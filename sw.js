@@ -4,28 +4,37 @@ const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png"
+  "./bee_icon_192x192.png",
+  "./bee_icon_512x512.png"
 ];
 
-// Instalacja SW i cache'owanie zasobów
+// Instalacja
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
 
-// Aktywacja SW
+// Aktywacja + czyszczenie starego cache
 self.addEventListener("activate", event => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
+      )
+    )
+  );
+  self.clients.claim();
 });
 
-// Obsługa fetch – najpierw cache, potem sieć, fallback do index.html
+// Fetch
 self.addEventListener("fetch", event => {
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      return cached || fetch(event.request).catch(() =>
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request).catch(() =>
         caches.match("./index.html")
       );
     })
