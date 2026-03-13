@@ -1,6 +1,6 @@
 {
   "name": "Kalendarz Pszczelarski 2026",
-  "version": "1.0.0",
+  "version": "1.0.0"
   "short_name": "Pasieka 2026",
   "description": "Offline kalendarz pasieczny 2026 z notatkami",
   "start_url": "./index.html",
