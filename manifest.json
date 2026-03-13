@@ -1,0 +1,26 @@
+{
+  "name": "Kalendarz Pszczelarski 2026",
+  "version": "1.0.0"
+  "short_name": "Pasieka 2026",
+  "description": "Offline kalendarz pasieczny 2026 z notatkami",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FBC02D",
+  "icons": [
+    {
+      "src": "bee_icon_192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "bee_icon_512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
