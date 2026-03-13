@@ -145,9 +145,7 @@ th, td {
 
 <body>
 
-<div>
-🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla
-<div>
+<div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla<div>
 
 <h2>Kalendarz pszczelarski 2026</h2>
 
@@ -189,37 +187,36 @@ margin-bottom:15px;
 
 <h3>🌦 Pogoda w pasiece</h3>
 
-<div id="weather-data">
-Ładowanie pogody...
-</div>
-
-<div id="weather-forecast" style="margin-top:8px;font-size:14px;"></div>
-
-<div id="weather-box">
-
-<h3>🌦 Pogoda w pasiece</h3>
-
-<div id="weather-data">
-Ładowanie pogody...
-</div>
-
-<div id="weather-forecast"></div>
-
-<div id="bee-flight-alert" style="
-margin-top:10px;
-padding:8px;
-background:#e8f5e9;
-border-radius:8px;
-font-weight:bold;
+<div id="weather-box" style="
+  background:#fff8e1;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:15px;
 ">
-🐝 Sprawdzanie warunków lotu pszczół...
-</div>
+
+  <div id="weather-data">
+    Ładowanie pogody...
+  </div>
+
+  <div id="weather-forecast" style="margin-top:8px;font-size:14px;">
+  </div>
+
+  <div id="bee-flight-alert" style="
+    margin-top:10px;
+    padding:8px;
+    background:#e8f5e9;
+    border-radius:8px;
+    font-weight:bold;
+">
+  🐝 Sprawdzanie warunków lotu pszczół...
+  </div>
 
 </div>
 
+<div id="season-info" style="margin-bottom:10px;font-weight:bold;">
+  <!-- Tutaj można wstawiać sezonowe informacje dla pszczół -->
 </div>
 
-<div id="season-info" style="margin-bottom:10px;font-weight:bold;"></div>
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
@@ -287,12 +284,6 @@ font-weight:bold;
 </div>
 
 <!-- Panel alertów, rojka, asystent -->
-<div id="alerts-box-01">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-01">Brak alertów na dziś</div>
-</div>
-
-<!-- Alerty pasieczne -->
 <div id="alerts-box-01">
   <strong>Alerty pasieczne:</strong>
   <div id="alerts-list-01">Brak alertów na dziś</div>
@@ -450,11 +441,6 @@ border-radius:10px;
 – Ciepły luty: możliwe obloty i wczesne pożytki pyłkowe<br>
 – 🟧 dni pomarańczowe: wzrost ryzyka rojliwości przy silnych rodzinach,⬛- zimowla 
 </div>
-<!-- Panel alertów, rojka, asystent -->
-<div id="alerts-box-02">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-02">Brak alertów na dziś</div>
-</div>
 
 <!-- Alerty pasieczne -->
 <div id="alerts-box-02">
@@ -595,13 +581,7 @@ border-radius:10px;
 – Intensywny rozwój rodzin pszczelich<br>
 – Pierwsze pożytki pyłkowe: leszczyna, olcha, wierzba, klon<br>
 – 🟧 Dni z podziałem koloru = prace + obserwacja rojowa
-</div>
-
-<!-- Panel alertów, rojka, asystent -->
-<div id="alerts-box-03">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-03">Brak alertów na dziś</div>
-</div>
+</div>\
 
 <!-- Alerty pasieczne -->
 <div id="alerts-box-03">
@@ -755,12 +735,6 @@ border-radius:10px;
 – KWIECIEŃ = realne zagrożenie rójką<br>
 – Konieczne częste przeglądy<br>
 – 🟧 Dni dwukolorowe = prace + rojliwość
-</div>
-
-<!-- Panel alertów, rojka, asystent -->
-<div id="alerts-box-04">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-04">Brak alertów na dziś</div>
 </div>
 
 <!-- Alerty pasieczne -->
@@ -1832,18 +1806,20 @@ border-radius:10px;
 
   <!-- Dodatkowe panele informacyjne -->
   <div id="season-info-12"></div>
-  <div id="swarm-box-12-duplicate"></div>
-  <div id="assistant-box-12-duplicate"></div>
   <button onclick="getLocation()">📍 Pokaż lokalizację pasieki</button>
-  <div id="location-box-12-duplicate"></div>
-  <div id="honey-total-12-duplicate"></div>
-  <div id="upcoming-list-12-duplicate"></div>
 
 </div> <!-- KONIEC month-panels-12 -->
 
 <div class="page-break"></div>
 
 <div class="stats">
+
+<div id="weather-panel">
+  <h3>🌤 Pogoda dla pasieki</h3>
+  <div id="weather-data">Ładowanie...</div>
+  <div id="weather-forecast"></div>
+  <div id="bee-flight-alert" style="margin-top:5px; font-weight:bold;"></div>
+</div>
 
   <!-- Alerty pasieczne -->
   <div id="alerts-box">
@@ -2206,18 +2182,14 @@ document.addEventListener("DOMContentLoaded", function(){
 window.addEventListener("load",()=>{ if("serviceWorker" in navigator) navigator.serviceWorker.register("service-worker.js"); });
 
 function loadWeather(){
-
 const weatherBox=document.getElementById("weather-data");
 const forecastBox=document.getElementById("weather-forecast");
 
 function showSaved(){
-
 const saved=localStorage.getItem("weather-cache");
-
 if(saved){
 
 const data=JSON.parse(saved);
-
 weatherBox.innerHTML=data.current;
 forecastBox.innerHTML=data.forecast;
 
@@ -2236,14 +2208,10 @@ const lat=pos.coords.latitude;
 const lon=pos.coords.longitude;
 
 const url="https://api.open-meteo.com/v1/forecast?latitude="+lat+
-"&longitude="+lon+
-"&hourly=temperature_2m,precipitation_probability,cloudcover"+
-"&current_weather=true";
+"&longitude="+lon+"&hourly=temperature_2m,precipitation_probability,cloudcover"+"&current_weather=true";
 
 fetch(url)
-
 .then(r=>r.json())
-
 .then(data=>{
 
 const w=data.current_weather;
@@ -2304,9 +2272,7 @@ forecast:forecast
 
 })
 
-.catch(()=>{
-
-showSaved();
+.catch(() => showSaved());;
 
 });
 
@@ -2335,26 +2301,6 @@ behavior:"smooth",
 block:"center"
 });
 
-}
-
-}
-
-function scrollToToday(){
-
-const today = new Date();
-
-const day = String(today.getDate()).padStart(2,"0");
-const month = String(today.getMonth()+1).padStart(2,"0");
-
-const el = document.querySelector(
-'.day-number[data-day="'+day+'"][data-month="'+month+'"]'
-);
-
-if(el){
-el.scrollIntoView({
-behavior:"smooth",
-block:"center"
-});
 }
 
 }
@@ -2446,6 +2392,20 @@ document.getElementById("assistant-text").innerText=text;
 }
 
 updateBeeAssistant();
+
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(reg => console.log("SW zarejestrowany:", reg.scope))
+        .catch(err => console.log("Błąd rejestracji SW:", err));
+    });
+  }if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(reg => console.log("SW zarejestrowany:", reg.scope))
+        .catch(err => console.log("Błąd rejestracji SW:", err));
+    });
+  }
 
 </script>
 
