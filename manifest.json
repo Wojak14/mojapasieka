@@ -1,38 +1,21 @@
 {
   "name": "Kalendarz Pszczelarski 2026",
-  "short_name": "Pasieka 2026",
-  "version": "1.0.0",
-  "description": "Offline kalendarz pasieczny 2026 z notatkami dziennymi, nadchodzącymi pracami, pogodą i alertami dla pszczelarzy.",
+  "short_name": "Kalendarz 2026",
+  "description": "Interaktywny kalendarz pszczelarski z notatkami, pogodą i listą nadchodzących prac.",
   "start_url": "./index.html",
-  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait",
-  "background_color": "#FFFFFF",
-  "theme_color": "#FBC02D",
+  "background_color": "#fff8e1",
+  "theme_color": "#ffb74d",
   "icons": [
     {
-      "src": "bee_icon_128x128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "bee_icon_192x192.png",
+      "src": "icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     },
     {
-      "src": "bee_icon_256x256.png",
-      "sizes": "256x256",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "bee_icon_512x512.png",
+      "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

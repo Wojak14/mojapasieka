@@ -34,9 +34,21 @@
 </div>
 
 <div class="section">
-  <h3>Historia rodzin pszczelich</h3>
-  <textarea id="family-notes" placeholder="Notatki rodzin pszczelich"></textarea>
-  <button onclick="saveFamilyNotes()">💾 Zapisz historię rodzin</button>
+<h3>Historia rodzin pszczelich</h3>
+
+<label>Wybierz ul:</label>
+<select id="hive-select">
+<option value="ul1">Ul 1</option>
+<option value="ul2">Ul 2</option>
+<option value="ul3">Ul 3</option>
+<option value="ul4">Ul 4</option>
+<option value="ul5">Ul 5</option>
+<option value="ul6">Ul 6</option>
+</select>
+
+<textarea id="family-notes" placeholder="Historia tej rodziny pszczelej..."></textarea>
+
+<button onclick="saveFamilyNotes()">💾 Zapisz historię ula</button>
 </div>
 
 <div class="section">
@@ -1875,13 +1887,31 @@ function saveNote(){
 
 // ==================== Notatki rodzin pszczelich ====================
 function saveFamilyNotes(){
-  const notes=document.getElementById("family-notes").value;
-  localStorage.setItem("family_notes",notes);
-  alert("Notatki rodzin zapisane");
+
+  const hive = document.getElementById("hive-select").value;
+  const notes = document.getElementById("family-notes").value;
+
+  localStorage.setItem("hive_"+hive, notes);
+
+  alert("Historia ula zapisana");
 }
+
 function loadFamilyNotes(){
-  const notes=localStorage.getItem("family_notes")||"";
-  document.getElementById("family-notes").value=notes;
+
+  const hive = document.getElementById("hive-select").value;
+
+  const saved = localStorage.getItem("hive_"+hive) || "";
+
+  document.getElementById("family-notes").value = saved;
+
+}
+
+// zmiana ula automatycznie ładuje historię
+document.getElementById("hive-select").addEventListener("change", loadFamilyNotes);
+
+
+// uruchom po starcie strony
+document.addEventListener("DOMContentLoaded", loadFamilyNotes);
 }
 
 // ==================== Podświetlenie dni ====================
@@ -2095,6 +2125,15 @@ loadWeather();
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js'));
 }
+
+  // Rejestracja service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('SW zarejestrowany:', reg))
+        .catch(err => console.log('Błąd rejestracji SW:', err));
+    });
+  }
 </script>
 </body>
 </html>
