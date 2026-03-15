@@ -2032,50 +2032,50 @@ document.addEventListener("DOMContentLoaded", function() {
   };
 
   // ==================== Podświetlenie dni ====================
-  function updateMarkers() {
-    const today = new Date();
-    const dayNow = String(today.getDate()).padStart(2,"0");
-    const monthNow = String(today.getMonth()+1).padStart(2,"0");
+function updateMarkers() {
+  const today = new Date();
+  const dayNow = String(today.getDate()).padStart(2,"0");
+  const monthNow = String(today.getMonth()+1).padStart(2,"0");
 
-    document.querySelectorAll(".day-number").forEach(span => {
-      const td = span.closest("td");
-      td.classList.remove("has-note","today","tomorrow","highlight-search");
-      const day = span.dataset.day.padStart(2,"0");
-      const month = span.dataset.month.padStart(2,"0");
-      const key = day + "." + month + ".2026";
+  document.querySelectorAll(".day-number").forEach(span => {
+    const td = span.closest("td");
+    td.classList.remove("has-note","today","tomorrow","highlight-search");
 
-      const oldMarker = td.querySelector(".note-marker");
-      if(oldMarker) oldMarker.remove();
+    const day = span.dataset.day.padStart(2,"0");
+    const month = span.dataset.month.padStart(2,"0");
+    const key = day + "." + month + ".2026";
 
-      const note = localStorage.getItem(key);
-      if(note && note.trim() !== "") {
-        td.classList.add("has-note");
-        const marker = document.createElement("span");
-        marker.className = "note-marker";
+    // Usuń stary znacznik
+    const oldMarker = td.querySelector(".note-marker");
+    if(oldMarker) oldMarker.remove();
 
-        let icons = "";
-const text = note.toLowerCase();
+    const note = localStorage.getItem(key);
+    if(note && note.trim() !== "") {
+      td.classList.add("has-note");
+      const marker = document.createElement("span");
+      marker.className = "note-marker";
 
-if(text.includes("miód") || text.includes("miodobranie")) icons += "🍯";
-if(text.includes("karmienie")) icons += "🥤";
-if(text.includes("leczenie")) icons += "💊";
-if(text.includes("przegląd")) icons += "🔍";
-if(text.includes("rój")) icons += "🐝";
-if(text.includes("pożytek")) icons += "🌸";
+      // wybór ikony po słowie kluczowym
+      let icon = "📝";
+      const text = note.toLowerCase();
+      if(text.includes("miód") || text.includes("miodobranie") || text.includes("karmienie")) icon="🍯";
+      if(text.includes("leczenie")) icon="💊";
+      if(text.includes("przegląd") || text.includes("kontrola")) icon="🔍";
+      if(text.includes("rój")) icon="🐝";
+      if(text.includes("pożytek")) icon="🌸";
 
-if(icons === "") icons = "📝";
+      marker.textContent = " " + icon;
+      span.after(marker);
+    }
 
-marker.textContent = " " + icons;
-      }
-
-      if(day === dayNow && month === monthNow) td.classList.add("today");
-
-      const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
-      const tDay = String(tomorrow.getDate()).padStart(2,"0");
-      const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
-      if(day === tDay && month === tMonth) td.classList.add("tomorrow");
-    });
-  }
+    // dzisiaj i jutro
+    if(day === dayNow && month === monthNow) td.classList.add("today");
+    const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
+    const tDay = String(tomorrow.getDate()).padStart(2,"0");
+    const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
+    if(day === tDay && month === tMonth) td.classList.add("tomorrow");
+  });
+}
 
   // ==================== Kliknięcie dnia ====================
   document.querySelectorAll(".day-number").forEach(span => {
