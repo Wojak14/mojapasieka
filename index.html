@@ -198,8 +198,28 @@ margin-bottom:15px;
     Ładowanie pogody...
   </div>
 
-  <div id="weather-forecast" style="margin-top:8px;font-size:14px;">
-  </div>
+<div id="location-box" style="
+background:#e3f2fd;
+padding:10px;
+border-radius:10px;
+margin-top:10px;
+font-size:14px;
+">
+📍 Lokalizacja pasieki: sprawdzanie...
+</div>
+
+<div id="map-box" 
+style="margin-top:10px;"></div>
+<h3>🌸 Pożytki w zasięgu lotu pszczół (3 km)</h3>
+
+<div id="forage-map" style="
+margin-top:10px;
+border-radius:10px;
+overflow:hidden;
+"></div>
+
+  <div id="weather-forecast" 
+style="margin-top:8px;font-size:14px;"></div>
 
   <div id="bee-flight-alert" style="
     margin-top:10px;
@@ -1797,12 +1817,18 @@ border-radius:10px;
     <div id="upcoming-list-12"></div>
   </div>
 
-  <!-- Panel notatek rodzin pszczelich -->
-  <div id="family-panel-12">
-    <strong>Notatki dla rodzin pszczelich:</strong><br>
-    <textarea id="family-notes-12" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-    <button onclick="saveFamilyNotes('12')">Zapisz notatki rodzin</button>
-  </div>
+<!-- Panel notatek rodzin pszczelich -->
+<div id="family-panel-12">
+
+<strong>🐝 Notatki dla rodzin pszczelich:</strong><br>
+
+<textarea id="family-notes-12" rows="4" style="width:100%;"></textarea>
+
+<button onclick="saveFamilyNotes('12')">
+💾 Zapisz notatki rodzin
+</button>
+
+</div>
 
   <!-- Dodatkowe panele informacyjne -->
   <div id="season-info-12"></div>
@@ -2260,16 +2286,17 @@ marker.textContent = " " + icons;
   }
 
   // ==================== Uruchomienie ====================
-  updateMarkers();
-  updateUpcoming();
-  updateHoney();
-  updateAlerts();
-  updateInspections();
-  updateAssistant();
-  loadFamilyNotes();
-  scrollToToday();
-  loadWeather();
-  updateTodayButton();
+updateMarkers();
+updateUpcoming();
+updateHoney();
+updateAlerts();
+updateInspections();
+updateAssistant();
+loadFamilyNotes();
+scrollToToday();
+loadWeather();
+updateTodayButton();
+getLocation();
 });
 
 // ==================== Service Worker ====================
