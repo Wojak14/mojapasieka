@@ -2019,17 +2019,18 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // ==================== Zapis notatki ====================
   window.saveNote = function() {
-    if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
-    const key = currentDay + "." + currentMonth + ".2026";
-    localStorage.setItem(key, textarea.value);
-    updateMarkers();
-    updateUpcoming();
-    updateHoney();
-    updateAlerts();
-    updateInspections();
-    updateTodayButton();
-    scrollToToday();
-  };
+  if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
+  const key = currentDay + "." + currentMonth + ".2026";
+  localStorage.setItem(key, textarea.value);
+
+  updateMarkers();   // <-- tutaj jest klucz
+  updateUpcoming();
+  updateHoney();
+  updateAlerts();
+  updateInspections();
+  updateTodayButton();
+  scrollToToday();
+};
 
   // ==================== Podświetlenie dni ====================
 function updateMarkers() {
