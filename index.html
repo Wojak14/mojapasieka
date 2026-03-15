@@ -2,241 +2,96 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Kalendarz Pszczelarski 2026</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FBC02D">
-
-<link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
-
-<link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
-
+<title>Kalendarz Pszczelarski 2026</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 10px;
-}
-
-body { font-family: Arial, sans-serif; margin:10px; }
-table { width:100%; border-collapse: collapse; margin-bottom:20px; }
-th, td { border:1px solid #444; padding:6px; text-align:center; position:relative; }
-.day-number { cursor:pointer; font-weight:bold; }
-.has-note { background-color: #fff59d; }
-.today { border:2px solid #4caf50; }
-.tomorrow { border:2px solid #ff9800; }
-.note-marker { margin-left:4px; font-size:14px; }
-.highlight-search { background-color:#ffeb3b; border-radius:4px; padding:2px 4px; margin-left:2px; }
-#day-note-box, #alerts-box, #inspection-honey, #family-panel, #weather-alerts { 
-  padding:10px; border-radius:10px; margin-top:15px; background:#fff8e1;
-}
-.notes { width:100%; margin-top:15px; background:#fff8e1; padding:10px; border-radius:10px; }
-.page-break { page-break-after: always; }
-
-#pasieka-panel{
-background:#e8f5e9;
-padding:12px;
-border-radius:10px;
-margin-top:20px;
-}
-
-.apiary-grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin-top:10px;
-}
-
-.hive{
-background:#ffe082;
-padding:15px;
-text-align:center;
-border-radius:8px;
-cursor:pointer;
-font-weight:bold;
-}
-
-#beekeeper-assistant{
-background:#e8f5e9;
-padding:12px;
-border-radius:10px;
-margin-top:20px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-th, td {
-  border: 1px solid #444;
-  padding: 6px;
-  text-align: center;
-  position: relative;
-}
-
-.green { background: #8BC34A; }
-.yellow { background: #FFEB3B; }
-.orange { background: #FF9800; }
-.red { background: #F44336; color: white; }
-.black { background: #000; color: white; }
-
-.day-number {
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.has-note {
-   background-color: #fff59d; /* jasny żółty */
-}
-
-#day-note-box {
-  background:#fff8e1;
-  padding:10px;
-  border-radius:10px;
-  margin-top:15px;
-}
-
-#day-note-content{
-  background:#fff8e1;
-  padding:12px;
-  margin-top:15px;
-  border-radius:10px;
-  font-size:14px;
-}
-
-.note-marker {
-  margin-left: 2px;
-  font-size: 14px;
-}
-
-.notes {
-  width: 100%;
-  height: 80px;
-}
-
-#autosave-status {
-  font-size: 13px;
-  margin-top: 4px;
-  color: green;
-}
-
-@media (max-width:600px) {
-  table, th, td { font-size: 12px; }
-  .notes { height: 60px; }
-}
-
-.has-note { background-color: #fff59d; }
-.today { border: 2px solid #4caf50; }
-.tomorrow { border: 2px solid #ff9800; }
-.note-marker { margin-left: 4px; }
-.highlight-search {
-  background-color: #ffeb3b;
-  border-radius: 4px;
-  padding: 2px 4px;
-  margin-left: 2px;
-}
-
+  body{font-family:sans-serif;margin:0;padding:0;background:#fff8e1;}
+  table{border-collapse:collapse;width:100%;margin-bottom:20px;}
+  th,td{border:1px solid #ccc;padding:5px;text-align:center;width:14.28%;height:60px;position:relative;}
+  .day-number{cursor:pointer;font-weight:bold;}
+  .has-note{background:#fff3e0;}
+  .today{border:2px solid #fbc02d;}
+  .tomorrow{border:2px dashed #81c784;}
+  .note-marker{position:absolute;top:2px;right:2px;font-size:16px;}
+  .highlight-search{background:#ffecb3;}
+  textarea{width:100%;height:80px;margin-top:5px;padding:5px;border-radius:8px;border:1px solid #ccc;}
+  #panel{padding:10px;background:#e1f5fe;border-radius:10px;margin-bottom:20px;}
+  #search-results{background:#fffde7;padding:5px;border-radius:6px;margin-top:5px;font-size:14px;}
+  .section{margin-bottom:20px;}
+  #bee-flight-alert,#weather-data,#weather-forecast,#location-box,#map-box{padding:8px;border-radius:8px;margin-top:10px;font-size:14px;}
+  #bee-flight-alert{background:#e8f5e9;font-weight:bold;}
+  button{padding:8px 12px;border:none;border-radius:6px;background:#fbc02d;color:#fff;cursor:pointer;margin-top:5px;}
 </style>
-
 </head>
-
 <body>
 
-<div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla<div>
+<h1 style="text-align:center;">Kalendarz Pszczelarski 2026</h1>
 
-<h2>Kalendarz pszczelarski 2026</h2>
-
-<div id="bee-assistant" style="
-background:#e8f5e9;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
-
-<h3>🐝 Asystent pszczelarza</h3>
-
-<div id="assistant-text">
-Sprawdzanie zaleceń...
+<div id="panel">
+  <button id="today-btn">📅 DZIŚ</button>
+  <textarea id="notes" placeholder="Notatka dzienna..."></textarea>
+  <button onclick="saveNote()">💾 Zapisz notatkę</button>
 </div>
 
+<div class="section">
+<h3>Historia rodzin pszczelich</h3>
+
+<label>Wybierz ul:</label>
+<select id="hive-select">
+<option value="ul1">Ul 1</option>
+<option value="ul2">Ul 2</option>
+<option value="ul3">Ul 3</option>
+<option value="ul4">Ul 4</option>
+<option value="ul5">Ul 5</option>
+<option value="ul6">Ul 6</option>
+</select>
+
+<textarea id="family-notes" placeholder="Historia tej rodziny pszczelej..."></textarea>
+
+<button onclick="saveFamilyNotes()">💾 Zapisz historię ula</button>
 </div>
 
-<button id="today-btn" onclick="scrollToToday()" style="
-margin-top:8px;
-margin-bottom:10px;
-padding:8px 12px;
-font-size:14px;
-border:none;
-border-radius:8px;
-background:#FBC02D;
-cursor:pointer;
-font-weight:bold;
-">
-📅 DZIŚ
-</button>
-
-<div id="weather-box" style="
-background:#fff8e1;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
-
-<h3>🌦 Pogoda w pasiece</h3>
-
-<div id="weather-box" style="
-  background:#fff8e1;
-  padding:10px;
-  border-radius:10px;
-  margin-bottom:15px;
-">
-
-  <div id="weather-data">
-    Ładowanie pogody...
-  </div>
-
-<div id="location-box" style="
-background:#e3f2fd;
-padding:10px;
-border-radius:10px;
-margin-top:10px;
-font-size:14px;
-">
-📍 Lokalizacja pasieki: sprawdzanie...
+<div class="section">
+  <h3>Wyszukiwarka notatek</h3>
+  <input type="text" id="note-search" placeholder="Szukaj w notatkach..." style="width:100%;padding:5px;border-radius:6px;border:1px solid #ccc;">
+  <div id="search-results"></div>
 </div>
 
-<div id="map-box" 
-style="margin-top:10px;"></div>
-<h3>🌸 Pożytki w zasięgu lotu pszczół (3 km)</h3>
-
-<div id="forage-map" style="
-margin-top:10px;
-border-radius:10px;
-overflow:hidden;
-"></div>
-
-  <div id="weather-forecast" 
-style="margin-top:8px;font-size:14px;"></div>
-
-  <div id="bee-flight-alert" style="
-    margin-top:10px;
-    padding:8px;
-    background:#e8f5e9;
-    border-radius:8px;
-    font-weight:bold;
-">
-  🐝 Sprawdzanie warunków lotu pszczół...
-  </div>
-
+<div class="section">
+  <h3>Informacje o pasiece</h3>
+  <div id="location-box">📍 Lokalizacja pasieki: sprawdzanie...</div>
+  <div id="map-box">Mapa pożytków (opcjonalnie)</div>
 </div>
 
-<div id="season-info" style="margin-bottom:10px;font-weight:bold;">
-  <!-- Tutaj można wstawiać sezonowe informacje dla pszczół -->
+<div class="section">
+  <h3>Pogoda i alert lotu pszczół</h3>
+  <div id="weather-data"></div>
+  <div id="weather-forecast"></div>
+  <div id="bee-flight-alert"></div>
 </div>
 
+<div class="section">
+  <h3>Nadchodzące prace (7 dni)</h3>
+  <div id="upcoming-list"></div>
+</div>
+
+<div class="section">
+  <h3>Kontrole miesięczne</h3>
+  <div id="inspection-count"></div>
+</div>
+
+<div class="section">
+  <h3>Asystent pszczelarski</h3>
+  <div id="assistant-box"></div>
+</div>
+
+<div class="section">
+  <h3>Podsumowanie miodu</h3>
+  <div id="honey-total"></div>
+</div
+
+<!-- ==================== Kalendarz (wszystkie miesiące) ==================== -->
+<div id="calendar-container">
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
@@ -2012,303 +1867,279 @@ border-radius:10px;
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  const textarea = document.getElementById("notes");
-  let currentDay = null;
-  let currentMonth = null;
+// ==================== Zmienne globalne ====================
+let currentDay=null,currentMonth=null;
 
-  // ==================== Zapis notatki ====================
-  window.saveNote = function() {
-  if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
-  const key = currentDay + "." + currentMonth + ".2026";
-  localStorage.setItem(key, textarea.value);
-
-  updateMarkers();   // <-- tutaj jest klucz
+// ==================== Zapis notatki ====================
+function saveNote(){
+  if(!currentDay){ alert("Kliknij dzień w kalendarzu"); return; }
+  const key=currentDay+"."+currentMonth+".2026";
+  const textarea=document.getElementById("notes");
+  localStorage.setItem(key,textarea.value);
+  updateMarkers();
   updateUpcoming();
   updateHoney();
   updateAlerts();
   updateInspections();
   updateTodayButton();
   scrollToToday();
-};
+}
 
-  // ==================== Podświetlenie dni ====================
-function updateMarkers() {
-  const today = new Date();
-  const dayNow = String(today.getDate()).padStart(2,"0");
-  const monthNow = String(today.getMonth()+1).padStart(2,"0");
+// ==================== Notatki rodzin pszczelich ====================// 
+zapis notatek dla konkretnego miesiąca
+function saveFamilyNotes(month){
 
-  document.querySelectorAll(".day-number").forEach(span => {
-    const td = span.closest("td");
+  const textarea = document.getElementById("family-notes-" + month);
+
+  if(!textarea) return;
+
+  const notes = textarea.value;
+
+  localStorage.setItem("family_notes_" + month, notes);
+
+  alert("Notatki rodzin zapisane dla miesiąca " + month);
+}
+
+
+function loadFamilyNotes(){
+
+  for(let m = 1; m <= 12; m++){
+
+    const month = String(m).padStart(2,"0");
+
+    const textarea = document.getElementById("family-notes-" + month);
+
+    if(textarea){
+
+      textarea.value = localStorage.getItem("family_notes_" + month) || "";
+
+    }
+
+  }
+
+}
+
+// ==================== Podświetlenie dni ====================
+function updateMarkers(){
+  const today=new Date();
+  const dayNow=String(today.getDate()).padStart(2,"0");
+  const monthNow=String(today.getMonth()+1).padStart(2,"0");
+
+  document.querySelectorAll(".day-number").forEach(span=>{
+    const td=span.closest("td");
     td.classList.remove("has-note","today","tomorrow","highlight-search");
+    const day=span.dataset.day.padStart(2,"0");
+    const month=span.dataset.month.padStart(2,"0");
+    const key=day+"."+month+".2026";
 
-    const day = span.dataset.day.padStart(2,"0");
-    const month = span.dataset.month.padStart(2,"0");
-    const key = day + "." + month + ".2026";
-
-    // Usuń stary znacznik
-    const oldMarker = td.querySelector(".note-marker");
-    if(oldMarker) oldMarker.remove();
-
-    const note = localStorage.getItem(key);
-    if(note && note.trim() !== "") {
+    const oldMarker=td.querySelector(".note-marker"); if(oldMarker) oldMarker.remove();
+    const note=localStorage.getItem(key);
+    if(note && note.trim()!==""){
       td.classList.add("has-note");
-      const marker = document.createElement("span");
-      marker.className = "note-marker";
-
-      // wybór ikony po słowie kluczowym
-      let icon = "📝";
-      const text = note.toLowerCase();
-      if(text.includes("miód") || text.includes("miodobranie") || text.includes("karmienie")) icon="🍯";
+      const marker=document.createElement("span"); marker.className="note-marker";
+      let icon="📝";
+      const text=note.toLowerCase();
+      if(text.includes("miód")||text.includes("miodobranie")||text.includes("karmienie")) icon="🍯";
       if(text.includes("leczenie")) icon="💊";
-      if(text.includes("przegląd") || text.includes("kontrola")) icon="🔍";
+      if(text.includes("przegląd")) icon="🔍";
       if(text.includes("rój")) icon="🐝";
       if(text.includes("pożytek")) icon="🌸";
-
-      marker.textContent = " " + icon;
+      marker.textContent=" "+icon;
       span.after(marker);
     }
 
-    // dzisiaj i jutro
-    if(day === dayNow && month === monthNow) td.classList.add("today");
-    const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
-    const tDay = String(tomorrow.getDate()).padStart(2,"0");
-    const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
-    if(day === tDay && month === tMonth) td.classList.add("tomorrow");
+    if(day===dayNow && month===monthNow) td.classList.add("today");
+    const tomorrow=new Date(); tomorrow.setDate(today.getDate()+1);
+    const tDay=String(tomorrow.getDate()).padStart(2,"0");
+    const tMonth=String(tomorrow.getMonth()+1).padStart(2,"0");
+    if(day===tDay && month===tMonth) td.classList.add("tomorrow");
   });
 }
 
-  // ==================== Kliknięcie dnia ====================
-  document.querySelectorAll(".day-number").forEach(span => {
-    span.addEventListener("click", () => {
-      currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = span.dataset.month.padStart(2,"0");
-      const key = currentDay + "." + currentMonth + ".2026";
-      textarea.value = localStorage.getItem(key) || "";
-      textarea.focus();
+// ==================== Kliknięcie dnia ====================
+document.querySelectorAll(".day-number").forEach(span=>{
+  span.addEventListener("click",()=>{
+    currentDay=span.dataset.day.padStart(2,"0");
+    currentMonth=span.dataset.month.padStart(2,"0");
+    document.getElementById("notes").value=localStorage.getItem(currentDay+"."+currentMonth+".2026")||"";
+    document.getElementById("notes").focus();
+  });
+});
+
+// ==================== Wyszukiwarka ====================
+document.getElementById("note-search")?.addEventListener("input",(e)=>{
+  const query=e.target.value.toLowerCase();
+  document.querySelectorAll(".day-number").forEach(span=>span.classList.remove("highlight-search"));
+  const results=[];
+  for(let i=1;i<=12;i++){
+    for(let d=1;d<=31;d++){
+      const key=String(d).padStart(2,"0")+"."+String(i).padStart(2,"0")+".2026";
+      const note=localStorage.getItem(key);
+      if(note && note.toLowerCase().includes(query)){
+        results.push(`<div class="search-item" data-date="${key}" style="cursor:pointer;color:blue;">${key}: ${note}</div>`);
+        const spanHighlight=document.querySelector(`.day-number[data-day="${String(d).padStart(2,"0")}"][data-month="${String(i).padStart(2,"0")}"]`);
+        if(spanHighlight) spanHighlight.classList.add("highlight-search");
+      }
+    }
+  }
+  document.getElementById("search-results").innerHTML=results.join("<br>")||"Brak wyników";
+  document.querySelectorAll(".search-item").forEach(item=>{
+    item.addEventListener("click",()=>{
+      const date=item.dataset.date.split(".");
+      const span=document.querySelector(`.day-number[data-day="${date[0]}"][data-month="${date[1]}"]`);
+      if(span){ span.scrollIntoView({behavior:"smooth"}); span.click(); }
     });
   });
+});
 
-  // ==================== Wyszukiwarka ====================
-  const searchInput = document.getElementById("note-search");
-  if(searchInput){
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value.toLowerCase();
-      document.querySelectorAll(".day-number").forEach(span => span.classList.remove("highlight-search"));
-      const results = [];
-
-      for(let i=1; i<=12; i++){
-        for(let d=1; d<=31; d++){
-          const key = String(d).padStart(2,"0")+"."+String(i).padStart(2,"0")+".2026";
-          const note = localStorage.getItem(key);
-          if(note && note.toLowerCase().includes(query)){
-            results.push(`<div class="search-item" data-date="${key}" style="cursor:pointer;color:blue;">${key}: ${note}</div>`);
-            const spanHighlight = document.querySelector(`.day-number[data-day="${String(d).padStart(2,"0")}"][data-month="${String(i).padStart(2,"0")}"]`);
-            if(spanHighlight) spanHighlight.classList.add("highlight-search");
-          }
-        }
-      }
-
-      const resBox = document.getElementById("search-results");
-      if(resBox) resBox.innerHTML = results.join("<br>") || "Brak wyników";
-
-      document.querySelectorAll(".search-item").forEach(item => {
-        item.addEventListener("click", () => {
-          const date = item.dataset.date.split(".");
-          const span = document.querySelector(`.day-number[data-day="${date[0]}"][data-month="${date[1]}"]`);
-          if(span){ span.scrollIntoView({behavior:"smooth"}); span.click(); }
-        });
-      });
-    });
+// ==================== Nadchodzące prace ====================
+function updateUpcoming(){
+  const upcoming=[]; const today=new Date();
+  for(let i=0;i<7;i++){
+    const d=new Date(); d.setDate(today.getDate()+i);
+    const day=String(d.getDate()).padStart(2,"0");
+    const month=String(d.getMonth()+1).padStart(2,"0");
+    const key=day+"."+month+".2026";
+    const note=localStorage.getItem(key);
+    if(note && note.trim()!=="") upcoming.push(key+": "+note);
   }
+  document.getElementById("upcoming-list").innerHTML=upcoming.join("<br>")||"Brak nadchodzących prac";
+}
 
-  // ==================== Nadchodzące prace ====================
-  function updateUpcoming(){
-    const upcoming = [];
-    const today = new Date();
-    for(let i=0; i<7; i++){
-      const d = new Date(); d.setDate(today.getDate()+i);
-      const day = String(d.getDate()).padStart(2,"0");
-      const month = String(d.getMonth()+1).padStart(2,"0");
-      const key = day+"."+month+".2026";
-      const note = localStorage.getItem(key);
-      if(note && note.trim()!=="") upcoming.push(key+": "+note);
-    }
-    const box = document.getElementById("upcoming-list");
-    if(box) box.innerHTML = upcoming.join("<br>") || "Brak nadchodzących prac";
+// ==================== Kontrole miesięczne ====================
+function updateInspections(){
+  let count=0;
+  for(let i=1;i<=31;i++){
+    const key=String(i).padStart(2,"0")+"."+String(new Date().getMonth()+1).padStart(2,"0")+".2026";
+    const note=localStorage.getItem(key)||"";
+    if(note.toLowerCase().includes("przegląd")||note.toLowerCase().includes("kontrola")) count++;
   }
+  document.getElementById("inspection-count").innerText="✅ Kontrole wykonane w tym miesiącu: "+count;
+}
 
-  // ==================== Licznik miodu ====================
-  function updateHoney(){
-    let total=0;
-    for(let i=1;i<=12;i++){
-      for(let d=1;d<=31;d++){
-        const key=String(d).padStart(2,"0")+"."+String(i).padStart(2,"0")+".2026";
-        const note=localStorage.getItem(key);
-        if(note){
-          const match=note.match(/(\d+)\s?kg/gi);
-          if(match) match.forEach(m=>{ const num=parseInt(m); if(!isNaN(num)) total+=num; });
-        }
+// ==================== Licznik miodu ====================
+function updateHoney(){
+  let total=0;
+  for(let i=1;i<=12;i++){
+    for(let d=1;d<=31;d++){
+      const key=String(d).padStart(2,"0")+"."+String(i).padStart(2,"0")+".2026";
+      const note=localStorage.getItem(key);
+      if(note){
+        const match=note.match(/(\d+)\s?kg/gi);
+        if(match) match.forEach(m=>{ const n=parseInt(m); if(!isNaN(n)) total+=n; });
       }
     }
-    const box=document.getElementById("honey-total");
-    if(box) box.innerText="🍯 Zebrany miód w 2026: "+total+" kg";
   }
+  document.getElementById("honey-total").innerText="🍯 Zebrany miód w 2026: "+total+" kg";
+}
 
-  // ==================== Alerty pasieczne ====================
-  function updateAlerts(){
-    const todayKey = new Date().getDate().toString().padStart(2,"0")+"."+ (new Date().getMonth()+1).toString().padStart(2,"0") +".2026";
-    const note = localStorage.getItem(todayKey) || "";
-    const alertsBox = document.getElementById("alerts-list");
-    if(!alertsBox) return;
-    const keywords = ["karmienie","leczenie","przegląd","miodobranie","rój"];
-    const alerts = [];
-    keywords.forEach(word=>{
-      if(note.toLowerCase().includes(word)){
-        switch(word){
-          case "karmienie": alerts.push("💧 Karmienie rodzin pszczelich"); break;
-          case "leczenie": alerts.push("💊 Leczenie warrozy"); break;
-          case "przegląd": alerts.push("🔍 Przegląd rodzin"); break;
-          case "miodobranie": alerts.push("🍯 Miodobranie"); break;
-          case "rój": alerts.push("🐝 Możliwe rojenie – kontrola mateczników"); break;
-        }
-      }
-    });
-    alertsBox.innerHTML = alerts.length ? alerts.join("<br>") : "Brak alertów na dziś";
-  }
+// ==================== Asystent ====================
+function updateAssistant(){
+  const box=document.getElementById("assistant-box"); if(!box) return;
+  const month=new Date().getMonth()+1; 
+  let tip="";
+  if(month==1||month==2) tip="⬛ Zimowla – kontroluj osyp i zapasy.";
+  else if(month==3) tip="🌼 Pierwszy przegląd rodzin i sprawdzenie zapasów.";
+  else if(month==4) tip="🌸 Rozwój rodzin – kontrola mateczników.";
+  else if(month==5) tip="🐝 Okres rojowy – regularne przeglądy.";
+  else if(month==6) tip="🍯 Przygotowanie do miodobrania.";
+  else if(month==7) tip="🍯 Główne miodobrania.";
+  else if(month==8) tip="💊 Leczenie warrozy.";
+  else if(month==9) tip="🍯 Karmienie zimowe.";
+  else if(month==10) tip="⬛ Przygotowanie do zimowli.";
+  else tip="❄ Zimowla – minimalna ingerencja.";
+  box.innerText=tip;
+}
 
-  // ==================== Kontrole miesięczne ====================
-  function updateInspections(){
-    let count=0;
-    for(let i=1;i<=31;i++){
-      const key=String(i).padStart(2,"0")+"."+String(new Date().getMonth()+1).padStart(2,"0")+".2026";
-      const note = localStorage.getItem(key) || "";
-      if(note.toLowerCase().includes("przegląd") || note.toLowerCase().includes("kontrola")) count++;
+// ==================== Przewijanie do dziś ====================
+function scrollToToday(){
+  const today=new Date();
+  const day=String(today.getDate()).padStart(2,"0");
+  const month=String(today.getMonth()+1).padStart(2,"0");
+  const el=document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
+  if(el){ el.scrollIntoView({behavior:"smooth",block:"center"}); el.classList.add("today"); }
+}
+
+// ==================== Dziś przycisk ====================
+function updateTodayButton(){
+  const today=new Date();
+  const btn=document.getElementById("today-btn");
+  if(btn){ btn.innerText="📅 DZIŚ – "+String(today.getDate()).padStart(2,"0")+"."+String(today.getMonth()+1).padStart(2,"0")+"."+today.getFullYear(); }
+}
+document.getElementById("today-btn")?.addEventListener("click",scrollToToday);
+
+// ==================== Lokalizacja pasieki ====================
+function getLocation(){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos=>{
+    document.getElementById("location-box").innerText="📍 Lat: "+pos.coords.latitude+" Lon: "+pos.coords.longitude;
+  });
+}
+
+// ==================== Pogoda ====================
+function loadWeather(){
+  const weatherBox=document.getElementById("weather-data");
+  const forecastBox=document.getElementById("weather-forecast");
+  const showSaved=()=>{
+    const saved=localStorage.getItem("weather-cache");
+    if(saved){
+      const data=JSON.parse(saved);
+      weatherBox.innerHTML=data.current;
+      forecastBox.innerHTML=data.forecast;
     }
-    const box=document.getElementById("inspection-count");
-    if(box) box.innerText="✅ Kontrole wykonane w tym miesiącu: "+count;
-  }
-
-  // ==================== Notatki rodzin ====================
-  function saveFamilyNotes(){ 
-    const notes=document.getElementById("family-notes")?.value;
-    if(notes) localStorage.setItem("family_notes",notes); 
-    alert("Notatki rodzin zapisane"); 
-  }
-  function loadFamilyNotes(){ 
-    const notes=localStorage.getItem("family_notes")||""; 
-    const box=document.getElementById("family-notes"); 
-    if(box) box.value=notes; 
-  }
-
-  // ==================== Asystent ====================
-  function updateAssistant(){
-    const box=document.getElementById("assistant-box"); if(!box) return;
-    const month=new Date().getMonth()+1; 
-    let tip="";
-    if(month==1 || month==2) tip="⬛ Zimowla – kontroluj osyp i zapasy.";
-    else if(month==3) tip="🌼 Pierwszy przegląd rodzin i sprawdzenie zapasów.";
-    else if(month==4) tip="🌸 Rozwój rodzin – kontrola mateczników.";
-    else if(month==5) tip="🐝 Okres rojowy – regularne przeglądy.";
-    else if(month==6) tip="🍯 Przygotowanie do miodobrania.";
-    else if(month==7) tip="🍯 Główne miodobrania.";
-    else if(month==8) tip="💊 Leczenie warrozy.";
-    else if(month==9) tip="🍯 Karmienie zimowe.";
-    else if(month==10) tip="⬛ Przygotowanie do zimowli.";
-    else tip="❄ Zimowla – minimalna ingerencja.";
-    box.innerText=tip;
-  }
-
-  // ==================== Lokalizacja ====================
-  function getLocation(){ 
-    if(!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const box=document.getElementById("location-box");
-      if(box) box.innerText="Lat: "+pos.coords.latitude+" Lon: "+pos.coords.longitude;
-    });
-  }
-
-  // ==================== Pogoda ====================
-  function loadWeather(){
-    const weatherBox=document.getElementById("weather-data");
-    const forecastBox=document.getElementById("weather-forecast");
-    const showSaved = () => {
-      const saved = localStorage.getItem("weather-cache");
-      if(saved){
-        const data = JSON.parse(saved);
-        weatherBox.innerHTML = data.current;
-        forecastBox.innerHTML = data.forecast;
+  };
+  if(!navigator.geolocation){ showSaved(); return; }
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const lat=pos.coords.latitude;
+    const lon=pos.coords.longitude;
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,cloudcover&current_weather=true`;
+    fetch(url).then(r=>r.json()).then(data=>{
+      const w=data.current_weather;
+      let alertMsg="";
+      if(w.temperature>=14 && w.windspeed<20) alertMsg="🐝 Dobre warunki do lotu pszczół";
+      else if(w.temperature<12) alertMsg="❄ Za zimno – pszczoły raczej nie latają";
+      else if(w.windspeed>=20) alertMsg="💨 Za silny wiatr dla lotu pszczół";
+      else alertMsg="⚠ Słabe warunki do lotu pszczół";
+      document.getElementById("bee-flight-alert").innerText=alertMsg;
+      const current=`🌡 Temperatura: ${w.temperature}°C<br>💨 Wiatr: ${w.windspeed} km/h`;
+      weatherBox.innerHTML=current;
+      let forecast="<b>Prognoza:</b><br>";
+      for(let i=0;i<6;i++){
+        forecast+=`🕐 ${i}h → ${data.hourly.temperature_2m[i]}°C | 🌧 ${data.hourly.precipitation_probability[i]}% | ☁ ${data.hourly.cloudcover[i]}%<br>`;
       }
-    };
-    if(!navigator.geolocation){ showSaved(); return; }
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const lat=pos.coords.latitude;
-      const lon=pos.coords.longitude;
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,cloudcover&current_weather=true`;
-      fetch(url).then(r=>r.json()).then(data=>{
-        const w = data.current_weather;
-        let alertMsg = "";
-        if(w.temperature >= 14 && w.windspeed < 20) alertMsg="🐝 Dobre warunki do lotu pszczół";
-        else if(w.temperature<12) alertMsg="❄ Za zimno – pszczoły raczej nie latają";
-        else if(w.windspeed>=20) alertMsg="💨 Za silny wiatr dla lotu pszczół";
-        else alertMsg="⚠ Słabe warunki do lotu pszczół";
-        document.getElementById("bee-flight-alert").innerText=alertMsg;
-        const current = `🌡 Temperatura: ${w.temperature}°C<br>💨 Wiatr: ${w.windspeed} km/h`;
-        weatherBox.innerHTML = current;
-        let forecast = "<b>Prognoza:</b><br>";
-        for(let i=0;i<6;i++){
-          forecast += `🕐 ${i}h → ${data.hourly.temperature_2m[i]}°C | 🌧 ${data.hourly.precipitation_probability[i]}% | ☁ ${data.hourly.cloudcover[i]}%<br>`;
-        }
-        forecastBox.innerHTML = forecast;
-        localStorage.setItem("weather-cache", JSON.stringify({current, forecast}));
-      }).catch(showSaved);
-    });
-  }
+      forecastBox.innerHTML=forecast;
+      localStorage.setItem("weather-cache",JSON.stringify({current,forecast}));
+    }).catch(showSaved);
+  });
+}
 
-  // ==================== Przewijanie do dzisiaj ====================
-  function scrollToToday(){
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2,"0");
-    const month = String(today.getMonth()+1).padStart(2,"0");
-    const el = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
-    if(el){
-      el.scrollIntoView({behavior:"smooth", block:"center"});
-      el.classList.add("today");
-    }
-  }
-
-  function updateTodayButton(){
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2,"0");
-    const month = String(today.getMonth()+1).padStart(2,"0");
-    const year = today.getFullYear();
-    const btn = document.getElementById("today-btn");
-    if(btn) btn.innerText = "📅 DZIŚ – " + day + "." + month + "." + year;
-  }
-
-  // ==================== Uruchomienie ====================
+// ==================== Inicjalizacja ====================
+loadFamilyNotes();
 updateMarkers();
 updateUpcoming();
 updateHoney();
 updateAlerts();
 updateInspections();
 updateAssistant();
-loadFamilyNotes();
 scrollToToday();
-loadWeather();
 updateTodayButton();
 getLocation();
-});
+loadWeather();
+loadFamilyNotes();
 
 // ==================== Service Worker ====================
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js")
-      .then(reg => console.log("SW zarejestrowany:", reg.scope))
-      .catch(err => console.log("Błąd rejestracji SW:", err));
-  });
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('service-worker.js'));
 }
-</script>
 
+  // Rejestracja service worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('SW zarejestrowany:', reg))
+        .catch(err => console.log('Błąd rejestracji SW:', err));
+    });
+  }
+</script>
 </body>
 </html>
