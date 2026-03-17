@@ -17,133 +17,87 @@
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
-}
-
-body { font-family: Arial, sans-serif; margin:10px; }
-table { width:100%; border-collapse: collapse; margin-bottom:20px; }
-th, td { border:1px solid #444; padding:6px; text-align:center; position:relative; }
-.day-number { cursor:pointer; font-weight:bold; }
-.has-note { background-color: #fff59d; }
-.today { border:2px solid #4caf50; }
-.tomorrow { border:2px solid #ff9800; }
-.note-marker { margin-left:4px; font-size:14px; }
-.highlight-search { background-color:#ffeb3b; border-radius:4px; padding:2px 4px; margin-left:2px; }
-#day-note-box, #alerts-box, #inspection-honey, #family-panel, #weather-alerts { 
-  padding:10px; border-radius:10px; margin-top:15px; background:#fff8e1;
-}
-.notes { width:100%; margin-top:15px; background:#fff8e1; padding:10px; border-radius:10px; }
-.page-break { page-break-after: always; }
-
-#pasieka-panel{
-background:#e8f5e9;
-padding:12px;
-border-radius:10px;
-margin-top:20px;
-}
-
-.apiary-grid{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:10px;
-margin-top:10px;
-}
-
-.hive{
-background:#ffe082;
-padding:15px;
-text-align:center;
-border-radius:8px;
-cursor:pointer;
-font-weight:bold;
-}
-
-#beekeeper-assistant{
-background:#e8f5e9;
-padding:12px;
-border-radius:10px;
-margin-top:20px;
+<div id="today"></div>
+<div id="upcoming"></div>
 }
 
 table {
-  width: 100%;
+  width:100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-bottom:20px;
 }
 
 th, td {
-  border: 1px solid #444;
-  padding: 6px;
-  text-align: center;
-  position: relative;
+  border:1px solid #444;
+  padding:6px;
+  text-align:center;
+  position:relative;
 }
 
-.green { background: #8BC34A; }
-.yellow { background: #FFEB3B; }
-.orange { background: #FF9800; }
-.red { background: #F44336; color: white; }
-.black { background: #000; color: white; }
-
 .day-number {
-  cursor: pointer;
-  font-weight: bold;
+  cursor:pointer;
+  font-weight:bold;
 }
 
 .has-note {
-   background-color: #fff59d; /* jasny żółty */
+  background-color: #fff59d;
 }
 
-#day-note-box {
-  background:#fff8e1;
-  padding:10px;
-  border-radius:10px;
-  margin-top:15px;
+.today {
+  border:2px solid #4caf50;
 }
 
-#day-note-content{
-  background:#fff8e1;
-  padding:12px;
-  margin-top:15px;
-  border-radius:10px;
-  font-size:14px;
+.tomorrow {
+  border:2px solid #ff9800;
 }
 
 .note-marker {
-  margin-left: 2px;
-  font-size: 14px;
+  margin-left:4px;
+  font-size:14px;
+}
+
+.highlight-search {
+  background-color:#ffeb3b;
+  border-radius:4px;
+  padding:2px 4px;
+  margin-left:2px;
+}
+
+#day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
+  padding:10px;
+  border-radius:10px;
+  margin-top:15px;
+  background:#fff8e1;
 }
 
 .notes {
-  width: 100%;
-  height: 80px;
+  width:100%;
+  height:80px;
 }
 
 #autosave-status {
-  font-size: 13px;
-  margin-top: 4px;
-  color: green;
+  font-size:13px;
+  margin-top:4px;
+  color:green;
 }
+
+.green { background:#8BC34A; }
+.yellow { background:#FFEB3B; }
+.orange { background:#FF9800; }
+.red { background:#F44336; color:white; }
+.black { background:#000; color:white; }
 
 @media (max-width:600px) {
-  table, th, td { font-size: 12px; }
-  .notes { height: 60px; }
+  table, th, td { font-size:12px; }
+  .notes { height:60px; }
 }
-
-.has-note { background-color: #fff59d; }
-.today { border: 2px solid #4caf50; }
-.tomorrow { border: 2px solid #ff9800; }
-.note-marker { margin-left: 4px; }
-.highlight-search {
-  background-color: #ffeb3b;
-  border-radius: 4px;
-  padding: 2px 4px;
-  margin-left: 2px;
-}
-
 </style>
 
 </head>
 
 <body>
+
+</html>
 
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla</div>
 
@@ -156,11 +110,11 @@ border-radius:10px;
 margin-bottom:15px;
 ">
 
-<h3>🐝 Asystent pszczelarza</h3>
+  <h3>🐝 Asystent pszczelarza</h3>
 
-<div id="assistant-text">
-Sprawdzanie zaleceń...
-</div>
+  <div id="assistant-text">
+    Sprawdzanie zaleceń...
+  </div>
 
 </div>
 
@@ -178,6 +132,7 @@ font-weight:bold;
 📅 DZIŚ
 </button>
 
+<!-- 🌦 POGODA -->
 <div id="weather-box" style="
 background:#fff8e1;
 padding:10px;
@@ -185,48 +140,44 @@ border-radius:10px;
 margin-bottom:15px;
 ">
 
-<h3>🌦 Pogoda w pasiece</h3>
+  <h3>🌦 Pogoda w pasiece</h3>
 
-<div id="weather-data">
-Ładowanie pogody...
+  <div id="weather-data">
+    Ładowanie pogody...
+  </div>
+
+  <div id="location-box" style="
+  background:#e3f2fd;
+  padding:10px;
+  border-radius:10px;
+  margin-top:10px;
+  font-size:14px;
+  ">
+    📍 Lokalizacja pasieki: sprawdzanie...
+  </div>
+
+  <div id="weather-forecast" style="
+  margin-top:8px;
+  font-size:14px;
+  "></div>
+
+  <div id="bee-flight-alert" style="
+  margin-top:10px;
+  padding:8px;
+  background:#e8f5e9;
+  border-radius:8px;
+  font-weight:bold;
+  ">
+    🐝 Sprawdzanie warunków lotu pszczół...
+  </div>
+
 </div>
 
-<div id="location-box" style="
-background:#e3f2fd;
-padding:10px;
-border-radius:10px;
-margin-top:10px;
-font-size:14px;
-">
-📍 Lokalizacja pasieki: sprawdzanie...
-</div>
-
-<div id="map-box" style="margin-top:10px;"></div>
-
-<h3>🌸 Pożytki w zasięgu lotu pszczół (3 km)</h3>
-
-<div id="forage-map" style="
-margin-top:10px;
-border-radius:10px;
-overflow:hidden;
-"></div>
-
-<div id="weather-forecast" style="margin-top:8px;font-size:14px;"></div>
-
-<div id="bee-flight-alert" style="
-margin-top:10px;
-padding:8px;
-background:#e8f5e9;
-border-radius:8px;
+<!-- 🌼 SEZON -->
+<div id="season-info" style="
+margin-bottom:10px;
 font-weight:bold;
-">
-🐝 Sprawdzanie warunków lotu pszczół...
-</div>
-
-</div>
-
-<div id="season-info" style="margin-bottom:10px;font-weight:bold;">
-</div>
+"></div>
 
 
 <!-- STYCZEŃ 2026 -->
@@ -291,7 +242,7 @@ font-weight:bold;
 <div class="notes">
 <strong>Uwagi miesiąca STYCZEŃ :</strong><br>
 - nadzorowanie pasieki, kontrola raz w tygodniu, 
-- ⬛ - zimowla, nie otwierać uli, możliwa jedynie kontrola zewnętrzna i kontrola osypu
+- ⬛ - zimowla, nie otwierać uli, mozliwa jedynie kontrola zewnętrzna i kontrola osypu
 </div>
 
 <!-- Panel alertów, rojka, asystent -->
@@ -313,50 +264,6 @@ font-weight:bold;
   <div id="honey-total-01">🍯 Zebrany miód w 2026: 0 kg</div>
 </div>
 
-<!-- MAPA PASIEKI -->
-<div id="apiary-map" style="
-margin-top:20px;
-background:#fff8e1;
-padding:10px;
-border-radius:10px;
-">
-
-<h3>🗺 Mapa pasieki</h3>
-
-<div class="apiary-grid">
-
-<div class="hive">Ul 1</div>
-<div class="hive">Ul 2</div>
-<div class="hive">Ul 3</div>
-
-<div class="hive">Ul 4</div>
-<div class="hive">Ul 5</div>
-<div class="hive">Ul 6</div>
-
-<div class="hive">Ul 7</div>
-<div class="hive">Ul 8</div>
-<div class="hive">Ul 9</div>
-
-<div class="hive">Ul 10</div>
-<div class="hive">Ul 11</div>
-<div class="hive">Ul 12</div>
-
-<div class="hive">Ul 13</div>
-<div class="hive">Ul 14</div>
-<div class="hive">Ul 15</div>
-
-<div class="hive">Ul 16</div>
-<div class="hive">Ul 17</div>
-<div class="hive">Ul 18</div>
-
-<div class="hive">Ul 19</div>
-<div class="hive">Ul 20</div>
-<div class="hive">Ul 21</div>
-<div class="hive">Ul 22</div>
-
-</div>
-
-</div>
 
 <!-- Notatki dnia -->
 <div id="day-note-box-01">
@@ -379,12 +286,6 @@ border-radius:10px;
   <div id="upcoming-list-01"></div>
 </div>
 
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-01">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-01" rows="1" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('01')">Zapisz notatki rodzin</button>
-</div>
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -477,7 +378,7 @@ border-radius:10px;
   <h3>Notatka dnia</h3>
   <textarea id="notes-02" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button type="button" onclick="saveNote('02')">Zapisz notatkę</button>
+  <button onclick="saveNote('02')">Zapisz notatkę</button>
 </div>
 
 <!-- Wyszukiwarka notatek -->
@@ -493,12 +394,6 @@ border-radius:10px;
   <div id="upcoming-list-02"></div>
 </div>
 
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-02">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-02" rows="2" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('02')">Zapisz notatki rodzin</button>
-</div>
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -592,7 +487,7 @@ border-radius:10px;
 – Intensywny rozwój rodzin pszczelich<br>
 – Pierwsze pożytki pyłkowe: leszczyna, olcha, wierzba, klon<br>
 – 🟧 Dni z podziałem koloru = prace + obserwacja rojowa
-</div>
+</div>\
 
 <!-- Alerty pasieczne -->
 <div id="alerts-box-03">
@@ -618,7 +513,7 @@ border-radius:10px;
   <h3>Notatka dnia</h3>
   <textarea id="notes-03" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button type="button" onclick="saveNote('03')">Zapisz notatkę</button>
+  <button onclick="saveNote('03')">Zapisz notatkę</button>
 </div>
 
 <!-- Wyszukiwarka notatek -->
@@ -632,13 +527,6 @@ border-radius:10px;
 <div id="upcoming-notes-03">
   <h3>Nadchodzące prace (7 dni)</h3>
   <div id="upcoming-list-03"></div>
-</div>
-
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-03">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-03" rows="3" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('03')">Zapisz notatki rodzin</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -772,7 +660,7 @@ border-radius:10px;
   <h3>Notatka dnia</h3>
   <textarea id="notes-04" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button type="button" onclick="saveNote('04')">Zapisz notatkę</button>
+  <button onclick="saveNote('04')">Zapisz notatkę</button>
 </div>
 
 <!-- Wyszukiwarka notatek -->
@@ -786,13 +674,6 @@ border-radius:10px;
 <div id="upcoming-notes-04">
   <h3>Nadchodzące prace (7 dni)</h3>
   <div id="upcoming-list-04"></div>
-</div>
-
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-04">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-04" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('04')">Zapisz notatki rodzin</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -837,7 +718,7 @@ border-radius:10px;
   <div class="green"><span class="day-number" data-day="08" data-month="05">8</span>Przegląd gniazd</div>
   <div class="orange">Bardzo wysoka rojliwość</div>
 </td>
-<td class="yellow"><span class="day-number" data-day="09" data-month="05">9</span>Miodobranie rzepakowe</td>
+<td class="yellow"><span class="day-number" data-day="09" data-month="05">9</span>Miodobranie rzepakowe</div>
 </td>
 <td>
   <div class="green"><span class="day-number" data-day="10" data-month="05">10</span>Prace pasieczne</div>
@@ -947,7 +828,7 @@ border-radius:10px;
   <h3>Notatka dnia</h3>
   <textarea id="notes-05" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button type="button" onclick="saveNote('05')">Zapisz notatkę</button>
+  <button onclick="saveNote('05')">Zapisz notatkę</button>
 </div>
 
 <!-- Wyszukiwarka notatek -->
@@ -961,13 +842,6 @@ border-radius:10px;
 <div id="upcoming-notes-05">
   <h3>Nadchodzące prace (7 dni)</h3>
   <div id="upcoming-list-05"></div>
-</div>
-
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-05">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-05" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('05')">Zapisz notatki rodzin</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1071,7 +945,7 @@ border-radius:10px;
   <h3>Notatka dnia</h3>
   <textarea id="notes-06" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button type="button" onclick="saveNote('06')">Zapisz notatkę</button>
+  <button onclick="saveNote('06')">Zapisz notatkę</button>
 </div>
 
 <!-- Wyszukiwarka notatek -->
@@ -1085,13 +959,6 @@ border-radius:10px;
 <div id="upcoming-notes-06">
   <h3>Nadchodzące prace (7 dni)</h3>
   <div id="upcoming-list-06"></div>
-</div>
-
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-06">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-06" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('06')">Zapisz notatki rodzin</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1186,7 +1053,7 @@ border-radius:10px;
     <h3>Notatka dnia</h3>
     <textarea id="notes-07" rows="6" style="width:100%;"></textarea>
     <br><br>
-    <button type="button" onclick="saveNote('07')">Zapisz notatkę</button>
+    <button onclick="saveNote('07')">Zapisz notatkę</button>
   </div>
 
   <!-- Wyszukiwarka notatek -->
@@ -1202,12 +1069,6 @@ border-radius:10px;
     <div id="upcoming-list-07"></div>
   </div>
 
-  <!-- Panel pasieki i notatki rodzin -->
-  <div id="family-panel-07">
-    <strong>Notatki dla rodzin pszczelich:</strong><br>
-    <textarea id="family-notes-07" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-    <button type="button" onclick="saveFamilyNotes('07')">Zapisz notatki rodzin</button>
-  </div>
 </div> <!-- zamknięcie miesiąca -->
 
 <div class="page-break"></div>
@@ -1306,7 +1167,7 @@ border-radius:10px;
   <h3>Notatka dnia</h3>
   <textarea id="notes-08" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button type="button" onclick="saveNote('08')">Zapisz notatkę</button>
+  <button onclick="saveNote('08')">Zapisz notatkę</button>
 </div>
 
 <!-- Wyszukiwarka notatek -->
@@ -1322,12 +1183,6 @@ border-radius:10px;
   <div id="upcoming-list-08"></div>
 </div>
 
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-08">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-08" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('08')">Zapisz notatki rodzin</button>
-</div>
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -1424,7 +1279,7 @@ border-radius:10px;
   <h3>Notatka dnia</h3>
   <textarea id="notes-09" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button type="button" onclick="saveNote('09')">Zapisz notatkę</button>
+  <button onclick="saveNote('09')">Zapisz notatkę</button>
 </div>
 
 <!-- Wyszukiwarka notatek -->
@@ -1438,13 +1293,6 @@ border-radius:10px;
 <div id="upcoming-notes-09">
   <h3>Nadchodzące prace (7 dni)</h3>
   <div id="upcoming-list-09"></div>
-</div>
-
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-09">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-09" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('09')">Zapisz notatki rodzin</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1543,7 +1391,7 @@ border-radius:10px;
   <h3>Notatka dnia</h3>
   <textarea id="notes-10" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button type="button" onclick="saveNote('10')">Zapisz notatkę</button>
+  <button onclick="saveNote('10')">Zapisz notatkę</button>
 </div>
 
 <!-- Wyszukiwarka notatek -->
@@ -1557,13 +1405,6 @@ border-radius:10px;
 <div id="upcoming-notes-10">
   <h3>Nadchodzące prace (7 dni)</h3>
   <div id="upcoming-list-10"></div>
-</div>
-
-<!-- Panel pasieki i notatki rodzin -->
-<div id="family-panel-10">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <textarea id="family-notes-10" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-  <button type="button" onclick="saveFamilyNotes('10')">Zapisz notatki rodzin</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1665,7 +1506,7 @@ border-radius:10px;
     <h3>Notatka dnia</h3>
     <textarea id="notes-11" rows="6" style="width:100%;"></textarea>
     <br><br>
-    <button type="button" onclick="saveNote('11')">Zapisz notatkę</button>
+    <button onclick="saveNote('11')">Zapisz notatkę</button>
   </div>
 
   <!-- Wyszukiwarka notatek -->
@@ -1681,15 +1522,14 @@ border-radius:10px;
     <div id="upcoming-list-11"></div>
   </div>
 
-  <!-- Panel notatek rodzin pszczelich -->
-  <div id="family-panel-11">
-    <strong>Notatki dla rodzin pszczelich:</strong><br>
-    <textarea id="family-notes-11" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-    <button type="button" onclick="saveFamilyNotes('11')">Zapisz notatki rodzin</button>
-  </div>
-
   <!-- Dodatkowe panele informacyjne -->
   <div id="season-info-11"></div>
+  <div id="swarm-box-11-duplicate"></div>
+  <div id="assistant-box-11-duplicate"></div>
+  <button onclick="getLocation()">📍 Pokaż lokalizację pasieki</button>
+  <div id="location-box-11-duplicate"></div>
+  <div id="honey-total-11-duplicate"></div>
+  <div id="upcoming-list-11-duplicate"></div>
 
 </div> <!-- KONIEC month-panels-11 -->
 
@@ -1755,65 +1595,53 @@ border-radius:10px;
 
 </table>
 
+
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
-– Pełna zimowla rodzin<br>
-– Brak prac pasiecznych<br>
-– Kontrola pasieki tylko wizualna
+– Pełna zimowla<br>
+– Kontrola osypu i obserwacja zewnętrzna uli
 </div>
-
 <!-- Panel alertów -->
-<div id="alerts-box-12">
-<strong>Alerty pasieczne:</strong>
-<div id="alerts-list-12">Brak alertów na dziś</div>
-</div>
+  <div id="alerts-box-12">
+    <strong>Alerty pasieczne:</strong>
+    <div id="alerts-list-12">Brak alertów na dziś</div>
+  </div>
 
-<!-- Panel rojka / asystent -->
-<div id="swarm-box-12"></div>
-<div id="assistant-box-12"></div>
+  <!-- Panel rojka / asystent -->
+  <div id="swarm-box-12"></div>
+  <div id="assistant-box-12"></div>
 
-<!-- Lokalizacja pasieki -->
-<button type="button" onclick="getLocation('12')">
-📍 Pokaż lokalizację pasieki
-</button>
-<div id="location-box-12"></div>
+  <!-- Lokalizacja pasieki -->
+  <button onclick="getLocation()">📍 Pokaż lokalizację pasieki</button>
+  <div id="location-box-12"></div>
 
-<!-- Licznik miodu i kontroli -->
-<div id="inspection-honey-12">
-<div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
-<div id="honey-total-12">🍯 Zebrany miód w 2026: 0 kg</div>
-<input type="number" id="honey-input-12" placeholder="kg miodu">
-</div>
+  <!-- Licznik miodu i kontroli -->
+  <div id="inspection-honey-12">
+    <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
+    <div id="honey-total-12">🍯 Zebrany miód w 2026: 0 kg</div>
+  </div>
 
-<!-- Notatki dnia -->
-<div id="day-note-box-12">
-<h3>Notatka dnia</h3>
-<textarea id="notes-12" rows="6" style="width:100%;"></textarea>
-<br><br>
-<button type="button" onclick="saveNote('12')">Zapisz notatkę</button>
-</div>
+  <!-- Notatki dnia -->
+  <div id="day-note-box-12">
+    <h3>Notatka dnia</h3>
+    <textarea id="notes-12" rows="6" style="width:100%;"></textarea>
+    <br><br>
+    <button onclick="saveNote('12')">Zapisz notatkę</button>
+  </div>
 
-<!-- Wyszukiwarka notatek -->
-<div id="search-notes-12">
-<h3>Wyszukiwarka notatek</h3>
-<input type="text" id="note-search-12" placeholder="Szukaj w notatkach..." style="width:100%; padding:5px;">
-<div id="search-results-12"></div>
-</div>
+  <!-- Wyszukiwarka notatek -->
+  <div id="search-notes-12">
+    <h3>Wyszukiwarka notatek</h3>
+    <input type="text" id="note-search-12" placeholder="Szukaj w notatkach..." style="width:100%; padding:5px;">
+    <div id="search-results-12"></div>
+  </div>
 
-<!-- Nadchodzące prace -->
-<div id="upcoming-notes-12">
-<h3>Nadchodzące prace (7 dni)</h3>
-<div id="upcoming-list-12"></div>
-</div>
+  <!-- Nadchodzące prace (7 dni) -->
+  <div id="upcoming-notes-12">
+    <h3>Nadchodzące prace (7 dni)</h3>
+    <div id="upcoming-list-12"></div>
+  </div>
 
-<!-- Panel notatek rodzin -->
-<div id="family-panel-12">
-<strong>🐝 Notatki dla rodzin pszczelich:</strong><br>
-<textarea id="family-notes-12" rows="4" style="width:100%;"></textarea>
-<button type="button" onclick="saveFamilyNotes('12')">
-💾 Zapisz notatki rodzin
-</button>
-</div>
 
   <!-- Dodatkowe panele informacyjne -->
   <div id="season-info-12"></div>
@@ -1896,29 +1724,11 @@ border-radius:10px;
   </div>
 
   <!-- Notatki rodzin -->
- <div id="family-panel">
-
-<strong>Notatki dla rodzin pszczelich:</strong><br>
-
-<textarea 
-id="family-notes"
-rows="4"
-style="width:100%;"
-placeholder="Np. Ule 1-5: karmienie wykonane">
-</textarea>
-
-<br><br>
-
-<button onclick="saveFamilyNotes()">
-💾 Zapisz notatki rodzin
-</button>
-
-<div id="family-save-status" style="
-margin-top:6px;
-font-size:13px;
-color:green;
-"></div>
-
+  <div id="family-panel">
+    <strong>Notatki dla rodzin pszczelich:</strong><br>
+    <textarea id="family-notes" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
+    <button onclick="saveFamilyNotes()">Zapisz notatki rodzin</button>
+  </div>
 
 </div> <!-- KONIEC stats -->
 
@@ -2033,7 +1843,6 @@ document.addEventListener("DOMContentLoaded", function() {
   updateInspections();
   updateTodayButton();
   scrollToToday();
-  loadFamilyNotes();
 };
 
   // ==================== Podświetlenie dni ====================
@@ -2193,57 +2002,7 @@ function updateMarkers() {
     if(box) box.innerText="✅ Kontrole wykonane w tym miesiącu: "+count;
   }
 
-  // ==================== Notatki rodzin ====================
-window.saveFamilyNotes = function(month){
 
-  const textarea = document.getElementById("family-notes-" + month);
-
-  if(!textarea){
-    console.log("Brak pola family-notes-" + month);
-    return;
-  }
-
-  const text = textarea.value;
-
-  localStorage.setItem("family-notes-" + month, text);
-
-  console.log("✅ Notatki rodzin zapisane dla miesiąca:", month);
-
-}
-
-
-
-// ==================== Wczytywanie notatek ====================
-
-function loadFamilyNotes(){
-
-  for(let m=1; m<=12; m++){
-
-    let month = m.toString().padStart(2,"0");
-
-    const textarea = document.getElementById("family-notes-" + month);
-
-    if(textarea){
-
-      const saved = localStorage.getItem("family-notes-" + month);
-
-      if(saved !== null){
-        textarea.value = saved;
-      }
-
-    }
-
-  }
-
-}
-
-
-
-// ==================== Start ====================
-
-  loadFamilyNotes();
-
-});
   // ==================== Asystent ====================
   function updateAssistant(){
     const box=document.getElementById("assistant-box"); if(!box) return;
@@ -2330,21 +2089,22 @@ function loadFamilyNotes(){
   }
 
   // ==================== Uruchomienie ====================
-loadFamilyNotes();
 updateMarkers();
 updateUpcoming();
 updateHoney();
+updateAlerts();
+updateInspections();
 updateAssistant();
 scrollToToday();
+loadWeather();
 updateTodayButton();
 getLocation();
-loadWeather();
 });
 
 // ==================== Service Worker ====================
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js")
+    navigator.serviceWorker.register("service-worker.js")
       .then(reg => console.log("SW zarejestrowany:", reg.scope))
       .catch(err => console.log("Błąd rejestracji SW:", err));
   });
