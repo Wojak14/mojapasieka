@@ -2194,40 +2194,56 @@ function updateMarkers() {
   }
 
   // ==================== Notatki rodzin ====================
-function saveFamilyNotes(){
+window.saveFamilyNotes = function(month){
 
-  const textarea = document.getElementById("family-notes");
+  const textarea = document.getElementById("family-notes-" + month);
 
-  if(!textarea) return;
-
-  const notes = textarea.value;
-
-  localStorage.setItem("family_notes", notes);
-
-  const status = document.getElementById("family-save-status");
-  if(status){
-    status.innerText = "✔ Notatki rodzin zapisane";
-    setTimeout(()=> status.innerText="",2000);
+  if(!textarea){
+    console.log("Brak pola family-notes-" + month);
+    return;
   }
+
+  const text = textarea.value;
+
+  localStorage.setItem("family-notes-" + month, text);
+
+  console.log("✅ Notatki rodzin zapisane dla miesiąca:", month);
 
 }
 
 
-// wczytanie przy starcie strony
+
+// ==================== Wczytywanie notatek ====================
+
 function loadFamilyNotes(){
 
-  const textarea = document.getElementById("family-notes");
+  for(let m=1; m<=12; m++){
 
-  if(!textarea) return;
+    let month = m.toString().padStart(2,"0");
 
-  const saved = localStorage.getItem("family_notes");
+    const textarea = document.getElementById("family-notes-" + month);
 
-  if(saved){
-    textarea.value = saved;
+    if(textarea){
+
+      const saved = localStorage.getItem("family-notes-" + month);
+
+      if(saved !== null){
+        textarea.value = saved;
+      }
+
+    }
+
   }
 
 }
 
+
+
+// ==================== Start ====================
+
+  loadFamilyNotes();
+
+});
   // ==================== Asystent ====================
   function updateAssistant(){
     const box=document.getElementById("assistant-box"); if(!box) return;
@@ -2328,7 +2344,7 @@ loadWeather();
 // ==================== Service Worker ====================
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js")
+    navigator.serviceWorker.register("sw.js")
       .then(reg => console.log("SW zarejestrowany:", reg.scope))
       .catch(err => console.log("Błąd rejestracji SW:", err));
   });
