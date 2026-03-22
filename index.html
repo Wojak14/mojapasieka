@@ -1825,217 +1825,303 @@ font-weight:bold;
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
 
 <script>
-document.addEventListener("DOMContentLoaded", function() { 
-
+document.addEventListener("DOMContentLoaded", function() {
   let textarea = null;
   let currentDay = null;
   let currentMonth = null;
 
-  // ==================== ZAPIS ====================
+  // ==================== Zapis notatki ====================
   window.saveNote = function() {
-    if(!currentDay){ 
-      alert("Najpierw kliknij dzień"); 
-      return; 
+  if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
+  const key = currentDay + "." + currentMonth + ".2026";
+  localStorage.setItem(key, textarea.value);
+
+  updateMarkers();   // <-- tutaj jest klucz
+  updateUpcoming();
+  updateHoney();
+  updateAlerts();
+  updateInspections();
+  updateTodayButton();
+  scrollToToday();
+  updateSmartAssistant();
+};
+
+  // ==================== Podświetlenie dni ====================
+function updateMarkers() {
+  const today = new Date();
+  const dayNow = String(today.getDate()).padStart(2,"0");
+  const monthNow = String(today.getMonth()+1).padStart(2,"0");
+
+  document.querySelectorAll(".day-number").forEach(span => {
+    const td = span.closest("td");
+    td.classList.remove("has-note","today","tomorrow","highlight-search");
+
+    const day = span.dataset.day.padStart(2,"0");
+    const month = span.dataset.month.padStart(2,"0");
+    const key = day + "." + month + ".2026";
+
+    // Usuń stary znacznik
+    const oldMarker = td.querySelector(".note-marker");
+    if(oldMarker) oldMarker.remove();
+
+    const note = localStorage.getItem(key);
+    if(note && note.trim() !== "") {
+      td.classList.add("has-note");
+      const marker = document.createElement("span");
+      marker.className = "note-marker";
+
+      // wybór ikony po słowie kluczowym
+      let icons = [];
+const text = note.toLowerCase();
+
+if(text.includes("miód") || text.includes("miodobranie")) icons.push("🍯");
+if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
+if(text.includes("leczenie") || text.includes("warroza") || text.includes("apiwarol")) icons.push("💊");
+if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
+if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
+if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
+if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
+if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
+if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
+
+if(icons.length === 0) icons.push("📝");
+
+marker.textContent = " " + icons.join(" ");
+span.after(marker); 
     }
 
-    if(!textarea){
-      alert("Brak pola notatki!");
-      return;
-    }
+    // dzisiaj i jutro
+    if(day === dayNow && month === monthNow) td.classList.add("today");
+    const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
+    const tDay = String(tomorrow.getDate()).padStart(2,"0");
+    const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
+    if(day === tDay && month === tMonth) td.classList.add("tomorrow");
+  });
+}
+
+// ==================== Kliknięcie dnia ====================
+document.querySelectorAll(".day-number").forEach(span => {
+  span.addEventListener("click", () => {
+    currentDay = span.dataset.day.padStart(2,"0");
+    currentMonth = span.dataset.month.padStart(2,"0");
+
+    textarea = document.getElementById("notes-" + currentMonth);
 
     const key = currentDay + "." + currentMonth + ".2026";
-    localStorage.setItem(key, textarea.value);
 
-    updateMarkers();
-    updateUpcoming();
-    updateHoney();
-    updateAlerts();
-    updateInspections();
-    updateAssistant();
-  };
-
-  // ==================== IKONY + DNI ====================
-  function updateMarkers() {
-
-    document.querySelectorAll(".day-number").forEach(span => {
-      const td = span.closest("td");
-      td.classList.remove("has-note");
-
-      const day = span.dataset.day.padStart(2,"0");
-      const month = span.dataset.month.padStart(2,"0");
-      const key = day + "." + month + ".2026";
-
-      // usuń stare ikony
-      const old = td.querySelector(".note-marker");
-      if(old) old.remove();
-
-      const note = localStorage.getItem(key);
-
-      if(note && note.trim() !== ""){
-        td.classList.add("has-note");
-
-        let icons = [];
-        const text = note.toLowerCase();
-
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🍯");
-        if(text.includes("karmienie")) icons.push("🍯");
-        if(text.includes("leczenie")) icons.push("💊");
-        if(text.includes("przegląd")) icons.push("🔍");
-        if(text.includes("rój")) icons.push("🐝");
-        if(text.includes("pożytek")) icons.push("🌸");
-
-        if(icons.length === 0) icons.push("📝");
-
-        const marker = document.createElement("span");
-        marker.className = "note-marker";
-        marker.textContent = " " + icons.join(" ");
-
-        span.after(marker);
-      }
-    });
-  }
-
-  // ==================== KLIK DZIEŃ ====================
-  document.querySelectorAll(".day-number").forEach(span => {
-    span.addEventListener("click", () => {
-
-      currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = span.dataset.month.padStart(2,"0");
-
-      textarea = document.getElementById("notes-" + currentMonth);
-
-      const key = currentDay + "." + currentMonth + ".2026";
-
-      if(textarea){
-        textarea.value = localStorage.getItem(key) || "";
-        textarea.focus();
-      }
-
-      updateAssistant();
-    });
-  });
-
-  // ==================== NADCHODZĄCE ====================
-  function updateUpcoming(){
-    const upcoming = [];
-    const today = new Date();
-
-    for(let i=0;i<7;i++){
-      const d = new Date();
-      d.setDate(today.getDate()+i);
-
-      const day = String(d.getDate()).padStart(2,"0");
-      const month = String(d.getMonth()+1).padStart(2,"0");
-      const key = day+"."+month+".2026";
-
-      const note = localStorage.getItem(key);
-
-      if(note && note.trim() !== ""){
-        let icons = "";
-        const text = note.toLowerCase();
-
-        if(text.includes("karmienie")) icons += "🍯 ";
-        if(text.includes("leczenie")) icons += "💊 ";
-        if(text.includes("przegląd")) icons += "🔍 ";
-        if(text.includes("rój")) icons += "🐝 ";
-
-        upcoming.push(icons + key + ": " + note);
-      }
+    if(textarea){
+      textarea.value = localStorage.getItem(key) || "";
+      textarea.focus();
     }
+  });
+});
+  // ==================== Wyszukiwarka ====================
+  const searchInput = document.getElementById("note-search");
+  if(searchInput){
+    searchInput.addEventListener("input", () => {
+      const query = searchInput.value.toLowerCase();
+      document.querySelectorAll(".day-number").forEach(span => span.classList.remove("highlight-search"));
+      const results = [];
 
-    const box = document.getElementById("upcoming-list");
-    if(box) box.innerHTML = upcoming.join("<br>") || "Brak";
-  }
-
-  // ==================== MIÓD ====================
-  function updateHoney(){
-    let total = 0;
-
-    for(let i=1;i<=12;i++){
-      for(let d=1;d<=31;d++){
-        const key = String(d).padStart(2,"0")+"."+String(i).padStart(2,"0")+".2026";
-        const note = localStorage.getItem(key);
-
-        if(note){
-          const match = note.match(/(\d+)\s?kg/gi);
-          if(match){
-            match.forEach(m=>{
-              const num = parseInt(m);
-              if(!isNaN(num)) total += num;
-            });
+      for(let i=1; i<=12; i++){
+        for(let d=1; d<=31; d++){
+          const key = String(d).padStart(2,"0")+"."+String(i).padStart(2,"0")+".2026";
+          const note = localStorage.getItem(key);
+          if(note && note.toLowerCase().includes(query)){
+            results.push(`<div class="search-item" data-date="${key}" style="cursor:pointer;color:blue;">${key}: ${note}</div>`);
+            const spanHighlight = document.querySelector(`.day-number[data-day="${String(d).padStart(2,"0")}"][data-month="${String(i).padStart(2,"0")}"]`);
+            if(spanHighlight) spanHighlight.classList.add("highlight-search");
           }
         }
       }
+
+      const resBox = document.getElementById("search-results");
+      if(resBox) resBox.innerHTML = results.join("<br>") || "Brak wyników";
+
+      document.querySelectorAll(".search-item").forEach(item => {
+        item.addEventListener("click", () => {
+          const date = item.dataset.date.split(".");
+          const span = document.querySelector(`.day-number[data-day="${date[0]}"][data-month="${date[1]}"]`);
+          if(span){ span.scrollIntoView({behavior:"smooth"}); span.click(); }
+        });
+      });
+    });
+  }
+
+  // ==================== Nadchodzące prace ====================
+ function updateUpcoming(){
+  const upcoming = [];
+  const today = new Date();
+
+  for(let i=0; i<7; i++){
+    const d = new Date();
+    d.setDate(today.getDate()+i);
+
+    const day = String(d.getDate()).padStart(2,"0");
+    const month = String(d.getMonth()+1).padStart(2,"0");
+    const key = day+"."+month+".2026";
+
+    const note = localStorage.getItem(key);
+
+    if(note && note.trim()!==""){
+      let icons = "";
+
+      const text = note.toLowerCase();
+
+      if(text.includes("karmienie")) icons += "🍯 ";
+      if(text.includes("leczenie")) icons += "💊 ";
+      if(text.includes("przegląd")) icons += "🔍 ";
+      if(text.includes("rój")) icons += "🐝 ";
+      if(text.includes("pożytek")) icons += "🌸 ";
+
+      upcoming.push(icons + key + ": " + note);
     }
-
-    const box = document.getElementById("honey-total");
-    if(box) box.innerText = "🍯 Miód: " + total + " kg";
   }
 
-  // ==================== ALERTY ====================
-  function updateAlerts(){
-    const today = new Date();
-    const key =
-      String(today.getDate()).padStart(2,"0") + "." +
-      String(today.getMonth()+1).padStart(2,"0") + ".2026";
-
-    const note = (localStorage.getItem(key) || "").toLowerCase();
-
-    const alerts = [];
-
-    if(note.includes("karmienie")) alerts.push("🍯 Karmienie");
-    if(note.includes("leczenie")) alerts.push("💊 Leczenie");
-    if(note.includes("przegląd")) alerts.push("🔍 Przegląd");
-    if(note.includes("rój")) alerts.push("🐝 Rój!");
-
-    const box = document.getElementById("alerts-list");
-    if(box) box.innerHTML = alerts.join("<br>") || "Brak";
-  }
-
-  // ==================== INSPEKCJE ====================
-  function updateInspections(){
-    let count = 0;
-    const m = String(new Date().getMonth()+1).padStart(2,"0");
-
-    for(let i=1;i<=31;i++){
-      const key = String(i).padStart(2,"0")+"."+m+".2026";
-      const note = (localStorage.getItem(key) || "").toLowerCase();
-
-      if(note.includes("przegląd")) count++;
-    }
-
-    const box = document.getElementById("inspection-count");
-    if(box) box.innerText = "Kontrole: " + count;
-  }
-
-  // ==================== 🤖 ASYSTENT ====================
-  function updateAssistant(){
-
-    const box = document.getElementById("assistant-text");
-    if(!box) return;
-
-    const today = new Date();
-    const key =
-      String(today.getDate()).padStart(2,"0")+"."+
-      String(today.getMonth()+1).padStart(2,"0")+".2026";
-
-    const note = (localStorage.getItem(key) || "").toLowerCase();
-
-    let msg = "🤖 Asystent:<br><br>";
-
-    msg += note.includes("karmienie") ? "✔ Karmienie<br>" : "❗ Brak karmienia<br>";
-    msg += note.includes("leczenie") ? "✔ Leczenie<br>" : "❗ Brak leczenia<br>";
-    msg += note.includes("przegląd") ? "✔ Przegląd<br>" : "❗ Brak przeglądu<br>";
-
-    if(note.includes("rój")) msg += "⚠ Rój!<br>";
-
-    box.innerHTML = msg;
-  }
-
-updateAssistant();
-
+  const box = document.getElementById("upcoming-list");
+  if(box) box.innerHTML = upcoming.join("<br>") || "Brak nadchodzących prac";
 }
 
+  // ==================== Licznik miodu ====================
+  function updateHoney(){
+    let total=0;
+    for(let i=1;i<=12;i++){
+      for(let d=1;d<=31;d++){
+        const key=String(d).padStart(2,"0")+"."+String(i).padStart(2,"0")+".2026";
+        const note=localStorage.getItem(key);
+        if(note){
+          const match=note.match(/(\d+)\s?kg/gi);
+          if(match) match.forEach(m=>{ const num=parseInt(m); if(!isNaN(num)) total+=num; });
+        }
+      }
+    }
+    const box=document.getElementById("honey-total");
+    if(box) box.innerText="🍯 Zebrany miód w 2026: "+total+" kg";
+  }
+
+  // ==================== Alerty pasieczne ====================
+function updateAlerts(){
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2,"0");
+  const month = String(today.getMonth()+1).padStart(2,"0");
+  const key = day+"."+month+".2026";
+
+  const note = localStorage.getItem(key) || "";
+  const text = note.toLowerCase();
+
+  const alertsBox = document.getElementById("alerts-list");
+  if(!alertsBox) return;
+
+  const alerts = [];
+
+  if(text.includes("karmienie")) alerts.push("🍯 Karmienie rodzin");
+  if(text.includes("leczenie") || text.includes("warroza")) alerts.push("💊 Leczenie warrozy");
+  if(text.includes("przegląd")) alerts.push("🔍 Przegląd rodzin");
+  if(text.includes("miodobranie")) alerts.push("🍯 Miodobranie");
+  if(text.includes("rój")) alerts.push("🐝 Możliwe rojenie!");
+  if(text.includes("matka")) alerts.push("👑 Sprawdź matkę");
+  if(text.includes("ramki")) alerts.push("🧱 Praca z ramkami");
+
+  alertsBox.innerHTML = alerts.length 
+    ? alerts.join("<br>") 
+    : "Brak alertów na dziś";
+}
+
+  // ==================== Kontrole miesięczne ====================
+  function updateInspections(){
+    let count=0;
+    for(let i=1;i<=31;i++){
+      const key=String(i).padStart(2,"0")+"."+String(new Date().getMonth()+1).padStart(2,"0")+".2026";
+      const note = localStorage.getItem(key) || "";
+      if(note.toLowerCase().includes("przegląd") || note.toLowerCase().includes("kontrola")) count++;
+    }
+    const box=document.getElementById("inspection-count");
+    if(box) box.innerText="✅ Kontrole wykonane w tym miesiącu: "+count;
+  }
+
+
+  // ==================== 🤖 INTELIGENTNY ASYSTENT ====================
+function updateSmartAssistant(){
+
+  const box = document.getElementById("assistant-text");
+  if(!box) return;
+
+  const today = new Date();
+  const month = today.getMonth()+1;
+  const day = String(today.getDate()).padStart(2,"0");
+  const m = String(month).padStart(2,"0");
+  const key = day+"."+m+".2026";
+
+  const note = (localStorage.getItem(key) || "").toLowerCase();
+
+  let tips = [];
+
+  // 🔍 WIOSNA
+  if(month == 3){
+    if(!note.includes("przegląd")){
+      tips.push("🔍 Zrób pierwszy przegląd rodzin");
+    }
+    if(note.includes("brak pokarmu")){
+      tips.push("🍯 Podaj pokarm – możliwy głód");
+    }
+  }
+
+  // 🌸 KWIECIEŃ
+  if(month == 4){
+    tips.push("🌸 Rozwój rodzin – kontroluj matkę i czerwienie");
+    if(note.includes("matecznik") || note.includes("rój")){
+      tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
+    }
+  }
+
+  // 🐝 MAJ – rojowy
+  if(month == 5){
+    tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
+    if(note.includes("rój")){
+      tips.push("🚨 Wysokie ryzyko rójki!");
+    }
+  }
+
+  // 🍯 CZERWIEC–LIPIEC
+  if(month == 6 || month == 7){
+    tips.push("🍯 Sprawdzaj nadstawki – możliwe miodobranie");
+    if(note.includes("miód")){
+      tips.push("🍯 Możesz planować miodobranie");
+    }
+  }
+
+  // 💊 SIERPIEŃ
+  if(month == 8){
+    if(!note.includes("leczenie")){
+      tips.push("💊 Rozpocznij leczenie warrozy!");
+    }
+  }
+
+  // 🍯 WRZESIEŃ
+  if(month == 9){
+    if(!note.includes("karmienie")){
+      tips.push("🍯 Karmienie zimowe rodzin");
+    }
+  }
+
+  // ❄ ZIMA
+  if(month <= 2 || month >= 10){
+    tips.push("⬛ Zimowla – nie otwieraj uli");
+  }
+
+  // 🌦 POGODA (prosta logika)
+  const weatherText = document.getElementById("bee-flight-alert");
+  if(weatherText && weatherText.innerText.includes("Dobre warunki")){
+    tips.push("🐝 Dobre warunki – pszczoły aktywne");
+  }
+
+  // 📋 WYNIK
+  if(tips.length === 0){
+    box.innerHTML = "✅ Wszystko wygląda dobrze";
+  } else {
+    box.innerHTML = tips.join("<br>");
+  }
+}
 
   // ==================== Lokalizacja ====================
   function getLocation(){ 
@@ -2110,7 +2196,7 @@ updateUpcoming();
 updateHoney();
 updateAlerts();
 updateInspections();
-updateAssistant();
+updateSmartAssistant();
 scrollToToday();
 loadWeather();
 updateTodayButton();
