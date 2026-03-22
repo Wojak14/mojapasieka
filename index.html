@@ -1826,7 +1826,7 @@ font-weight:bold;
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-  const textarea = document.getElementById("notes");
+  let textarea = null;
   let currentDay = null;
   let currentMonth = null;
 
@@ -1843,6 +1843,7 @@ document.addEventListener("DOMContentLoaded", function() {
   updateInspections();
   updateTodayButton();
   scrollToToday();
+  updateSmartAssistant();
 };
 
   // ==================== Podświetlenie dni ====================
@@ -1886,6 +1887,7 @@ if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
 if(icons.length === 0) icons.push("📝");
 
 marker.textContent = " " + icons.join(" ");
+span.after(marker); 
     }
 
     // dzisiaj i jutro
@@ -1897,17 +1899,22 @@ marker.textContent = " " + icons.join(" ");
   });
 }
 
-  // ==================== Kliknięcie dnia ====================
-  document.querySelectorAll(".day-number").forEach(span => {
-    span.addEventListener("click", () => {
-      currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = span.dataset.month.padStart(2,"0");
-      const key = currentDay + "." + currentMonth + ".2026";
+// ==================== Kliknięcie dnia ====================
+document.querySelectorAll(".day-number").forEach(span => {
+  span.addEventListener("click", () => {
+    currentDay = span.dataset.day.padStart(2,"0");
+    currentMonth = span.dataset.month.padStart(2,"0");
+
+    textarea = document.getElementById("notes-" + currentMonth);
+
+    const key = currentDay + "." + currentMonth + ".2026";
+
+    if(textarea){
       textarea.value = localStorage.getItem(key) || "";
       textarea.focus();
-    });
+    }
   });
-
+});
   // ==================== Wyszukiwarka ====================
   const searchInput = document.getElementById("note-search");
   if(searchInput){
@@ -2033,23 +2040,88 @@ function updateAlerts(){
   }
 
 
-  // ==================== Asystent ====================
-  function updateAssistant(){
-    const box=document.getElementById("assistant-box"); if(!box) return;
-    const month=new Date().getMonth()+1; 
-    let tip="";
-    if(month==1 || month==2) tip="⬛ Zimowla – kontroluj osyp i zapasy.";
-    else if(month==3) tip="🌼 Pierwszy przegląd rodzin i sprawdzenie zapasów.";
-    else if(month==4) tip="🌸 Rozwój rodzin – kontrola mateczników.";
-    else if(month==5) tip="🐝 Okres rojowy – regularne przeglądy.";
-    else if(month==6) tip="🍯 Przygotowanie do miodobrania.";
-    else if(month==7) tip="🍯 Główne miodobrania.";
-    else if(month==8) tip="💊 Leczenie warrozy.";
-    else if(month==9) tip="🍯 Karmienie zimowe.";
-    else if(month==10) tip="⬛ Przygotowanie do zimowli.";
-    else tip="❄ Zimowla – minimalna ingerencja.";
-    box.innerText=tip;
+  // ==================== 🤖 INTELIGENTNY ASYSTENT ====================
+function updateSmartAssistant(){
+
+  const box = document.getElementById("assistant-text");
+  if(!box) return;
+
+  const today = new Date();
+  const month = today.getMonth()+1;
+  const day = String(today.getDate()).padStart(2,"0");
+  const m = String(month).padStart(2,"0");
+  const key = day+"."+m+".2026";
+
+  const note = (localStorage.getItem(key) || "").toLowerCase();
+
+  let tips = [];
+
+  // 🔍 WIOSNA
+  if(month == 3){
+    if(!note.includes("przegląd")){
+      tips.push("🔍 Zrób pierwszy przegląd rodzin");
+    }
+    if(note.includes("brak pokarmu")){
+      tips.push("🍯 Podaj pokarm – możliwy głód");
+    }
   }
+
+  // 🌸 KWIECIEŃ
+  if(month == 4){
+    tips.push("🌸 Rozwój rodzin – kontroluj matkę i czerwienie");
+    if(note.includes("matecznik") || note.includes("rój")){
+      tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
+    }
+  }
+
+  // 🐝 MAJ – rojowy
+  if(month == 5){
+    tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
+    if(note.includes("rój")){
+      tips.push("🚨 Wysokie ryzyko rójki!");
+    }
+  }
+
+  // 🍯 CZERWIEC–LIPIEC
+  if(month == 6 || month == 7){
+    tips.push("🍯 Sprawdzaj nadstawki – możliwe miodobranie");
+    if(note.includes("miód")){
+      tips.push("🍯 Możesz planować miodobranie");
+    }
+  }
+
+  // 💊 SIERPIEŃ
+  if(month == 8){
+    if(!note.includes("leczenie")){
+      tips.push("💊 Rozpocznij leczenie warrozy!");
+    }
+  }
+
+  // 🍯 WRZESIEŃ
+  if(month == 9){
+    if(!note.includes("karmienie")){
+      tips.push("🍯 Karmienie zimowe rodzin");
+    }
+  }
+
+  // ❄ ZIMA
+  if(month <= 2 || month >= 10){
+    tips.push("⬛ Zimowla – nie otwieraj uli");
+  }
+
+  // 🌦 POGODA (prosta logika)
+  const weatherText = document.getElementById("bee-flight-alert");
+  if(weatherText && weatherText.innerText.includes("Dobre warunki")){
+    tips.push("🐝 Dobre warunki – pszczoły aktywne");
+  }
+
+  // 📋 WYNIK
+  if(tips.length === 0){
+    box.innerHTML = "✅ Wszystko wygląda dobrze";
+  } else {
+    box.innerHTML = tips.join("<br>");
+  }
+}
 
   // ==================== Lokalizacja ====================
   function getLocation(){ 
@@ -2124,7 +2196,7 @@ updateUpcoming();
 updateHoney();
 updateAlerts();
 updateInspections();
-updateAssistant();
+updateSmartAssistant();
 scrollToToday();
 loadWeather();
 updateTodayButton();
