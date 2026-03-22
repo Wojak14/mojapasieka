@@ -1870,16 +1870,22 @@ function updateMarkers() {
       marker.className = "note-marker";
 
       // wybór ikony po słowie kluczowym
-      let icon = "📝";
-      const text = note.toLowerCase();
-      if(text.includes("miód") || text.includes("miodobranie") || text.includes("karmienie")) icon="🍯";
-      if(text.includes("leczenie")) icon="💊";
-      if(text.includes("przegląd") || text.includes("kontrola")) icon="🔍";
-      if(text.includes("rój")) icon="🐝";
-      if(text.includes("pożytek")) icon="🌸";
+      let icons = [];
+const text = note.toLowerCase();
 
-      marker.textContent = " " + icon;
-      span.after(marker);
+if(text.includes("miód") || text.includes("miodobranie")) icons.push("🍯");
+if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
+if(text.includes("leczenie") || text.includes("warroza") || text.includes("apiwarol")) icons.push("💊");
+if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
+if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
+if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
+if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
+if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
+if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
+
+if(icons.length === 0) icons.push("📝");
+
+marker.textContent = " " + icons.join(" ");
     }
 
     // dzisiaj i jutro
@@ -1936,20 +1942,38 @@ function updateMarkers() {
   }
 
   // ==================== Nadchodzące prace ====================
-  function updateUpcoming(){
-    const upcoming = [];
-    const today = new Date();
-    for(let i=0; i<7; i++){
-      const d = new Date(); d.setDate(today.getDate()+i);
-      const day = String(d.getDate()).padStart(2,"0");
-      const month = String(d.getMonth()+1).padStart(2,"0");
-      const key = day+"."+month+".2026";
-      const note = localStorage.getItem(key);
-      if(note && note.trim()!=="") upcoming.push(key+": "+note);
+ function updateUpcoming(){
+  const upcoming = [];
+  const today = new Date();
+
+  for(let i=0; i<7; i++){
+    const d = new Date();
+    d.setDate(today.getDate()+i);
+
+    const day = String(d.getDate()).padStart(2,"0");
+    const month = String(d.getMonth()+1).padStart(2,"0");
+    const key = day+"."+month+".2026";
+
+    const note = localStorage.getItem(key);
+
+    if(note && note.trim()!==""){
+      let icons = "";
+
+      const text = note.toLowerCase();
+
+      if(text.includes("karmienie")) icons += "🍯 ";
+      if(text.includes("leczenie")) icons += "💊 ";
+      if(text.includes("przegląd")) icons += "🔍 ";
+      if(text.includes("rój")) icons += "🐝 ";
+      if(text.includes("pożytek")) icons += "🌸 ";
+
+      upcoming.push(icons + key + ": " + note);
     }
-    const box = document.getElementById("upcoming-list");
-    if(box) box.innerHTML = upcoming.join("<br>") || "Brak nadchodzących prac";
   }
+
+  const box = document.getElementById("upcoming-list");
+  if(box) box.innerHTML = upcoming.join("<br>") || "Brak nadchodzących prac";
+}
 
   // ==================== Licznik miodu ====================
   function updateHoney(){
@@ -1969,26 +1993,32 @@ function updateMarkers() {
   }
 
   // ==================== Alerty pasieczne ====================
-  function updateAlerts(){
-    const todayKey = new Date().getDate().toString().padStart(2,"0")+"."+ (new Date().getMonth()+1).toString().padStart(2,"0") +".2026";
-    const note = localStorage.getItem(todayKey) || "";
-    const alertsBox = document.getElementById("alerts-list");
-    if(!alertsBox) return;
-    const keywords = ["karmienie","leczenie","przegląd","miodobranie","rój"];
-    const alerts = [];
-    keywords.forEach(word=>{
-      if(note.toLowerCase().includes(word)){
-        switch(word){
-          case "karmienie": alerts.push("💧 Karmienie rodzin pszczelich"); break;
-          case "leczenie": alerts.push("💊 Leczenie warrozy"); break;
-          case "przegląd": alerts.push("🔍 Przegląd rodzin"); break;
-          case "miodobranie": alerts.push("🍯 Miodobranie"); break;
-          case "rój": alerts.push("🐝 Możliwe rojenie – kontrola mateczników"); break;
-        }
-      }
-    });
-    alertsBox.innerHTML = alerts.length ? alerts.join("<br>") : "Brak alertów na dziś";
-  }
+function updateAlerts(){
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2,"0");
+  const month = String(today.getMonth()+1).padStart(2,"0");
+  const key = day+"."+month+".2026";
+
+  const note = localStorage.getItem(key) || "";
+  const text = note.toLowerCase();
+
+  const alertsBox = document.getElementById("alerts-list");
+  if(!alertsBox) return;
+
+  const alerts = [];
+
+  if(text.includes("karmienie")) alerts.push("🍯 Karmienie rodzin");
+  if(text.includes("leczenie") || text.includes("warroza")) alerts.push("💊 Leczenie warrozy");
+  if(text.includes("przegląd")) alerts.push("🔍 Przegląd rodzin");
+  if(text.includes("miodobranie")) alerts.push("🍯 Miodobranie");
+  if(text.includes("rój")) alerts.push("🐝 Możliwe rojenie!");
+  if(text.includes("matka")) alerts.push("👑 Sprawdź matkę");
+  if(text.includes("ramki")) alerts.push("🧱 Praca z ramkami");
+
+  alertsBox.innerHTML = alerts.length 
+    ? alerts.join("<br>") 
+    : "Brak alertów na dziś";
+}
 
   // ==================== Kontrole miesięczne ====================
   function updateInspections(){
