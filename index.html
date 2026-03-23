@@ -2047,147 +2047,80 @@ function updateSmartAssistant(){
   if(!box) return;
 
   const today = new Date();
+  const month = today.getMonth()+1;
+  const day = String(today.getDate()).padStart(2,"0");
+  const m = String(month).padStart(2,"0");
+  const key = day+"."+m+".2026";
 
-  // 🔧 USTAWIENIA PRO (możesz zmieniać)
-  const INSPECTION_INTERVAL = 7;   // co ile dni przegląd
-  const FEEDING_INTERVAL = 3;      // karmienie
-  const TREATMENT_INTERVAL = 14;   // leczenie
+  const note = (localStorage.getItem(key) || "").toLowerCase();
 
-  let lastInspection = null;
-  let lastFeeding = null;
-  let lastTreatment = null;
+  let tips = [];
 
-  let swarmSignals = 0;
-  let honeyFlow = false;
-  let strongColony = false;
-
-  for(let i=0; i<30; i++){
-    const d = new Date();
-    d.setDate(today.getDate() - i);
-
-    const day = String(d.getDate()).padStart(2,"0");
-    const month = String(d.getMonth()+1).padStart(2,"0");
-    const key = day+"."+month+".2026";
-
-    const note = (localStorage.getItem(key) || "").toLowerCase();
-
-    if(note.includes("przegląd") && lastInspection === null) lastInspection = i;
-    if(note.includes("karmienie") && lastFeeding === null) lastFeeding = i;
-    if(note.includes("leczenie") && lastTreatment === null) lastTreatment = i;
-
-    if(note.includes("matecznik")) swarmSignals += 2;
-    if(note.includes("rój")) swarmSignals += 3;
-    if(note.includes("ciasno")) swarmSignals += 1;
-    if(note.includes("dużo pszczół")) swarmSignals += 1;
-
-    if(note.includes("miód") || note.includes("pożytek")) honeyFlow = true;
-
-    if(note.includes("silna rodzina") || note.includes("dużo pszczół")){
-      strongColony = true;
+  // 🔍 WIOSNA
+  if(month == 3){
+    if(!note.includes("przegląd")){
+      tips.push("🔍 Zrób pierwszy przegląd rodzin");
+    }
+    if(note.includes("brak pokarmu")){
+      tips.push("🍯 Podaj pokarm – możliwy głód");
     }
   }
 
-  let swarmRisk = Math.min(100, swarmSignals * 15);
+  // 🌸 KWIECIEŃ
+  if(month == 4){
+    tips.push("🌸 Rozwój rodzin – kontroluj matkę i czerwienie");
+    if(note.includes("matecznik") || note.includes("rój")){
+      tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
+    }
+  }
 
-  let msg = "🤖 <b>EXPERT Asystent Pasieki</b><br><br>";
+  // 🐝 MAJ – rojowy
+  if(month == 5){
+    tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
+    if(note.includes("rój")){
+      tips.push("🚨 Wysokie ryzyko rójki!");
+    }
+  }
 
-  // 🔍 PRZEGLĄD
-  if(lastInspection === null){
-    msg += "🔴 Brak przeglądu!<br>";
-  } else if(lastInspection > INSPECTION_INTERVAL){
-    msg += "⚠ Przegląd spóźniony ("+lastInspection+" dni)<br>";
+  // 🍯 CZERWIEC–LIPIEC
+  if(month == 6 || month == 7){
+    tips.push("🍯 Sprawdzaj nadstawki – możliwe miodobranie");
+    if(note.includes("miód")){
+      tips.push("🍯 Możesz planować miodobranie");
+    }
+  }
+
+  // 💊 SIERPIEŃ
+  if(month == 8){
+    if(!note.includes("leczenie")){
+      tips.push("💊 Rozpocznij leczenie warrozy!");
+    }
+  }
+
+  // 🍯 WRZESIEŃ
+  if(month == 9){
+    if(!note.includes("karmienie")){
+      tips.push("🍯 Karmienie zimowe rodzin");
+    }
+  }
+
+  // ❄ ZIMA
+  if(month <= 2 || month >= 10){
+    tips.push("⬛ Zimowla – nie otwieraj uli");
+  }
+
+  // 🌦 POGODA (prosta logika)
+  const weatherText = document.getElementById("bee-flight-alert");
+  if(weatherText && weatherText.innerText.includes("Dobre warunki")){
+    tips.push("🐝 Dobre warunki – pszczoły aktywne");
+  }
+
+  // 📋 WYNIK
+  if(tips.length === 0){
+    box.innerHTML = "✅ Wszystko wygląda dobrze";
   } else {
-    msg += "✔ Przegląd OK ("+lastInspection+" dni)<br>";
+    box.innerHTML = tips.join("<br>");
   }
-
-  // 🍯 KARMIENIE
-  if(lastFeeding === null){
-    msg += "🔴 Brak karmienia!<br>";
-  } else if(lastFeeding > FEEDING_INTERVAL){
-    msg += "⚠ Karmienie dawno ("+lastFeeding+" dni)<br>";
-  } else {
-    msg += "✔ Karmienie OK ("+lastFeeding+" dni)<br>";
-  }
-
-  // 💊 LECZENIE
-  if(lastTreatment === null){
-    msg += "🔴 Brak leczenia!<br>";
-  } else if(lastTreatment > TREATMENT_INTERVAL){
-    msg += "⚠ Leczenie przeterminowane ("+lastTreatment+" dni)<br>";
-  } else {
-    msg += "✔ Leczenie OK ("+lastTreatment+" dni)<br>";
-  }
-
-  msg += "<br>🐝 <b>Ryzyko rójki:</b> " + swarmRisk + "%<br>";
-
-  if(swarmRisk > 70){
-    msg += "🚨 WYSOKIE ryzyko rójki!<br>";
-  } else if(swarmRisk > 40){
-    msg += "⚠ Możliwa rójka<br>";
-  } else {
-    msg += "✔ Niskie ryzyko rójki<br>";
-  }
-
-  msg += "<br>🧠 <b>Decyzje:</b><br>";
-
-  if(honeyFlow && strongColony){
-    msg += "🍯 Dodaj nadstawkę<br>";
-  }
-
-  if(swarmRisk > 60){
-    msg += "🐝 Sprawdź mateczniki i zrób odkład<br>";
-  }
-
-  if(lastInspection !== null && lastInspection > 10){
-    msg += "🔍 Pilny przegląd wymagany<br>";
-  }
-
-  if(lastTreatment !== null && lastTreatment > 20){
-    msg += "💊 NATYCHMIAST leczenie warrozy<br>";
-  }
-
-  const m = today.getMonth()+1;
-
-  msg += "<br>📌 <b>Sezon:</b><br>";
-
-  if(m <= 2) msg += "⬛ Zimowla";
-  else if(m == 3) msg += "🌼 Start sezonu";
-  else if(m == 4) msg += "🌸 Rozwój";
-  else if(m == 5) msg += "🐝 Rójka";
-  else if(m == 6) msg += "🍯 Pożytek";
-  else if(m == 7) msg += "🍯 Miodobranie";
-  else if(m == 8) msg += "💊 Leczenie";
-  else if(m == 9) msg += "🍯 Karmienie";
-  else msg += "❄ Zimowla";
-
-  const weatherBox = document.getElementById("bee-flight-alert");
-
-  if(weatherBox && weatherBox.innerText.includes("Dobre")){
-    msg += "<br><br>🐝 Lot pszczół aktywny";
-  }
-
-  msg += "<br><br>📊 <i>Analiza 30 dni + AI decyzje</i>";
-
-// ==================== 🐝 ALERT RÓJKI + POGODA ====================
-
-const weatherBox = document.getElementById("bee-flight-alert");
-
-const goodWeather = weatherBox &&
-  weatherBox.innerText.includes("Dobre");
-
-const swarmSeason = (new Date().getMonth()+1) >= 5 && (new Date().getMonth()+1) <= 6;
-
-if(swarmSeason && goodWeather){
-
-  if(!note.includes("rój")){
-    msg += "<br><br>🚨 🐝 ALERT: Możliwa rójka + dobra pogoda!";
-  } else {
-    msg += "<br><br>⚠ 🐝 Rójka zgłoszona – obserwuj ule!";
-  }
-
-}
-
-box.innerHTML = msg;
 }
 
   // ==================== Lokalizacja ====================
@@ -2200,109 +2133,41 @@ box.innerHTML = msg;
   }
 
   // ==================== Pogoda ====================
-function loadWeather(){
-
-  const weatherBox = document.getElementById("weather-data");
-  const forecastBox = document.getElementById("weather-forecast");
-  const flightBox = document.getElementById("bee-flight-alert");
-
-  if(!weatherBox) return;
-
-  const showSaved = () => {
-    const saved = localStorage.getItem("weather-cache");
-    if(saved){
-      const data = JSON.parse(saved);
-      weatherBox.innerHTML = data.current;
-      forecastBox.innerHTML = data.forecast;
-      if(flightBox) flightBox.innerHTML = data.flight;
-    }
-  };
-
-  if(!navigator.geolocation){
-    showSaved();
-    return;
+  function loadWeather(){
+    const weatherBox=document.getElementById("weather-data");
+    const forecastBox=document.getElementById("weather-forecast");
+    const showSaved = () => {
+      const saved = localStorage.getItem("weather-cache");
+      if(saved){
+        const data = JSON.parse(saved);
+        weatherBox.innerHTML = data.current;
+        forecastBox.innerHTML = data.forecast;
+      }
+    };
+    if(!navigator.geolocation){ showSaved(); return; }
+    navigator.geolocation.getCurrentPosition(pos=>{
+      const lat=pos.coords.latitude;
+      const lon=pos.coords.longitude;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,cloudcover&current_weather=true`;
+      fetch(url).then(r=>r.json()).then(data=>{
+        const w = data.current_weather;
+        let alertMsg = "";
+        if(w.temperature >= 14 && w.windspeed < 20) alertMsg="🐝 Dobre warunki do lotu pszczół";
+        else if(w.temperature<12) alertMsg="❄ Za zimno – pszczoły raczej nie latają";
+        else if(w.windspeed>=20) alertMsg="💨 Za silny wiatr dla lotu pszczół";
+        else alertMsg="⚠ Słabe warunki do lotu pszczół";
+        document.getElementById("bee-flight-alert").innerText=alertMsg;
+        const current = `🌡 Temperatura: ${w.temperature}°C<br>💨 Wiatr: ${w.windspeed} km/h`;
+        weatherBox.innerHTML = current;
+        let forecast = "<b>Prognoza:</b><br>";
+        for(let i=0;i<6;i++){
+          forecast += `🕐 ${i}h → ${data.hourly.temperature_2m[i]}°C | 🌧 ${data.hourly.precipitation_probability[i]}% | ☁ ${data.hourly.cloudcover[i]}%<br>`;
+        }
+        forecastBox.innerHTML = forecast;
+        localStorage.setItem("weather-cache", JSON.stringify({current, forecast}));
+      }).catch(showSaved);
+    });
   }
-
-  navigator.geolocation.getCurrentPosition(pos=>{
-
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,cloudcover,windspeed_10m&current_weather=true`;
-
-    fetch(url)
-    .then(r=>r.json())
-    .then(data=>{
-
-      const w = data.current_weather;
-
-      // ==================== 🌡 AKTUALNE ====================
-      const currentHTML = `
-        <div style="font-size:18px;font-weight:bold;">
-          🌡 ${w.temperature}°C
-        </div>
-        <div>
-          💨 Wiatr: ${w.windspeed} km/h
-        </div>
-      `;
-
-      weatherBox.innerHTML = currentHTML;
-
-      // ==================== 🐝 WARUNKI LOTU ====================
-      let flightHTML = "";
-
-      if(w.temperature >= 15 && w.windspeed < 20){
-        flightHTML = "🟢 🐝 Idealne warunki lotu";
-        flightBox.style.background = "#c8e6c9";
-      }
-      else if(w.temperature >= 12){
-        flightHTML = "🟡 🐝 Średnie warunki lotu";
-        flightBox.style.background = "#fff9c4";
-      }
-      else{
-        flightHTML = "🔴 ❄ Brak lotów pszczół";
-        flightBox.style.background = "#ffcdd2";
-      }
-
-      if(flightBox) flightBox.innerHTML = flightHTML;
-
-      // ==================== 📊 PROGNOZA ====================
-      let forecastHTML = "<b>📊 Najbliższe godziny:</b><br>";
-
-      for(let i=0;i<6;i++){
-        const temp = data.hourly.temperature_2m[i];
-        const rain = data.hourly.precipitation_probability[i];
-        const wind = data.hourly.windspeed_10m[i];
-
-        forecastHTML += `
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            padding:4px 0;
-            border-bottom:1px solid #ddd;
-          ">
-            <span>🕐 +${i}h</span>
-            <span>${temp}°C</span>
-            <span>🌧 ${rain}%</span>
-            <span>💨 ${wind}</span>
-          </div>
-        `;
-      }
-
-      forecastBox.innerHTML = forecastHTML;
-
-      // ==================== CACHE ====================
-      localStorage.setItem("weather-cache", JSON.stringify({
-        current: currentHTML,
-        forecast: forecastHTML,
-        flight: flightHTML
-      }));
-
-    })
-    .catch(showSaved);
-
-  });
-}
 
   // ==================== Przewijanie do dzisiaj ====================
   function scrollToToday(){
