@@ -2047,12 +2047,6 @@ function updateSmartAssistant(){
   if(!box) return;
 
   const today = new Date();
-
- // 🔧 USTAWIENIA PRO (możesz zmieniać)
-  const INSPECTION_INTERVAL = 7;   // co ile dni przegląd
-  const FEEDING_INTERVAL = 3;      // karmienie
-  const TREATMENT_INTERVAL = 14;   // leczenie
-
   const month = today.getMonth()+1;
   const day = String(today.getDate()).padStart(2,"0");
   const m = String(month).padStart(2,"0");
