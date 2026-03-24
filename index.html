@@ -17,6 +17,8 @@
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
+<div id="today"></div>
+<div id="upcoming"></div>
 }
 
 table {
@@ -78,6 +80,8 @@ th, td {
   padding:15px;
   border-radius:15px;
   margin-bottom:10px;
+  font-size:18px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 .weather-grid{
@@ -91,6 +95,8 @@ th, td {
   border-radius:12px;
   padding:10px;
   text-align:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  font-size:14px;
 }
 
 .bee-good{ background:#e8f5e9; }
@@ -127,8 +133,7 @@ th, td {
 
 <body>
 
-<div id="today"></div>
-<div id="upcoming"></div>
+</html>
 
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla</div>
 
@@ -764,7 +769,7 @@ font-weight:bold;
   <div class="green"><span class="day-number" data-day="08" data-month="05">8</span>Przegląd gniazd</div>
   <div class="orange">Bardzo wysoka rojliwość</div>
 </td>
-<div class="yellow"><span class="day-number" data-day="09" data-month="05">9</span>Miodobranie rzepakowe</div>
+<td class="yellow"><span class="day-number" data-day="09" data-month="05">9</span>Miodobranie rzepakowe</div>
 </td>
 <td>
   <div class="green"><span class="day-number" data-day="10" data-month="05">10</span>Prace pasieczne</div>
@@ -1702,7 +1707,7 @@ font-weight:bold;
 <div id="weather-panel">
   <h3>🌤 Pogoda dla pasieki</h3>
   <div id="weather-data">Ładowanie...</div>
-  <div id="weather-forecast-2."></div>
+  <div id="weather-forecast"></div>
   <div id="bee-flight-alert" style="margin-top:5px; font-weight:bold;"></div>
 </div>
 
