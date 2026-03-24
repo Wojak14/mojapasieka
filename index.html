@@ -75,6 +75,42 @@ th, td {
   height:80px;
 }
 
+.weather-today{
+  background:#fff8e1;
+  padding:15px;
+  border-radius:15px;
+  margin-bottom:10px;
+  font-size:18px;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.weather-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
+  gap:10px;
+}
+
+.weather-day{
+  background:#ffffff;
+  border-radius:12px;
+  padding:10px;
+  text-align:center;
+  box-shadow:0 2px 6px rgba(0,0,0,0.1);
+  font-size:14px;
+}
+
+.bee-good{ background:#e8f5e9; }
+.bee-medium{ background:#fffde7; }
+.bee-bad{ background:#ffebee; }
+
+.bee-window{
+  margin:10px 0;
+  padding:10px;
+  border-radius:12px;
+  background:#e3f2fd;
+  font-weight:bold;
+}
+
 #autosave-status {
   font-size:13px;
   margin-top:4px;
@@ -109,6 +145,21 @@ padding:10px;
 border-radius:10px;
 margin-bottom:15px;
 ">
+
+<div id="weather-app">
+
+  <h2>🌤 Pogoda w pasiece</h2>
+
+  <!-- DZIŚ -->
+  <div id="weather-today" class="weather-today"></div>
+
+  <!-- OKNO LOTU -->
+  <div id="bee-window" class="bee-window"></div>
+
+  <!-- PROGNOZA -->
+  <div id="weather-forecast" class="weather-grid"></div>
+
+</div>
 
   <h3>🐝 Asystent pszczelarza</h3>
 
