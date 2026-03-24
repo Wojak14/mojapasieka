@@ -1995,47 +1995,37 @@ document.querySelectorAll(".day-number").forEach(span => {
   }
 
   // ==================== Nadchodzące prace ====================
-function updateUpcoming() {
+ function updateUpcoming(){
+  const upcoming = [];
   const today = new Date();
 
-  // wszystkie panele "upcoming-list" (miesiące + globalny)
-  const upcomingContainers = document.querySelectorAll('[id^="upcoming-list"]');
-  upcomingContainers.forEach(list => list.innerHTML = "");
+  for(let i=0; i<7; i++){
+    const d = new Date();
+    d.setDate(today.getDate()+i);
 
-  // iteracja po notatkach w localStorage
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
+    const day = String(d.getDate()).padStart(2,"0");
+    const month = String(d.getMonth()+1).padStart(2,"0");
+    const key = day+"."+month+".2026";
+
     const note = localStorage.getItem(key);
-    if (!note || note.trim() === "") continue;
 
-    const parts = key.split(".");
-    if (parts.length !== 3) continue;
-
-    const noteDate = new Date(parts[2], parts[1]-1, parts[0]);
-    const diffDays = (noteDate - today) / (1000*60*60*24);
-
-    if (diffDays >= 0 && diffDays < 7) {
-      // wybór ikon
+    if(note && note.trim()!==""){
       let icons = "";
+
       const text = note.toLowerCase();
-      if(text.includes("karmienie") || text.includes("miód") || text.includes("miodobranie")) icons += "🍯 ";
-      if(text.includes("leczenie") || text.includes("warroza")) icons += "💊 ";
-      if(text.includes("przegląd") || text.includes("kontrola")) icons += "🔍 ";
-      if(text.includes("rój") || text.includes("rojka")) icons += "🐝 ";
-      if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons += "🌸 ";
-      if(icons==="") icons = "📝 ";
 
-      const entry = icons + key + ": " + note;
+      if(text.includes("karmienie")) icons += "🍯 ";
+      if(text.includes("leczenie")) icons += "💊 ";
+      if(text.includes("przegląd")) icons += "🔍 ";
+      if(text.includes("rój")) icons += "🐝 ";
+      if(text.includes("pożytek")) icons += "🌸 ";
 
-      // dodaj do wszystkich paneli
-      upcomingContainers.forEach(list => list.appendChild(document.createElement("div")).textContent = entry);
+      upcoming.push(icons + key + ": " + note);
     }
   }
 
-  // jeśli pusty, komunikat
-  upcomingContainers.forEach(list => {
-    if(list.children.length === 0) list.textContent = "Brak nadchodzących prac w 7 dni";
-  });
+  const box = document.getElementById("upcoming-list");
+  if(box) box.innerHTML = upcoming.join("<br>") || "Brak nadchodzących prac";
 }
 
   // ==================== Licznik miodu ====================
