@@ -17,8 +17,6 @@
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
-<div id="today"></div>
-<div id="upcoming"></div>
 }
 
 table {
@@ -80,8 +78,6 @@ th, td {
   padding:15px;
   border-radius:15px;
   margin-bottom:10px;
-  font-size:18px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 .weather-grid{
@@ -95,8 +91,6 @@ th, td {
   border-radius:12px;
   padding:10px;
   text-align:center;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
-  font-size:14px;
 }
 
 .bee-good{ background:#e8f5e9; }
@@ -133,7 +127,8 @@ th, td {
 
 <body>
 
-</html>
+<div id="today"></div>
+<div id="upcoming"></div>
 
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla</div>
 
@@ -769,7 +764,7 @@ font-weight:bold;
   <div class="green"><span class="day-number" data-day="08" data-month="05">8</span>Przegląd gniazd</div>
   <div class="orange">Bardzo wysoka rojliwość</div>
 </td>
-<td class="yellow"><span class="day-number" data-day="09" data-month="05">9</span>Miodobranie rzepakowe</div>
+<div class="yellow"><span class="day-number" data-day="09" data-month="05">9</span>Miodobranie rzepakowe</div>
 </td>
 <td>
   <div class="green"><span class="day-number" data-day="10" data-month="05">10</span>Prace pasieczne</div>
@@ -1707,7 +1702,7 @@ font-weight:bold;
 <div id="weather-panel">
   <h3>🌤 Pogoda dla pasieki</h3>
   <div id="weather-data">Ładowanie...</div>
-  <div id="weather-forecast"></div>
+  <div id="weather-forecast-2."></div>
   <div id="bee-flight-alert" style="margin-top:5px; font-weight:bold;"></div>
 </div>
 
@@ -2000,37 +1995,47 @@ document.querySelectorAll(".day-number").forEach(span => {
   }
 
   // ==================== Nadchodzące prace ====================
- function updateUpcoming(){
-  const upcoming = [];
+function updateUpcoming() {
   const today = new Date();
 
-  for(let i=0; i<7; i++){
-    const d = new Date();
-    d.setDate(today.getDate()+i);
+  // wszystkie panele "upcoming-list" (miesiące + globalny)
+  const upcomingContainers = document.querySelectorAll('[id^="upcoming-list"]');
+  upcomingContainers.forEach(list => list.innerHTML = "");
 
-    const day = String(d.getDate()).padStart(2,"0");
-    const month = String(d.getMonth()+1).padStart(2,"0");
-    const key = day+"."+month+".2026";
-
+  // iteracja po notatkach w localStorage
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
     const note = localStorage.getItem(key);
+    if (!note || note.trim() === "") continue;
 
-    if(note && note.trim()!==""){
+    const parts = key.split(".");
+    if (parts.length !== 3) continue;
+
+    const noteDate = new Date(parts[2], parts[1]-1, parts[0]);
+    const diffDays = (noteDate - today) / (1000*60*60*24);
+
+    if (diffDays >= 0 && diffDays < 7) {
+      // wybór ikon
       let icons = "";
-
       const text = note.toLowerCase();
+      if(text.includes("karmienie") || text.includes("miód") || text.includes("miodobranie")) icons += "🍯 ";
+      if(text.includes("leczenie") || text.includes("warroza")) icons += "💊 ";
+      if(text.includes("przegląd") || text.includes("kontrola")) icons += "🔍 ";
+      if(text.includes("rój") || text.includes("rojka")) icons += "🐝 ";
+      if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons += "🌸 ";
+      if(icons==="") icons = "📝 ";
 
-      if(text.includes("karmienie")) icons += "🍯 ";
-      if(text.includes("leczenie")) icons += "💊 ";
-      if(text.includes("przegląd")) icons += "🔍 ";
-      if(text.includes("rój")) icons += "🐝 ";
-      if(text.includes("pożytek")) icons += "🌸 ";
+      const entry = icons + key + ": " + note;
 
-      upcoming.push(icons + key + ": " + note);
+      // dodaj do wszystkich paneli
+      upcomingContainers.forEach(list => list.appendChild(document.createElement("div")).textContent = entry);
     }
   }
 
-  const box = document.getElementById("upcoming-list");
-  if(box) box.innerHTML = upcoming.join("<br>") || "Brak nadchodzących prac";
+  // jeśli pusty, komunikat
+  upcomingContainers.forEach(list => {
+    if(list.children.length === 0) list.textContent = "Brak nadchodzących prac w 7 dni";
+  });
 }
 
   // ==================== Licznik miodu ====================
