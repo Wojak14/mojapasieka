@@ -2047,81 +2047,105 @@ function updateSmartAssistant(){
   if(!box) return;
 
   const today = new Date();
-  const month = today.getMonth()+1;
-  const day = String(today.getDate()).padStart(2,"0");
-  const m = String(month).padStart(2,"0");
-  const key = day+"."+m+".2026";
 
-  const note = (localStorage.getItem(key) || "").toLowerCase();
+  const INSPECTION_INTERVAL = 7;
+  const FEEDING_INTERVAL = 3;
+  const TREATMENT_INTERVAL = 14;
+
+  const month = today.getMonth()+1;
+
+  let lastInspection = null;
+  let lastFeeding = null;
+  let lastTreatment = null;
 
   let tips = [];
 
-  // 🔍 WIOSNA
+  // ==================== 🔍 SZUKANIE W HISTORII ====================
+  for(let i=0; i<30; i++){
+    const d = new Date();
+    d.setDate(today.getDate() - i);
+
+    const day = String(d.getDate()).padStart(2,"0");
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const key = day+"."+m+".2026";
+
+    const note = (localStorage.getItem(key) || "").toLowerCase();
+
+    if(note.includes("przegląd") && lastInspection === null) lastInspection = i;
+    if(note.includes("karmienie") && lastFeeding === null) lastFeeding = i;
+    if(note.includes("leczenie") && lastTreatment === null) lastTreatment = i;
+  }
+
+  // ==================== 🧠 LOGIKA ====================
+
+  // 🔍 PRZEGLĄD
+  if(lastInspection === null){
+    tips.push("🔴 Brak przeglądu!");
+  } 
+  else if(lastInspection > INSPECTION_INTERVAL){
+    tips.push("⚠ Przegląd dawno ("+lastInspection+" dni)");
+  }
+  else{
+    tips.push("✔ Przegląd OK ("+lastInspection+" dni temu)");
+  }
+
+  // 🍯 KARMIENIE
+  if(lastFeeding === null){
+    tips.push("🔴 Brak karmienia");
+  } 
+  else if(lastFeeding > FEEDING_INTERVAL){
+    tips.push("⚠ Karmienie dawno ("+lastFeeding+" dni)");
+  }
+  else{
+    tips.push("✔ Karmienie OK");
+  }
+
+  // 💊 LECZENIE
+  if(lastTreatment === null){
+    tips.push("🔴 Brak leczenia");
+  } 
+  else if(lastTreatment > TREATMENT_INTERVAL){
+    tips.push("⚠ Leczenie dawno ("+lastTreatment+" dni)");
+  }
+  else{
+    tips.push("✔ Leczenie OK");
+  }
+
+  // ==================== 📅 SEZON ====================
+
   if(month == 3){
-    if(!note.includes("przegląd")){
-      tips.push("🔍 Zrób pierwszy przegląd rodzin");
-    }
-    if(note.includes("brak pokarmu")){
-      tips.push("🍯 Podaj pokarm – możliwy głód");
-    }
+    tips.push("🌼 Start sezonu – obserwuj rozwój");
+  }
+  else if(month == 4){
+    tips.push("🌸 Rozwój – kontroluj matkę");
+  }
+  else if(month == 5){
+    tips.push("🐝 Okres rojowy – kontroluj mateczniki");
+  }
+  else if(month == 6 || month == 7){
+    tips.push("🍯 Pożytek / miodobranie");
+  }
+  else if(month == 8){
+    tips.push("💊 Leczenie warrozy");
+  }
+  else if(month == 9){
+    tips.push("🍯 Karmienie zimowe");
+  }
+  else{
+    tips.push("❄ Zimowla");
   }
 
-  // 🌸 KWIECIEŃ
-  if(month == 4){
-    tips.push("🌸 Rozwój rodzin – kontroluj matkę i czerwienie");
-    if(note.includes("matecznik") || note.includes("rój")){
-      tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
-    }
-  }
-
-  // 🐝 MAJ – rojowy
-  if(month == 5){
-    tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
-    if(note.includes("rój")){
-      tips.push("🚨 Wysokie ryzyko rójki!");
-    }
-  }
-
-  // 🍯 CZERWIEC–LIPIEC
-  if(month == 6 || month == 7){
-    tips.push("🍯 Sprawdzaj nadstawki – możliwe miodobranie");
-    if(note.includes("miód")){
-      tips.push("🍯 Możesz planować miodobranie");
-    }
-  }
-
-  // 💊 SIERPIEŃ
-  if(month == 8){
-    if(!note.includes("leczenie")){
-      tips.push("💊 Rozpocznij leczenie warrozy!");
-    }
-  }
-
-  // 🍯 WRZESIEŃ
-  if(month == 9){
-    if(!note.includes("karmienie")){
-      tips.push("🍯 Karmienie zimowe rodzin");
-    }
-  }
-
-  // ❄ ZIMA
-  if(month <= 2 || month >= 10){
-    tips.push("⬛ Zimowla – nie otwieraj uli");
-  }
-
-  // 🌦 POGODA (prosta logika)
+  // ==================== 🌦 POGODA ====================
   const weatherText = document.getElementById("bee-flight-alert");
-  if(weatherText && weatherText.innerText.includes("Dobre warunki")){
-    tips.push("🐝 Dobre warunki – pszczoły aktywne");
+
+  if(weatherText && weatherText.innerText.includes("Dobre")){
+    tips.push("🐝 Pszczoły aktywne (pogoda)");
   }
 
-  // 📋 WYNIK
-  if(tips.length === 0){
-    box.innerHTML = "✅ Wszystko wygląda dobrze";
-  } else {
-    box.innerHTML = tips.join("<br>");
-  }
+  // ==================== 📋 OUTPUT ====================
+  box.innerHTML = tips.join("<br>");
 }
+
 
   // ==================== Lokalizacja ====================
   function getLocation(){ 
@@ -2133,41 +2157,101 @@ function updateSmartAssistant(){
   }
 
   // ==================== Pogoda ====================
-  function loadWeather(){
-    const weatherBox=document.getElementById("weather-data");
-    const forecastBox=document.getElementById("weather-forecast");
-    const showSaved = () => {
-      const saved = localStorage.getItem("weather-cache");
-      if(saved){
-        const data = JSON.parse(saved);
-        weatherBox.innerHTML = data.current;
-        forecastBox.innerHTML = data.forecast;
-      }
-    };
-    if(!navigator.geolocation){ showSaved(); return; }
-    navigator.geolocation.getCurrentPosition(pos=>{
-      const lat=pos.coords.latitude;
-      const lon=pos.coords.longitude;
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation_probability,cloudcover&current_weather=true`;
-      fetch(url).then(r=>r.json()).then(data=>{
+ function loadWeather(){
+
+  const weatherBox = document.getElementById("weather-data");
+  const forecastBox = document.getElementById("weather-forecast");
+  const beeBox = document.getElementById("bee-flight-alert");
+
+  if(!weatherBox || !forecastBox) return;
+
+  const showSaved = () => {
+    const saved = localStorage.getItem("weather-cache");
+    if(saved){
+      const data = JSON.parse(saved);
+      weatherBox.innerHTML = data.today;
+      forecastBox.innerHTML = data.days;
+      if(beeBox) beeBox.innerHTML = data.bee;
+    }
+  };
+
+  if(!navigator.geolocation){ showSaved(); return; }
+
+  navigator.geolocation.getCurrentPosition(pos => {
+
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&timezone=auto`;
+
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+
         const w = data.current_weather;
-        let alertMsg = "";
-        if(w.temperature >= 14 && w.windspeed < 20) alertMsg="🐝 Dobre warunki do lotu pszczół";
-        else if(w.temperature<12) alertMsg="❄ Za zimno – pszczoły raczej nie latają";
-        else if(w.windspeed>=20) alertMsg="💨 Za silny wiatr dla lotu pszczół";
-        else alertMsg="⚠ Słabe warunki do lotu pszczół";
-        document.getElementById("bee-flight-alert").innerText=alertMsg;
-        const current = `🌡 Temperatura: ${w.temperature}°C<br>💨 Wiatr: ${w.windspeed} km/h`;
-        weatherBox.innerHTML = current;
-        let forecast = "<b>Prognoza:</b><br>";
-        for(let i=0;i<6;i++){
-          forecast += `🕐 ${i}h → ${data.hourly.temperature_2m[i]}°C | 🌧 ${data.hourly.precipitation_probability[i]}% | ☁ ${data.hourly.cloudcover[i]}%<br>`;
+
+        // ==================== 🐝 WARUNKI ====================
+        let beeMsg = "";
+        if(w.temperature >= 18 && w.windspeed < 20) beeMsg="🐝 Idealne warunki do lotu";
+        else if(w.temperature >= 14 && w.windspeed < 25) beeMsg="🐝 Dobre warunki";
+        else if(w.temperature < 12) beeMsg="❄ Za zimno";
+        else if(w.windspeed >= 25) beeMsg="💨 Za silny wiatr";
+        else beeMsg="⚠ Słabe warunki";
+
+        if(beeBox) beeBox.innerHTML = beeMsg;
+
+        // ==================== 📍 DZIŚ ====================
+        const todayHTML = `
+          <div style="border:1px solid #ccc; padding:8px; border-radius:8px; margin-bottom:6px;">
+            <b>📍 Pogoda dziś</b><br>
+            🌡 ${w.temperature}°C<br>
+            💨 Wiatr: ${w.windspeed} km/h<br>
+            ${beeMsg}
+          </div>
+        `;
+
+        weatherBox.innerHTML = todayHTML;
+
+        // ==================== 📅 5 DNI ====================
+        let daysHTML = "<b>📅 Prognoza 5 dni:</b><br>";
+
+        for(let i=0; i<5; i++){
+
+          const date = data.daily.time[i];
+          const max = data.daily.temperature_2m_max[i];
+          const min = data.daily.temperature_2m_min[i];
+          const rain = data.daily.precipitation_probability_max[i];
+          const wind = data.daily.windspeed_10m_max[i];
+
+          let beeDay = "⚠";
+          if(max >= 18 && wind < 20) beeDay = "🐝";
+          else if(max >= 14) beeDay = "🙂";
+
+          daysHTML += `
+            <div style="border:1px solid #ddd; padding:6px; margin:4px 0; border-radius:6px;">
+              <b>${date}</b><br>
+              🌡 ${min}–${max}°C<br>
+              🌧 ${rain}%<br>
+              💨 ${wind} km/h<br>
+              ${beeDay}
+            </div>
+          `;
         }
-        forecastBox.innerHTML = forecast;
-        localStorage.setItem("weather-cache", JSON.stringify({current, forecast}));
-      }).catch(showSaved);
-    });
-  }
+
+        forecastBox.innerHTML = daysHTML;
+
+        // ==================== 💾 CACHE ====================
+        localStorage.setItem("weather-cache", JSON.stringify({
+          today: todayHTML,
+          days: daysHTML,
+          bee: beeMsg
+        }));
+
+      })
+      .catch(showSaved);
+
+  });
+}
 
   // ==================== Przewijanie do dzisiaj ====================
   function scrollToToday(){
@@ -2199,6 +2283,7 @@ updateInspections();
 updateSmartAssistant();
 scrollToToday();
 loadWeather();
+setInterval(loadWeather, 600000); // co 10 min
 updateTodayButton();
 getLocation();
 });
