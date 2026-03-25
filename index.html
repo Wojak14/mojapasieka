@@ -2,234 +2,32 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Kalendarz Pszczelarski 2026</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FBC02D">
-
-<link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
-
-<link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
-
+<title>Kalendarz Pszczelarski 2026 – Ultra Enterprise MAX</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 10px;
-<div id="today"></div>
-<div id="upcoming"></div>
-}
-
-table {
-  width:100%;
-  border-collapse: collapse;
-  margin-bottom:20px;
-}
-
-th, td {
-  border:1px solid #444;
-  padding:6px;
-  text-align:center;
-  position:relative;
-}
-
-.day-number {
-  cursor:pointer;
-  font-weight:bold;
-}
-
-.has-note {
-  background-color: #fff59d;
-}
-
-.today {
-  border:2px solid #4caf50;
-}
-
-.tomorrow {
-  border:2px solid #ff9800;
-}
-
-.note-marker {
-  margin-left:4px;
-  font-size:14px;
-}
-
-.highlight-search {
-  background-color:#ffeb3b;
-  border-radius:4px;
-  padding:2px 4px;
-  margin-left:2px;
-}
-
-#day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
-  padding:10px;
-  border-radius:10px;
-  margin-top:15px;
-  background:#fff8e1;
-}
-
-.notes {
-  width:100%;
-  height:80px;
-}
-
-.weather-today{
-  background:#fff8e1;
-  padding:15px;
-  border-radius:15px;
-  margin-bottom:10px;
-  font-size:18px;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-.weather-grid{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px,1fr));
-  gap:10px;
-}
-
-.weather-day{
-  background:#ffffff;
-  border-radius:12px;
-  padding:10px;
-  text-align:center;
-  box-shadow:0 2px 6px rgba(0,0,0,0.1);
-  font-size:14px;
-}
-
-.bee-good{ background:#e8f5e9; }
-.bee-medium{ background:#fffde7; }
-.bee-bad{ background:#ffebee; }
-
-.bee-window{
-  margin:10px 0;
-  padding:10px;
-  border-radius:12px;
-  background:#e3f2fd;
-  font-weight:bold;
-}
-
-#autosave-status {
-  font-size:13px;
-  margin-top:4px;
-  color:green;
-}
-
-.green { background:#8BC34A; }
-.yellow { background:#FFEB3B; }
-.orange { background:#FF9800; }
-.red { background:#F44336; color:white; }
-.black { background:#000; color:white; }
-
-@media (max-width:600px) {
-  table, th, td { font-size:12px; }
-  .notes { height:60px; }
-}
+body { font-family: Arial, sans-serif; margin: 10px; background: #f5f5f5; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+.day-number { font-weight: bold; cursor: pointer; }
+.note-marker { margin-left: 4px; font-weight: normal; }
+.has-note { border: 2px solid #ff9800; }
+.today { outline: 2px solid #2196f3; }
+.tomorrow { outline: 2px dashed #4caf50; }
+.month { margin-bottom: 40px; }
+textarea { width: 100%; resize: none; }
+.page-break { page-break-after: always; }
 </style>
-
 </head>
-
-<body>
+<body>>
 
 </html>
 
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla</div>
 
-<h2>Kalendarz pszczelarski 2026</h2>
+<h1>Kalendarz Pszczelarski 2026 – Ultra Enterprise MAX</h1>
 
-<div id="bee-assistant" style="
-background:#e8f5e9;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
-
-<div id="weather-app">
-
-  <h2>🌤 Pogoda w pasiece</h2>
-
-  <!-- DZIŚ -->
-  <div id="weather-today" class="weather-today"></div>
-
-  <!-- OKNO LOTU -->
-  <div id="bee-window" class="bee-window"></div>
-
-  <!-- PROGNOZA -->
-  <div id="weather-forecast" class="weather-grid"></div>
-
-</div>
-
-  <h3>🐝 Asystent pszczelarza</h3>
-
-  <div id="assistant-text">
-    Sprawdzanie zaleceń...
-  </div>
-
-</div>
-
-<button id="today-btn" onclick="scrollToToday()" style="
-margin-top:8px;
-margin-bottom:10px;
-padding:8px 12px;
-font-size:14px;
-border:none;
-border-radius:8px;
-background:#FBC02D;
-cursor:pointer;
-font-weight:bold;
-">
-📅 DZIŚ
-</button>
-
-<!-- 🌦 POGODA -->
-<div id="weather-box" style="
-background:#fff8e1;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
-
-  <h3>🌦 Pogoda w pasiece</h3>
-
-  <div id="weather-data">
-    Ładowanie pogody...
-  </div>
-
-  <div id="location-box" style="
-  background:#e3f2fd;
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
-  font-size:14px;
-  ">
-    📍 Lokalizacja pasieki: sprawdzanie...
-  </div>
-
-  <div id="weather-forecast" style="
-  margin-top:8px;
-  font-size:14px;
-  "></div>
-
-  <div id="bee-flight-alert" style="
-  margin-top:10px;
-  padding:8px;
-  background:#e8f5e9;
-  border-radius:8px;
-  font-weight:bold;
-  ">
-    🐝 Sprawdzanie warunków lotu pszczół...
-  </div>
-
-</div>
-
-<!-- 🌼 SEZON -->
-<div id="season-info" style="
-margin-bottom:10px;
-font-weight:bold;
-"></div>
-
+<div id="calendar-container">
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
@@ -289,6 +87,10 @@ font-weight:bold;
 <td></td>
 </tr>
 </table>
+
+<!-- POGODA -->
+<div id="weather-box-01">Ładowanie pogody...</div>
+<canvas id="weather-chart-01" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca STYCZEŃ :</strong><br>
@@ -398,6 +200,10 @@ font-weight:bold;
 <td></td>
 </tr>
 </table>
+
+<!-- POGODA -->
+<div id="weather-box-02">Ładowanie pogody...</div>
+<canvas id="weather-chart-02" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -532,6 +338,10 @@ font-weight:bold;
 </tr>
 
 </table>
+
+<!-- POGODA -->
+<div id="weather-box-03">Ładowanie pogody...</div>
+<canvas id="weather-chart-03" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -678,7 +488,9 @@ font-weight:bold;
 
 </table>
 
-
+<!-- POGODA -->
+<div id="weather-box-04">Ładowanie pogody...</div>
+<canvas id="weather-chart-04" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -848,6 +660,10 @@ font-weight:bold;
 
 </table>
 
+<!-- POGODA -->
+<div id="weather-box-05">Ładowanie pogody...</div>
+<canvas id="weather-chart-05" height="60"></canvas>
+
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
 – MAJ = NAJWIĘKSZE RYZYKO RÓJKI<br>
@@ -965,6 +781,10 @@ font-weight:bold;
 
 </table>
 
+<!-- POGODA -->
+<div id="weather-box-06">Ładowanie pogody...</div>
+<canvas id="weather-chart-06" height="60"></canvas>
+
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
 – Początek miesiąca: możliwe ostatnie rójki<br>
@@ -1072,6 +892,10 @@ font-weight:bold;
       <td></td><td></td>
     </tr>
   </table>
+
+<!-- POGODA -->
+<div id="weather-box-07">Ładowanie pogody...</div>
+<canvas id="weather-chart-07" height="60"></canvas>
 
   <div class="notes">
     <strong>Uwagi:</strong><br>
@@ -1187,6 +1011,10 @@ font-weight:bold;
     </tr>
   </table>
 
+<!-- POGODA -->
+<div id="weather-box-08">Ładowanie pogody...</div>
+<canvas id="weather-chart-08" height="60"></canvas>
+
   <div class="notes">
     <strong>Uwagi:</strong><br>
     – Ostatnie miodobrania do 14 sierpnia<br>
@@ -1297,6 +1125,10 @@ font-weight:bold;
 </tr>
 
 </table>
+
+<!-- POGODA -->
+<div id="weather-box-09">Ładowanie pogody...</div>
+<canvas id="weather-chart-09" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1411,6 +1243,10 @@ font-weight:bold;
 
 </table>
 
+<!-- POGODA -->
+<div id="weather-box-10">Ładowanie pogody...</div>
+<canvas id="weather-chart-10" height="60"></canvas>
+
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
 – Leczenie warrozy trwa do połowy miesiąca<br>
@@ -1524,6 +1360,10 @@ font-weight:bold;
 </tr>
 
 </table>
+
+<!-- POGODA -->
+<div id="weather-box-11">Ładowanie pogody...</div>
+<canvas id="weather-chart-11" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1646,6 +1486,9 @@ font-weight:bold;
 
 </table>
 
+<!-- POGODA -->
+<div id="weather-box-12">Ładowanie pogody...</div>
+<canvas id="weather-chart-12" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
