@@ -1885,20 +1885,116 @@ function getWeatherIcon(code){
 }
 
 function renderWeatherAllMonths(data){
-  const days=data.daily.time;
-  const max=data.daily.temperature_2m_max;
-  const min=data.daily.temperature_2m_min;
-  const code=data.daily.weathercode;
-  const boxes=document.querySelectorAll('[id^="weather-box"]');
-  boxes.forEach(box=>{
-    let html="<b>🌤 Pogoda:</b><br>";
-    html+=`<b>Dziś:</b> ${getWeatherIcon(code[0])} ${max[0]}° / ${min[0]}°<br><br>`;
-    html+="<b>Prognoza 5 dni:</b><br>";
+
+  const days = data.daily.time;
+  const max = data.daily.temperature_2m_max;
+  const min = data.daily.temperature_2m_min;
+  const code = data.daily.weathercode;
+
+  const boxes = document.querySelectorAll('[id^="weather-box"]');
+
+  boxes.forEach(box => {
+
+    let html = "<b>🌤 Pogoda:</b><br>";
+
+    // ===== DZIŚ =====
+    html += `<b>Dziś:</b> ${getWeatherIcon(code[0])} ${max[0]}° / ${min[0]}°<br><br>`;
+
+    // ===== PROGNOZA =====
+    html += "<b>Prognoza (5 dni):</b><br>";
+
+    let bestDay = null;
+    let bestScore = -1;
+
     for(let i=1;i<=5;i++){
-      const date=new Date(days[i]);
-      html+=`${date.getDate()}.${date.getMonth()+1} ${getWeatherIcon(code[i])} ${max[i]}° / ${min[i]}°<br>`;
-html +=`<canvas id="weather-chart-${box.id.split("-")[2]}" height="120"></canvas>`;
+
+      const date = new Date(days[i]);
+      const d = date.getDate();
+      const m = date.getMonth()+1;
+
+      const temp = max[i];
+      const rain = code[i];
+
+      let status = "";
+      let color = "";
+      let score = 0;
+
+      // ===== AI LOGIKA =====
+      if(temp >= 15 && rain <= 3){
+        status = "🟢 IDEALNY";
+        color = "green";
+        score = 3;
+      }
+      else if(temp >= 12){
+        status = "🟡 ŚREDNI";
+        color = "orange";
+        score = 2;
+      }
+      else{
+        status = "🔴 ZŁY";
+        color = "red";
+        score = 1;
+      }
+
+      if(score > bestScore){
+        bestScore = score;
+        bestDay = `${d}.${m}`;
+      }
+
+      html += `<div style="color:${color}">
+        ${d}.${m} ${getWeatherIcon(code[i])} ${temp}° → ${status}
+      </div>`;
     }
+
+    // ===== AI WNIOSEK =====
+    html += `<br><b>🤖 AI:</b> Najlepszy dzień na przegląd: <b>${bestDay}</b><br>`;
+
+    // ===== CANVAS =====
+    html += `<canvas id="weather-chart-${box.id.split("-")[2]}" height="120"></canvas>`;
+
+    // WSTAW
+    box.innerHTML = html;
+
+    // ===== WYKRES =====
+    const ctx = document.getElementById("weather-chart-"+box.id.split("-")[2]);
+
+    if(ctx){
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: days.slice(1,6).map(d=>{
+            const date = new Date(d);
+            return `${date.getDate()}.${date.getMonth()+1}`;
+          }),
+          datasets: [
+            {
+              label: 'Max °C',
+              data: max.slice(1,6),
+              borderColor: '#f44336',
+              backgroundColor: 'rgba(244,67,54,0.2)',
+              fill: true,
+              tension: 0.3
+            },
+            {
+              label: 'Min °C',
+              data: min.slice(1,6),
+              borderColor: '#2196f3',
+              backgroundColor: 'rgba(33,150,243,0.2)',
+              fill: true,
+              tension: 0.3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: false } }
+        }
+      });
+    }
+
+  });
+}
     box.innerHTML=html;
 
 // ======= WYKRES 5 DNI =======
