@@ -1740,6 +1740,7 @@ function generateMonth(monthNumber, monthName){
   }
   html+=`</table>
 <div id="weather-box-${monthNumber}">Ładowanie pogody...</div>
+<canvas id="weather-chart-${monthNumber}" height="60"></canvas>
 <div id="day-note-box-${monthNumber}">
 <h3>Notatka dnia</h3>
 <textarea id="notes-${monthNumber}" rows="4"></textarea><br><br>
@@ -1896,8 +1897,49 @@ function renderWeatherAllMonths(data){
     for(let i=1;i<=5;i++){
       const date=new Date(days[i]);
       html+=`${date.getDate()}.${date.getMonth()+1} ${getWeatherIcon(code[i])} ${max[i]}° / ${min[i]}°<br>`;
+html +=`<canvas id="weather-chart-${box.id.split("-")[2]}" height="120"></canvas>`;
     }
     box.innerHTML=html;
+
+// ======= WYKRES 5 DNI =======
+const ctx = document.getElementById("weather-chart-"+box.id.split("-")[2]);
+
+if(ctx){
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: days.slice(1,6).map(d=> {
+        const date = new Date(d);
+        return `${date.getDate()}.${date.getMonth()+1}`;
+      }),
+      datasets: [
+        {
+          label: 'Max °C',
+          data: max.slice(1,6),
+          borderColor: '#f44336',
+          backgroundColor: 'rgba(244,67,54,0.2)',
+          fill: true,
+          tension: 0.3
+        },
+        {
+          label: 'Min °C',
+          data: min.slice(1,6),
+          borderColor: '#2196f3',
+          backgroundColor: 'rgba(33,150,243,0.2)',
+          fill: true,
+          tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: { beginAtZero: false }
+      }
+    }
   });
 }
 
