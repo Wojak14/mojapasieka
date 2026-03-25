@@ -93,11 +93,15 @@ th, td {
 }
 </style>
 
+</head>
+
+<body>
+
 </html>
 
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla</div>
 
-<h1>Kalendarz Pszczelarski 2026 – Ultra Enterprise MAX</h1>
+<h2>Kalendarz pszczelarski 2026</h2>
 
 <div id="bee-assistant" style="
 background:#e8f5e9;
@@ -235,10 +239,6 @@ font-weight:bold;
 </tr>
 </table>
 
-<!-- POGODA -->
-<div id="weather-box-01">Ładowanie pogody...</div>
-<canvas id="weather-chart-01" height="60"></canvas>
-
 <div class="notes">
 <strong>Uwagi miesiąca STYCZEŃ :</strong><br>
 - nadzorowanie pasieki, kontrola raz w tygodniu, 
@@ -347,10 +347,6 @@ font-weight:bold;
 <td></td>
 </tr>
 </table>
-
-<!-- POGODA -->
-<div id="weather-box-02">Ładowanie pogody...</div>
-<canvas id="weather-chart-02" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -485,10 +481,6 @@ font-weight:bold;
 </tr>
 
 </table>
-
-<!-- POGODA -->
-<div id="weather-box-03">Ładowanie pogody...</div>
-<canvas id="weather-chart-03" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -635,9 +627,7 @@ font-weight:bold;
 
 </table>
 
-<!-- POGODA -->
-<div id="weather-box-04">Ładowanie pogody...</div>
-<canvas id="weather-chart-04" height="60"></canvas>
+
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -807,10 +797,6 @@ font-weight:bold;
 
 </table>
 
-<!-- POGODA -->
-<div id="weather-box-05">Ładowanie pogody...</div>
-<canvas id="weather-chart-05" height="60"></canvas>
-
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
 – MAJ = NAJWIĘKSZE RYZYKO RÓJKI<br>
@@ -928,10 +914,6 @@ font-weight:bold;
 
 </table>
 
-<!-- POGODA -->
-<div id="weather-box-06">Ładowanie pogody...</div>
-<canvas id="weather-chart-06" height="60"></canvas>
-
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
 – Początek miesiąca: możliwe ostatnie rójki<br>
@@ -1039,10 +1021,6 @@ font-weight:bold;
       <td></td><td></td>
     </tr>
   </table>
-
-<!-- POGODA -->
-<div id="weather-box-07">Ładowanie pogody...</div>
-<canvas id="weather-chart-07" height="60"></canvas>
 
   <div class="notes">
     <strong>Uwagi:</strong><br>
@@ -1158,10 +1136,6 @@ font-weight:bold;
     </tr>
   </table>
 
-<!-- POGODA -->
-<div id="weather-box-08">Ładowanie pogody...</div>
-<canvas id="weather-chart-08" height="60"></canvas>
-
   <div class="notes">
     <strong>Uwagi:</strong><br>
     – Ostatnie miodobrania do 14 sierpnia<br>
@@ -1272,10 +1246,6 @@ font-weight:bold;
 </tr>
 
 </table>
-
-<!-- POGODA -->
-<div id="weather-box-09">Ładowanie pogody...</div>
-<canvas id="weather-chart-09" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1390,10 +1360,6 @@ font-weight:bold;
 
 </table>
 
-<!-- POGODA -->
-<div id="weather-box-10">Ładowanie pogody...</div>
-<canvas id="weather-chart-10" height="60"></canvas>
-
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
 – Leczenie warrozy trwa do połowy miesiąca<br>
@@ -1507,10 +1473,6 @@ font-weight:bold;
 </tr>
 
 </table>
-
-<!-- POGODA -->
-<div id="weather-box-11">Ładowanie pogody...</div>
-<canvas id="weather-chart-11" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1633,9 +1595,6 @@ font-weight:bold;
 
 </table>
 
-<!-- POGODA -->
-<div id="weather-box-12">Ładowanie pogody...</div>
-<canvas id="weather-chart-12" height="60"></canvas>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -2164,94 +2123,6 @@ function updateSmartAssistant(){
   }
 }
 
-
-  // ==================== 🔍 SZUKANIE W HISTORII ====================
-  for(let i=0; i<30; i++){
-    const d = new Date();
-    d.setDate(today.getDate() - i);
-
-    const day = String(d.getDate()).padStart(2,"0");
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const key = day+"."+m+".2026";
-
-    const note = (localStorage.getItem(key) || "").toLowerCase();
-
-    if(note.includes("przegląd") && lastInspection === null) lastInspection = i;
-    if(note.includes("karmienie") && lastFeeding === null) lastFeeding = i;
-    if(note.includes("leczenie") && lastTreatment === null) lastTreatment = i;
-  }
-
-  // ==================== 🧠 LOGIKA ====================
-
-  // 🔍 PRZEGLĄD
-  if(lastInspection === null){
-    tips.push("🔴 Brak przeglądu!");
-  } 
-  else if(lastInspection > INSPECTION_INTERVAL){
-    tips.push("⚠ Przegląd dawno ("+lastInspection+" dni)");
-  }
-  else{
-    tips.push("✔ Przegląd OK ("+lastInspection+" dni temu)");
-  }
-
-  // 🍯 KARMIENIE
-  if(lastFeeding === null){
-    tips.push("🔴 Brak karmienia");
-  } 
-  else if(lastFeeding > FEEDING_INTERVAL){
-    tips.push("⚠ Karmienie dawno ("+lastFeeding+" dni)");
-  }
-  else{
-    tips.push("✔ Karmienie OK");
-  }
-
-  // 💊 LECZENIE
-  if(lastTreatment === null){
-    tips.push("🔴 Brak leczenia");
-  } 
-  else if(lastTreatment > TREATMENT_INTERVAL){
-    tips.push("⚠ Leczenie dawno ("+lastTreatment+" dni)");
-  }
-  else{
-    tips.push("✔ Leczenie OK");
-  }
-
-  // ==================== 📅 SEZON ====================
-
-  if(month == 3){
-    tips.push("🌼 Start sezonu – obserwuj rozwój");
-  }
-  else if(month == 4){
-    tips.push("🌸 Rozwój – kontroluj matkę");
-  }
-  else if(month == 5){
-    tips.push("🐝 Okres rojowy – kontroluj mateczniki");
-  }
-  else if(month == 6 || month == 7){
-    tips.push("🍯 Pożytek / miodobranie");
-  }
-  else if(month == 8){
-    tips.push("💊 Leczenie warrozy");
-  }
-  else if(month == 9){
-    tips.push("🍯 Karmienie zimowe");
-  }
-  else{
-    tips.push("❄ Zimowla");
-  }
-
-  // ==================== 🌦 POGODA ====================
-  const weatherText = document.getElementById("bee-flight-alert");
-
-  if(weatherText && weatherText.innerText.includes("Dobre")){
-    tips.push("🐝 Pszczoły aktywne (pogoda)");
-  }
-
-  // ==================== 📋 OUTPUT ====================
-  box.innerHTML = tips.join("<br>");
-}
-
-
   // ==================== Lokalizacja ====================
   function getLocation(){ 
     if(!navigator.geolocation) return;
@@ -2262,6 +2133,7 @@ function updateSmartAssistant(){
   }
 
   // ==================== Pogoda ====================
+   // ==================== Pogoda ====================
 function loadWeather(){
 
   const weatherBox = document.getElementById("weather-data");
@@ -2413,6 +2285,7 @@ function loadWeather(){
 
 }
 
+
   // ==================== Przewijanie do dzisiaj ====================
   function scrollToToday(){
     const today = new Date();
@@ -2443,7 +2316,6 @@ updateInspections();
 updateSmartAssistant();
 scrollToToday();
 loadWeather();
-setInterval(loadWeather, 900000); // co 15 min
 updateTodayButton();
 getLocation();
 });
