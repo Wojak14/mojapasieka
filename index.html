@@ -1834,7 +1834,9 @@ document.addEventListener("DOMContentLoaded", function() {
   window.saveNote = function() {
   if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
   const key = currentDay + "." + currentMonth + ".2026";
+  if(textarea){
   localStorage.setItem(key, textarea.value);
+}
 
   updateMarkers();   // <-- tutaj jest klucz
   updateUpcoming();
@@ -1844,6 +1846,7 @@ document.addEventListener("DOMContentLoaded", function() {
   updateTodayButton();
   scrollToToday();
   updateSmartAssistant();
+  updateAI();
 };
 
   // ==================== Podświetlenie dni ====================
@@ -1949,37 +1952,40 @@ document.querySelectorAll(".day-number").forEach(span => {
   }
 
   // ==================== Nadchodzące prace ====================
- function updateUpcoming(){
-  const upcoming = [];
+function updateUpcoming(){
+
   const today = new Date();
+  const containers = document.querySelectorAll('[id^="upcoming-list"]');
 
-  for(let i=0; i<7; i++){
-    const d = new Date();
-    d.setDate(today.getDate()+i);
+  containers.forEach(box => {
+    const upcoming = [];
 
-    const day = String(d.getDate()).padStart(2,"0");
-    const month = String(d.getMonth()+1).padStart(2,"0");
-    const key = day+"."+month+".2026";
+    for(let i=0; i<7; i++){
+      const d = new Date();
+      d.setDate(today.getDate()+i);
 
-    const note = localStorage.getItem(key);
+      const day = String(d.getDate()).padStart(2,"0");
+      const month = String(d.getMonth()+1).padStart(2,"0");
+      const key = day+"."+month+".2026";
 
-    if(note && note.trim()!==""){
-      let icons = "";
+      const note = localStorage.getItem(key);
 
-      const text = note.toLowerCase();
+      if(note && note.trim()!==""){
+        let icons = "";
+        const text = note.toLowerCase();
 
-      if(text.includes("karmienie")) icons += "🍯 ";
-      if(text.includes("leczenie")) icons += "💊 ";
-      if(text.includes("przegląd")) icons += "🔍 ";
-      if(text.includes("rój")) icons += "🐝 ";
-      if(text.includes("pożytek")) icons += "🌸 ";
+        if(text.includes("karmienie")) icons += "🍯 ";
+        if(text.includes("leczenie")) icons += "💊 ";
+        if(text.includes("przegląd")) icons += "🔍 ";
+        if(text.includes("rój")) icons += "🐝 ";
+        if(text.includes("pożytek")) icons += "🌸 ";
 
-      upcoming.push(icons + key + ": " + note);
+        upcoming.push(icons + key + ": " + note);
+      }
     }
-  }
 
-  const box = document.getElementById("upcoming-list");
-  if(box) box.innerHTML = upcoming.join("<br>") || "Brak nadchodzących prac";
+    box.innerHTML = upcoming.join("<br>") || "Brak nadchodzących prac";
+  });
 }
 
   // ==================== Licznik miodu ====================
@@ -2074,7 +2080,7 @@ function updateSmartAssistant(){
     }
   }
 
-  // 🐝 MAJ – rojowy
+  // 🐝 MAJ
   if(month == 5){
     tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
     if(note.includes("rój")){
@@ -2109,9 +2115,9 @@ function updateSmartAssistant(){
     tips.push("⬛ Zimowla – nie otwieraj uli");
   }
 
-  // 🌦 POGODA (prosta logika)
+  // 🌦 POGODA
   const weatherText = document.getElementById("bee-flight-alert");
-  if(weatherText && weatherText.innerText.includes("Dobre warunki")){
+  if(weatherText && weatherText.innerText.includes("IDEALNE")){
     tips.push("🐝 Dobre warunki – pszczoły aktywne");
   }
 
@@ -2121,6 +2127,40 @@ function updateSmartAssistant(){
   } else {
     box.innerHTML = tips.join("<br>");
   }
+}
+// ==================== 🤖 ULTRA AI ANALIZA ====================
+function updateAI(){
+
+  const box = document.getElementById("assistant-box");
+  if(!box) return;
+
+  const today = new Date();
+  const messages = [];
+
+  for(let i=0; i<3; i++){
+    const d = new Date();
+    d.setDate(today.getDate()-i);
+
+    const day = String(d.getDate()).padStart(2,"0");
+    const month = String(d.getMonth()+1).padStart(2,"0");
+    const key = day+"."+month+".2026";
+
+    const note = (localStorage.getItem(key) || "").toLowerCase();
+
+    if(note.includes("rój")){
+      messages.push("🚨 Wykryto rojkę w ostatnich dniach");
+    }
+    if(note.includes("leczenie")){
+      messages.push("💊 Leczenie trwa – kontroluj warrozę");
+    }
+    if(note.includes("przegląd")){
+      messages.push("🔍 Przegląd wykonany");
+    }
+  }
+
+  messages.push("📅 JUTRO: sprawdź ule około 14:00");
+
+  box.innerHTML = messages.join("<br>") || "🤖 AI: wszystko OK";
 }
 
   // ==================== Lokalizacja ====================
@@ -2132,7 +2172,6 @@ function updateSmartAssistant(){
     });
   }
 
-  // ==================== Pogoda ====================
    // ==================== Pogoda ====================
 function loadWeather(){
 
@@ -2314,6 +2353,7 @@ updateHoney();
 updateAlerts();
 updateInspections();
 updateSmartAssistant();
+updateAI();
 scrollToToday();
 loadWeather();
 updateTodayButton();
