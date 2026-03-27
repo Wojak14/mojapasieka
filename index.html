@@ -2047,133 +2047,80 @@ function updateAlerts(){
 
 
   // ==================== 🤖 INTELIGENTNY ASYSTENT ====================
-function updateSmartAssistant(){
-
+function updateSmartAssistant() {
   const box = document.getElementById("assistant-text");
-  if(!box) return;
+  if (!box) return;
 
   const today = new Date();
-  const month = today.getMonth()+1;
-  const day = String(today.getDate()).padStart(2,"0");
-  const m = String(month).padStart(2,"0");
-  const key = day+"."+m+".2026";
+  const currentMonth = today.getMonth() + 1; // 1–12
+  const monthStr = String(currentMonth).padStart(2, "0");
 
- let recentNotes = "";
+  const tips = [];
+  const completed = {
+    feeding: false,
+    inspection: false,
+    treatment: false,
+    honeyHarvest: false,
+    swarmCheck: false
+  };
 
-for(let i=0; i<3; i++){
-  const d = new Date();
-  d.setDate(today.getDate()-i);
+  // ==================== Analiza wykonanych prac ====================
+  for (let d = 1; d <= 31; d++) {
+    const dayStr = String(d).padStart(2, "0");
+    const key = `${dayStr}.${monthStr}.2026`;
+    const note = (localStorage.getItem(key) || "").toLowerCase();
 
-  const day = String(d.getDate()).padStart(2,"0");
-  const month = String(d.getMonth()+1).padStart(2,"0");
-  const keyLoop = day+"."+month+".2026";
-
-  recentNotes += (localStorage.getItem(keyLoop) || "").toLowerCase() + " ";
-}
-
-let note = recentNotes;
-let tips = [];
-
-// ==================== LICZNIK DNI OD PRZEGLĄDU ====================
-let lastInspectionDate = null;
-
-for(let i=0; i<30; i++){
-  const d = new Date();
-  d.setDate(today.getDate()-i);
-
-  const dayLoop = String(d.getDate()).padStart(2,"0");
-  const monthLoop = String(d.getMonth()+1).padStart(2,"0");
-  const keyLoop = dayLoop+"."+monthLoop+".2026";
-
-  const noteLoop = (localStorage.getItem(keyLoop) || "").toLowerCase();
-
-  if(noteLoop.includes("przegląd") || noteLoop.includes("kontrola")){
-    lastInspectionDate = d;
-    break;
-  }
-}
-
-// jeśli znaleziono przegląd → licz dni
-if(lastInspectionDate){
-  const diffTime = today - lastInspectionDate;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  if(diffDays >= 7){
-    tips.push("⏰ Minęło " + diffDays + " dni od ostatniego przeglądu – zrób kontrolę!");
-  } else if(diffDays >= 4){
-    tips.push("🟡 Ostatni przegląd " + diffDays + " dni temu – obserwuj rodziny");
-  }
-} else {
-  tips.push("⚠️ Brak przeglądu w ostatnich dniach!");
-}
-
-  // 🔍 WIOSNA
-  if(month == 3){
-    if(!note.includes("przegląd") && !note.includes("kontrola")){
-      tips.push("🔍 Zrób pierwszy przegląd rodzin");
-    }
-    if(note.includes("brak pokarmu")){
-      tips.push("🍯 Podaj pokarm – możliwy głód");
-    }
+    if (note.includes("karmienie") || note.includes("syrop") || note.includes("ciasto")) completed.feeding = true;
+    if (note.includes("przegląd") || note.includes("kontrola")) completed.inspection = true;
+    if (note.includes("leczenie") || note.includes("warroza") || note.includes("apiwarol")) completed.treatment = true;
+    if (note.includes("miodobranie") || note.includes("miód")) completed.honeyHarvest = true;
+    if (note.includes("rój") || note.includes("rojka")) completed.swarmCheck = true;
   }
 
-  // 🌸 KWIECIEŃ
-  if(month == 4){
-    tips.push("🌸 Rozwój rodzin – kontroluj matkę i czerwienie");
-    if(note.includes("matecznik") || note.includes("rój")){
-      tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
+  // ==================== Tworzenie podsumowania ====================
+  if (!completed.feeding) tips.push("🍯 Nie zanotowano karmienia – rozważ dokarmienie rodzin");
+  else tips.push("🍯 Karmienie wykonane w tym miesiącu");
+
+  if (!completed.inspection) tips.push("🔍 Brak przeglądów – wykonaj kontrolę uli");
+  else tips.push("🔍 Przegląd wykonany");
+
+  if (!completed.treatment) tips.push("💊 Leczenie warrozy nie przeprowadzone – sprawdź u rodziny");
+  else tips.push("💊 Leczenie wykonane");
+
+  if (!completed.honeyHarvest) tips.push("🍯 Miodobranie jeszcze nie wykonane");
+  else tips.push("🍯 Miodobranie zarejestrowane");
+
+  if (!completed.swarmCheck) tips.push("🐝 Sprawdź możliwość rojki");
+  else tips.push("🐝 Ryzyko rojki monitorowane");
+
+  // ==================== Nadchodzące prace ====================
+  const upcoming = [];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(today.getDate() + i);
+    const dayStr = String(d.getDate()).padStart(2, "0");
+    const monthStr = String(d.getMonth() + 1).padStart(2, "0");
+    const key = `${dayStr}.${monthStr}.2026`;
+    const note = (localStorage.getItem(key) || "").toLowerCase();
+
+    let icons = "";
+    if (note.includes("karmienie")) icons += "🍯 ";
+    if (note.includes("przegląd")) icons += "🔍 ";
+    if (note.includes("leczenie")) icons += "💊 ";
+    if (note.includes("miodobranie") || note.includes("miód")) icons += "🍯 ";
+    if (note.includes("rój")) icons += "🐝 ";
+
+    if (note && note.trim() !== "") {
+      upcoming.push(`${icons}${key}: ${note}`);
     }
   }
 
-  // 🐝 MAJ
-  if(month == 5){
-    tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
-    if(note.includes("rój")){
-      tips.push("🚨 Wysokie ryzyko rójki!");
-    }
-  }
-
-  // 🍯 CZERWIEC–LIPIEC
-  if(month == 6 || month == 7){
-    tips.push("🍯 Sprawdzaj nadstawki – możliwe miodobranie");
-    if(note.includes("miód")){
-      tips.push("🍯 Możesz planować miodobranie");
-    }
-  }
-
-  // 💊 SIERPIEŃ
-  if(month == 8){
-    if(!note.includes("leczenie")){
-      tips.push("💊 Rozpocznij leczenie warrozy!");
-    }
-  }
-
-  // 🍯 WRZESIEŃ
-  if(month == 9){
-    if(!note.includes("karmienie")){
-      tips.push("🍯 Karmienie zimowe rodzin");
-    }
-  }
-
-  // ❄ ZIMA
-  if(month <= 2 || month >= 10){
-    tips.push("⬛ Zimowla – nie otwieraj uli");
-  }
-
-  // 🌦 POGODA
-  const weatherText = document.getElementById("bee-flight-alert");
-  if(weatherText && weatherText.innerText.includes("IDEALNE")){
-    tips.push("🐝 Dobre warunki – pszczoły aktywne");
-  }
-
-  // 📋 WYNIK
-  if(tips.length === 0){
-    box.innerHTML = "✅ Wszystko wygląda dobrze";
-  } else {
-    box.innerHTML = tips.join("<br>");
-  }
-}
-// ==================== 🤖 ULTRA AI ANALIZA ====================
+  box.innerHTML = `
+    <b>📅 Podsumowanie miesiąca:</b><br>${tips.join("<br>")}<br><br>
+    <b>📌 Nadchodzące prace (7 dni):</b><br>${upcoming.join("<br>") || "Brak zaplanowanych prac"}
+  `;
+}// ==================== 🤖 ULTRA AI ANALIZA ====================
 function updateAI(){
 
   const box = document.getElementById("assistant-box");
