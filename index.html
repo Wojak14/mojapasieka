@@ -2240,6 +2240,16 @@ for(let i=0; i<7; i++){
     <br><br>
     ${weatherInfo}
   `;
+// ==================== AUTOMATYCZNE PRZEWIJANIE DO DNIA DZIŚ ====================
+const todayDay = String(today.getDate()).padStart(2,"0");
+const todayMonth = String(today.getMonth()+1).padStart(2,"0");
+const todayEl = document.querySelector(`.day-number[data-day="${todayDay}"][data-month="${todayMonth}"]`);
+
+if(todayEl){
+  todayEl.scrollIntoView({behavior:"smooth", block:"center"});
+  // opcjonalne podświetlenie dnia
+  todayEl.style.border = "2px solid red";
+  todayEl.style.borderRadius = "50%";
 }
 
   // ==================== Lokalizacja ====================
@@ -2251,8 +2261,8 @@ for(let i=0; i<7; i++){
     });
   }
 
-   // ==================== Pogoda ====================
-function loadWeather(){
+// ==================== 🌤 POGODA 5 DNI + DZIŚ ====================
+function loadWeather5Days() {
 
   const weatherBox = document.getElementById("weather-data");
   const forecastBox = document.getElementById("weather-forecast");
@@ -2260,20 +2270,17 @@ function loadWeather(){
 
   if(!weatherBox || !forecastBox) return;
 
-  const showSaved = () => {
-    const saved = localStorage.getItem("weather-cache");
-    if(saved){
-      const data = JSON.parse(saved);
-      weatherBox.innerHTML = data.current;
-      forecastBox.innerHTML = data.forecast;
-      if(beeBox) beeBox.innerHTML = data.bee;
-    }
-  };
-
-  if(!navigator.geolocation){
-    showSaved();
-    return;
+  // 1️⃣ pokaż cache natychmiast
+  const saved = localStorage.getItem("weather-cache-5d");
+  if(saved){
+    const data = JSON.parse(saved);
+    weatherBox.innerHTML = data.today;
+    forecastBox.innerHTML = data.forecast;
+    if(beeBox) beeBox.innerHTML = data.bee;
   }
+
+  // 2️⃣ pobierz pogodę w tle
+  if(!navigator.geolocation) return;
 
   navigator.geolocation.getCurrentPosition(pos => {
 
@@ -2288,22 +2295,13 @@ function loadWeather(){
 
         const today = data.current_weather;
 
-        // ================= DZISIAJ =================
-        let beeStatus = "";
-        let beeColor = "";
+        // 🌤 Dziś
+        let beeStatus="", beeColor="";
+        if(today.temperature>=15 && today.windspeed<20){ beeStatus="🐝 IDEALNE"; beeColor="green"; }
+        else if(today.temperature>=12){ beeStatus="🐝 ŚREDNIE"; beeColor="orange"; }
+        else { beeStatus="❄ SŁABE"; beeColor="red"; }
 
-        if(today.temperature >= 15 && today.windspeed < 20){
-          beeStatus = "🐝 IDEALNE warunki";
-          beeColor = "green";
-        } else if(today.temperature >= 12){
-          beeStatus = "🐝 ŚREDNIE warunki";
-          beeColor = "orange";
-        } else {
-          beeStatus = "❄ SŁABE warunki";
-          beeColor = "red";
-        }
-
-        const currentHTML = `
+        const todayHTML = `
           <div style="padding:10px;border-radius:10px;background:#fff3cd">
             <b>📅 DZIŚ</b><br>
             🌡 ${today.temperature}°C<br>
@@ -2312,118 +2310,70 @@ function loadWeather(){
           </div>
         `;
 
-        // ================= PROGNOZA OD JUTRA =================
-        let forecastHTML = `<b>📅 PROGNOZA (5 dni od jutra)</b><br><br>`;
-        let beeSummary = "";
-
-        for(let i=1; i<=5; i++){
-
-          const date = new Date(data.daily.time[i]);
-          const day = String(date.getDate()).padStart(2,"0");
-          const month = String(date.getMonth()+1).padStart(2,"0");
-
+        // 🌤 Prognoza 5 dni od jutra
+        let forecastHTML = `<b>📅 Prognoza 5 dni</b><br>`;
+        for(let i=1;i<=5;i++){
           const tMax = data.daily.temperature_2m_max[i];
           const tMin = data.daily.temperature_2m_min[i];
-          const rain = data.daily.precipitation_probability_max[i];
           const wind = data.daily.windspeed_10m_max[i];
+          const rain = data.daily.precipitation_probability_max[i];
 
-          let bee = "";
+          let dayStatus="";
+          if(tMax>=15 && wind<20) dayStatus="🐝 IDEALNE";
+          else if(tMax>=12) dayStatus="🐝 ŚREDNIE";
+          else dayStatus="❄ SŁABE";
 
-          if(tMax >= 15 && wind < 20){
-            bee = "🟢 lot OK";
-            beeSummary += 1;
-          } else if(tMax >= 12){
-            bee = "🟡 średnio";
-          } else {
-            bee = "🔴 brak lotu";
-          }
-
-          forecastHTML += `
-            <div style="
-              display:inline-block;
-              width:120px;
-              margin:5px;
-              padding:8px;
-              border-radius:10px;
-              background:#f1f1f1;
-              text-align:center;
-            ">
-              <b>${day}.${month}</b><br>
-              🌡 ${tMax}° / ${tMin}°<br>
-              🌧 ${rain}%<br>
-              💨 ${wind}<br>
-              ${bee}
-            </div>
-          `;
+          forecastHTML += `<div style="margin:3px 0;">
+            <b>Dzień ${i}</b>: 🌡 ${tMin}–${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% 
+            <span style="color:${dayStatus.includes("IDEALNE")?"green":dayStatus.includes("ŚREDNIE")?"orange":"red"}; font-weight:bold">${dayStatus}</span>
+          </div>`;
         }
 
-        // ================= OKNO LOTU =================
-        let beeWindow = "";
+        const beeHTML = `<div style="margin-top:5px">🐝 Aktualny stan: ${beeStatus}</div>`;
 
-        if(today.temperature >= 15 && today.windspeed < 20){
-          beeWindow = "🐝 OKNO LOTU: 10:00 – 16:00";
-        } else if(today.temperature >= 12){
-          beeWindow = "🐝 OKNO LOTU: 12:00 – 15:00";
-        } else {
-          beeWindow = "❄ BRAK LOTU";
-        }
-
-        // ================= AI DECYZJA =================
-        let aiMsg = "";
-
-        if(beeSummary >= 3){
-          aiMsg = "🤖 AI: dobre dni na przegląd w najbliższym czasie";
-        } else {
-          aiMsg = "🤖 AI: słabe warunki – poczekaj";
-        }
-
-        const beeHTML = `
-          <div style="margin-top:10px">
-            ${beeWindow}<br>
-            ${aiMsg}
-          </div>
-        `;
-
-        // ================= WSTAW =================
-        weatherBox.innerHTML = currentHTML;
+        // 3️⃣ aktualizacja DOM
+        weatherBox.innerHTML = todayHTML;
         forecastBox.innerHTML = forecastHTML;
         if(beeBox) beeBox.innerHTML = beeHTML;
 
-        // ================= CACHE =================
-        localStorage.setItem("weather-cache", JSON.stringify({
-          current: currentHTML,
+        // 4️⃣ cache w localStorage na 10 min
+        localStorage.setItem("weather-cache-5d", JSON.stringify({
+          today: todayHTML,
           forecast: forecastHTML,
           bee: beeHTML
         }));
 
       })
-      .catch(showSaved);
-
+      .catch(()=>{}); // błąd fetch – ignoruj
+  },
+  ()=>{}, // brak zgody GPS – ignoruj
+  {
+    timeout: 3000,
+    maximumAge: 600000
   });
-
 }
 
-
-  // ==================== Przewijanie do dzisiaj ====================
-  function scrollToToday(){
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2,"0");
-    const month = String(today.getMonth()+1).padStart(2,"0");
-    const el = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
-    if(el){
-      el.scrollIntoView({behavior:"smooth", block:"center"});
-      el.classList.add("today");
-    }
+ // ==================== AUTOMATYCZNE PRZEWIJANIE DO DNIA DZIŚ ====================
+function scrollToToday() {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  
+  // zakładamy, że każdy dzień ma klasę day-number i data-day/data-month
+  const todayEl = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
+  
+  if(todayEl){
+    todayEl.scrollIntoView({behavior: "smooth", block: "center"});
+    // opcjonalnie podświetlenie
+    todayEl.style.border = "2px solid red";
+    todayEl.style.borderRadius = "50%";
   }
+}
 
-  function updateTodayButton(){
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2,"0");
-    const month = String(today.getMonth()+1).padStart(2,"0");
-    const year = today.getFullYear();
-    const btn = document.getElementById("today-btn");
-    if(btn) btn.innerText = "📅 DZIŚ – " + day + "." + month + "." + year;
-  }
+// wywołanie po załadowaniu kalendarza
+document.addEventListener("DOMContentLoaded", () => {
+  scrollToToday();
+});
 
   // ==================== Uruchomienie ====================
 updateMarkers();
