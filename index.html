@@ -63,31 +63,22 @@ th, td {
   margin-left:2px;
 }
 
-<div id="day-note-box">
+#day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
+  padding:10px;
+  border-radius:10px;
+  margin-top:15px;
+  background:#fff8e1;
+}
 
-  <h3>📝 Notatka dnia</h3>
+.notes {
+  width:100%;
+  height:80px;
+}
 
-  <div style="display:flex; gap:5px; align-items:center;">
-    
-    <textarea id="notes-01" class="notes" placeholder="Wpisz lub powiedz notatkę..."></textarea>
-
-    <!-- 🎤 PRZYCISK -->
-    <button id="micBtn" style="
-      font-size:18px;
-      padding:8px;
-      border:none;
-      border-radius:8px;
-      background:#eee;
-      cursor:pointer;
-    ">🎤</button>
-
-  </div>
-
-  <button onclick="saveNote()">💾 Zapisz</button>
-
-  <div id="autosave-status"></div>
-
-</div>
+#autosave-status {
+  font-size:13px;
+  margin-top:4px;
+  color:green;
 }
 
 .green { background:#8BC34A; }
@@ -108,7 +99,7 @@ th, td {
 
 </html>
 
-<div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 <button id="saveNote">Zapisz</button>Przymrozki | ⬛ Zimowla</div>
+<div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla</div>
 
 <h2>Kalendarz pszczelarski 2026</h2>
 
@@ -1847,15 +1838,16 @@ document.addEventListener("DOMContentLoaded", function() {
   localStorage.setItem(key, textarea.value);
 }
 
-  updateAlerts();
   updateAI();
   updateMarkers();   // <-- tutaj jest klucz
   updateUpcoming();
   updateHoney();
-  updateSmartAssistant();
+  updateAlerts();
   updateInspections();
   updateTodayButton();
-  scrollToToday(); 
+  scrollToToday();
+  updateSmartAssistant();
+  
 };
 
   // ==================== Podświetlenie dni ====================
@@ -2229,18 +2221,7 @@ function updateAI(){
   }
 
    // ==================== Pogoda ====================
-function loadWeather() {
-  if (!navigator.onLine) {
-    console.log("OFFLINE MODE");
-
-    const saved = localStorage.getItem("weatherCache");
-    if (saved) {
-      showSaved(JSON.parse(saved));
-    } else {
-      setOfflineWeather();
-    }
-    return;
-  }
+function loadWeather(){
 
   const weatherBox = document.getElementById("weather-data");
   const forecastBox = document.getElementById("weather-forecast");
@@ -2378,10 +2359,10 @@ function loadWeather() {
         if(beeBox) beeBox.innerHTML = beeHTML;
 
         // ================= CACHE =================
-      localStorage.setItem("weatherCache", JSON.stringify({
-  current: currentHTML,
-  forecast: forecastHTML,
-  bee: beeHTML
+        localStorage.setItem("weather-cache", JSON.stringify({
+          current: currentHTML,
+          forecast: forecastHTML,
+          bee: beeHTML
         }));
 
       })
@@ -2435,195 +2416,6 @@ if ("serviceWorker" in navigator) {
       .catch(err => console.log("Błąd rejestracji SW:", err));
   });
 }
-
-// ==================== 🎤 ROZPOZNAWANIE MOWY ====================
-let recognition;
-let isRecording = false;
-
-if ('webkitSpeechRecognition' in window) {
-  recognition = new webkitSpeechRecognition();
-  recognition.lang = "pl-PL";
-  recognition.continuous = true;
-
-  recognition.onresult = function(event) {
-    let transcript = "";
-
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      transcript += event.results[i][0].transcript;
-    }
-
-    const activeTextarea = document.querySelector(".notes:focus") || document.querySelector(".notes");
-
-    if(transcript){
-  processVoiceCommand(transcript); // <--- TU wywołanie Twojego AI
-  textarea.focus();;
-    }
-  };
-
-  recognition.onerror = function() {
-    console.log("Błąd mikrofonu");
-  };
-}
-
-// 🎤 BUTTON
-document.addEventListener("DOMContentLoaded", () => {
-  const micBtn = document.getElementById("micBtn");
-
-  if(micBtn){
-    micBtn.addEventListener("click", () => {
-
-      if (!recognition) {
-        alert("Brak wsparcia dla mowy (Chrome działa najlepiej)");
-        return;
-      }
-
-      if (!isRecording) {
-        recognition.start();
-        isRecording = true;
-        micBtn.innerText = "⏹️";
-        micBtn.style.background = "red";
-        micBtn.style.color = "white";
-      } else {
-        recognition.stop();
-        isRecording = false;
-        micBtn.innerText = "🎤";
-        micBtn.style.background = "#eee";
-        micBtn.style.color = "black";
-      }
-    });
-  }
-});
-
-// ==================== 🎤 NOTATKI GŁOSOWE PRO ====================
-
-let recognition = null;
-let isRecording = false;
-
-function toggleVoiceNote(){
-
-  if(!('webkitSpeechRecognition' in window)){
-    alert("Brak obsługi mowy w tej przeglądarce");
-    return;
-  }
-
-  if(!textarea){
-    alert("Najpierw kliknij dzień w kalendarzu");
-    return;
-  }
-
-  const btn = document.getElementById("voice-btn");
-
-  // START
-  if(!isRecording){
-
-    recognition = new webkitSpeechRecognition();
-    recognition.lang = "pl-PL";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    recognition.start();
-    isRecording = true;
-
-    if(btn) btn.innerText = "⏹ Stop";
-
-    recognition.onresult = (event) => {
-
-      let finalText = "";
-
-      for(let i = event.resultIndex; i < event.results.length; i++){
-        if(event.results[i].isFinal){
-          finalText += event.results[i][0].transcript;
-        }
-      }
-
-      if(finalText){
-        textarea.value += (textarea.value ? "\n• " : "• ") + finalText;
-        textarea.focus();
-
-        // auto zapis
-        if(typeof saveNote === "function"){
-          saveNote();
-        }
-      }
-    };
-
-    recognition.onerror = () => {
-      stopVoice();
-    };
-
-    recognition.onend = () => {
-      // automatyczne wznowienie (ciągłe nagrywanie)
-      if(isRecording){
-        recognition.start();
-      }
-    };
-
-  } 
-  // STOP
-  else {
-    stopVoice();
-  }
-}
-
-function stopVoice(){
-  if(recognition){
-    recognition.stop();
-    recognition = null;
-  }
-  isRecording = false;
-
-  const btn = document.getElementById("voice-btn");
-  if(btn) btn.innerText = "🎤 Start";
-}
-
-// ==================== 🤖 KOMENDY GŁOSOWE AI ====================
-function processVoiceCommand(text){
-  if(!textarea || !currentDay) return;
-
-  const cmd = text.toLowerCase().trim();
-
-  let noteToAdd = "";
-  let addAlert = false;
-
-  if(cmd.includes("karmienie")){
-    noteToAdd = "Karmienie rodzin";
-    addAlert = true;
-  }
-  else if(cmd.includes("przegląd")){
-    noteToAdd = "Przegląd rodzin";
-    addAlert = true;
-  }
-  else if(cmd.includes("rój")){
-    noteToAdd = "Możliwe rojenie!";
-    addAlert = true;
-  }
-  else if(cmd.includes("miodobranie")){
-    noteToAdd = "Miodobranie";
-    addAlert = true;
-  }
-  else if(cmd.includes("leczenie")){
-    noteToAdd = "Leczenie warrozy";
-    addAlert = true;
-  }
-  else{
-    // zwykła notatka
-    noteToAdd = cmd;
-  }
-
-  if(noteToAdd){
-    textarea.value += (textarea.value ? "\n" : "") + noteToAdd;
-    saveNote(); // auto zapis
-
-    if(addAlert){
-      updateAlerts();
-      updateMarkers();
-      updateUpcoming();
-      updateSmartAssistant();
-      updateAI();
-    }
-  }
-}
-
 </script>
 
 </body>
