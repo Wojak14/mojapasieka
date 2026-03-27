@@ -4,11 +4,21 @@
 <meta charset="UTF-8">
 <title>Kalendarz Pszczelarski 2026</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FBC02D">
+
+<link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
+<link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
+
+<link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
 
 <style>
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
+<div id="today"></div>
+<div id="upcoming"></div>
 }
 
 table {
@@ -21,6 +31,7 @@ th, td {
   border:1px solid #444;
   padding:6px;
   text-align:center;
+  position:relative;
 }
 
 .day-number {
@@ -36,7 +47,23 @@ th, td {
   border:2px solid #4caf50;
 }
 
-#day-note-box {
+.tomorrow {
+  border:2px solid #ff9800;
+}
+
+.note-marker {
+  margin-left:4px;
+  font-size:14px;
+}
+
+.highlight-search {
+  background-color:#ffeb3b;
+  border-radius:4px;
+  padding:2px 4px;
+  margin-left:2px;
+}
+
+#day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
   padding:10px;
   border-radius:10px;
   margin-top:15px;
@@ -48,82 +75,31 @@ th, td {
   height:80px;
 }
 
-/* --- kolory dni --- */
-.black {
-  background-color: #212121; /* ⬛ zimowla */
-  color: #fff;
+#autosave-status {
+  font-size:13px;
+  margin-top:4px;
+  color:green;
 }
 
-.green {
-  background-color: #A5D6A7; /* 🟩 prace pasieczne */
-  color: #000;
-}
+.green { background:#8BC34A; }
+.yellow { background:#FFEB3B; }
+.orange { background:#FF9800; }
+.red { background:#F44336; color:white; }
+.black { background:#000; color:white; }
 
-.yellow {
-  background-color: #FFF59D; /* 🟨 miodobranie */
-  color: #000;
-}
-
-.orange {
-  background-color: #FFCC80; /* 🟧 dni rojowe */
-  color: #000;
-}
-
-.red {
-  background-color: #EF5350; /* 🔴 przymrozki */
-  color: #fff;
-}
-
-/* --- podświetlenie DZIŚ i JUTRO --- */
-.today-highlight {
-  border: 2px solid #4CAF50; /* zielona ramka dla DZIŚ */
-  border-radius: 5px;
-}
-
-.tomorrow-highlight {
-  border: 2px solid #FFA000; /* pomarańczowa ramka dla JUTRO */
-  border-radius: 5px;}
-
-.today-highlight {
-  border: 2px solid #4CAF50; /* zielona ramka dla DZIŚ */
-  border-radius: 5px;
-}
-
-.tomorrow-highlight {
-  border: 2px solid #FFA000; /* pomarańczowa ramka dla JUTRO */
-  border-radius: 5px;
+@media (max-width:600px) {
+  table, th, td { font-size:12px; }
+  .notes { height:60px; }
 }
 </style>
+
 </head>
 
 <body>
 
+</html>
+
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Dni rojowe | 🔴 Przymrozki | ⬛ Zimowla</div>
-
-<div id="day-note-box">
-
-  <h3>📝 Notatka dnia</h3>
-
-  <div style="display:flex; gap:5px; align-items:center;">
-    
-    <textarea id="noteInput" class="notes" placeholder="Wpisz lub powiedz notatkę..."></textarea>
-
-    <button id="micBtn" style="
-      font-size:18px;
-      padding:8px;
-      border:none;
-      border-radius:8px;
-      background:#eee;
-      cursor:pointer;
-    ">🎤</button>
-
-  </div>
-
-  <button id="saveNoteBtn">💾 Zapisz</button>
-
-<div id="save-status" style="font-size:12px;color:green;"></div>
-
-</div>
 
 <h2>Kalendarz pszczelarski 2026</h2>
 
@@ -1619,30 +1595,6 @@ font-weight:bold;
 
 </table>
 
-<!-- ==================== NOTATKI ==================== -->
-<div id="day-note-box">
-
-  <h3>📝 Notatka dnia</h3>
-
-  <div style="display:flex; gap:5px; align-items:center;">
-    
-    <textarea id="noteInput" class="notes" placeholder="Wpisz lub powiedz notatkę..."></textarea>
-
-    <button id="micBtn" style="
-      font-size:18px;
-      padding:8px;
-      border:none;
-      border-radius:8px;
-      background:#eee;
-      cursor:pointer;
-    ">🎤</button>
-
-  </div>
-
-  <button onclick="saveNote()">💾 Zapisz</button>
-
-</div>
-
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1874,113 +1826,9 @@ font-weight:bold;
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-let currentDay = null;
-let currentMonth = null;
-
-
-
-// ==================== WYBÓR DNIA ====================
-document.querySelectorAll(".day-number").forEach(el => {
-  el.addEventListener("click", () => {
-    currentDay = el.dataset.day;
-    currentMonth = el.dataset.month;
-
-    const key = currentDay + "." + currentMonth + ".2026";
-    document.getElementById("noteInput").value = localStorage.getItem(key) || "";
-  });
-});
-
-// ==================== ZAPIS ====================
-window.saveNote = function() {
-  if(!currentDay){ 
-    alert("Najpierw kliknij dzień w kalendarzu"); 
-    return; 
-  }
-
-  const key = currentDay + "." + currentMonth + ".2026";
-  const textarea = document.getElementById("noteInput");
-
-  if(textarea){
-    localStorage.setItem(key, textarea.value);
-  }
-
-  updateMarkers();
-  updateUpcoming();
-  updateHoney();
-  updateAlerts();
-  updateInspections();
-  updateTodayButton();
-  scrollToToday();
-  updateSmartAssistant();
-  updateAI();
-};
-
-// ==================== AUTO ZAPIS ====================
-sdocument.getElementById("saveNoteBtn").addEventListener("click", () => {
-  if (!selectedDay) {
-    alert("Najpierw wybierz dzień w kalendarzu!");
-    return;
-  }
-  const noteText = document.getElementById("noteInput").value;
-  localStorage.setItem(selectedDay, noteText);
-  document.getElementById("autosave-status").innerText = "💾 Zapisano!";
-  setTimeout(() => {
-    document.getElementById("autosave-status").innerText = "";
-  }, 2000);
-});
-
-// ==================== 🎤 MIKROFON ====================
-let recognition;
-let isRecording = false;
-
-if ('webkitSpeechRecognition' in window) {
-  recognition = new webkitSpeechRecognition();
-  recognition.lang = "pl-PL";
-  recognition.continuous = true;
-
-recognition.onend = function() {
-
-  if(!currentDay) return;
-
-  const textarea = document.getElementById("noteInput");
-  if(!textarea) return;
-
-  const key = currentDay + "." + currentMonth + ".2026";
-
-  localStorage.setItem(key, textarea.value);
-
-  updateMarkers();
-  updateUpcoming();
-  updateSmartAssistant();
-  updateAI();
-
-  console.log("🎤 zapis po mowie");
-};
-}
-
-// BUTTON
-document.getElementById("micBtn").addEventListener("click", () => {
-
-  if (!recognition) {
-    alert("Brak obsługi mikrofonu");
-    return;
-  }
-
-  if (!isRecording) {
-    recognition.start();
-    isRecording = true;
-    micBtn.innerText = "⏹️";
-    micBtn.style.background = "red";
-    micBtn.style.color = "white";
-  } else {
-    recognition.stop();
-    isRecording = false;
-    micBtn.innerText = "🎤";
-    micBtn.style.background = "#eee";
-    micBtn.style.color = "black";
-  }
-});
-
+  let textarea = null;
+  let currentDay = null;
+  let currentMonth = null;
 
   // ==================== Zapis notatki ====================
   window.saveNote = function() {
@@ -2565,128 +2413,7 @@ if ("serviceWorker" in navigator) {
       .catch(err => console.log("Błąd rejestracji SW:", err));
   });
 }
-
-// ==================== LIVE AI ====================
-const noteInput = document.getElementById("noteInput");
-
-if(noteInput){
-  noteInput.addEventListener("input", () => {
-
-    const text = noteInput.value.toLowerCase();
-
-    const hints = [];
-
-    if(text.includes("rój") || text.includes("matecznik")){
-      hints.push("🐝 Uwaga – możliwa rójka!");
-    }
-
-    if(text.includes("brak pokarmu")){
-      hints.push("🍯 Sprawdź zapasy – możliwy głód");
-    }
-
-    if(text.includes("warroza")){
-      hints.push("💊 Rozważ leczenie warrozy");
-    }
-
-    if(text.includes("miód")){
-      hints.push("🍯 Możliwe miodobranie");
-    }
-
-    if(text.includes("matka")){
-      hints.push("👑 Sprawdź stan matki");
-    }
-
-    const assistant = document.getElementById("assistant-text");
-
-    if(assistant){
-      if(hints.length > 0){
-        assistant.innerHTML = hints.join("<br>");
-      }
-    }
-  });
-}
-
-
-// ==================== GENERATOR KALENDARZA 2026 ====================
-function generateCalendar(){
-
-  const calendar = document.getElementById("calendar");
-  const months = [
-    "Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec",
-    "Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"
-  ];
-
-  let html = "";
-
-  for(let m = 0; m < 12; m++){
-
-    const monthIndex = m;
-    const monthNumber = String(m+1).padStart(2,"0");
-
-    html += `<h3>${months[m]}</h3>`;
-    html += `<table><tr>`;
-
-    const firstDay = new Date(2026, monthIndex, 1).getDay();
-    const daysInMonth = new Date(2026, monthIndex+1, 0).getDate();
-
-    // poprawka na poniedziałek jako pierwszy dzień
-    let start = (firstDay === 0) ? 6 : firstDay - 1;
-
-    for(let i=0; i<start; i++){
-      html += "<td></td>";
-    }
-
-    for(let d=1; d<=daysInMonth; d++){
-
-      const day = String(d).padStart(2,"0");
-
-      html += `
-        <td>
-          <span class="day-number" data-day="${day}" data-month="${monthNumber}">
-            ${d}
-          </span>
-        </td>
-      `;
-
-      if((start + d) % 7 === 0){
-        html += "</tr><tr>";
-      }
-    }
-
-    html += "</tr></table>";
-  }
-
-  calendar.innerHTML = html;
-}
-
-// ==================== START ====================
-document.addEventListener("DOMContentLoaded", function(){
-  generateCalendar();
-});
 </script>
-
-// Pobranie dzisiejszej daty
-const now = new Date();
-const todayDay = now.getDate();
-const todayMonth = now.getMonth() + 1; // miesiące 0-11
-const tomorrow = new Date();
-tomorrow.setDate(now.getDate() + 1);
-const tomorrowDay = tomorrow.getDate();
-const tomorrowMonth = tomorrow.getMonth() + 1;
-
-// Przejście przez wszystkie dni w kalendarzu
-document.querySelectorAll(".day-number").forEach(span => {
-  const day = parseInt(span.dataset.day);
-  const month = parseInt(span.dataset.month);
-
-  if(day === todayDay && month === todayMonth) {
-    span.parentElement.classList.add("today-highlight");
-  }
-
-  if(day === tomorrowDay && month === tomorrowMonth) {
-    span.parentElement.classList.add("tomorrow-highlight");
-  }
-});
 
 </body>
 </html>
