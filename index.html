@@ -1825,7 +1825,6 @@ font-weight:bold;
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
 
 <script>
-
 document.addEventListener("DOMContentLoaded", function() {
   let textarea = null;
   let currentDay = null;
@@ -2048,78 +2047,135 @@ function updateAlerts(){
 
 
   // ==================== 🤖 INTELIGENTNY ASYSTENT ====================
-function updateSmartAssistant() {
+function updateSmartAssistant(){
+
   const box = document.getElementById("assistant-text");
-  if (!box) return;
+  if(!box) return;
 
-const today = new Date();
-  const currentMonth = today.getMonth() + 1; // 1–12
-  const monthStr = String(currentMonth).padStart(2, "0");
-const tips = [];
-  const completed = {
-    feeding: false,
-    inspection: false,
-    treatment: false,
-    honeyHarvest: false,
-    swarmCheck: false
-  };
+  const today = new Date();
+  const month = today.getMonth()+1;
+  const monthStr = String(month).padStart(2,"0");
 
-  // ==================== Analiza wykonanych prac w całym miesiącu ====================
-  for (let d = 1; d <= 31; d++) {
-    const dayStr = String(d).padStart(2, "0");
-    const key = `${dayStr}.${monthStr}.2026`;
-    const note = (localStorage.getItem(key) || "").toLowerCase();
+  let inspections = 0;
+  let feeding = false;
+  let treatment = false;
+  let swarm = false;
+  let honey = false;
 
-    if (note.includes("karmienie") || note.includes("syrop") || note.includes("ciasto")) completed.feeding = true;
-    if (note.includes("przegląd") || note.includes("kontrola")) completed.inspection = true;
-    if (note.includes("leczenie") || note.includes("warroza") || note.includes("apiwarol")) completed.treatment = true;
-    if (note.includes("miodobranie") || note.includes("miód")) completed.honeyHarvest = true;
-    if (note.includes("rój") || note.includes("rojka")) completed.swarmCheck = true;
+  // ==================== ANALIZA MIESIĄCA ====================
+  for(let d=1; d<=31; d++){
+
+    const key = String(d).padStart(2,"0")+"."+monthStr+".2026";
+    const note = (localStorage.getItem(key)||"").toLowerCase();
+
+    if(note.includes("przegląd") || note.includes("kontrola")) inspections++;
+    if(note.includes("karmienie") || note.includes("syrop")) feeding = true;
+    if(note.includes("leczenie") || note.includes("warroza")) treatment = true;
+    if(note.includes("rój")) swarm = true;
+    if(note.includes("miód") || note.includes("miodobranie")) honey = true;
   }
 
-// ==================== Tworzenie podsumowania miesiąca ====================
-  if (!completed.feeding) tips.push("🍯 Nie zanotowano karmienia – rozważ dokarmienie rodzin");
-  else tips.push("🍯 Karmienie wykonane w tym miesiącu");
+  // ==================== DNI OD PRZEGLĄDU ====================
+  let lastInspectionDate = null;
 
-  if (!completed.inspection) tips.push("🔍 Brak przeglądów – wykonaj kontrolę uli");
-  else tips.push("🔍 Przegląd wykonany");
+  for(let i=0; i<30; i++){
+    const d = new Date();
+    d.setDate(today.getDate()-i);
 
-  if (!completed.treatment) tips.push("💊 Leczenie warrozy nie przeprowadzone – sprawdź u rodziny");
-  else tips.push("💊 Leczenie wykonane");
+    const day = String(d.getDate()).padStart(2,"0");
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const key = day+"."+m+".2026";
 
-  if (!completed.honeyHarvest) tips.push("🍯 Miodobranie jeszcze nie wykonane");
-  else tips.push("🍯 Miodobranie zarejestrowane");
+    const note = (localStorage.getItem(key)||"").toLowerCase();
 
-  if (!completed.swarmCheck) tips.push("🐝 Sprawdź możliwość rojki");
-  else tips.push("🐝 Ryzyko rojki monitorowane");
-
-  const upcoming = [];
-for (let i = 0; i < 7; i++) {
-  const d = new Date();
-  d.setDate(today.getDate() + i);
-  const dayStr = String(d.getDate()).padStart(2, "0");
-  const loopMonthStr = String(d.getMonth() + 1).padStart(2, "0");
-  const key = `${dayStr}.${loopMonthStr}.2026`;
-  const note = (localStorage.getItem(key) || "").toLowerCase();
-
-  let icons = "";
-  if (note.includes("karmienie")) icons += "🍯 ";
-  if (note.includes("przegląd")) icons += "🔍 ";
-  if (note.includes("leczenie")) icons += "💊 ";
-  if (note.includes("miodobranie") || note.includes("miód")) icons += "🍯 ";
-  if (note.includes("rój")) icons += "🐝 ";
-
-  if (note && note.trim() !== "") {
-    upcoming.push(`${icons}${key}: ${note}`);
+    if(note.includes("przegląd") || note.includes("kontrola")){
+      lastInspectionDate = d;
+      break;
+    }
   }
+
+  let summary = [];
+
+  summary.push("🔍 Przeglądy w miesiącu: " + inspections);
+
+  if(lastInspectionDate){
+    const diffDays = Math.floor((today - lastInspectionDate)/(1000*60*60*24));
+    summary.push("⏰ Ostatni przegląd: " + diffDays + " dni temu");
+  } else {
+    summary.push("⚠️ Brak przeglądu!");
+  }
+
+  if(!feeding) summary.push("🍯 Brak karmienia");
+  if(!treatment) summary.push("💊 Brak leczenia");
+  if(swarm) summary.push("🐝 Wystąpiła rojka");
+  if(honey) summary.push("🍯 Było miodobranie");
+
+  // ==================== SEZON ====================
+  if(month == 3) summary.push("🔍 Wiosna – pierwszy przegląd");
+  if(month == 4) summary.push("🌸 Rozwój rodzin");
+  if(month == 5) summary.push("🐝 Okres rojowy");
+  if(month == 6 || month == 7) summary.push("🍯 Miodobranie");
+  if(month == 8) summary.push("💊 Leczenie warrozy");
+  if(month == 9) summary.push("🍯 Karmienie zimowe");
+  if(month <= 2 || month >= 10) summary.push("⬛ Zimowla");
+
+  // ==================== PLAN 7 DNI ====================
+  let plan = [];
+
+  for(let i=0; i<7; i++){
+
+    const d = new Date();
+    d.setDate(today.getDate()+i);
+
+    const day = String(d.getDate()).padStart(2,"0");
+    const m = String(d.getMonth()+1).padStart(2,"0");
+    const key = day+"."+m+".2026";
+
+    const note = (localStorage.getItem(key)||"").toLowerCase();
+
+    let tasks = [];
+
+    if(note.includes("karmienie")) tasks.push("🍯 karmienie");
+    if(note.includes("leczenie")) tasks.push("💊 leczenie");
+    if(note.includes("przegląd")) tasks.push("🔍 przegląd");
+    if(note.includes("rój")) tasks.push("🐝 kontrola rojki");
+    if(note.includes("miód")) tasks.push("🍯 miodobranie");
+
+    // inteligencja
+    if(inspections < 2 && i < 3) tasks.push("🔍 zalecany przegląd");
+    if(!feeding && i < 3) tasks.push("🍯 sprawdź zapasy");
+    if(!treatment && month >= 8) tasks.push("💊 rozważ leczenie");
+
+    if(tasks.length === 0){
+      tasks.push("✅ obserwacja");
+    }
+
+    plan.push("<b>"+key+"</b>: " + tasks.join(", "));
+  }
+
+  // ==================== POGODA ====================
+  const weatherText = document.getElementById("bee-flight-alert");
+  let weatherInfo = "";
+
+  if(weatherText){
+    if(weatherText.innerText.includes("IDEALNE")){
+      weatherInfo = "🐝 Dobre warunki lotu";
+    } else {
+      weatherInfo = "❄ Słabe warunki";
+    }
+  }
+
+  // ==================== WYNIK ====================
+  box.innerHTML = `
+    <b>📊 Podsumowanie:</b><br>
+    ${summary.join("<br>")}
+    <br><br>
+    <b>📅 Plan (7 dni):</b><br>
+    ${plan.join("<br>")}
+    <br><br>
+    ${weatherInfo}
+  `;
 }
-
-// ==================== Wyświetlenie w panelu ====================
-box.innerHTML = `
-  <b>📅 Podsumowanie miesiąca:</b><br>${tips.join("<br>")}<br><br>
-  <b>📌 Nadchodzące prace (7 dni):</b><br>${upcoming.join("<br>") || "Brak zaplanowanych prac"}
-`;
-
 // ==================== 🤖 ULTRA AI ANALIZA ====================
 function updateAI(){
 
