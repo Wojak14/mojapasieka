@@ -1838,7 +1838,6 @@ document.addEventListener("DOMContentLoaded", function() {
   localStorage.setItem(key, textarea.value);
 }
 
-  updateAI();
   updateMarkers();   // <-- tutaj jest klucz
   updateUpcoming();
   updateHoney();
@@ -1847,7 +1846,7 @@ document.addEventListener("DOMContentLoaded", function() {
   updateTodayButton();
   scrollToToday();
   updateSmartAssistant();
-  
+  updateAI();
 };
 
   // ==================== Podświetlenie dni ====================
@@ -2047,129 +2046,127 @@ function updateAlerts(){
   }
 
 
- // ==================== 🤖 INTELIGENTNY ASYSTENT – WERSJA PRO ====================
+  // ==================== 🤖 INTELIGENTNY ASYSTENT ====================
 function updateSmartAssistant(){
+
   const box = document.getElementById("assistant-text");
   if(!box) return;
 
   const today = new Date();
-  const day = String(today.getDate()).padStart(2,"0");
   const month = today.getMonth()+1;
+  const day = String(today.getDate()).padStart(2,"0");
   const m = String(month).padStart(2,"0");
   const key = day+"."+m+".2026";
 
-    // ----------------- Zbieranie notatek ostatnich 7 dni -----------------
-  let recentNotes = "";
-  for(let i=0; i<7; i++){
-    const d = new Date();
-    d.setDate(today.getDate()-i);
-    const keyLoop = String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+".2026";
-    recentNotes += (localStorage.getItem(keyLoop) || "").toLowerCase() + " ";
-  }
+ let recentNotes = "";
+
+for(let i=0; i<3; i++){
+  const d = new Date();
+  d.setDate(today.getDate()-i);
+
+  const day = String(d.getDate()).padStart(2,"0");
+  const month = String(d.getMonth()+1).padStart(2,"0");
+  const keyLoop = day+"."+month+".2026";
+
+  recentNotes += (localStorage.getItem(keyLoop) || "").toLowerCase() + " ";
+}
 
 let note = recentNotes;
 let tips = [];
 
-// ----------------- Minęło 7 dni od ostatniego przeglądu? -----------------
-  const lastInspection = [];
-  for(let i=1;i<=31;i++){
-    const k = String(i).padStart(2,"0")+"."+m+".2026";
-    const n = (localStorage.getItem(k) || "").toLowerCase();
-    if(n.includes("przegląd") || n.includes("kontrola")) lastInspection.push(i);
-  }
+// ==================== LICZNIK DNI OD PRZEGLĄDU ====================
+let lastInspectionDate = null;
 
-  if(lastInspection.length > 0){
-    const lastDay = Math.max(...lastInspection);
-    if(today.getDate() - lastDay >= 7){
-      tips.push("⏰ Minęło 7 dni od ostatniego przeglądu – zrób kontrolę!");
-    }
-  } else {
-    tips.push("⏰ Brak przeglądu w tym miesiącu – zrób kontrolę!");
-  }
+for(let i=0; i<30; i++){
+  const d = new Date();
+  d.setDate(today.getDate()-i);
 
-// ----------------- Ryzyko rójki -----------------
-  let swarmRisk = 0;
-  for(let i=0; i<7; i++){
-    const d = new Date();
-    d.setDate(today.getDate()-i);
-    const keyLoop = String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+".2026";
-    const noteLoop = (localStorage.getItem(keyLoop) || "").toLowerCase();
-    if(noteLoop.includes("rój") || noteLoop.includes("rojka") || noteLoop.includes("matecznik")){
-      swarmRisk += 25;
-    }
-  }
-const weatherEl = document.getElementById("bee-flight-alert");
-  if(weatherEl){
-    const text = weatherEl.innerText.toUpperCase();
-    if(text.includes("IDEALNE")) swarmRisk += 25;
-    else if(text.includes("ŚREDNIE")) swarmRisk += 10;
-  }
-  if(swarmRisk > 100) swarmRisk = 100;
-  tips.push("🐝 Ryzyko rójki: " + swarmRisk + "%");
+  const dayLoop = String(d.getDate()).padStart(2,"0");
+  const monthLoop = String(d.getMonth()+1).padStart(2,"0");
+  const keyLoop = dayLoop+"."+monthLoop+".2026";
 
-const weatherEl = document.getElementById("bee-flight-alert");
-  if(weatherEl){
-    const text = weatherEl.innerText.toUpperCase();
-    if(text.includes("IDEALNE")) swarmRisk += 25;
-    else if(text.includes("ŚREDNIE")) swarmRisk += 10;
-  }
-  if(swarmRisk > 100) swarmRisk = 100;
-  tips.push("🐝 Ryzyko rójki: " + swarmRisk + "%");
+  const noteLoop = (localStorage.getItem(keyLoop) || "").toLowerCase();
 
-// ----------------- Wiosna / lato / jesień / zima -----------------
+  if(noteLoop.includes("przegląd") || noteLoop.includes("kontrola")){
+    lastInspectionDate = d;
+    break;
+  }
+}
+
+// jeśli znaleziono przegląd → licz dni
+if(lastInspectionDate){
+  const diffTime = today - lastInspectionDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if(diffDays >= 7){
+    tips.push("⏰ Minęło " + diffDays + " dni od ostatniego przeglądu – zrób kontrolę!");
+  } else if(diffDays >= 4){
+    tips.push("🟡 Ostatni przegląd " + diffDays + " dni temu – obserwuj rodziny");
+  }
+} else {
+  tips.push("⚠️ Brak przeglądu w ostatnich dniach!");
+}
+
+  // 🔍 WIOSNA
   if(month == 3){
-    if(!note.includes("przegląd")) tips.push("🔍 Zrób pierwszy przegląd rodzin");
-    if(note.includes("brak pokarmu")) tips.push("🍯 Podaj pokarm – możliwy głód");
+    if(!note.includes("przegląd") && !note.includes("kontrola")){
+      tips.push("🔍 Zrób pierwszy przegląd rodzin");
+    }
+    if(note.includes("brak pokarmu")){
+      tips.push("🍯 Podaj pokarm – możliwy głód");
+    }
   }
+
+  // 🌸 KWIECIEŃ
   if(month == 4){
     tips.push("🌸 Rozwój rodzin – kontroluj matkę i czerwienie");
-    if(note.includes("matecznik") || note.includes("rój")) tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
+    if(note.includes("matecznik") || note.includes("rój")){
+      tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
+    }
   }
+
+  // 🐝 MAJ
   if(month == 5){
     tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
-    if(note.includes("rój")) tips.push("🚨 Wysokie ryzyko rójki!");
+    if(note.includes("rój")){
+      tips.push("🚨 Wysokie ryzyko rójki!");
+    }
   }
+
+  // 🍯 CZERWIEC–LIPIEC
   if(month == 6 || month == 7){
     tips.push("🍯 Sprawdzaj nadstawki – możliwe miodobranie");
-    if(note.includes("miód")) tips.push("🍯 Możesz planować miodobranie");
+    if(note.includes("miód")){
+      tips.push("🍯 Możesz planować miodobranie");
+    }
   }
+
+  // 💊 SIERPIEŃ
   if(month == 8){
-    if(!note.includes("leczenie")) tips.push("💊 Rozpocznij leczenie warrozy!");
+    if(!note.includes("leczenie")){
+      tips.push("💊 Rozpocznij leczenie warrozy!");
+    }
   }
+
+  // 🍯 WRZESIEŃ
   if(month == 9){
-    if(!note.includes("karmienie")) tips.push("🍯 Karmienie zimowe rodzin");
+    if(!note.includes("karmienie")){
+      tips.push("🍯 Karmienie zimowe rodzin");
+    }
   }
-  if(month <= 2 || month >= 10) tips.push("⬛ Zimowla – nie otwieraj uli");
 
-  // ----------------- Wiosna / lato / jesień / zima -----------------
-  if(month == 3){
-    if(!note.includes("przegląd")) tips.push("🔍 Zrób pierwszy przegląd rodzin");
-    if(note.includes("brak pokarmu")) tips.push("🍯 Podaj pokarm – możliwy głód");
+  // ❄ ZIMA
+  if(month <= 2 || month >= 10){
+    tips.push("⬛ Zimowla – nie otwieraj uli");
   }
-  if(month == 4){
-    tips.push("🌸 Rozwój rodzin – kontroluj matkę i czerwienie");
-    if(note.includes("matecznik") || note.includes("rój")) tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
-  }
-  if(month == 5){
-    tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
-    if(note.includes("rój")) tips.push("🚨 Wysokie ryzyko rójki!");
-  }
-  if(month == 6 || month == 7){
-    tips.push("🍯 Sprawdzaj nadstawki – możliwe miodobranie");
-    if(note.includes("miód")) tips.push("🍯 Możesz planować miodobranie");
-  }
-  if(month == 8){
-    if(!note.includes("leczenie")) tips.push("💊 Rozpocznij leczenie warrozy!");
-  }
-  if(month == 9){
-    if(!note.includes("karmienie")) tips.push("🍯 Karmienie zimowe rodzin");
-  }
-  if(month <= 2 || month >= 10) tips.push("⬛ Zimowla – nie otwieraj uli");
 
-  // 🌦 Pogoda
-  if(weatherEl && weatherEl.innerText.includes("IDEALNE")) tips.push("🐝 Dobre warunk🐝 Dobre warunki – pszczoły aktywne");
+  // 🌦 POGODA
+  const weatherText = document.getElementById("bee-flight-alert");
+  if(weatherText && weatherText.innerText.includes("IDEALNE")){
+    tips.push("🐝 Dobre warunki – pszczoły aktywne");
+  }
 
-// ----------------- Wyświetlenie w UI -----------------
+  // 📋 WYNIK
   if(tips.length === 0){
     box.innerHTML = "✅ Wszystko wygląda dobrze";
   } else {
