@@ -2046,7 +2046,7 @@ function updateAlerts(){
   }
 
 
-  // ==================== 🤖 INTELIGENTNY ASYSTENT ====================
+// ==================== 🤖 INTELIGENTNY ASYSTENT ====================
 function updateSmartAssistant(){
 
   const box = document.getElementById("assistant-text");
@@ -2064,7 +2064,6 @@ function updateSmartAssistant(){
 
   // ==================== ANALIZA MIESIĄCA ====================
   for(let d=1; d<=31; d++){
-
     const key = String(d).padStart(2,"0")+"."+monthStr+".2026";
     const note = (localStorage.getItem(key)||"").toLowerCase();
 
@@ -2094,6 +2093,35 @@ function updateSmartAssistant(){
     }
   }
 
+  // ==================== RYZYKO ROJKI ====================
+  let swarmRisk = 0;
+
+  if(month == 4) swarmRisk += 20;
+  if(month == 5) swarmRisk += 40;
+  if(month == 6) swarmRisk += 30;
+
+  if(inspections === 0) swarmRisk += 30;
+  if(inspections === 1) swarmRisk += 20;
+
+  if(swarm) swarmRisk += 30;
+
+  const weatherBox = document.getElementById("bee-flight-alert");
+  if(weatherBox && weatherBox.innerText.includes("IDEALNE")){
+    swarmRisk += 10;
+  }
+
+  if(swarmRisk > 100) swarmRisk = 100;
+
+  let swarmText = "";
+  if(swarmRisk >= 70){
+    swarmText = "🚨 WYSOKIE ryzyko rojki!";
+  } else if(swarmRisk >= 40){
+    swarmText = "⚠️ ŚREDNIE ryzyko rojki";
+  } else {
+    swarmText = "✅ NISKIE ryzyko rojki";
+  }
+
+  // ==================== PODSUMOWANIE ====================
   let summary = [];
 
   summary.push("🔍 Przeglądy w miesiącu: " + inspections);
@@ -2104,6 +2132,9 @@ function updateSmartAssistant(){
   } else {
     summary.push("⚠️ Brak przeglądu!");
   }
+
+  summary.push("🐝 Ryzyko rojki: " + swarmRisk + "%");
+  summary.push(swarmText);
 
   if(!feeding) summary.push("🍯 Brak karmienia");
   if(!treatment) summary.push("💊 Brak leczenia");
@@ -2120,45 +2151,79 @@ function updateSmartAssistant(){
   if(month <= 2 || month >= 10) summary.push("⬛ Zimowla");
 
   // ==================== PLAN 7 DNI ====================
-  let plan = [];
+let plan = [];
 
-  for(let i=0; i<7; i++){
+for(let i=0; i<7; i++){
 
-    const d = new Date();
-    d.setDate(today.getDate()+i);
+  const d = new Date();
+  d.setDate(today.getDate()+i);
 
-    const day = String(d.getDate()).padStart(2,"0");
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const key = day+"."+m+".2026";
+  const day = String(d.getDate()).padStart(2,"0");
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const key = day+"."+m+".2026";
 
-    const note = (localStorage.getItem(key)||"").toLowerCase();
+  const note = (localStorage.getItem(key)||"").toLowerCase();
 
-    let tasks = [];
+  let tasks = [];
 
-    if(note.includes("karmienie")) tasks.push("🍯 karmienie");
-    if(note.includes("leczenie")) tasks.push("💊 leczenie");
-    if(note.includes("przegląd")) tasks.push("🔍 przegląd");
-    if(note.includes("rój")) tasks.push("🐝 kontrola rojki");
-    if(note.includes("miód")) tasks.push("🍯 miodobranie");
+  // ==================== ZADANIA ====================
+  if(note.includes("karmienie")) tasks.push("🍯 karmienie");
+  if(note.includes("leczenie")) tasks.push("💊 leczenie");
+  if(note.includes("przegląd")) tasks.push("🔍 przegląd");
+  if(note.includes("rój")) tasks.push("🐝 kontrola rojki");
+  if(note.includes("miód")) tasks.push("🍯 miodobranie");
 
-    // inteligencja
-    if(inspections < 2 && i < 3) tasks.push("🔍 zalecany przegląd");
-    if(!feeding && i < 3) tasks.push("🍯 sprawdź zapasy");
-    if(!treatment && month >= 8) tasks.push("💊 rozważ leczenie");
+  if(inspections < 2 && i < 3) tasks.push("🔍 zalecany przegląd");
+  if(!feeding && i < 3) tasks.push("🍯 sprawdź zapasy");
+  if(!treatment && month >= 8) tasks.push("💊 rozważ leczenie");
 
-    if(tasks.length === 0){
-      tasks.push("✅ obserwacja");
-    }
-
-    plan.push("<b>"+key+"</b>: " + tasks.join(", "));
+  if(tasks.length === 0){
+    tasks.push("✅ obserwacja");
   }
 
-  // ==================== POGODA ====================
-  const weatherText = document.getElementById("bee-flight-alert");
-  let weatherInfo = "";
+  // ==================== AI RYZYKO DZIENNE ====================
+  let dayRisk = swarmRisk;
 
-  if(weatherText){
-    if(weatherText.innerText.includes("IDEALNE")){
+  // im dalej w czasie → lekkie zwiększenie
+  dayRisk += i * 3;
+
+  // brak przeglądu → rośnie szybciej
+  if(inspections === 0) dayRisk += i * 2;
+
+  // wpisy o rojce → duży wzrost
+  if(note.includes("rój") || note.includes("matecznik")) dayRisk += 20;
+
+  // pogoda (jeśli masz IDEALNE warunki)
+  const weatherBox = document.getElementById("bee-flight-alert");
+  if(weatherBox && weatherBox.innerText.includes("IDEALNE")){
+    dayRisk += 5;
+  }
+
+  if(dayRisk > 100) dayRisk = 100;
+
+  // opis dnia
+  let riskLabel = "";
+  if(dayRisk >= 80){
+    riskLabel = "🚨 możliwa rojka!";
+  } else if(dayRisk >= 60){
+    riskLabel = "⚠️ wysokie ryzyko";
+  } else if(dayRisk >= 40){
+    riskLabel = "🟡 rośnie ryzyko";
+  } else {
+    riskLabel = "🟢 stabilnie";
+  }
+
+  plan.push(
+    "<b>"+key+"</b>: " +
+    tasks.join(", ") +
+    " | 🐝 " + dayRisk + "% " + riskLabel
+  );
+}
+
+  // ==================== POGODA ====================
+  let weatherInfo = "";
+  if(weatherBox){
+    if(weatherBox.innerText.includes("IDEALNE")){
       weatherInfo = "🐝 Dobre warunki lotu";
     } else {
       weatherInfo = "❄ Słabe warunki";
@@ -2175,40 +2240,6 @@ function updateSmartAssistant(){
     <br><br>
     ${weatherInfo}
   `;
-}
-// ==================== 🤖 ULTRA AI ANALIZA ====================
-function updateAI(){
-
-  const box = document.getElementById("assistant-box");
-  if(!box) return;
-
-  const today = new Date();
-  const messages = [];
-
-  for(let i=0; i<3; i++){
-    const d = new Date();
-    d.setDate(today.getDate()-i);
-
-    const day = String(d.getDate()).padStart(2,"0");
-    const month = String(d.getMonth()+1).padStart(2,"0");
-    const key = day+"."+month+".2026";
-
-    const note = (localStorage.getItem(key) || "").toLowerCase();
-
-    if(note.includes("rój")){
-      messages.push("🚨 Wykryto rojkę w ostatnich dniach");
-    }
-    if(note.includes("leczenie")){
-      messages.push("💊 Leczenie trwa – kontroluj warrozę");
-    }
-    if(note.includes("przegląd")){
-      messages.push("🔍 Przegląd wykonany");
-    }
-  }
-
-  messages.push("📅 JUTRO: sprawdź ule około 14:00");
-
-  box.innerHTML = messages.join("<br>") || "🤖 AI: wszystko OK";
 }
 
   // ==================== Lokalizacja ====================
