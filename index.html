@@ -47,6 +47,41 @@ th, td {
   width:100%;
   height:80px;
 }
+
+.black {
+  background-color: #212121; /* ⬛ zimowla */
+  color: #fff;
+}
+
+.green {
+  background-color: #A5D6A7; /* 🟩 prace pasieczne */
+  color: #000;
+}
+
+.yellow {
+  background-color: #FFF59D; /* 🟨 miodobranie */
+  color: #000;
+}
+
+.orange {
+  background-color: #FFCC80; /* 🟧 dni rojowe */
+  color: #000;
+}
+
+.red {
+  background-color: #EF5350; /* 🔴 przymrozki */
+  color: #fff;
+}
+
+.today-highlight {
+  border: 2px solid #4CAF50; /* zielona ramka dla DZIŚ */
+  border-radius: 5px;
+}
+
+.tomorrow-highlight {
+  border: 2px solid #FFA000; /* pomarańczowa ramka dla JUTRO */
+  border-radius: 5px;
+}
 </style>
 </head>
 
@@ -2625,6 +2660,29 @@ document.addEventListener("DOMContentLoaded", function(){
   generateCalendar();
 });
 </script>
+
+// Pobranie dzisiejszej daty
+const now = new Date();
+const todayDay = now.getDate();
+const todayMonth = now.getMonth() + 1; // miesiące 0-11
+const tomorrow = new Date();
+tomorrow.setDate(now.getDate() + 1);
+const tomorrowDay = tomorrow.getDate();
+const tomorrowMonth = tomorrow.getMonth() + 1;
+
+// Przejście przez wszystkie dni w kalendarzu
+document.querySelectorAll(".day-number").forEach(span => {
+  const day = parseInt(span.dataset.day);
+  const month = parseInt(span.dataset.month);
+
+  if(day === todayDay && month === todayMonth) {
+    span.parentElement.classList.add("today-highlight");
+  }
+
+  if(day === tomorrowDay && month === tomorrowMonth) {
+    span.parentElement.classList.add("tomorrow-highlight");
+  }
+});
 
 </body>
 </html>
