@@ -121,7 +121,7 @@ th, td {
 
   <button id="saveNoteBtn">💾 Zapisz</button>
 
-<div id="autosave-status" style="font-size:12px;color:green;"></div>
+<div id="save-status" style="font-size:12px;color:green;"></div>
 
 </div>
 
@@ -1916,25 +1916,18 @@ window.saveNote = function() {
 };
 
 // ==================== AUTO ZAPIS ====================
-setInterval(() => {
-  if(!currentDay) return;
-
-  const textarea = document.getElementById("noteInput");
-  if(!textarea) return;
-
-  const key = currentDay + "." + currentMonth + ".2026";
-  localStorage.setItem(key, textarea.value);
-
-  const status = document.getElementById("autosave-status");
-  if(status){
-    status.innerText = "💾 auto zapis...";
-    setTimeout(()=> status.innerText = "", 2000);
+sdocument.getElementById("saveNoteBtn").addEventListener("click", () => {
+  if (!selectedDay) {
+    alert("Najpierw wybierz dzień w kalendarzu!");
+    return;
   }
-
-  // 🔥 aktualizacja systemu
-  updateMarkers();
-  updateUpcoming();
-}, 2000);
+  const noteText = document.getElementById("noteInput").value;
+  localStorage.setItem(selectedDay, noteText);
+  document.getElementById("autosave-status").innerText = "💾 Zapisano!";
+  setTimeout(() => {
+    document.getElementById("autosave-status").innerText = "";
+  }, 2000);
+});
 
 // ==================== 🎤 MIKROFON ====================
 let recognition;
