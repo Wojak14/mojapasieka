@@ -2,128 +2,25 @@
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
-<title>Kalendarz Pszczelarski 2026</title>
+<title>Panel Pasieki</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FBC02D">
-
-<link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
-
-<link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 10px;
-<div id="today"></div>
-<div id="upcoming"></div>
+body { font-family: Arial; margin:20px; }
+
+#weather, #assistant, #today-box, #location-box { 
+  margin-top:15px; 
+  padding:15px; 
+  border-radius:10px; 
 }
 
-/* PODSTAWA */
-.today {
-  border: 2px solid red;
-  border-radius: 50%;
-}
+#today-box { background:#fff3cd; font-weight:bold; }
+#weather { background:#e3f2fd; }
+#assistant { background:#e8f5e9; }
+#location-box { background:#f1f8e9; font-size:14px; }
 
-/* PRZEGLĄD */
-.highlight-note {
-  background: #cce5ff !important;
-}
-
-/* KARMIENIE */
-.highlight-feeding {
-  background: #fff3cd !important;
-}
-
-/* LECZENIE */
-.highlight-treatment {
-  background: #f8d7da !important;
-}
-
-/* ROJKA */
-.highlight-swarm {
-  background: #ffe5b4 !important;
-}
-
-/* OGÓLNA NOTATKA */
-.has-note {
-  font-weight: bold;
-}
-
-table {
-  width:100%;
-  border-collapse: collapse;
-  margin-bottom:20px;
-}
-
-th, td {
-  border:1px solid #444;
-  padding:6px;
-  text-align:center;
-  position:relative;
-}
-
-.day-number {
-  cursor:pointer;
-  font-weight:bold;
-}
-
-.has-note {
-  background-color: #fff59d;
-}
-
-.today {
-  border:2px solid #4caf50;
-}
-
-.tomorrow {
-  border:2px solid #ff9800;
-}
-
-.note-marker {
-  margin-left:4px;
-  font-size:14px;
-}
-
-.highlight-search {
-  background-color:#ffeb3b;
-  border-radius:4px;
-  padding:2px 4px;
-  margin-left:2px;
-}
-
-#day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
-  padding:10px;
-  border-radius:10px;
-  margin-top:15px;
-  background:#fff8e1;
-}
-
-.notes {
-  width:100%;
-  height:80px;
-}
-
-#autosave-status {
-  font-size:13px;
-  margin-top:4px;
-  color:green;
-}
-
-.green { background:#8BC34A; }
-.yellow { background:#FFEB3B; }
-.orange { background:#FF9800; }
-.red { background:#F44336; color:white; }
-.black { background:#000; color:white; }
-
-@media (max-width:600px) {
-  table, th, td { font-size:12px; }
-  .notes { height:60px; }
-}
+h2 { margin-bottom:5px; }
 </style>
-
 </head>
 
 <body>
@@ -134,82 +31,54 @@ th, td {
 
 <h2>Kalendarz pszczelarski 2026</h2>
 
-<div id="bee-assistant" style="
-background:#e8f5e9;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
+<h2>📅 Dzisiejszy dzień</h2>
+<div id="today-box">Ładowanie...</div>
 
-  <h3>🐝 Asystent pszczelarza</h3>
-
-  <div id="assistant-text">
-    Sprawdzanie zaleceń...
-  </div>
-
-</div>
-
-<button id="today-btn" onclick="scrollToToday()" style="
-margin-top:8px;
-margin-bottom:10px;
-padding:8px 12px;
-font-size:14px;
-border:none;
-border-radius:8px;
-background:#FBC02D;
-cursor:pointer;
-font-weight:bold;
-">
-📅 DZIŚ
-</button>
-
-<!-- 🌦 POGODA -->
-<div id="weather-box" style="
+<h2>🌤 Pogoda w pasiece</h2>
+<div id="weather" style="
 background:#fff8e1;
 padding:10px;
 border-radius:10px;
 margin-bottom:15px;
 ">
 
-  <h3>🌦 Pogoda w pasiece</h3>
-
-  <div id="weather-data">
-    Ładowanie pogody...
-  </div>
-
-  <div id="location-box" style="
-  background:#e3f2fd;
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
-  font-size:14px;
-  ">
-    📍 Lokalizacja pasieki: sprawdzanie...
-  </div>
+  <div id="weather-today"></div>
 
   <div id="weather-forecast" style="
   margin-top:8px;
   font-size:14px;
   "></div>
 
-  <div id="bee-flight-alert" style="
-  margin-top:10px;
-  padding:8px;
-  background:#e8f5e9;
-  border-radius:8px;
-  font-weight:bold;
-  ">
-    🐝 Sprawdzanie warunków lotu pszczół...
+</div>
+
+<div id="location-box" style="
+background:#e3f2fd;
+padding:10px;
+border-radius:10px;
+margin-bottom:15px;
+font-size:14px;
+">
+📍 Lokalizacja: sprawdzanie...
+</div>
+
+<h2>🐝 Asystent pszczelarza</h2>
+<div id="assistant" style="
+background:#e8f5e9;
+padding:10px;
+border-radius:10px;
+">
+
+  <div id="assistant-text">
+    Ładowanie...
   </div>
 
 </div>
 
 <!-- 🌼 SEZON -->
 <div id="season-info" style="
-margin-bottom:10px;
+margin-top:10px;
 font-weight:bold;
 "></div>
-
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
@@ -1856,240 +1725,146 @@ font-weight:bold;
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function(){
 
-  let textarea = null;
-  let currentDay = null;
-  let currentMonth = null;
+  // ==================== DZISIAJ ====================
+  function loadToday(){
+    const todayBox = document.getElementById("today-box");
+    const d = new Date();
 
-  // ==================== KALENDARZ ====================
-  function updateMarkers() {
-    const today = new Date();
+    const days = ["Niedziela","Poniedziałek","Wtorek","Środa","Czwartek","Piątek","Sobota"];
+    const dayName = days[d.getDay()];
 
-    document.querySelectorAll(".day-number").forEach(span => {
-      const td = span.closest("td");
+    const day = String(d.getDate()).padStart(2,"0");
+    const month = String(d.getMonth()+1).padStart(2,"0");
+    const year = d.getFullYear();
 
-      td.classList.remove(
-        "has-note","today",
-        "highlight-note","highlight-feeding",
-        "highlight-treatment","highlight-swarm"
-      );
-
-      const day = span.dataset.day.padStart(2,"0");
-      const month = span.dataset.month.padStart(2,"0");
-      const key = day + "." + month + ".2026";
-
-      const old = td.querySelector(".note-marker");
-      if(old) old.remove();
-
-      const note = (localStorage.getItem(key)||"").toLowerCase();
-
-      if(note){
-        td.classList.add("has-note");
-
-        let icons = [];
-        if(note.includes("miód") || note.includes("karmienie")) icons.push("🍯");
-        if(note.includes("leczenie")) icons.push("💊");
-        if(note.includes("przegląd")) icons.push("🔍");
-        if(note.includes("rój")) icons.push("🐝");
-        if(note.includes("ramka")) icons.push("🧱");
-        if(note.includes("węza") || note.includes("weze")) icons.push("🧩");
-        if(icons.length===0) icons.push("📝");
-
-        const marker = document.createElement("span");
-        marker.className = "note-marker";
-        marker.textContent = " " + icons.join(" ");
-        span.after(marker);
-
-        // 🔥 PODŚWIETLENIA PRIORYTETÓW
-        if(note.includes("przegląd")) td.classList.add("highlight-note");
-        if(note.includes("karmienie")) td.classList.add("highlight-feeding");
-        if(note.includes("leczenie")) td.classList.add("highlight-treatment");
-        if(note.includes("rój") || note.includes("matecznik")) td.classList.add("highlight-swarm");
-      }
-
-      // DZIŚ
-      if(
-        parseInt(day) === today.getDate() &&
-        parseInt(month) === (today.getMonth()+1)
-      ){
-        td.classList.add("today");
-      }
-    });
+    todayBox.innerHTML = `📅 ${dayName}, ${day}.${month}.${year}`;
   }
 
-  // ==================== KLIK DZIEŃ ====================
-  document.querySelectorAll(".day-number").forEach(span => {
-    span.addEventListener("click", () => {
-      currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = span.dataset.month.padStart(2,"0");
-      textarea = document.getElementById("notes-" + currentMonth);
-
-      const key = currentDay + "." + currentMonth + ".2026";
-      if(textarea){
-        textarea.value = localStorage.getItem(key) || "";
-        textarea.focus();
-      }
-    });
-  });
-
-  // ==================== ZAPIS ====================
-  window.saveNote = function() {
-    if(!currentDay) return alert("Kliknij dzień w kalendarzu");
-
-    const key = currentDay + "." + currentMonth + ".2026";
-    if(textarea) localStorage.setItem(key, textarea.value);
-
-    updateMarkers();
-    loadWeatherAndAssist();
-  };
-
-  // ==================== POGODA PRO ====================
-  async function loadWeather5Days() {
-    const weatherBox = document.getElementById("weather-data");
+  // ==================== POGODA + GPS ====================
+  function loadWeather(){
+    const todayBox = document.getElementById("weather-today");
     const forecastBox = document.getElementById("weather-forecast");
+    const locationBox = document.getElementById("location-box");
 
-    if(!weatherBox || !forecastBox) return null;
+    if(!navigator.geolocation){
+      locationBox.innerHTML = "❌ Brak GPS w przeglądarce";
+      return;
+    }
 
-    if(!navigator.geolocation) return null;
+    navigator.geolocation.getCurrentPosition(async (pos)=>{
 
-    return new Promise(resolve=>{
-      navigator.geolocation.getCurrentPosition(async pos=>{
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
 
-        try {
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`);
-          const data = await res.json();
+      locationBox.innerHTML = `📍 Lokalizacja: ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
 
-          const t = data.current_weather.temperature;
-          const w = data.current_weather.windspeed;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
 
-          const beeStatus = (t>=15 && w<20) ? "🐝 IDEALNE" :
-                           (t>=12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
+      try{
+        const res = await fetch(url);
+        const data = await res.json();
 
-          weatherBox.innerHTML = `
-            <div style="padding:10px;background:#fff3cd;border-radius:8px">
-              <b>📅 DZIŚ</b><br>
-              🌡 ${t}°C<br>
-              💨 ${w} km/h<br>
-              <b>${beeStatus}</b>
-            </div>
+        // DZISIAJ
+        const t = data.current_weather.temperature;
+        const w = data.current_weather.windspeed;
+
+        let bee = "";
+        if(t>=15 && w<20) bee="🐝 IDEALNE";
+        else if(t>=12) bee="🐝 ŚREDNIE";
+        else bee="❄ SŁABE";
+
+        todayBox.innerHTML = `
+          🌡 ${t}°C<br>
+          💨 ${w} km/h<br>
+          <b>${bee}</b>
+        `;
+
+        // PROGNOZA 5 DNI Z DATĄ
+        const days = ["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
+        let html = "<b>📅 Prognoza (5 dni)</b><br>";
+
+        for(let i=1;i<=5;i++){
+          const date = new Date();
+          date.setDate(date.getDate()+i);
+
+          const dayName = days[date.getDay()];
+          const day = String(date.getDate()).padStart(2,"0");
+          const month = String(date.getMonth()+1).padStart(2,"0");
+
+          const tMin = data.daily.temperature_2m_min[i];
+          const tMax = data.daily.temperature_2m_max[i];
+          const wind = data.daily.windspeed_10m_max[i];
+          const rain = data.daily.precipitation_probability_max[i];
+
+          let status="";
+          if(tMax>=15 && wind<20) status="🐝 IDEALNE";
+          else if(tMax>=12) status="🐝 ŚREDNIE";
+          else status="❄ SŁABE";
+
+          html += `
+            ${dayName} ${day}.${month}: 🌡 ${tMin}–${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% ${status}<br>
           `;
-
-          // 🔥 PROGNOZA Z DATĄ
-          const days = ["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-          let html = `<b>📅 Prognoza (5 dni)</b><br>`;
-
-          for(let i=1;i<=5;i++){
-            const date = new Date();
-            date.setDate(date.getDate()+i);
-
-            const d = String(date.getDate()).padStart(2,"0");
-            const m = String(date.getMonth()+1).padStart(2,"0");
-            const dayName = days[date.getDay()];
-
-            const tMin = data.daily.temperature_2m_min[i];
-            const tMax = data.daily.temperature_2m_max[i];
-            const wind = data.daily.windspeed_10m_max[i];
-            const rain = data.daily.precipitation_probability_max[i];
-
-            let status = (tMax>=15 && wind<20) ? "🐝 IDEALNE" :
-                         (tMax>=12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
-
-            html += `
-              <div>
-                ${dayName} ${d}.${m}:
-                🌡 ${tMin}–${tMax}°C
-                💨 ${wind} km/h
-                🌧 ${rain}%
-                <b>${status}</b>
-              </div>
-            `;
-          }
-
-          forecastBox.innerHTML = html;
-
-          resolve({today:{temperature:t,windspeed:w}, beeStatus});
-
-        } catch(e){
-          resolve(null);
         }
 
-      }, ()=>resolve(null));
-    });
+        forecastBox.innerHTML = html;
+
+        updateAssistant(data);
+
+      }catch(e){
+        todayBox.innerHTML = "❌ Błąd pogody";
+      }
+
+    }, (err)=>{
+      locationBox.innerHTML = "❌ Brak zgody na GPS";
+    }, {timeout:5000});
   }
 
-  // ==================== ASYSTENT PRO ====================
-  async function loadWeatherAndAssist(){
-    const weatherData = await loadWeather5Days();
-    updateAssistant(weatherData);
-  }
-
-  function updateAssistant(weatherData){
+  // ==================== ASYSTENT ====================
+  function updateAssistant(data){
     const box = document.getElementById("assistant-text");
-    if(!box) return;
+    const month = new Date().getMonth()+1;
 
-    const today = new Date();
-    const month = today.getMonth()+1;
+    let msg = [];
 
-    let out = [];
+    // sezon
+    if(month==3) msg.push("🔍 Wykonaj pierwszy przegląd");
+    if(month==4) msg.push("🌸 Rozwój rodzin");
+    if(month==5) msg.push("🐝 Uwaga na rojki!");
+    if(month==6||month==7) msg.push("🍯 Miodobranie");
+    if(month==8) msg.push("💊 Leczenie warrozy");
+    if(month==9) msg.push("🍯 Karmienie zimowe");
 
-    // POGODA
-    if(weatherData){
-      out.push(`🌡 ${weatherData.today.temperature}°C 💨 ${weatherData.today.windspeed} km/h | ${weatherData.beeStatus}`);
-    } else out.push("❌ Brak pogody");
+    // pogoda
+    if(data){
+      const t = data.current_weather.temperature;
+      const w = data.current_weather.windspeed;
 
-    // PRZEGLĄDY MIESIĄCA
+      if(t>=15 && w<20) msg.push("🐝 Idealny dzień na przegląd");
+      else if(t<10) msg.push("❄ Za zimno na otwieranie uli");
+      if(w>25) msg.push("💨 Silny wiatr – odłóż prace");
+    }
+
+    // analiza notatek miesiąca
     let inspections=0;
-    for(let d=1;d<=31;d++){
-      const key = String(d).padStart(2,"0")+"."+String(month).padStart(2,"0")+".2026";
+    const m = String(month).padStart(2,"0");
+
+    for(let d=1; d<=31; d++){
+      const key = String(d).padStart(2,"0")+"."+m+".2026";
       const note = (localStorage.getItem(key)||"").toLowerCase();
       if(note.includes("przegląd")) inspections++;
     }
 
-    out.push(`🔍 Przeglądy: ${inspections}`);
+    if(inspections==0) msg.push("⚠️ Brak przeglądu w tym miesiącu!");
+    if(inspections>=2) msg.push("✅ Przeglądy wykonane");
 
-    // PLAN 7 DNI
-    let plan=[];
-    for(let i=0;i<7;i++){
-      const d=new Date();
-      d.setDate(today.getDate()+i);
-
-      const day = String(d.getDate()).padStart(2,"0");
-      const m = String(d.getMonth()+1).padStart(2,"0");
-      const key = day+"."+m+".2026";
-
-      const note=(localStorage.getItem(key)||"").toLowerCase();
-
-      let tasks=[];
-      if(note.includes("karmienie")) tasks.push("🍯");
-      if(note.includes("leczenie")) tasks.push("💊");
-      if(note.includes("przegląd")) tasks.push("🔍");
-      if(note.includes("rój")) tasks.push("🐝");
-      if(note.includes("ramka")) tasks.push("🧱");
-      if(note.includes("węza")) tasks.push("🧩");
-
-      let risk=0;
-      if(month>=5 && month<=6) risk+=30;
-      if(inspections===0) risk+=20;
-      if(note.includes("rój")) risk+=20;
-      if(weatherData && weatherData.beeStatus.includes("IDEALNE")) risk+=10;
-
-      if(risk>100) risk=100;
-
-      plan.push(`${day}.${m}: ${tasks.join(" ") || "—"} | 🐝 ${risk}%`);
-    }
-
-    out.push("<b>📅 7 dni:</b>");
-    out.push(plan.join("<br>"));
-
-    box.innerHTML = out.join("<br>");
+    box.innerHTML = msg.join("<br>");
   }
 
   // ==================== START ====================
-  updateMarkers();
-  loadWeatherAndAssist();
+  loadToday();
+  loadWeather();
 
 });
 </script>
