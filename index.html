@@ -1922,34 +1922,30 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // ==================== POGODA 5 DNI + DZIŚ ====================
   function loadWeather5Days() {
-  return new Promise((resolve) => {
+    return new Promise((resolve,reject)=>{
+      const weatherBox = document.getElementById("weather-data");
+      const forecastBox = document.getElementById("weather-forecast");
+      const beeBox = document.getElementById("bee-flight-alert");
+      if(!weatherBox || !forecastBox) return resolve(null);
 
-    const weatherBox = document.getElementById("weather-data");
-    const forecastBox = document.getElementById("weather-forecast");
-    const beeBox = document.getElementById("bee-flight-alert");
+      // pokaż cache
+      const saved = localStorage.getItem("weather-cache-5d");
+      if(saved){
+        const data = JSON.parse(saved);
+        weatherBox.innerHTML = data.today;
+        forecastBox.innerHTML = data.forecast;
+        if(beeBox) beeBox.innerHTML = data.bee;
+      }
 
-    if(!weatherBox || !forecastBox) return resolve(null);
+      if(!navigator.geolocation) return resolve(null);
 
-    // ================= CACHE =================
-    const saved = localStorage.getItem("weather-cache-5d");
-    if(saved){
-      const data = JSON.parse(saved);
-      weatherBox.innerHTML = data.today;
-      forecastBox.innerHTML = data.forecast;
-      if(beeBox) beeBox.innerHTML = data.bee;
-    }
+      navigator.geolocation.getCurrentPosition(pos=>{
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
 
-    // ================= GPS =================
-    function fetchWeather(lat, lon){
-
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
-
-      fetch(url)
-        .then(r => r.json())
-        .then(data => {
-
+        fetch(url).then(r=>r.json()).then(data=>{
           const today = data.current_weather;
-
           let beeStatus="", beeColor="";
           if(today.temperature>=15 && today.windspeed<20){ beeStatus="🐝 IDEALNE"; beeColor="green"; }
           else if(today.temperature>=12){ beeStatus="🐝 ŚREDNIE"; beeColor="orange"; }
@@ -1964,25 +1960,25 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
           `;
 
-          let forecastHTML = `<b>📅 Prognoza 7 dni</b><br>`;
-          for(let i=0;i<7;i++){
+          let forecastHTML = `<b>📅 Prognoza 5 dni</b><br>`;
+          for(let i=1;i<=5;i++){
             const tMax = data.daily.temperature_2m_max[i];
             const tMin = data.daily.temperature_2m_min[i];
             const wind = data.daily.windspeed_10m_max[i];
             const rain = data.daily.precipitation_probability_max[i];
 
-            let status="";
-            if(tMax>=15 && wind<20) status="🐝 IDEALNE";
-            else if(tMax>=12) status="🐝 ŚREDNIE";
-            else status="❄ SŁABE";
+            let dayStatus="";
+            if(tMax>=15 && wind<20) dayStatus="🐝 IDEALNE";
+            else if(tMax>=12) dayStatus="🐝 ŚREDNIE";
+            else dayStatus="❄ SŁABE";
 
             forecastHTML += `<div style="margin:3px 0;">
-              Dzień ${i+1}: 🌡 ${tMin}–${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% 
-              <b>${status}</b>
+              <b>Dzień ${i}</b>: 🌡 ${tMin}–${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% 
+              <span style="color:${dayStatus.includes("IDEALNE")?"green":dayStatus.includes("ŚREDNIE")?"orange":"red"}; font-weight:bold">${dayStatus}</span>
             </div>`;
           }
 
-          const beeHTML = `<div>🐝 Status: ${beeStatus}</div>`;
+          const beeHTML = `<div style="margin-top:5px">🐝 Aktualny stan: ${beeStatus}</div>`;
 
           weatherBox.innerHTML = todayHTML;
           forecastBox.innerHTML = forecastHTML;
@@ -1994,30 +1990,11 @@ document.addEventListener("DOMContentLoaded", function() {
             bee: beeHTML
           }));
 
-          resolve({beeStatus});
-        })
-        .catch(()=>resolve(null));
-    }
-
-    // ================= PRÓBA GPS =================
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-
-        // ❗ jak GPS NIE działa → fallback Polska (Twoja pasieka)
-        () => {
-          console.warn("GPS OFF → używam lokalizacji zapasowej");
-          fetchWeather(52.23, 21.01); // Warszawa
-        },
-
-        {timeout:5000, maximumAge:600000}
-      );
-    } else {
-      fetchWeather(52.23, 21.01);
-    }
-
-  });
-}
+          resolve({today, beeStatus});
+        }).catch(()=>resolve(null));
+      }, ()=>resolve(null), {timeout:5000, maximumAge:600000});
+    });
+  }
 
   // ==================== ASYSTENT ====================
   async function loadWeatherAndAssist(){
@@ -2206,6 +2183,7 @@ document.addEventListener("DOMContentLoaded", function() {
   updateInspections();
   scrollToToday();
   loadWeatherAndAssist();
+  loadWeather();
 
 });
 
@@ -2217,6 +2195,56 @@ if ("serviceWorker" in navigator) {
       .catch(err => console.log("Błąd rejestracji SW:", err));
   });
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+
+  const weatherBox = document.getElementById("weather-today");
+  const forecastBox = document.getElementById("weather-7days");
+  const CACHE_KEY = "weather-cache";
+  const CACHE_DURATION = 10 * 60 * 1000; // 10 minut
+
+  async function loadWeather() {
+    // --- sprawdź cache ---
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const data = JSON.parse(cached);
+      if (Date.now() - data.timestamp < CACHE_DURATION) {
+        updateWeatherUI(data.weather);
+        return;
+      }
+    }
+
+    // --- pobierz GPS ---
+    if (!navigator.geolocation) {
+      console.warn("Brak GPS");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
+
+      try {
+        const resp = await fetch(url);
+        const data = await resp.json();
+        const weatherData = {
+          today: data.current_weather,
+          daily: data.daily
+        };
+        // --- cache ---
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ timestamp: Date.now(), weather: weatherData }));
+        updateWeatherUI(weatherData);
+      } catch (e) {
+        console.error("Błąd pobierania pogody", e);
+        if (cached) updateWeatherUI(JSON.parse(cached).weather); // fallback
+      }
+
+    }, (err) => {
+      console.warn("GPS niedostępny", err);
+      if (cached) updateWeatherUI(JSON.parse(cached).weather);
+    }, { timeout: 5000, maximumAge: CACHE_DURATION });
+  }
 
   function updateWeatherUI(data) {
     if (!data) return;
