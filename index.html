@@ -2046,7 +2046,7 @@ function updateAlerts(){
   }
 
 
-// ==================== 🤖 INTELIGENTNY ASYSTENT ====================
+  // ==================== 🤖 INTELIGENTNY ASYSTENT ====================
 function updateSmartAssistant(){
 
   const box = document.getElementById("assistant-text");
@@ -2054,204 +2054,158 @@ function updateSmartAssistant(){
 
   const today = new Date();
   const month = today.getMonth()+1;
-  const monthStr = String(month).padStart(2,"0");
+  const day = String(today.getDate()).padStart(2,"0");
+  const m = String(month).padStart(2,"0");
+  const key = day+"."+m+".2026";
 
-  let inspections = 0;
-  let feeding = false;
-  let treatment = false;
-  let swarm = false;
-  let honey = false;
+ let recentNotes = "";
 
-  // ==================== ANALIZA MIESIĄCA ====================
-  for(let d=1; d<=31; d++){
-    const key = String(d).padStart(2,"0")+"."+monthStr+".2026";
-    const note = (localStorage.getItem(key)||"").toLowerCase();
+for(let i=0; i<3; i++){
+  const d = new Date();
+  d.setDate(today.getDate()-i);
 
-    if(note.includes("przegląd") || note.includes("kontrola")) inspections++;
-    if(note.includes("karmienie") || note.includes("syrop")) feeding = true;
-    if(note.includes("leczenie") || note.includes("warroza")) treatment = true;
-    if(note.includes("rój")) swarm = true;
-    if(note.includes("miód") || note.includes("miodobranie")) honey = true;
+  const day = String(d.getDate()).padStart(2,"0");
+  const month = String(d.getMonth()+1).padStart(2,"0");
+  const keyLoop = day+"."+month+".2026";
+
+  recentNotes += (localStorage.getItem(keyLoop) || "").toLowerCase() + " ";
+}
+
+let note = recentNotes;
+let tips = [];
+
+// ==================== LICZNIK DNI OD PRZEGLĄDU ====================
+let lastInspectionDate = null;
+
+for(let i=0; i<30; i++){
+  const d = new Date();
+  d.setDate(today.getDate()-i);
+
+  const dayLoop = String(d.getDate()).padStart(2,"0");
+  const monthLoop = String(d.getMonth()+1).padStart(2,"0");
+  const keyLoop = dayLoop+"."+monthLoop+".2026";
+
+  const noteLoop = (localStorage.getItem(keyLoop) || "").toLowerCase();
+
+  if(noteLoop.includes("przegląd") || noteLoop.includes("kontrola")){
+    lastInspectionDate = d;
+    break;
+  }
+}
+
+// jeśli znaleziono przegląd → licz dni
+if(lastInspectionDate){
+  const diffTime = today - lastInspectionDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if(diffDays >= 7){
+    tips.push("⏰ Minęło " + diffDays + " dni od ostatniego przeglądu – zrób kontrolę!");
+  } else if(diffDays >= 4){
+    tips.push("🟡 Ostatni przegląd " + diffDays + " dni temu – obserwuj rodziny");
+  }
+} else {
+  tips.push("⚠️ Brak przeglądu w ostatnich dniach!");
+}
+
+  // 🔍 WIOSNA
+  if(month == 3){
+    if(!note.includes("przegląd") && !note.includes("kontrola")){
+      tips.push("🔍 Zrób pierwszy przegląd rodzin");
+    }
+    if(note.includes("brak pokarmu")){
+      tips.push("🍯 Podaj pokarm – możliwy głód");
+    }
   }
 
-  // ==================== DNI OD PRZEGLĄDU ====================
-  let lastInspectionDate = null;
+  // 🌸 KWIECIEŃ
+  if(month == 4){
+    tips.push("🌸 Rozwój rodzin – kontroluj matkę i czerwienie");
+    if(note.includes("matecznik") || note.includes("rój")){
+      tips.push("🐝 Uwaga na rójkę – sprawdź ule!");
+    }
+  }
 
-  for(let i=0; i<30; i++){
+  // 🐝 MAJ
+  if(month == 5){
+    tips.push("🐝 Okres rojowy – rób przeglądy co 7 dni");
+    if(note.includes("rój")){
+      tips.push("🚨 Wysokie ryzyko rójki!");
+    }
+  }
+
+  // 🍯 CZERWIEC–LIPIEC
+  if(month == 6 || month == 7){
+    tips.push("🍯 Sprawdzaj nadstawki – możliwe miodobranie");
+    if(note.includes("miód")){
+      tips.push("🍯 Możesz planować miodobranie");
+    }
+  }
+
+  // 💊 SIERPIEŃ
+  if(month == 8){
+    if(!note.includes("leczenie")){
+      tips.push("💊 Rozpocznij leczenie warrozy!");
+    }
+  }
+
+  // 🍯 WRZESIEŃ
+  if(month == 9){
+    if(!note.includes("karmienie")){
+      tips.push("🍯 Karmienie zimowe rodzin");
+    }
+  }
+
+  // ❄ ZIMA
+  if(month <= 2 || month >= 10){
+    tips.push("⬛ Zimowla – nie otwieraj uli");
+  }
+
+  // 🌦 POGODA
+  const weatherText = document.getElementById("bee-flight-alert");
+  if(weatherText && weatherText.innerText.includes("IDEALNE")){
+    tips.push("🐝 Dobre warunki – pszczoły aktywne");
+  }
+
+  // 📋 WYNIK
+  if(tips.length === 0){
+    box.innerHTML = "✅ Wszystko wygląda dobrze";
+  } else {
+    box.innerHTML = tips.join("<br>");
+  }
+}
+// ==================== 🤖 ULTRA AI ANALIZA ====================
+function updateAI(){
+
+  const box = document.getElementById("assistant-box");
+  if(!box) return;
+
+  const today = new Date();
+  const messages = [];
+
+  for(let i=0; i<3; i++){
     const d = new Date();
     d.setDate(today.getDate()-i);
 
     const day = String(d.getDate()).padStart(2,"0");
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const key = day+"."+m+".2026";
+    const month = String(d.getMonth()+1).padStart(2,"0");
+    const key = day+"."+month+".2026";
 
-    const note = (localStorage.getItem(key)||"").toLowerCase();
+    const note = (localStorage.getItem(key) || "").toLowerCase();
 
-    if(note.includes("przegląd") || note.includes("kontrola")){
-      lastInspectionDate = d;
-      break;
+    if(note.includes("rój")){
+      messages.push("🚨 Wykryto rojkę w ostatnich dniach");
+    }
+    if(note.includes("leczenie")){
+      messages.push("💊 Leczenie trwa – kontroluj warrozę");
+    }
+    if(note.includes("przegląd")){
+      messages.push("🔍 Przegląd wykonany");
     }
   }
 
-  // ==================== RYZYKO ROJKI ====================
-  let swarmRisk = 0;
+  messages.push("📅 JUTRO: sprawdź ule około 14:00");
 
-  if(month == 4) swarmRisk += 20;
-  if(month == 5) swarmRisk += 40;
-  if(month == 6) swarmRisk += 30;
-
-  if(inspections === 0) swarmRisk += 30;
-  if(inspections === 1) swarmRisk += 20;
-
-  if(swarm) swarmRisk += 30;
-
-  const weatherBox = document.getElementById("bee-flight-alert");
-  if(weatherBox && weatherBox.innerText.includes("IDEALNE")){
-    swarmRisk += 10;
-  }
-
-  if(swarmRisk > 100) swarmRisk = 100;
-
-  let swarmText = "";
-  if(swarmRisk >= 70){
-    swarmText = "🚨 WYSOKIE ryzyko rojki!";
-  } else if(swarmRisk >= 40){
-    swarmText = "⚠️ ŚREDNIE ryzyko rojki";
-  } else {
-    swarmText = "✅ NISKIE ryzyko rojki";
-  }
-
-  // ==================== PODSUMOWANIE ====================
-  let summary = [];
-
-  summary.push("🔍 Przeglądy w miesiącu: " + inspections);
-
-  if(lastInspectionDate){
-    const diffDays = Math.floor((today - lastInspectionDate)/(1000*60*60*24));
-    summary.push("⏰ Ostatni przegląd: " + diffDays + " dni temu");
-  } else {
-    summary.push("⚠️ Brak przeglądu!");
-  }
-
-  summary.push("🐝 Ryzyko rojki: " + swarmRisk + "%");
-  summary.push(swarmText);
-
-  if(!feeding) summary.push("🍯 Brak karmienia");
-  if(!treatment) summary.push("💊 Brak leczenia");
-  if(swarm) summary.push("🐝 Wystąpiła rojka");
-  if(honey) summary.push("🍯 Było miodobranie");
-
-  // ==================== SEZON ====================
-  if(month == 3) summary.push("🔍 Wiosna – pierwszy przegląd");
-  if(month == 4) summary.push("🌸 Rozwój rodzin");
-  if(month == 5) summary.push("🐝 Okres rojowy");
-  if(month == 6 || month == 7) summary.push("🍯 Miodobranie");
-  if(month == 8) summary.push("💊 Leczenie warrozy");
-  if(month == 9) summary.push("🍯 Karmienie zimowe");
-  if(month <= 2 || month >= 10) summary.push("⬛ Zimowla");
-
-  // ==================== PLAN 7 DNI ====================
-let plan = [];
-
-for(let i=0; i<7; i++){
-
-  const d = new Date();
-  d.setDate(today.getDate()+i);
-
-  const day = String(d.getDate()).padStart(2,"0");
-  const m = String(d.getMonth()+1).padStart(2,"0");
-  const key = day+"."+m+".2026";
-
-  const note = (localStorage.getItem(key)||"").toLowerCase();
-
-  let tasks = [];
-
-  // ==================== ZADANIA ====================
-  if(note.includes("karmienie")) tasks.push("🍯 karmienie");
-  if(note.includes("leczenie")) tasks.push("💊 leczenie");
-  if(note.includes("przegląd")) tasks.push("🔍 przegląd");
-  if(note.includes("rój")) tasks.push("🐝 kontrola rojki");
-  if(note.includes("miód")) tasks.push("🍯 miodobranie");
-
-  if(inspections < 2 && i < 3) tasks.push("🔍 zalecany przegląd");
-  if(!feeding && i < 3) tasks.push("🍯 sprawdź zapasy");
-  if(!treatment && month >= 8) tasks.push("💊 rozważ leczenie");
-
-  if(tasks.length === 0){
-    tasks.push("✅ obserwacja");
-  }
-
-  // ==================== AI RYZYKO DZIENNE ====================
-  let dayRisk = swarmRisk;
-
-  // im dalej w czasie → lekkie zwiększenie
-  dayRisk += i * 3;
-
-  // brak przeglądu → rośnie szybciej
-  if(inspections === 0) dayRisk += i * 2;
-
-  // wpisy o rojce → duży wzrost
-  if(note.includes("rój") || note.includes("matecznik")) dayRisk += 20;
-
-  // pogoda (jeśli masz IDEALNE warunki)
-  const weatherBox = document.getElementById("bee-flight-alert");
-  if(weatherBox && weatherBox.innerText.includes("IDEALNE")){
-    dayRisk += 5;
-  }
-
-  if(dayRisk > 100) dayRisk = 100;
-
-  // opis dnia
-  let riskLabel = "";
-  if(dayRisk >= 80){
-    riskLabel = "🚨 możliwa rojka!";
-  } else if(dayRisk >= 60){
-    riskLabel = "⚠️ wysokie ryzyko";
-  } else if(dayRisk >= 40){
-    riskLabel = "🟡 rośnie ryzyko";
-  } else {
-    riskLabel = "🟢 stabilnie";
-  }
-
-  plan.push(
-    "<b>"+key+"</b>: " +
-    tasks.join(", ") +
-    " | 🐝 " + dayRisk + "% " + riskLabel
-  );
-}
-
-  // ==================== POGODA ====================
-  let weatherInfo = "";
-  if(weatherBox){
-    if(weatherBox.innerText.includes("IDEALNE")){
-      weatherInfo = "🐝 Dobre warunki lotu";
-    } else {
-      weatherInfo = "❄ Słabe warunki";
-    }
-  }
-
-  // ==================== WYNIK ====================
-  box.innerHTML = `
-    <b>📊 Podsumowanie:</b><br>
-    ${summary.join("<br>")}
-    <br><br>
-    <b>📅 Plan (7 dni):</b><br>
-    ${plan.join("<br>")}
-    <br><br>
-    ${weatherInfo}
-  `;
-// ==================== AUTOMATYCZNE PRZEWIJANIE DO DNIA DZIŚ ====================
-const todayDay = String(today.getDate()).padStart(2,"0");
-const todayMonth = String(today.getMonth()+1).padStart(2,"0");
-const todayEl = document.querySelector(`.day-number[data-day="${todayDay}"][data-month="${todayMonth}"]`);
-
-if(todayEl){
-  todayEl.scrollIntoView({behavior:"smooth", block:"center"});
-  // opcjonalne podświetlenie dnia
-  todayEl.style.border = "2px solid red";
-  todayEl.style.borderRadius = "50%";
-}
-
+  box.innerHTML = messages.join("<br>") || "🤖 AI: wszystko OK";
 }
 
   // ==================== Lokalizacja ====================
@@ -2263,16 +2217,16 @@ if(todayEl){
     });
   }
 
-// ==================== 🌤 POGODA 5 DNI + DZIŚ ====================
+   // ==================== Pogoda ====================
 function loadWeather5Days() {
 
-  const weatherBox = document.getElementById("weather-data");
+   const weatherBox = document.getElementById("weather-data");
   const forecastBox = document.getElementById("weather-forecast");
   const beeBox = document.getElementById("bee-flight-alert");
 
   if(!weatherBox || !forecastBox) return;
 
-  // 1️⃣ pokaż cache natychmiast
+  // 1️⃣ Pokaż cache natychmiast
   const saved = localStorage.getItem("weather-cache-5d");
   if(saved){
     const data = JSON.parse(saved);
@@ -2281,20 +2235,13 @@ function loadWeather5Days() {
     if(beeBox) beeBox.innerHTML = data.bee;
   }
 
-  // 2️⃣ pobierz pogodę w tle
-  if(!navigator.geolocation) return;
-
-  navigator.geolocation.getCurrentPosition(pos => {
-
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-
+  // 2️⃣ Funkcja fetch pogody z podaniem lat/lon
+  function fetchWeather(lat, lon){
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
-
+    
     fetch(url)
       .then(r => r.json())
       .then(data => {
-
         const today = data.current_weather;
 
         // 🌤 Dziś
@@ -2333,49 +2280,113 @@ function loadWeather5Days() {
 
         const beeHTML = `<div style="margin-top:5px">🐝 Aktualny stan: ${beeStatus}</div>`;
 
-        // 3️⃣ aktualizacja DOM
+        // 3️⃣ Aktualizacja DOM
         weatherBox.innerHTML = todayHTML;
         forecastBox.innerHTML = forecastHTML;
         if(beeBox) beeBox.innerHTML = beeHTML;
 
-        // 4️⃣ cache w localStorage na 10 min
+        // 4️⃣ Cache w localStorage na 10 min
         localStorage.setItem("weather-cache-5d", JSON.stringify({
           today: todayHTML,
           forecast: forecastHTML,
           bee: beeHTML
         }));
-
       })
-      .catch(()=>{}); // błąd fetch – ignoruj
-  },
-  ()=>{}, // brak zgody GPS – ignoruj
-  {
-    timeout: 3000,
-    maximumAge: 600000
-  });
-}
+      .catch(err => {
+        console.error("Błąd pobierania pogody:", err);
+      });
+  }
 
- // ==================== AUTOMATYCZNE PRZEWIJANIE DO DNIA DZIŚ ====================
-function scrollToToday() {
-  const today = new Date();
-  const day = String(today.getDate()).padStart(2, "0");
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  
-  // zakładamy, że każdy dzień ma klasę day-number i data-day/data-month
-  const todayEl = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
-  
-  if(todayEl){
-    todayEl.scrollIntoView({behavior: "smooth", block: "center"});
-    // opcjonalnie podświetlenie
-    todayEl.style.border = "2px solid red";
-    todayEl.style.borderRadius = "50%";
+  // 3️⃣ Pobranie GPS z logami i fallbackiem
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        console.log("GPS OK:", pos.coords.latitude, pos.coords.longitude);
+        fetchWeather(pos.coords.latitude, pos.coords.longitude);
+      },
+      err => {
+        console.warn("Nie udało się pobrać GPS, używam domyślnej lokalizacji pasieki:", err.message);
+        // fallback na domyślną lokalizację (np. Warszawa)
+        fetchWeather(52.2297, 21.0122);
+      },
+      {
+        timeout: 10000,       // 10 sekund
+        maximumAge: 600000    // cache GPS 10 min
+      }
+    );
+  } else {
+    console.warn("Brak obsługi geolokalizacji – używam domyślnej lokalizacji pasieki");
+    fetchWeather(52.40942, 23.16108);
   }
 }
 
-// wywołanie po załadowaniu kalendarza
-document.addEventListener("DOMContentLoaded", () => {
-  scrollToToday();
-});
+        // ================= OKNO LOTU =================
+        let beeWindow = "";
+
+        if(today.temperature >= 15 && today.windspeed < 20){
+          beeWindow = "🐝 OKNO LOTU: 10:00 – 16:00";
+        } else if(today.temperature >= 12){
+          beeWindow = "🐝 OKNO LOTU: 12:00 – 15:00";
+        } else {
+          beeWindow = "❄ BRAK LOTU";
+        }
+
+        // ================= AI DECYZJA =================
+        let aiMsg = "";
+
+        if(beeSummary >= 3){
+          aiMsg = "🤖 AI: dobre dni na przegląd w najbliższym czasie";
+        } else {
+          aiMsg = "🤖 AI: słabe warunki – poczekaj";
+        }
+
+        const beeHTML = `
+          <div style="margin-top:10px">
+            ${beeWindow}<br>
+            ${aiMsg}
+          </div>
+        `;
+
+        // ================= WSTAW =================
+        weatherBox.innerHTML = currentHTML;
+        forecastBox.innerHTML = forecastHTML;
+        if(beeBox) beeBox.innerHTML = beeHTML;
+
+        // ================= CACHE =================
+        localStorage.setItem("weather-cache", JSON.stringify({
+          current: currentHTML,
+          forecast: forecastHTML,
+          bee: beeHTML
+        }));
+
+      })
+      .catch(showSaved);
+
+  });
+
+}
+
+
+  // ==================== Przewijanie do dzisiaj ====================
+  function scrollToToday(){
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2,"0");
+    const month = String(today.getMonth()+1).padStart(2,"0");
+    const el = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
+    if(el){
+      el.scrollIntoView({behavior:"smooth", block:"center"});
+      el.classList.add("today");
+    }
+  }
+
+  function updateTodayButton(){
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2,"0");
+    const month = String(today.getMonth()+1).padStart(2,"0");
+    const year = today.getFullYear();
+    const btn = document.getElementById("today-btn");
+    if(btn) btn.innerText = "📅 DZIŚ – " + day + "." + month + "." + year;
+  }
 
   // ==================== Uruchomienie ====================
 updateMarkers();
@@ -2389,6 +2400,7 @@ scrollToToday();
 loadWeather();
 updateTodayButton();
 getLocation();
+loadWeather5Days();
 });
 
 // ==================== Service Worker ====================
