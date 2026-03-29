@@ -1907,7 +1907,6 @@ function loadWeather5Days() {
 
         const todayHTML = `
           <div style="padding:10px;border-radius:10px;background:#fff3cd">
-            <b>📅 DZIŚ</b><br>
             🌡 ${today.temperature}°C<br>
             💨 ${today.windspeed} km/h<br>
             <span style="color:${beeColor};font-weight:bold">${beeStatus}</span>
@@ -2112,6 +2111,65 @@ function loadWeather5Days() {
     box.innerHTML=`<b>📊 Podsumowanie:</b><br>${summary.join("<br>")}
       <br><br><b>📅 Plan (7 dni):</b><br>${plan.join("<br>")}`;
   }
+// ==================== KOLORY KALENDARZA ====================
+function updateCalendarColors(){
+
+  document.querySelectorAll(".day-number").forEach(span => {
+    const td = span.closest("td");
+    if(!td) return;
+
+    td.classList.remove(
+      "highlight-note",
+      "highlight-feeding",
+      "highlight-treatment",
+      "highlight-swarm"
+    );
+
+    const day = span.dataset.day.padStart(2,"0");
+    const month = span.dataset.month.padStart(2,"0");
+    const key = day+"."+month+".2026";
+
+    const note = (localStorage.getItem(key)||"").toLowerCase();
+
+    if(!note) return;
+
+    if(note.includes("karmienie")) td.classList.add("highlight-feeding");
+    else if(note.includes("leczenie") || note.includes("warroza")) td.classList.add("highlight-treatment");
+    else if(note.includes("rój")) td.classList.add("highlight-swarm");
+    else td.classList.add("highlight-note");
+
+  });
+}
+
+// Funkcja asystenta pszczelarza - analiza notatek
+function updateBeeAssistant() {
+  const assistantBox = document.getElementById("assistant-text");
+  if (!assistantBox) return;
+
+  const notes = JSON.parse(localStorage.getItem("notes") || "{}");
+  const today = new Date();
+  const todayStr = `${String(today.getDate()).padStart(2,'0')}.${String(today.getMonth()+1).padStart(2,'0')}.2026`;
+
+  let messages = [];
+
+  // Analiza wszystkich dni
+  for (const [date, noteText] of Object.entries(notes)) {
+    const text = noteText.toLowerCase();
+
+    // Sprawdź nadstawki
+    if (text.includes("dodano nadstawkę") || text.includes("nadstawka dodana")) {
+      messages.push(`🟩 ${date}: Dodano nadstawkę do ula`);
+    }
+    if (text.includes("zdjęto nadstawkę") || text.includes("zabrano nadstawkę")) {
+      messages.push(`🟧 ${date}: Zabrano nadstawkę z ula`);
+    }
+
+  if (messages.length === 0) {
+    messages.push("Brak nadchodzących działań z nadstawkami w pasiece.");
+  }
+
+  assistantBox.innerHTML = messages.join("<br>");
+}
 
   // ==================== INNE FUNKCJE ====================
   function updateUpcoming(){
@@ -2174,8 +2232,53 @@ function loadWeather5Days() {
   }
 
   function updateInspections(){
-    // można dodać logikę alarmów na podstawie dni od ostatniego przeglądu
+     const assistantBox = document.getElementById("assistant-text");
+  if (!assistantBox) return;
+
+  const notes = JSON.parse(localStorage.getItem("notes") || "{}");
+  const today = new Date();
+
+  let lastInspectionDate = null;
+
+  // Szukamy ostatniego przeglądu
+  for (const [dateStr, text] of Object.entries(notes)) {
+    if (text.toLowerCase().includes("przegląd")) {
+      const parts = dateStr.split(".");
+      const noteDate = new Date(2026, parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
+      if (!lastInspectionDate || noteDate > lastInspectionDate) {
+        lastInspectionDate = noteDate;
+      }
+    }
   }
+
+  if (!lastInspectionDate) {
+    assistantBox.innerHTML += "<br>🔴 Brak zapisanych przeglądów – wykonaj przegląd jak najszybciej!";
+    return;
+  }
+
+  // Obliczamy różnicę dni
+  const diffTime = today - lastInspectionDate;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  let alertMessage = "";
+  let alertColor = "";
+
+  if (diffDays <= 6) {
+    alertMessage = `🟢 Ostatni przegląd: ${diffDays} dni temu – wszystko OK.`;
+    alertColor = "green";
+  } else if (diffDays <= 10) {
+    alertMessage = `🟡 Ostatni przegląd: ${diffDays} dni temu – warto przeprowadzić przegląd.`;
+    alertColor = "orange";
+  } else if (diffDays <= 14) {
+    alertMessage = `🟠 Ostatni przegląd: ${diffDays} dni temu – przegląd pilnie zalecany.`;
+    alertColor = "orange";
+  } else {
+    alertMessage = `🔴 Ostatni przegląd: ${diffDays} dni temu – przegląd zaległy!`;
+    alertColor = "red";
+  }
+
+  assistantBox.innerHTML += `<br><span style="color:${alertColor}; font-weight:bold">${alertMessage}</span>`;
+}
 
   // ==================== START ====================
   updateMarkers();
@@ -2185,8 +2288,10 @@ function loadWeather5Days() {
   updateInspections();
   scrollToToday();
   loadWeatherAndAssist();
+  updateCalendarColors();
+  updateBeeAssistant();
+  updateInspections();
   
-
 });
 
 // ==================== Service Worker ====================
