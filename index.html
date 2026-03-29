@@ -2232,53 +2232,8 @@ function updateBeeAssistant() {
   }
 
   function updateInspections(){
-     const assistantBox = document.getElementById("assistant-text");
-  if (!assistantBox) return;
-
-  const notes = JSON.parse(localStorage.getItem("notes") || "{}");
-  const today = new Date();
-
-  let lastInspectionDate = null;
-
-  // Szukamy ostatniego przeglądu
-  for (const [dateStr, text] of Object.entries(notes)) {
-    if (text.toLowerCase().includes("przegląd")) {
-      const parts = dateStr.split(".");
-      const noteDate = new Date(2026, parseInt(parts[1], 10) - 1, parseInt(parts[0], 10));
-      if (!lastInspectionDate || noteDate > lastInspectionDate) {
-        lastInspectionDate = noteDate;
-      }
-    }
+    // można dodać logikę alarmów na podstawie dni od ostatniego przeglądu
   }
-
-  if (!lastInspectionDate) {
-    assistantBox.innerHTML += "<br>🔴 Brak zapisanych przeglądów – wykonaj przegląd jak najszybciej!";
-    return;
-  }
-
-  // Obliczamy różnicę dni
-  const diffTime = today - lastInspectionDate;
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  let alertMessage = "";
-  let alertColor = "";
-
-  if (diffDays <= 6) {
-    alertMessage = `🟢 Ostatni przegląd: ${diffDays} dni temu – wszystko OK.`;
-    alertColor = "green";
-  } else if (diffDays <= 10) {
-    alertMessage = `🟡 Ostatni przegląd: ${diffDays} dni temu – warto przeprowadzić przegląd.`;
-    alertColor = "orange";
-  } else if (diffDays <= 14) {
-    alertMessage = `🟠 Ostatni przegląd: ${diffDays} dni temu – przegląd pilnie zalecany.`;
-    alertColor = "orange";
-  } else {
-    alertMessage = `🔴 Ostatni przegląd: ${diffDays} dni temu – przegląd zaległy!`;
-    alertColor = "red";
-  }
-
-  assistantBox.innerHTML += `<br><span style="color:${alertColor}; font-weight:bold">${alertMessage}</span>`;
-}
 
   // ==================== START ====================
   updateMarkers();
@@ -2289,8 +2244,7 @@ function updateBeeAssistant() {
   scrollToToday();
   loadWeatherAndAssist();
   updateCalendarColors();
-  updateBeeAssistant();
-  updateInspections();
+  
   
 });
 
