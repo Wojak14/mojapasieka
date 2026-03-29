@@ -2033,6 +2033,11 @@ document.addEventListener("DOMContentLoaded", function() {
   scrollToToday();
   loadWeatherAndAssist();
 
+// --- AUTOMATYCZNE ODŚWIEŻANIE POGODY co 120 sekund ---
+setInterval(() => {
+    loadWeatherAndAssist();
+}, 120000); // 120000 ms = 120 sekund
+
 });
 </script>
 
