@@ -1819,7 +1819,7 @@ document.addEventListener("DOMContentLoaded", function() {
     updateAlerts();
     updateInspections();
     scrollToToday();
-    loadWeatherAndAssist();
+    loadWeatherAndAssist(); // teraz asystent po pogodzie
   };
 
   // ==================== AUTOMATYCZNE PRZEWIJANIE DO DNIA DZIŚ ====================
@@ -1835,17 +1835,18 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // ==================== POGODA 5 DNI + DZIŚ ====================
+  // ==================== POGODA 5 DNI + DZIŚ Z POPRAWIONĄ LOKALIZACJĄ ====================
   function loadWeather5Days() {
     return new Promise((resolve)=>{
 
       const weatherBox = document.getElementById("weather-data");
       const forecastBox = document.getElementById("weather-forecast");
       const beeBox = document.getElementById("bee-flight-alert");
-      const locationBox = document.getElementById("location-box-11");
+      const locationBox = document.getElementById("location-box");
 
       if(!weatherBox || !forecastBox) return resolve(null);
 
+      // 📦 CACHE
       const saved = localStorage.getItem("weather-cache-5d");
       if(saved){
         const data = JSON.parse(saved);
@@ -1854,7 +1855,14 @@ document.addEventListener("DOMContentLoaded", function() {
         if(beeBox) beeBox.innerHTML = data.bee;
       }
 
+      // 📍 FUNKCJA POBIERANIA POGODY
       function fetchWeather(lat, lon, label="GPS"){
+        lat = Number(lat);
+        lon = Number(lon);
+        if(isNaN(lat) || isNaN(lon)){
+          lat = 52.24; lon = 23.09; label="Werpol (fallback)";
+        }
+
         if(locationBox){
           locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)}, ${lon.toFixed(3)})`;
         }
@@ -1863,34 +1871,35 @@ document.addEventListener("DOMContentLoaded", function() {
 
         fetch(url).then(r=>r.json()).then(data=>{
 
-          const todayWeather = data.current_weather;
+          const todayData = data.current_weather || {temperature:0,windspeed:0};
 
           let beeStatus="", beeColor="";
-          if(todayWeather.temperature>=15 && todayWeather.windspeed<20){ beeStatus="🐝 IDEALNE"; beeColor="green"; }
-          else if(todayWeather.temperature>=12){ beeStatus="🐝 ŚREDNIE"; beeColor="orange"; }
+          if(todayData.temperature>=15 && todayData.windspeed<20){ beeStatus="🐝 IDEALNE"; beeColor="green"; }
+          else if(todayData.temperature>=12){ beeStatus="🐝 ŚREDNIE"; beeColor="orange"; }
           else { beeStatus="❄ SŁABE"; beeColor="red"; }
 
           const todayHTML = `
             <div style="padding:10px;border-radius:10px;background:#fff3cd">
-              🌡 ${todayWeather.temperature}°C<br>
-              💨 ${todayWeather.windspeed} km/h<br>
+              🌡 ${todayData.temperature}°C<br>
+              💨 ${todayData.windspeed} km/h<br>
               <span style="color:${beeColor};font-weight:bold">${beeStatus}</span>
             </div>
           `;
 
+          // 📅 PROGNOZA 5 DNI
           const days = ["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
           let forecastHTML = `<b>📅 Prognoza (5 dni)</b><br>`;
 
           for(let i=1;i<=5;i++){
             const date = new Date(); date.setDate(date.getDate() + i);
             const dayName = days[date.getDay()];
-            const dayNum = String(date.getDate()).padStart(2,"0");
-            const monthNum = String(date.getMonth()+1).padStart(2,"0");
+            const dayStr = String(date.getDate()).padStart(2,"0");
+            const monthStr = String(date.getMonth()+1).padStart(2,"0");
 
-            const tMax = data.daily.temperature_2m_max[i];
-            const tMin = data.daily.temperature_2m_min[i];
-            const wind = data.daily.windspeed_10m_max[i];
-            const rain = data.daily.precipitation_probability_max[i];
+            const tMax = data.daily.temperature_2m_max[i] ?? 0;
+            const tMin = data.daily.temperature_2m_min[i] ?? 0;
+            const wind = data.daily.windspeed_10m_max[i] ?? 0;
+            const rain = data.daily.precipitation_probability_max[i] ?? 0;
 
             let status="";
             if(tMax>=15 && wind<20) status="🐝 IDEALNE";
@@ -1902,7 +1911,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             forecastHTML += `
               <div style="margin:3px 0;">
-                <b>${dayName} ${dayNum}.${monthNum}</b>: 
+                <b>${dayName} ${dayStr}.${monthStr}</b>: 
                 🌡 ${tMin}–${tMax}°C 
                 💨 ${wind} km/h 
                 🌧 ${rain}% 
@@ -1923,7 +1932,7 @@ document.addEventListener("DOMContentLoaded", function() {
             bee: beeHTML
           }));
 
-          resolve({today: todayWeather, beeStatus});
+          resolve({today: todayData, beeStatus});
 
         }).catch(()=>{
           if(locationBox) locationBox.innerHTML = "❌ Błąd pobierania pogody";
@@ -1931,27 +1940,33 @@ document.addEventListener("DOMContentLoaded", function() {
         });
       }
 
+      // 📍 GPS
       if(!navigator.geolocation){
-        if(locationBox) locationBox.innerHTML = "❌ Brak GPS w przeglądarce";
         fetchWeather(52.24, 23.09, "Werpol (fallback)");
         return;
       }
 
       navigator.geolocation.getCurrentPosition(
-        (pos)=>{ fetchWeather(pos.coords.latitude, pos.coords.longitude, "GPS OK"); },
-        ()=>{ fetchWeather(52.24, 23.09, "Werpol (fallback)"); },
+        (pos)=>{
+          fetchWeather(pos.coords.latitude, pos.coords.longitude, "GPS OK");
+        },
+        ()=>{
+          fetchWeather(52.24, 23.09, "Werpol (fallback)");
+        },
         { enableHighAccuracy:true, timeout:8000, maximumAge:300000 }
       );
+
     });
   }
 
+  // ==================== ASYSTENT ====================
   async function loadWeatherAndAssist(){
     const weatherData = await loadWeather5Days();
     updateSmartAssistant(weatherData);
   }
 
   function updateSmartAssistant(weatherData){
-    const box = document.getElementById("assistant-box-11");
+    const box = document.getElementById("assistant-text");
     if(!box) return;
 
     const today = new Date();
@@ -2007,6 +2022,16 @@ document.addEventListener("DOMContentLoaded", function() {
     if(swarm) summary.push("🐝 Wystąpiła rojka");
     if(honey) summary.push("🍯 Było miodobranie");
 
+    // SEZON
+    if(month==3) summary.push("🔍 Wiosna – pierwszy przegląd");
+    else if(month==4) summary.push("🌸 Rozwój rodzin");
+    else if(month==5) summary.push("🐝 Okres rojowy");
+    else if(month==6||month==7) summary.push("🍯 Miodobranie");
+    else if(month==8) summary.push("💊 Leczenie warrozy");
+    else if(month==9) summary.push("🍯 Karmienie zimowe");
+    else summary.push("⬛ Zimowla");
+
+    // PLAN 7 DNI
     let plan=[];
     for(let i=0;i<7;i++){
       const d=new Date(); d.setDate(today.getDate()+i);
@@ -2020,74 +2045,29 @@ document.addEventListener("DOMContentLoaded", function() {
       if(note.includes("przegląd")) tasks.push("🔍 przegląd");
       if(note.includes("rój")) tasks.push("🐝 kontrola rojki");
       if(note.includes("miód")) tasks.push("🍯 miodobranie");
-      plan.push("<b>"+key+"</b>: "+tasks.join(", "));
+      if(inspections<2 && i<3) tasks.push("🔍 zalecany przegląd");
+      if(!feeding && i<3) tasks.push("🍯 sprawdź zapasy");
+      if(!treatment && month>=8) tasks.push("💊 rozważ leczenie");
+
+      let dayRisk=swarmRisk;
+      dayRisk+=i*3;
+      if(inspections===0) dayRisk+=i*2;
+      if(note.includes("rój")||note.includes("matecznik")) dayRisk+=20;
+      if(weatherData && weatherData.beeStatus.includes("IDEALNE")) dayRisk+=5;
+      if(dayRisk>100) dayRisk=100;
+
+      let riskLabel="";
+      if(dayRisk>=80) riskLabel="🚨 możliwa rojka!";
+      else if(dayRisk>=60) riskLabel="⚠️ wysokie ryzyko";
+      else if(dayRisk>=40) riskLabel="🟡 rośnie ryzyko";
+      else riskLabel="🟢 stabilnie";
+
+      plan.push("<b>"+key+"</b>: "+tasks.join(", ")+" | 🐝 "+dayRisk+"% "+riskLabel);
     }
 
     box.innerHTML=`<b>📊 Podsumowanie:</b><br>${summary.join("<br>")}
       <br><br><b>📅 Plan (7 dni):</b><br>${plan.join("<br>")}`;
   }
-
-  // ==================== INNE FUNKCJE ====================
-  function updateUpcoming(){
-    const today = new Date();
-    const boxes=document.querySelectorAll('[id^="upcoming-list-11"]');
-    boxes.forEach(box=>{
-      const upcoming=[];
-      for(let i=0;i<7;i++){
-        const d=new Date(); d.setDate(today.getDate()+i);
-        const key=String(d.getDate()).padStart(2,"0")+"."+String(d.getMonth()+1).padStart(2,"0")+".2026";
-        const note=localStorage.getItem(key);
-        if(note && note.trim()!==""){
-          let icons="";
-          const text=note.toLowerCase();
-          if(text.includes("karmienie")) icons+="🍯 ";
-          if(text.includes("leczenie")) icons+="💊 ";
-          if(text.includes("przegląd")) icons+="🔍 ";
-          if(text.includes("rój")) icons+="🐝 ";
-          if(text.includes("pożytek")) icons+="🌸 ";
-          upcoming.push(icons+key+": "+note);
-        }
-      }
-      box.innerHTML=upcoming.join("<br>") || "Brak nadchodzących prac";
-    });
-  }
-
-  function updateHoney(){
-    let total=0;
-    for(let i=1;i<=12;i++){
-      for(let d=1;d<=31;d++){
-        const key=String(d).padStart(2,"0")+"."+String(i).padStart(2,"0")+".2026";
-        const note=localStorage.getItem(key);
-        if(note){
-          const match=note.match(/(\d+)\s?kg/gi);
-          if(match) match.forEach(m=>{ const num=parseInt(m); if(!isNaN(num)) total+=num; });
-        }
-      }
-    }
-    const box=document.getElementById("honey-total-11");
-    if(box) box.innerText="🍯 Zebrany miód w 2026: "+total+" kg";
-  }
-
-  function updateAlerts(){
-    const today=new Date();
-    const day=String(today.getDate()).padStart(2,"0");
-    const month=String(today.getMonth()+1).padStart(2,"0");
-    const key=day+"."+month+".2026";
-    const note=localStorage.getItem(key)||"";
-    const text=note.toLowerCase();
-    const alertsBox=document.getElementById("alerts-list-11");
-    if(!alertsBox) return;
-    const alerts=[];
-    if(text.includes("karmienie")) alerts.push("🍯 Karmienie rodzin");
-    if(text.includes("leczenie") || text.includes("warroza")) alerts.push("💊 Leczenie warrozy");
-    if(text.includes("przegląd")) alerts.push("🔍 Przegląd rodzin");
-    if(text.includes("miodobranie")) alerts.push("🍯 Miodobranie");
-    if(text.includes("rój")) alerts.push("🐝 Możliwe rojenie!");
-    if(text.includes("matka")) alerts.push("👑 Sprawdź matki");
-    alertsBox.innerHTML=alerts.join("<br>") || "Brak alertów";
-  }
-
-  function updateInspections(){}
 
   // ==================== START ====================
   updateMarkers();
@@ -2099,15 +2079,6 @@ document.addEventListener("DOMContentLoaded", function() {
   loadWeatherAndAssist();
 
 });
-
-// ==================== Service Worker ====================
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js")
-      .then(reg => console.log("SW zarejestrowany:", reg.scope))
-      .catch(err => console.log("Błąd rejestracji SW:", err));
-  });
-}
 </script>
 
 </body>
