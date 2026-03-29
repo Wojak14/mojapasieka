@@ -1853,10 +1853,8 @@ document.addEventListener("DOMContentLoaded", function() {
       let icons = [];
 const text = note.toLowerCase();
 
-// Nadstawka – używamy Twojego obrazka PNG
-if(text.includes("nastawka")) {
-  icons.push('<img src="/mnt/data/9cc44de5-e3ee-42c4-8df3-bec61ad2ea1b.png" style="width:16px;height:16px;margin-left:2px;vertical-align:middle;">');
-}
+
+
 
 // Inne ikony pasieczne
 if(text.includes("miód") || text.includes("miodobranie")) icons.push("🍯");
@@ -1872,6 +1870,7 @@ if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
 if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
 if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
 if(text.includes("pogoda") || text.includes("mróz")) icons.push("🥶");
+
 
 // Domyślny marker, jeśli brak innych ikon
 if(icons.length === 0) icons.push("📝");
