@@ -1,114 +1,33 @@
-onst CACHE_NAME = "pasieka-2026-v5";
-
-const ASSETS = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./bee_icon_192x192.png",
-  "./bee_icon_512x512.png",
-  "./style.css",
-  "./app.js",
-  "./script-weather.js"
+const CACHE_NAME = 'pasieka-pro-2026-v1';
+const urlsToCache = [
+  './',
+  './index.html',
+  './script.js',
+  './manifest.json',
+  './icons/icon-128.png',
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
-
-// ================= INSTALL =================
-self.addEventListener("install", event => {
-
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(ASSETS);
-      })
-      .catch(err => {
-        console.log("Błąd cache install:", err);
-      })
+    caches.open(CACHE_NAME).then(cache=>cache.addAll(urlsToCache))
   );
-
-  self.skipWaiting();
-
 });
 
-
-// ================= ACTIVATE =================
-self.addEventListener("activate", event => {
-
-  event.waitUntil(
-
-    caches.keys().then(keys => {
-
-      return Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
-      );
-
-    })
-
-  );
-
-  self.clients.claim();
-
-});
-
-
-// ================= FETCH =================
-self.addEventListener("fetch", event => {
-
-  const request = event.request;
-
-
-  // ===== API pogody =====
-  if (request.url.includes("api.open-meteo.com")) {
-
-    event.respondWith(
-
-      fetch(request)
-        .then(response => {
-
-          const clone = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then(cache => cache.put(request, clone));
-
-          return response;
-
-        })
-        .catch(() => caches.match(request))
-
-    );
-
-    return;
-  }
-
-
-  // ===== RESZTA PLIKÓW =====
+self.addEventListener('fetch', event => {
   event.respondWith(
-
-    caches.match(request)
-      .then(cached => {
-
-        if (cached) return cached;
-
-        return fetch(request)
-          .then(response => {
-
-            if (!response || response.status !== 200 || response.type !== "basic") {
-              return response;
-            }
-
-            const clone = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then(cache => cache.put(request, clone));
-
-            return response;
-
-          });
-
-      })
-      .catch(() => caches.match("./index.html"))
-
+    caches.match(event.request).then(response=>{
+      return response || fetch(event.request).catch(()=>caches.match('./index.html'));
+    })
   );
+});
 
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(keys=>Promise.all(
+      keys.map(key=>!cacheWhitelist.includes(key)?caches.delete(key):null)
+    ))
+  );
 });
