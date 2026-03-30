@@ -1928,6 +1928,56 @@ document.addEventListener("DOMContentLoaded", function() {
     if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
     const key = currentDay + "." + currentMonth + ".2026";
     if(textarea) localStorage.setItem(key, textarea.value);
+
+    // --- WYSZUKIWARKA NOTATEK ---
+const searchInput = document.getElementById('search-notes');
+const resultsContainer = document.getElementById('search-results');
+
+if(searchInput && resultsContainer){
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase().trim();
+        resultsContainer.innerHTML = '';
+
+        // Najpierw usuwamy podświetlenia z wszystkich dni
+        document.querySelectorAll('.day-number').forEach(day => {
+            day.classList.remove('highlight-day');
+        });
+
+        if (!query) return; // jeśli pole puste, nic nie robimy
+
+        // Przeglądamy wszystkie notatki w localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key.startsWith('notes-')) continue;
+
+            try {
+                const note = JSON.parse(localStorage.getItem(key));
+                if (note && note.content && note.content.toLowerCase().includes(query)) {
+                    // Tworzymy element listy wyników
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.textContent = `${key.slice(6)}: ${note.content}`;
+                    resultsContainer.appendChild(div);
+
+                    // Podświetlamy odpowiedni dzień w kalendarzu
+                    const [dd, mm, yyyy] = key.slice(6).split('.');
+                    const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+                    if(dayElem) dayElem.classList.add('highlight-day');
+
+                    // Kliknięcie w wynik przenosi do notatki
+                    div.addEventListener('click', () => {
+                        if(dayElem){
+                            dayElem.scrollIntoView({behavior: "smooth", block: "center"});
+                            dayElem.click(); // otwiera panel notatki
+                        }
+                    });
+                }
+            } catch(e) {
+                console.error('Błąd parsowania notatki:', key, e);
+            }
+        }
+    });
+}
     updateMarkers();
     loadWeatherAndAssist();
   };
