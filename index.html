@@ -2068,32 +2068,42 @@ document.addEventListener("DOMContentLoaded", function() {
   const today = new Date();
   const monthStr = (today.getMonth()+1).toString().padStart(2,"0");
 
-  let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
+// 🔥 SYNONIMY (AI rozumienie notatek)
+  const synonyms = {
+    honey: ["miód","miodobranie","wirowanie"],
+    feeding: ["karmienie","syrop","ciasto"],
+    treatment: ["leczenie","warroza","apiwarol"],
+    inspection: ["przegląd","kontrola","sprawdzenie"],
+    swarm: ["rój","rojka","nastrój rojowy"]
+  };
+
+  function match(text, list){
+    return list.some(word => text.includes(word));
+  }
+let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
   let tasks = [];
 
   for(let d=1; d<=31; d++){
     const day = d.toString().padStart(2,"0");
     const key = day + "." + monthStr + ".2026";
-
-    // ✅ TWÓJ FORMAT – ZWYKŁY TEKST
     const note = (localStorage.getItem(key) || "").toLowerCase();
 
-    if(note.includes("przegląd") || note.includes("kontrola")) inspections++;
-    if(note.includes("karmienie")) feeding = true;
-    if(note.includes("leczenie")) treatment = true;
-    if(note.includes("rój") || note.includes("rojka")) swarm = true;
-    if(note.includes("miód") || note.includes("miodobranie")) honey = true;
-
-    // ✅ Nadchodzące prace
+    if(match(note, synonyms.inspection)) inspections++;
+    if(match(note, synonyms.feeding)) feeding = true;
+    if(match(note, synonyms.treatment)) treatment = true;
+    if(match(note, synonyms.swarm)) swarm = true;
+    if(match(note, synonyms.honey)) honey = true;
+    
+    // 🔥 TASKI Z CHECKBOXAMI
     if(d >= today.getDate()){
-      if(!note.includes("nastawka")) tasks.push(`${day}.${monthStr} ➤ Dodanie nastawki`);
-      if(!note.includes("ramka pracy")) tasks.push(`${day}.${monthStr} ➤ Dodanie ramki pracy`);
-      if(!note.includes("ramka trutowa")) tasks.push(`${day}.${monthStr} ➤ Dodanie ramki trutowej`);
-      if(!note.includes("ramka z węzą")) tasks.push(`${day}.${monthStr} ➤ Dodanie ramki z węzą`);
+      if(!note.includes("nastawka")) tasks.push({text:`Dodanie nastawki`, key});
+      if(!note.includes("ramka pracy")) tasks.push({text:`Dodanie ramki pracy`, key});
+      if(!note.includes("ramka trutowa")) tasks.push({text:`Dodanie ramki trutowej`, key});
+      if(!note.includes("ramka z węzą")) tasks.push({text:`Dodanie ramki z węzą`, key});
     }
   }
-
-  // 🔥 LICZENIE RYZYKA ROJKI
+   
+  // 🔥 RYZYKO ROJKI
   let swarmRisk = 0;
   const month = today.getMonth()+1;
 
@@ -2109,29 +2119,67 @@ document.addEventListener("DOMContentLoaded", function() {
   if(swarmRisk>100) swarmRisk=100;
 
   let swarmText="";
-  if(swarmRisk>=70) swarmText="🚨 WYSOKIE ryzyko rojki!";
+  let alertBox="";
+
+  if(swarmRisk>=80){
+    swarmText="🚨 WYSOKIE ryzyko rojki!";
+    alertBox=`<div style="background:red;color:white;padding:8px;margin:5px 0;font-weight:bold;">
+      🚨 UWAGA! RYZYKO ROJKI ${swarmRisk}% – sprawdź ule NATYCHMIAST!
+    </div>`;
+  }
   else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
   else swarmText="✅ NISKIE ryzyko rojki";
 
-  // 🔥 PODSUMOWANIE
-  let summary=[];
-  summary.push("🔍 Przeglądy: " + inspections);
-  summary.push("🐝 Ryzyko rojki: " + swarmRisk + "% " + swarmText);
+// 🔥 AI PODPOWIEDZI
+  let tips = [];
 
-  if(!feeding) summary.push("🍯 Brak karmienia");
-  if(!treatment) summary.push("💊 Brak leczenia");
-  if(honey) summary.push("🍯 Było miodobranie");
+  if(inspections === 0) tips.push("❗ Brak przeglądów – sprawdź matkę i nastrój rojowy");
+  if(inspections === 1) tips.push("⚠️ Tylko 1 przegląd – zwiększ kontrolę uli");
+  if(!feeding) tips.push("🍯 Brak karmienia – sprawdź zapasy");
+  if(!treatment) tips.push("💊 Brak leczenia – kontroluj warrozę");
+  if(swarmRisk > 70) tips.push("🐝 Duże ryzyko rojki – dodaj miejsce i ramki");
 
-  if(tasks.length > 0){
-    summary.push("🛠 Nadchodzące prace:<br>" + tasks.slice(0,10).join("<br>"));
+// 🔥 PODSUMOWANIE
+  let html = `<b>📊 Asystent:</b><br>`;
+  html += `🔍 Przeglądy: ${inspections}<br>`;
+  html += `🐝 Ryzyko rojki: ${swarmRisk}% ${swarmText}<br>`;
+
+  if(honey) html += "🍯 Było miodobranie<br>";
+
+  if(tips.length){
+    html += "<br><b>🤖 Podpowiedzi:</b><br>" + tips.join("<br>");
   }
 
-  box.innerHTML = "<b>📊 Asystent:</b><br>" + summary.join("<br>");
+ // 🔥 TASKI + CHECKBOXY
+  if(tasks.length){
+    html += "<br><b>🛠 Nadchodzące prace:</b><br>";
+
+    tasks.slice(0,10).forEach((t,i)=>{
+      const id = "task_"+i;
+      html += `
+        <div>
+          <input type="checkbox" id="${id}" data-key="${t.key}" data-task="${t.text}">
+          <label for="${id}">${t.text}</label>
+        </div>
+      `;
+    });
   }
+
+  box.innerHTML = alertBox + html;
+/ 🔥 OBSŁUGA CHECKBOXÓW
+  box.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', ()=>{
+      if(cb.checked){
+        const key = cb.dataset.key;
+        const task = cb.dataset.task;
+
+        let note = localStorage.getItem(key) || "";
+        note += "\n✔ " + task;
+
+        localStorage.setItem(key, note);
 
   // ==== URUCHOMIENIE ====
   updateMarkers();
-  scrollToToday();
   loadWeatherAndAssist();
 
   // Odświeżanie pogody co 2 minuty
