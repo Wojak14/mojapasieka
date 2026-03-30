@@ -2130,56 +2130,55 @@ let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
   else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
   else swarmText="✅ NISKIE ryzyko rojki";
 
-// 🔥 AI PODPOWIEDZI
-  let tips = [];
 
-  if(inspections === 0) tips.push("❗ Brak przeglądów – sprawdź matkę i nastrój rojowy");
-  if(inspections === 1) tips.push("⚠️ Tylko 1 przegląd – zwiększ kontrolę uli");
-  if(!feeding) tips.push("🍯 Brak karmienia – sprawdź zapasy");
-  if(!treatment) tips.push("💊 Brak leczenia – kontroluj warrozę");
-  if(swarmRisk > 70) tips.push("🐝 Duże ryzyko rojki – dodaj miejsce i ramki");
-
-// 🔥 PODSUMOWANIE
-  let html = `<b>📊 Asystent:</b><br>`;
-  html += `🔍 Przeglądy: ${inspections}<br>`;
-  html += `🐝 Ryzyko rojki: ${swarmRisk}% ${swarmText}<br>`;
-
-  if(honey) html += "🍯 Było miodobranie<br>";
-
-  if(tips.length){
-    html += "<br><b>🤖 Podpowiedzi:</b><br>" + tips.join("<br>");
+    // ✅ Nadchodzące prace
+    if(d >= today.getDate()){
+      if(!note.includes("nastawka")) tasks.push(`${day}.${monthStr} ➤ Dodanie nastawki`);
+      if(!note.includes("ramka pracy")) tasks.push(`${day}.${monthStr} ➤ Dodanie ramki pracy`);
+      if(!note.includes("ramka trutowa")) tasks.push(`${day}.${monthStr} ➤ Dodanie ramki trutowej`);
+      if(!note.includes("ramka z węzą")) tasks.push(`${day}.${monthStr} ➤ Dodanie ramki z węzą`);
+    }
   }
 
- // 🔥 TASKI + CHECKBOXY
-  if(tasks.length){
-    html += "<br><b>🛠 Nadchodzące prace:</b><br>";
+  // 🔥 LICZENIE RYZYKA ROJKI
+  let swarmRisk = 0;
+  const month = today.getMonth()+1;
 
-    tasks.slice(0,10).forEach((t,i)=>{
-      const id = "task_"+i;
-      html += `
-        <div>
-          <input type="checkbox" id="${id}" data-key="${t.key}" data-task="${t.text}">
-          <label for="${id}">${t.text}</label>
-        </div>
-      `;
-    });
+  if(month==4) swarmRisk+=20;
+  else if(month==5) swarmRisk+=40;
+  else if(month==6) swarmRisk+=30;
+
+  if(inspections==0) swarmRisk+=30;
+  if(inspections==1) swarmRisk+=20;
+  if(swarm) swarmRisk+=30;
+  if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
+
+  if(swarmRisk>100) swarmRisk=100;
+
+  let swarmText="";
+  if(swarmRisk>=70) swarmText="🚨 WYSOKIE ryzyko rojki!";
+  else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
+  else swarmText="✅ NISKIE ryzyko rojki";
+
+  // 🔥 PODSUMOWANIE
+  let summary=[];
+  summary.push("🔍 Przeglądy: " + inspections);
+  summary.push("🐝 Ryzyko rojki: " + swarmRisk + "% " + swarmText);
+
+  if(!feeding) summary.push("🍯 Brak karmienia");
+  if(!treatment) summary.push("💊 Brak leczenia");
+  if(honey) summary.push("🍯 Było miodobranie");
+
+  if(tasks.length > 0){
+    summary.push("🛠 Nadchodzące prace:<br>" + tasks.slice(0,10).join("<br>"));
   }
 
-  box.innerHTML = alertBox + html;
-/ 🔥 OBSŁUGA CHECKBOXÓW
-  box.querySelectorAll('input[type="checkbox"]').forEach(cb=>{
-    cb.addEventListener('change', ()=>{
-      if(cb.checked){
-        const key = cb.dataset.key;
-        const task = cb.dataset.task;
-
-        let note = localStorage.getItem(key) || "";
-        note += "\n✔ " + task;
-
-        localStorage.setItem(key, note);
+  box.innerHTML = "<b>📊 Asystent:</b><br>" + summary.join("<br>");
+  }
 
   // ==== URUCHOMIENIE ====
   updateMarkers();
+  scrollToToday();
   loadWeatherAndAssist();
 
   // Odświeżanie pogody co 2 minuty
