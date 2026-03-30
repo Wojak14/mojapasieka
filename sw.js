@@ -1,11 +1,77 @@
-const CACHE_NAME="pasieka-pro-v1";
-const OFFLINE_URL="index.html";
-const FILES_TO_CACHE=[
-  "index.html","manifest.json","service-worker.js",
-  "icons/icon-128.png","icons/icon-192.png","icons/icon-512.png",
-  "https://cdn.jsdelivr.net/npm/chart.js"
+const CACHE_NAME = "pasieka-2026-v6";
+
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./bee_icon_192x192.png",
+  "./bee_icon_512x512.png"
 ];
-self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(FILES_TO_CACHE)));self.skipWaiting();});
-self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.map(k=>k!==CACHE_NAME?caches.delete(k):null))));self.clients.claim();});
-self.addEventListener("fetch",e=>{const url=new URL(e.request.url);if(url.hostname.includes("api.open-meteo.com")){e.respondWith(fetch(e.request).then(r=>{caches.open(CACHE_NAME).then(c=>c.put(e.request,r.clone()));return r}).catch(()=>caches.match(e.request).then(r=>r||new Response("{}"))));return;}
-e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match(OFFLINE_URL
+
+// ================= INSTALL =================
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
+  );
+
+  self.skipWaiting();
+});
+
+// ================= ACTIVATE =================
+self.addEventListener("activate", event => {
+  event.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      )
+    )
+  );
+
+  self.clients.claim();
+});
+
+// ================= FETCH =================
+self.addEventListener("fetch", event => {
+
+  const request = event.request;
+
+  // ===== API POGODY =====
+  if (request.url.includes("api.open-meteo.com")) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // ===== NAWIGACJA (PWA FIX) =====
+  if (request.mode === "navigate") {
+    event.respondWith(
+      fetch(request).catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
+  // ===== RESZTA =====
+  event.respondWith(
+    caches.match(request).then(cached => {
+      return cached || fetch(request).then(response => {
+
+        if (!response || response.status !== 200) return response;
+
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
+
+        return response;
+      });
+    })
+  );
+});
