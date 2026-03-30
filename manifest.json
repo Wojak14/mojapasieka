@@ -1,33 +1,13 @@
-const CACHE_NAME = 'pasieka-pro-2026-v1';
-const urlsToCache = [
-  './',
-  './index.html',
-  './script.js',
-  './manifest.json',
-  './icons/icon-128.png',
-  './icons/icon-192.png',
-  './icons/icon-512.png'
-];
-
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache=>cache.addAll(urlsToCache))
-  );
-});
-
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response=>{
-      return response || fetch(event.request).catch(()=>caches.match('./index.html'));
-    })
-  );
-});
-
-self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then(keys=>Promise.all(
-      keys.map(key=>!cacheWhitelist.includes(key)?caches.delete(key):null)
-    ))
-  );
-});
+{
+  "name":"Pasieka PRO 2026",
+  "short_name":"PasiekaPRO",
+  "start_url":"./index.html",
+  "display":"standalone",
+  "background_color":"#fdf6e3",
+  "theme_color":"#fdd835",
+  "icons":[
+    {"src":"icons/icon-128.png","sizes":"128x128","type":"image/png"},
+    {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},
+    {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"}
+  ]
+}

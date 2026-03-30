@@ -3,11 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pasieka PRO - Next Level</title>
-
+<title>Pasieka PRO 2026</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-128.png">
-
 <style>
 body{font-family:sans-serif;margin:0;padding:0;background:#fdf6e3;color:#333;}
 h1,h2{margin:10px;}
@@ -25,9 +23,7 @@ canvas{max-width:100%;height:150px;margin-top:5px;}
 </head>
 <body>
 
-<h1>Pasieka PRO - Next Level</h1>
-
-<label>Rok: <input type="number" id="year-input" value="2026" min="2000" max="2100"></label>
+<h1>Pasieka PRO 2026</h1>
 
 <div id="location-box"></div>
 <div id="weather-data"></div>
@@ -48,31 +44,32 @@ canvas{max-width:100%;height:150px;margin-top:5px;}
 <h2>Mini wykres tygodniowy (ramki/czerw/pokarm)</h2>
 <canvas id="week-chart"></canvas>
 
-<!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-
+// ====================== KONFIG ======================
+const HIVES=[2,3,4,5,8,10,11,13,14,15,16,17,19,20,21,22,23,26,27,28,30];
 let textarea=null;
 let currentDay=null;
 let currentMonth=null;
 
-// 🐝 TWOJE ULE
-const HIVES = [2,3,4,5,8,10,11,13,14,15,16,17,19,20,21,22,23,26,27,28,30];
-
-// ================== GENERATOR ULI ==================
-document.querySelectorAll('[id^="hive-select-"]').forEach(select=>{
-  select.innerHTML="";
-  HIVES.forEach(h=>{
-    const opt=document.createElement("option");
-    opt.value=h;
-    opt.textContent="Ul "+h;
-    select.appendChild(opt);
+// ====================== GENERATOR ULI ======================
+function generateHiveSelects(months){
+  months.forEach(m=>{
+    const sel=document.getElementById("hive-select-"+m);
+    if(sel){
+      sel.innerHTML="";
+      HIVES.forEach(h=>{
+        const opt=document.createElement("option");
+        opt.value=h;
+        opt.textContent="Ul "+h;
+        sel.appendChild(opt);
+      });
+    }
   });
-});
+}
 
-// ================== MARKERY ==================
+// ====================== MARKERY DZIŚ ======================
 function updateMarkers(){
   const today=new Date();
   const dNow=String(today.getDate()).padStart(2,"0");
@@ -91,84 +88,67 @@ function updateMarkers(){
   });
 }
 
-// ================== KLIK DZIEŃ ==================
-document.querySelectorAll(".day-number").forEach(span=>{
-  span.addEventListener("click", ()=>{
-    currentDay=span.dataset.day.padStart(2,"0");
-    currentMonth=span.dataset.month.padStart(2,"0");
-
-    const hive=document.getElementById("hive-select-"+currentMonth)?.value || HIVES[0];
-    textarea=document.getElementById("notes-"+currentMonth);
-
-    const key=currentDay+"."+currentMonth+".2026_ul_"+hive;
-
-    if(textarea){
-      textarea.value=localStorage.getItem(key)||"";
-      textarea.focus();
-    }
-
-    updateHiveAI();
-    updateWeekChart();
+// ====================== KLIK DZIEN ======================
+function bindDayClicks(){
+  document.querySelectorAll(".day-number").forEach(span=>{
+    span.addEventListener("click", ()=>{
+      currentDay=span.dataset.day.padStart(2,"0");
+      currentMonth=span.dataset.month.padStart(2,"0");
+      const hive=document.getElementById("hive-select-"+currentMonth)?.value||HIVES[0];
+      textarea=document.getElementById("notes-"+currentMonth);
+      const key=currentDay+"."+currentMonth+".2026_ul_"+hive;
+      if(textarea){
+        textarea.value=localStorage.getItem(key)||"";
+        textarea.focus();
+      }
+      updateHiveAI();
+    });
   });
-});
+}
 
-// ================== ZMIANA ULA ==================
-document.querySelectorAll('[id^="hive-select-"]').forEach(select=>{
-  select.addEventListener("change", ()=>{
-    if(!currentDay) return;
-
-    const hive=select.value;
-    const key=currentDay+"."+currentMonth+".2026_ul_"+hive;
-
-    if(textarea){
-      textarea.value=localStorage.getItem(key)||"";
-    }
-
-    updateHiveAI();
-    updateWeekChart();
+// ====================== ZMIANA ULA ======================
+function bindHiveChange(){
+  document.querySelectorAll('[id^="hive-select-"]').forEach(select=>{
+    select.addEventListener("change", ()=>{
+      if(!currentDay) return;
+      const hive=select.value;
+      const key=currentDay+"."+currentMonth+".2026_ul_"+hive;
+      if(textarea){
+        textarea.value=localStorage.getItem(key)||"";
+      }
+      updateHiveAI();
+    });
   });
-});
+}
 
-// ================== ZAPIS ==================
-window.saveNote=function(){
+// ====================== ZAPIS ======================
+function saveNote(){
   if(!currentDay){ alert("Kliknij dzień"); return; }
-
-  const hive=document.getElementById("hive-select-"+currentMonth)?.value || HIVES[0];
+  const hive=document.getElementById("hive-select-"+currentMonth)?.value||HIVES[0];
   const key=currentDay+"."+currentMonth+".2026_ul_"+hive;
-
-  if(textarea){
-    localStorage.setItem(key,textarea.value);
-  }
-
+  if(textarea) localStorage.setItem(key,textarea.value);
   updateHiveAI();
   updateApiaryAI();
-  updateWeekChart();
-};
+}
 
-// ================== AI ULA ==================
+// ====================== AI ULA ======================
 function updateHiveAI(){
-
-  if(!currentDay || !currentMonth) return;
-
-  const hive=document.getElementById("hive-select-"+currentMonth)?.value || HIVES[0];
+  if(!currentDay||!currentMonth) return;
+  const hive=document.getElementById("hive-select-"+currentMonth)?.value||HIVES[0];
   const box=document.getElementById("hive-ai-"+currentMonth);
   if(!box) return;
-
   const key=currentDay+"."+currentMonth+".2026_ul_"+hive;
   const note=(localStorage.getItem(key)||"").toLowerCase();
 
-  let frames=0, brood=0, food=0, pollen=0;
-  let queen=true;
-
+  let frames=0, brood=0, food=0, pollen=0, queen=true;
   const f=note.match(/(\d+)\s?ramek/); if(f) frames=parseInt(f[1]);
   const c=note.match(/(\d+)\s?czerw/); if(c) brood=parseInt(c[1]);
   const p=note.match(/(\d+)\s?pokarm/); if(p) food=parseInt(p[1]);
   const py=note.match(/(\d+)\s?pyłek/); if(py) pollen=parseInt(py[1]);
-
   if(note.includes("brak matki")) queen=false;
 
   let status="🟢 SILNY";
-  if(frames<6 || brood<2) status="🔴 SŁABY";
+  if(frames<6||brood<2) status="🔴 SŁABY";
   else if(frames<8) status="🟡 ŚREDNI";
 
   let alerts=[];
@@ -177,7 +157,7 @@ function updateHiveAI(){
   if(brood<2) alerts.push("🐝 mało czerwiu");
 
   let actions=[];
-  if(frames>=8 && brood>=3) actions.push("⬆️ dodaj nadstawkę");
+  if(frames>=8&&brood>=3) actions.push("⬆️ dodaj nadstawkę");
   if(frames<7) actions.push("🧱 dodaj węzę");
   if(brood>=4) actions.push("🐝 ramka pracy");
   if(!queen) actions.push("👑 poddaj matkę");
@@ -187,78 +167,52 @@ function updateHiveAI(){
   Status: <b>${status}</b><br>
   Ramki:${frames} | Czerw:${brood} | Pokarm:${food} | Pyłek:${pollen}<br><br>
   <b>⚠️ Alerty:</b><br>${alerts.join("<br>")||"brak"}<br><br>
-  <b>🛠 Zalecenia:</b><br>${actions.join("<br>")||"brak"}
-  `;
+  <b>🛠 Zalecenia:</b><br>${actions.join("<br>")||"brak"}`;
 }
 
-// ================== AI PASIEKI ==================
+// ====================== AI PASIEKI ======================
 function updateApiaryAI(){
-
   const box=document.getElementById("assistant-text");
   if(!box) return;
-
   const today=new Date();
   const m=String(today.getMonth()+1).padStart(2,"0");
-
   let weak=0,strong=0,noQueen=0;
-
   HIVES.forEach(h=>{
     for(let d=1;d<=31;d++){
       const key=String(d).padStart(2,"0")+"."+m+".2026_ul_"+h;
       const note=(localStorage.getItem(key)||"").toLowerCase();
-
       if(!note) continue;
-
       if(note.includes("brak matki")) noQueen++;
-
       const frames=(note.match(/(\d+)\s?ramek/)||[])[1]||0;
       const brood=(note.match(/(\d+)\s?czerw/)||[])[1]||0;
-
-      if(frames<6 || brood<2) weak++;
-      else if(frames>=8 && brood>=3) strong++;
+      if(frames<6||brood<2) weak++;
+      else if(frames>=8&&brood>=3) strong++;
     }
   });
-
   box.innerHTML=`
   <b>🐝 AI PASIEKI</b><br><br>
   🟢 Silne: ${strong}<br>
   🔴 Słabe: ${weak}<br>
   👑 Bez matki: ${noQueen}<br><br>
   ${weak>5 ? "⚠️ Dużo słabych rodzin!" : ""}
-  ${noQueen>0 ? "🚨 Są ule bez matki!" : ""}
-  `;
+  ${noQueen>0 ? "🚨 Są ule bez matki!" : ""}`;
 }
 
-// ================== Nadchodzące prace ==================
-document.getElementById("confirm-tasks-btn").addEventListener("click",()=>{
-  document.querySelectorAll(".task-checkbox").forEach(cb=>{
-    if(cb.checked){
-      alert(`✅ Zadanie "${cb.dataset.task}" wykonane!`);
-      cb.checked=false;
-    }
-  });
-});
-
-// ================== POGODA ==================
+// ====================== POGODA ======================
 function loadWeather(){
-
   const box=document.getElementById("weather-data");
   const loc=document.getElementById("location-box");
-
   function fetchWeather(lat,lon){
-    if(isNaN(lat)||isNaN(lon)){lat=52.24;lon=23.09;}
-
+    if(isNaN(lat)||isNaN(lon)) {lat=52.24; lon=23.09;}
     if(loc) loc.innerHTML=`📍 ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
-
     fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
-    .then(r=>r.json())
-    .then(data=>{
-      const t=data.current_weather?.temperature||0;
-      const w=data.current_weather?.windspeed||0;
-      if(box) box.innerHTML=`🌡 ${t}°C | 💨 ${w} km/h`;
-    });
+      .then(r=>r.json())
+      .then(data=>{
+        const t=data.current_weather?.temperature||0;
+        const w=data.current_weather?.windspeed||0;
+        if(box) box.innerHTML=`🌡 ${t}°C | 💨 ${w} km/h`;
+      });
   }
-
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(
       pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude),
@@ -266,65 +220,21 @@ function loadWeather(){
     );
   } else fetchWeather(52.24,23.09);
 }
-
-// ================== AUTO REFRESH ==================
 setInterval(loadWeather,120000);
 
-// ================== TODAY ==================
-function scrollToToday(){
-  const t=new Date();
-  const d=String(t.getDate()).padStart(2,"0");
-  const m=String(t.getMonth()+1).padStart(2,"0");
-
-  const el=document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
-  if(el) el.scrollIntoView({behavior:"smooth",block:"center"});
-}
-
-// ================== WEEK CHART ==================
-let weekChart;
-function updateWeekChart(){
-  const ctx=document.getElementById("week-chart").getContext("2d");
-  const labels=[];
-  const framesData=[],broodData=[],foodData=[];
-  const today=new Date();
-  for(let i=6;i>=0;i--){
-    const d=new Date(today); d.setDate(today.getDate()-i);
-    const day=String(d.getDate()).padStart(2,"0");
-    const month=String(d.getMonth()+1).padStart(2,"0");
-    labels.push(`${day}.${month}`);
-    let frames=0, brood=0, food=0;
-    HIVES.forEach(h=>{
-      const key=day+"."+month+".2026_ul_"+h;
-      const note=(localStorage.getItem(key)||"").toLowerCase();
-      frames+=parseInt((note.match(/(\d+)\s?ramek/)||[])[1]||0);
-      brood+=parseInt((note.match(/(\d+)\s?czerw/)||[])[1]||0);
-      food+=parseInt((note.match(/(\d+)\s?pokarm/)||[])[1]||0);
-    });
-    framesData.push(frames);
-    broodData.push(brood);
-    foodData.push(food);
-  }
-  if(weekChart) weekChart.destroy();
-  weekChart=new Chart(ctx,{
-    type:"line",
-    data:{
-      labels:labels,
-      datasets:[
-        {label:"Ramki",data:framesData,borderColor:"orange",fill:false},
-        {label:"Czerw",data:broodData,borderColor:"red",fill:false},
-        {label:"Pokarm",data:foodData,borderColor:"green",fill:false}
-      ]
-    }
+// ====================== NADCHODZĄCE PRACE ======================
+document.getElementById("confirm-tasks-btn").addEventListener("click", ()=>{
+  document.querySelectorAll(".task-checkbox").forEach(cb=>{
+    if(cb.checked) console.log("Wykonano:",cb.dataset.task);
   });
-}
+  alert("Zatwierdzono wykonanie zaznaczonych prac!");
+});
 
-// ================== START ==================
-updateMarkers();
-updateApiaryAI();
-scrollToToday();
-loadWeather();
-updateWeekChart();
-
+// ====================== START ======================
+document.addEventListener("DOMContentLoaded", function(){
+  updateMarkers();
+  updateApiaryAI();
+  loadWeather();
 });
 </script>
 
