@@ -2122,6 +2122,7 @@ if(searchInput && resultsContainer){
       if(note.includes("miód")) honey=true;
 
       // Nadchodzące prace - tylko jeśli nie wykonane
+      if(!note.includes("ramka z miodem") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki z miodem`, key});
       if(!note.includes("nastawka") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie nastawki`, key});
       if(!note.includes("ramka pracy") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki pracy`, key});
       if(!note.includes("ramka trutowa") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki trutowej`, key});
