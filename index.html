@@ -4,23 +4,14 @@
 <meta charset="UTF-8">
 <title>Kalendarz Pszczelarski 2026</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FBC02D">
-
-<link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
-
-<link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
 
 <style>
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
-<div id="today"></div>
-<div id="upcoming"></div>
 }
 
+/* ===== KALENDARZ ===== */
 table {
   width:100%;
   border-collapse: collapse;
@@ -37,151 +28,77 @@ th, td {
 .day-number {
   cursor:pointer;
   font-weight:bold;
+  user-select: none;
 }
 
-.has-note {
-  background-color: #fff59d;
+/* ===== KOLORY ===== */
+.has-note { background-color: #fff59d; }
+.highlight-note { background: #cce5ff !important; }
+.highlight-feeding { background: #fff3cd !important; }
+.highlight-treatment { background: #f8d7da !important; }
+.highlight-swarm { background: #ffe5b4 !important; }
+
+/* ===== DZIS / JUTRO ===== */
+.today { border:2px solid #4caf50; }
+.tomorrow { border:2px solid #ff9800; }
+
+/* ===== IKONY ===== */
+.note-marker { margin-left:4px; font-size:14px; }
+
+/* ===== BOXy ===== */
+#weather-box {
+  background:#fff8e1;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:15px;
 }
 
-.today {
-  border:2px solid #4caf50;
-}
-
-.tomorrow {
-  border:2px solid #ff9800;
-}
-
-.note-marker {
-  margin-left:4px;
-  font-size:14px;
-}
-
-.highlight-search {
-  background-color:#ffeb3b;
-  border-radius:4px;
-  padding:2px 4px;
-  margin-left:2px;
-}
-
-#day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
+#assistant {
+  background:#e8f5e9;
   padding:10px;
   border-radius:10px;
   margin-top:15px;
-  background:#fff8e1;
 }
 
-.notes {
-  width:100%;
-  height:80px;
-}
-
-#autosave-status {
-  font-size:13px;
-  margin-top:4px;
-  color:green;
-}
-
-.green { background:#8BC34A; }
-.yellow { background:#FFEB3B; }
-.orange { background:#FF9800; }
-.red { background:#F44336; color:white; }
-.black { background:#000; color:white; }
-
-@media (max-width:600px) {
-  table, th, td { font-size:12px; }
-  .notes { height:60px; }
-}
+#season-info { margin-top:10px; font-weight:bold; }
 </style>
 
 </head>
 
 <body>
 
-</html>
-
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Rojka | 🔴 Leczenie | ⬛ Zimowla</div>
 
 <h2>Kalendarz pszczelarski 2026</h2>
 
-<div id="bee-assistant" style="
-background:#e8f5e9;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
+<!-- KALENDARZ -->
+<table id="calendar">
+  <!-- Tutaj JS wstawi dni miesięcy -->
+</table>
 
-  <h3>🐝 Asystent pszczelarza</h3>
-
-  <div id="assistant-text">
-    Sprawdzanie zaleceń...
-  </div>
-
-</div>
-
-<button id="today-btn" onclick="scrollToToday()" style="
-margin-top:8px;
-margin-bottom:10px;
-padding:8px 12px;
-font-size:14px;
-border:none;
-border-radius:8px;
-background:#FBC02D;
-cursor:pointer;
-font-weight:bold;
-">
-📅 DZIŚ
-</button>
+<h2>📅 Dzisiejszy dzień</h2>
+<div id="today-box">Ładowanie...</div>
 
 <!-- 🌦 POGODA -->
-<div id="weather-box" style="
-background:#fff8e1;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
+<div id="weather-box">
+  <h2>🌤 Pogoda w pasiece</h2>
+  <div id="weather-data">Ładowanie pogody...</div>
+  <div id="weather-forecast"></div>
+  <div id="location-box">📍 Lokalizacja: sprawdzanie...</div>
+  <div id="bee-flight-alert"></div>
+</div>
 
-  <h3>🌦 Pogoda w pasiece</h3>
-
-  <div id="weather-data">
-    Ładowanie pogody...
-  </div>
-
-  <div id="location-box" style="
-  background:#e3f2fd;
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
-  font-size:14px;
-  ">
-    📍 Lokalizacja pasieki: sprawdzanie...
-  </div>
-
-  <div id="weather-forecast" style="
-  margin-top:8px;
-  font-size:14px;
-  "></div>
-
-  <div id="bee-flight-alert" style="
-  margin-top:10px;
-  padding:8px;
-  background:#e8f5e9;
-  border-radius:8px;
-  font-weight:bold;
-  ">
-    🐝 Sprawdzanie warunków lotu pszczół...
-  </div>
-
+<!-- 🐝 ASYSTENT -->
+<h2>🐝 Asystent pszczelarza</h2>
+<div id="assistant">
+  <div id="assistant-text">Ładowanie...</div>
 </div>
 
 <!-- 🌼 SEZON -->
-<div id="season-info" style="
-margin-bottom:10px;
-font-weight:bold;
-"></div>
+<div id="season-info"></div>
 
 </body>
 </html>
-
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
