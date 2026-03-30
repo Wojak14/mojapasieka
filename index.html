@@ -27,12 +27,6 @@ table {
   margin-bottom:20px;
 }
 
-/* PODŚWIETLENIE DNIA W WYSZUKIWARCE */
-.highlight-day {
-  outline: 2px solid #ffcc00;
-  background-color: #fff4cc !important;
-  border-radius: 4px;
-}
 
 th, td {
   border:1px solid #444;
@@ -1862,7 +1856,7 @@ document.addEventListener("DOMContentLoaded", function() {
   let currentDay = null;
   let currentMonth = null;
 
-  // --- FUNKCJA AKTUALIZUJĄCA MARKERY I IKONY ---
+  // --- MARKERY I IKONY ---
   function updateMarkers() {
     const today = new Date();
     const dayNow = String(today.getDate()).padStart(2,"0");
@@ -1904,13 +1898,11 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
 
         if(icons.length === 0) icons.push("📒");
-
         marker.innerHTML = icons.join(" ");
         span.after(marker); 
       }
 
       if(day === dayNow && month === monthNow) td.classList.add("today");
-
       const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
       const tDay = String(tomorrow.getDate()).padStart(2,"0");
       const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
@@ -1951,13 +1943,10 @@ document.addEventListener("DOMContentLoaded", function() {
   // --- WYSZUKIWARKA NOTATEK ---
   const searchInput = document.getElementById('search-notes');
   const resultsContainer = document.getElementById('search-results');
-
   if(searchInput && resultsContainer){
     searchInput.addEventListener('input', () => {
       const query = searchInput.value.toLowerCase();
       resultsContainer.innerHTML = '';
-
-      // usuwamy podświetlenia z poprzednich wyszukiwań
       document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
       if(!query) return;
 
@@ -1966,7 +1955,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(key.startsWith('notes-')){
           try{
             const noteObj = JSON.parse(localStorage.getItem(key));
-            const noteText = noteObj?.content ?? noteObj ?? ""; // obsługa starszych wersji bez JSON
+            const noteText = noteObj?.content ?? noteObj ?? "";
             if(noteText.toLowerCase().includes(query)){
               const div = document.createElement('div');
               div.textContent = `${key.slice(6)}: ${noteText}`;
@@ -1991,7 +1980,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // --- FUNKCJA POBIERANIA POGODY 5 DNI + DZIŚ ---
+  // --- POGODA 5 DNI + DZIŚ ---
   function loadWeather5Days() {
     return new Promise((resolve)=>{
       const weatherBox = document.getElementById("weather-data");
@@ -2057,7 +2046,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // --- ASYSTENT PSZCZELARSKI ---
+  // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
   async function loadWeatherAndAssist(){
     const weatherData = await loadWeather5Days();
     updateSmartAssistant(weatherData);
@@ -2066,7 +2055,6 @@ document.addEventListener("DOMContentLoaded", function() {
   function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
-
     const today=new Date();
     const monthStr=(today.getMonth()+1).toString().padStart(2,"0");
 
@@ -2083,10 +2071,11 @@ document.addEventListener("DOMContentLoaded", function() {
       if(note.includes("rój")) swarm=true;
       if(note.includes("miód")) honey=true;
 
-      if(!note.includes("nastawka") && d>=today.getDate()) tasks.push(`${d}.${monthStr} ➤ Dodanie nastawki`);
-      if(!note.includes("ramka pracy") && d>=today.getDate()) tasks.push(`${d}.${monthStr} ➤ Dodanie ramki pracy`);
-      if(!note.includes("ramka trutowa") && d>=today.getDate()) tasks.push(`${d}.${monthStr} ➤ Dodanie ramki trutowej`);
-      if(!note.includes("ramka z węzą") && d>=today.getDate()) tasks.push(`${d}.${monthStr} ➤ Dodanie ramki z węzą`);
+      // Nadchodzące prace - tylko jeśli nie wykonane
+      if(!note.includes("nastawka") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie nastawki`, key});
+      if(!note.includes("ramka pracy") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki pracy`, key});
+      if(!note.includes("ramka trutowa") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki trutowej`, key});
+      if(!note.includes("ramka z węzą") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki z węzą`, key});
     }
 
     let swarmRisk=0;
@@ -2111,22 +2100,44 @@ document.addEventListener("DOMContentLoaded", function() {
     if(!feeding) summary.push("🍯 Brak karmienia");
     if(!treatment) summary.push("💊 Brak leczenia");
     if(honey) summary.push("🍯 Było miodobranie");
-    if(tasks.length>0) summary.push("🛠 Nadchodzące prace:<br>"+tasks.slice(0,10).join("<br>"));
+
+    if(tasks.length>0){
+      let tasksHtml = tasks.map(t=>{
+        return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`;
+      }).join("");
+      summary.push("🛠 Nadchodzące prace:<br>"+tasksHtml);
+    }
 
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
+
+    // Kliknięcie w zadanie - oznacza jako wykonane
+    box.querySelectorAll('div[data-key]').forEach(div=>{
+      div.addEventListener('click', ()=>{
+        const key = div.dataset.key;
+        const note = localStorage.getItem(key) || "";
+        localStorage.setItem(key, note + "\n" + div.textContent + " [WYKONANE]");
+        updateMarkers();
+        loadWeatherAndAssist();
+      });
+    });
   }
 
   updateMarkers();
   scrollToToday();
   loadWeatherAndAssist();
 
-// --- AUTOMATYCZNE ODŚWIEŻANIE POGODY co 120 sekund ---
-setInterval(() => {
-    loadWeatherAndAssist();
-}, 120000); // 120000 ms = 120 sekund
+  setInterval(()=>{ loadWeatherAndAssist(); },120000);
 
 });
 </script>
+
+</style>
+/* PODŚWIETLENIE DNIA W WYSZUKIWARCE */
+.highlight-day {
+  outline: 2px solid #ffcc00;
+  background-color: #fff4cc !important;
+  border-radius: 4px;
+</style>
 
 </body>
 </html>
