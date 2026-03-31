@@ -152,6 +152,7 @@ background:#FBC02D;
 cursor:pointer;
 font-weight:bold;
 ">
+
 </button>
 
 <!-- 🌦 POGODA -->
@@ -1771,6 +1772,45 @@ if(searchInput && resultsContainer){
     if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
+  // --- WYSZUKIWARKA NOTATEK ---
+  const searchInput = document.getElementById('search-notes');
+  const resultsContainer = document.getElementById('search-results');
+  if(searchInput && resultsContainer){
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase();
+      resultsContainer.innerHTML = '';
+      document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
+      if(!query) return;
+
+      for(let i=0;i<localStorage.length;i++){
+        const key = localStorage.key(i);
+        if(key.startsWith('notes-')){
+          try{
+            const noteObj = JSON.parse(localStorage.getItem(key));
+            const noteText = noteObj?.content ?? noteObj ?? "";
+            if(noteText.toLowerCase().includes(query)){
+              const div = document.createElement('div');
+              div.textContent = `${key.slice(6)}: ${noteText}`;
+              div.style.padding = "3px 5px"; div.style.cursor="pointer";
+              div.style.borderBottom="1px solid #eee";
+              resultsContainer.appendChild(div);
+
+              const [dd, mm, yyyy] = key.slice(6).split('.');
+              const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+              if(dayElem) dayElem.classList.add('highlight-day');
+
+              div.addEventListener('click', () => {
+                if(dayElem){
+                  dayElem.scrollIntoView({behavior:"smooth", block:"center"});
+                  dayElem.click();
+                }
+              });
+            }
+          } catch(e){ console.error('Błąd parsowania notatki:', key,e); }
+        }
+      }
+    });
+  }
 
   // --- POGODA 5 DNI + DZIŚ ---
   function loadWeather5Days() {
