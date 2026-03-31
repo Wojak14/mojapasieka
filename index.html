@@ -94,8 +94,9 @@ th, td {
   background-color: #fffaaa;
 }
 .highlight-day {
-  background-color: #ffe066 !important;
-  border-radius: 50%;
+  outline: 2px solid #ffcc00;
+  background-color: #fff4cc !important;
+  border-radius: 4px;
 }
 
 #autosave-status {
@@ -1855,11 +1856,10 @@ document.addEventListener("DOMContentLoaded", function() {
   let textarea = null;
   let currentDay = null;
   let currentMonth = null;
-  
-// 🐝 TWOJE ULE
-const HIVES = [2,3,4,5,8,10,11,13,14,15,16,17,19,20,21,22,23,26,27,28,30];
-  
-  // --- MARKERY I IKONY ---
+
+  // =====================
+  // 🔵 MARKERY I IKONY
+  // =====================
   function updateMarkers() {
     const today = new Date();
     const dayNow = String(today.getDate()).padStart(2,"0");
@@ -1877,49 +1877,52 @@ const HIVES = [2,3,4,5,8,10,11,13,14,15,16,17,19,20,21,22,23,26,27,28,30];
       if(oldMarker) oldMarker.remove();
 
       const noteData = localStorage.getItem(key);
+
       if(noteData && noteData.trim() !== "") {
         td.classList.add("has-note");
+
         const marker = document.createElement("span");
         marker.className = "note-marker";
 
         let icons = [];
         const text = noteData.toLowerCase();
 
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🍯");
+        if(text.includes("miód") || text.includes("miod")) icons.push("🍯");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("apiwarol")) icons.push("💊");
+        if(text.includes("leczenie") || text.includes("warroza")) icons.push("💊");
         if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
-        if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
-        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
-        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-        if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
-        if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
-        if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
-        if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
-        if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("pogoda") || text.includes("mróz")) icons.push("🥶");
-        if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
+        if(text.includes("rój") || text.includes("roj")) icons.push("🐝");
 
         if(icons.length === 0) icons.push("📒");
+
         marker.innerHTML = icons.join(" ");
-        span.after(marker); 
+        span.after(marker);
       }
 
       if(day === dayNow && month === monthNow) td.classList.add("today");
-      const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
+
+      const tomorrow = new Date();
+      tomorrow.setDate(today.getDate()+1);
+
       const tDay = String(tomorrow.getDate()).padStart(2,"0");
       const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
+
       if(day === tDay && month === tMonth) td.classList.add("tomorrow");
     });
   }
 
-  // --- OTWIERANIE NOTATKI PO KLIKU ---
+  // =====================
+  // 📅 KLIK DZIEŃ
+  // =====================
   document.querySelectorAll("td .day-number").forEach(span => {
     span.addEventListener("click", () => {
       currentDay = span.dataset.day.padStart(2,"0");
       currentMonth = span.dataset.month.padStart(2,"0");
+
       textarea = document.getElementById("notes-" + currentMonth);
+
       const key = currentDay + "." + currentMonth + ".2026";
+
       if(textarea){
         textarea.value = localStorage.getItem(key) || "";
         textarea.focus();
@@ -1927,255 +1930,93 @@ const HIVES = [2,3,4,5,8,10,11,13,14,15,16,17,19,20,21,22,23,26,27,28,30];
     });
   });
 
+  // =====================
+  // 💾 ZAPIS
+  // =====================
   window.saveNote = function() {
-    if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
+    if(!currentDay){
+      alert("Najpierw kliknij dzień w kalendarzu");
+      return;
+    }
+
     const key = currentDay + "." + currentMonth + ".2026";
-    if(textarea) localStorage.setItem(key, textarea.value);
 
-    // --- WYSZUKIWARKA NOTATEK ---
-const searchInput = document.getElementById('search-notes');
-const resultsContainer = document.getElementById('search-results');
+    if(textarea){
+      localStorage.setItem(key, textarea.value);
+    }
 
-if(searchInput && resultsContainer){
-    searchInput.addEventListener('input', () => {
-        const query = searchInput.value.toLowerCase().trim();
-        resultsContainer.innerHTML = '';
-
-        // Najpierw usuwamy podświetlenia z wszystkich dni
-        document.querySelectorAll('.day-number').forEach(day => {
-            day.classList.remove('highlight-day');
-        });
-
-        if (!query) return; // jeśli pole puste, nic nie robimy
-
-        // Przeglądamy wszystkie notatki w localStorage
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (!key.startsWith('notes-')) continue;
-
-            try {
-                const note = JSON.parse(localStorage.getItem(key));
-                if (note && note.content && note.content.toLowerCase().includes(query)) {
-                    // Tworzymy element listy wyników
-                    const div = document.createElement('div');
-                    div.className = 'search-result-item';
-                    div.textContent = `${key.slice(6)}: ${note.content}`;
-                    resultsContainer.appendChild(div);
-
-                    // Podświetlamy odpowiedni dzień w kalendarzu
-                    const [dd, mm, yyyy] = key.slice(6).split('.');
-                    const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
-                    if(dayElem) dayElem.classList.add('highlight-day');
-
-                    // Kliknięcie w wynik przenosi do notatki
-                    div.addEventListener('click', () => {
-                        if(dayElem){
-                            dayElem.scrollIntoView({behavior: "smooth", block: "center"});
-                            dayElem.click(); // otwiera panel notatki
-                        }
-                    });
-                }
-            } catch(e) {
-                console.error('Błąd parsowania notatki:', key, e);
-            }
-        }
-    });
-}
     updateMarkers();
     loadWeatherAndAssist();
   };
 
-  function scrollToToday() {
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2,"0");
-    const month = String(today.getMonth()+1).padStart(2,"0");
-    const todayEl = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
-    if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
-  }
-
-  // --- WYSZUKIWARKA NOTATEK ---
+  // =====================
+  // 🔍 WYSZUKIWARKA (NAPRAWIONA)
+  // =====================
   const searchInput = document.getElementById('search-notes');
   const resultsContainer = document.getElementById('search-results');
+
   if(searchInput && resultsContainer){
     searchInput.addEventListener('input', () => {
-      const query = searchInput.value.toLowerCase();
+
+      const query = searchInput.value.toLowerCase().trim();
       resultsContainer.innerHTML = '';
-      document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
-      if(!query) return;
 
-      for(let i=0;i<localStorage.length;i++){
+      document.querySelectorAll('.day-number')
+        .forEach(day => day.classList.remove('highlight-day'));
+
+      if (!query) return;
+
+      for (let i = 0; i < localStorage.length; i++) {
+
         const key = localStorage.key(i);
-        if(key.startsWith('notes-')){
-          try{
-            const noteObj = JSON.parse(localStorage.getItem(key));
-            const noteText = noteObj?.content ?? noteObj ?? "";
-            if(noteText.toLowerCase().includes(query)){
-              const div = document.createElement('div');
-              div.textContent = `${key.slice(6)}: ${noteText}`;
-              div.style.padding = "3px 5px"; div.style.cursor="pointer";
-              div.style.borderBottom="1px solid #eee";
-              resultsContainer.appendChild(div);
 
-              const [dd, mm, yyyy] = key.slice(6).split('.');
-              const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
-              if(dayElem) dayElem.classList.add('highlight-day');
+        if(!key.match(/^\d{2}\.\d{2}\.2026$/)) continue;
 
-              div.addEventListener('click', () => {
-                if(dayElem){
-                  dayElem.scrollIntoView({behavior:"smooth", block:"center"});
-                  dayElem.click();
-                }
-              });
+        const note = localStorage.getItem(key) || "";
+
+        if (note.toLowerCase().includes(query)) {
+
+          const div = document.createElement('div');
+          div.textContent = `${key}: ${note}`;
+          div.style.cursor = "pointer";
+          resultsContainer.appendChild(div);
+
+          const [dd, mm] = key.split('.');
+          const dayElem = document.querySelector(
+            `.day-number[data-day="${dd}"][data-month="${mm}"]`
+          );
+
+          if(dayElem) dayElem.classList.add('highlight-day');
+
+          div.addEventListener('click', () => {
+            if(dayElem){
+              dayElem.scrollIntoView({behavior:"smooth", block:"center"});
+              dayElem.click();
             }
-          } catch(e){ console.error('Błąd parsowania notatki:', key,e); }
+          });
         }
       }
     });
   }
 
-  // --- POGODA 5 DNI + DZIŚ ---
-  function loadWeather5Days() {
-    return new Promise((resolve)=>{
-      const weatherBox = document.getElementById("weather-data");
-      const forecastBox = document.getElementById("weather-forecast");
-      const beeBox = document.getElementById("bee-flight-alert");
-      const locationBox = document.getElementById("location-box");
+  // =====================
+  // 📍 LOKALIZACJA (NAPRAWIONA)
+  // =====================
+  window.getLocation = function(){
+    const boxes = document.querySelectorAll("[id^='location-box']");
 
-      function fetchWeather(lat, lon, label="Fallback") {
-        lat = Number(lat); lon = Number(lon);
-        if(isNaN(lat) || isNaN(lon)) { lat=52.24; lon=23.09; label="Werpol (fallback)"; }
-        if(locationBox) locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
-
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
-
-        fetch(url).then(r=>r.json()).then(data=>{
-          const cw = data.current_weather || {temperature:0,windspeed:0};
-          const todayMax = data.daily.temperature_2m_max[0];
-          const todayMin = data.daily.temperature_2m_min[0];
-          const todayWind = data.daily.windspeed_10m_max[0];
-          const todayRain = data.daily.precipitation_probability_max[0];
-
-          const beeStatus = (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" : (cw.temperature>=12 ? "🐝 ŚREDNIE":"❄ SŁABE");
-          const color = beeStatus.includes("IDEALNE")?"green":beeStatus.includes("ŚREDNIE")?"orange":"red";
-
-          if(weatherBox) weatherBox.innerHTML = `
-            <b>🌡 Dzisiaj:</b><br>
-            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
-            💨 Wiatr: ${todayWind} km/h<br>
-            🌧 Szansa opadów: ${todayRain}%<br>
-            <span style="color:${color};font-weight:bold">${beeStatus}</span>
-          `;
-
-          if(forecastBox){
-            const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
-            for(let i=1;i<=5;i++){
-              const date=new Date(); date.setDate(date.getDate()+i);
-              const d=date.getDate().toString().padStart(2,"0");
-              const m=(date.getMonth()+1).toString().padStart(2,"0");
-              const tMax=data.daily.temperature_2m_max[i] ?? 0;
-              const tMin=data.daily.temperature_2m_min[i] ?? 0;
-              const wind=data.daily.windspeed_10m_max[i] ?? 0;
-              const rain=data.daily.precipitation_probability_max[i] ?? 0;
-              const status=(tMax>=15 && wind<20)?"🐝 IDEALNE":(tMax>=12?"🐝 ŚREDNIE":"❄ SŁABE");
-              const color=status.includes("IDEALNE")?"green":status.includes("ŚREDNIE")?"orange":"red";
-              html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% <span style="color:${color};font-weight:bold">${status}</span></div>`;
-            }
-            forecastBox.innerHTML=html;
-          }
-
-          if(beeBox) beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
-          resolve({beeStatus});
-        }).catch(()=>resolve(null));
-      }
-
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(
-          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
-          ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
-          {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
-        );
-      } else fetchWeather(52.24,23.09,"Werpol (fallback)");
-    });
-  }
-
-  // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
-  async function loadWeatherAndAssist(){
-    const weatherData = await loadWeather5Days();
-    updateSmartAssistant(weatherData);
-  }
-
-  function updateSmartAssistant(weatherData){
-    const box=document.getElementById("assistant-text");
-    if(!box) return;
-    const today=new Date();
-    const monthStr=(today.getMonth()+1).toString().padStart(2,"0");
-
-    let inspections=0,feeding=false,treatment=false,swarm=false,honey=false;
-    let tasks = [];
-
-    for(let d=1;d<=31;d++){
-      const key=d.toString().padStart(2,"0")+"."+monthStr+".2026";
-      const note=(localStorage.getItem(key)||"").toLowerCase();
-
-      if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
-      if(note.includes("karmienie")) feeding=true;
-      if(note.includes("leczenie")) treatment=true;
-      if(note.includes("rój")) swarm=true;
-      if(note.includes("miód")) honey=true;
-
-      // Nadchodzące prace - tylko jeśli nie wykonane
-      if(!note.includes("ramka z miodem") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki z miodem`, key});
-      if(!note.includes("nastawka") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie nastawki`, key});
-      if(!note.includes("ramka pracy") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki pracy`, key});
-      if(!note.includes("ramka trutowa") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki trutowej`, key});
-      if(!note.includes("ramka z węzą") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki z węzą`, key});
-    }
-
-    let swarmRisk=0;
-    const month=today.getMonth()+1;
-    if(month==4) swarmRisk+=20;
-    else if(month==5) swarmRisk+=40;
-    else if(month==6) swarmRisk+=30;
-    if(inspections==0) swarmRisk+=30;
-    if(inspections==1) swarmRisk+=20;
-    if(swarm) swarmRisk+=30;
-    if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
-    if(swarmRisk>100) swarmRisk=100;
-
-    let swarmText="";
-    if(swarmRisk>=70) swarmText="🚨 WYSOKIE ryzyko rojki!";
-    else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
-    else swarmText="✅ NISKIE ryzyko rojki";
-
-    let summary=[];
-    summary.push("🔍 Przeglądy: "+inspections);
-    summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
-    if(!feeding) summary.push("🍯 Brak karmienia");
-    if(!treatment) summary.push("💊 Brak leczenia");
-    if(honey) summary.push("🍯 Było miodobranie");
-
-    if(tasks.length>0){
-      let tasksHtml = tasks.map(t=>{
-        return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`;
-      }).join("");
-      summary.push("🛠 Nadchodzące prace:<br>"+tasksHtml);
-    }
-
-    box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
-
-    // Kliknięcie w zadanie - oznacza jako wykonane
-    box.querySelectorAll('div[data-key]').forEach(div=>{
-      div.addEventListener('click', ()=>{
-        const key = div.dataset.key;
-        const note = localStorage.getItem(key) || "";
-        localStorage.setItem(key, note + "\n" + div.textContent + " [WYKONANE]");
-        updateMarkers();
-        loadWeatherAndAssist();
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        boxes.forEach(b=>{
+          b.innerHTML = `📍 ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`;
+        });
       });
-    });
-  }
+    }
+  };
 
+  // =====================
+  // START
+  // =====================
   updateMarkers();
   scrollToToday();
   loadWeatherAndAssist();
@@ -2184,14 +2025,3 @@ if(searchInput && resultsContainer){
 
 });
 </script>
-
-</style>
-/* PODŚWIETLENIE DNIA W WYSZUKIWARCE */
-.highlight-day {
-  outline: 2px solid #ffcc00;
-  background-color: #fff4cc !important;
-  border-radius: 4px;
-</style>
-
-</body>
-</html>
