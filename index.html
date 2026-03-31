@@ -1633,6 +1633,12 @@ font-weight:bold;
 </tr>
 </table>
 
+<div class="notes">
+<strong>Uwagi ogólne:</strong><br>
+– Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
+– Zachować higienę w ulu i narzędziach<br>
+– Kontrolować temperaturę i wilgotność w komórkach matecznych
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -1678,7 +1684,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
         if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
         if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("pogoda") || text.includes("mróz")) icons.push("🥶");
+        if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
         if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
 
         if(icons.length === 0) icons.push("📒");
