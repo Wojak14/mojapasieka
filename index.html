@@ -1898,7 +1898,7 @@ if(searchInput && resultsContainer){
   let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
 
   // =====================
-  // 📊 ANALIZA MIESIĄCA
+  // 📊 ANALIZA MIESIĄCA (Twoje notatki)
   // =====================
   for(let d=1; d<=31; d++){
     const key = d.toString().padStart(2,"0")+"."+monthStr+".2026";
@@ -1907,12 +1907,12 @@ if(searchInput && resultsContainer){
     if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
     if(note.includes("karmienie")) feeding=true;
     if(note.includes("leczenie")) treatment=true;
-    if(note.includes("rój")) swarm=true;
-    if(note.includes("miód")) honey=true;
+    if(note.includes("rój")||note.includes("rojka")) swarm=true;
+    if(note.includes("miód")||note.includes("miod")) honey=true;
   }
 
   // =====================
-  // 🔥 NADCHODZĄCE PRACE (7 DNI)
+  // 🧠 NADCHODZĄCE 7 DNI (POWIĄZANE Z KALENDARZEM)
   // =====================
   let tasks = [];
 
@@ -1927,29 +1927,36 @@ if(searchInput && resultsContainer){
     const key = d + "." + m + ".2026";
     const note = (localStorage.getItem(key) || "").toLowerCase();
 
-    // 👉 jeśli masz wpis – pokazujemy go
+    // 🔵 JEŚLI MASZ NOTATKĘ → POKAZUJEMY JĄ
     if(note){
+
+      let status = note.includes("[wykonane]") ? "✅" : "📌";
+
       tasks.push({
-        text: `📅 ${key}: ${note}`,
+        text: `${status} ${key}: ${note}`,
         key
       });
-    }
 
-    // 👉 jeśli brak wpisu – AI podpowiada
-    else{
+    } else {
 
-      // sezon pszczelarski
+      // 🔴 AI PODPOWIADA TYLKO GDY BRAK WPISU
+
+      let suggestion = "";
+
+      // sezon aktywny
       if(m >= "04" && m <= "08"){
-        tasks.push({
-          text: `⚠️ ${key}: brak wpisu – sprawdź rodzinę`,
-          key
-        });
+        suggestion = "🔍 sprawdź rodzinę";
       }
 
-      // rojka sezon
+      // rojka
       if(m === "05" || m === "06"){
+        suggestion = "🐝 kontrola rojki";
+      }
+
+      // jeśli coś sensownego → dodaj
+      if(suggestion){
         tasks.push({
-          text: `🐝 ${key}: kontrola rojki`,
+          text: `⚠️ ${key}: ${suggestion}`,
           key
         });
       }
@@ -1957,19 +1964,22 @@ if(searchInput && resultsContainer){
   }
 
   // =====================
-  // 🐝 RYZYKO ROJKI
+  // 🐝 RYZYKO ROJKI (inteligentne)
   // =====================
   let swarmRisk=0;
   const month=today.getMonth()+1;
 
   if(month==4) swarmRisk+=20;
-  else if(month==5) swarmRisk+=40;
-  else if(month==6) swarmRisk+=30;
+  if(month==5) swarmRisk+=40;
+  if(month==6) swarmRisk+=30;
 
   if(inspections==0) swarmRisk+=30;
-  if(inspections==1) swarmRisk+=20;
+  if(inspections<2) swarmRisk+=20;
   if(swarm) swarmRisk+=30;
-  if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
+
+  if(weatherData && weatherData.beeStatus.includes("IDEALNE")){
+    swarmRisk+=10;
+  }
 
   if(swarmRisk>100) swarmRisk=100;
 
@@ -1979,18 +1989,38 @@ if(searchInput && resultsContainer){
   else swarmText="✅ NISKIE ryzyko rojki";
 
   // =====================
+  // 🤖 AI WNIOSKI
+  // =====================
+  let aiTips = [];
+
+  if(inspections < 2){
+    aiTips.push("⚠️ Za mało przeglądów – sprawdź matkę i czerw");
+  }
+
+  if(!feeding && month >= 7){
+    aiTips.push("🍯 Rozważ karmienie uzupełniające");
+  }
+
+  if(!treatment && month >= 8){
+    aiTips.push("💊 Brak leczenia – sprawdź warrozę");
+  }
+
+  // =====================
   // 📋 PODSUMOWANIE
   // =====================
   let summary=[];
+
   summary.push("🔍 Przeglądy: "+inspections);
   summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
 
-  if(!feeding) summary.push("🍯 Brak karmienia");
-  if(!treatment) summary.push("💊 Brak leczenia");
-  if(honey) summary.push("🍯 Było miodobranie");
+  if(honey) summary.push("🍯 Wykonano miodobranie");
+
+  if(aiTips.length){
+    summary.push("<br><b>🤖 AI podpowiedzi:</b><br>"+aiTips.join("<br>"));
+  }
 
   // =====================
-  // 🛠 WYŚWIETLANIE ZADAŃ
+  // 🛠 NADCHODZĄCE PRACE
   // =====================
   if(tasks.length>0){
 
@@ -1998,10 +2028,10 @@ if(searchInput && resultsContainer){
       return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`;
     }).join("");
 
-    summary.push("🛠 Nadchodzące prace (7 dni):<br>"+tasksHtml);
+    summary.push("<br><b>🛠 Nadchodzące 7 dni:</b><br>"+tasksHtml);
   }
 
-  box.innerHTML = "<b>📒 Asystent:</b><br>"+summary.join("<br>");
+  box.innerHTML = "<b>📒 Asystent pszczelarza:</b><br>"+summary.join("<br>");
 
   // =====================
   // ✅ KLIK = WYKONANE
@@ -2011,7 +2041,7 @@ if(searchInput && resultsContainer){
       const key = div.dataset.key;
       const note = localStorage.getItem(key) || "";
 
-      localStorage.setItem(key, note + "\n" + div.textContent + " [WYKONANE]");
+      localStorage.setItem(key, note + "\n" + "[WYKONANE]");
 
       updateMarkers();
       loadWeatherAndAssist();
