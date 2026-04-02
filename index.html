@@ -1892,6 +1892,68 @@ if(searchInput && resultsContainer){
     updateSmartAssistant(weatherData);
   }
 
+function analyzeHives(){
+
+  let hivesMap = {};
+
+  const today = new Date();
+  const monthStr = String(today.getMonth()+1).padStart(2,"0");
+
+  for(let d=1; d<=31; d++){
+
+    const key = String(d).padStart(2,"0")+"."+monthStr+".2026";
+    const note = (localStorage.getItem(key)||"").toLowerCase();
+
+    if(!note) continue;
+
+    const matches = note.match(/ul\s*\d+/g);
+
+    if(matches){
+      matches.forEach(m => {
+
+        const hiveNumber = m.replace(/\D/g,'');
+
+        if(!hivesMap[hiveNumber]){
+          hivesMap[hiveNumber] = {
+            inspections: 0,
+            swarm: false
+          };
+        }
+
+        if(note.includes("przegląd") || note.includes("kontrola")){
+          hivesMap[hiveNumber].inspections++;
+        }
+
+        if(note.includes("rój") || note.includes("rojka")){
+          hivesMap[hiveNumber].swarm = true;
+        }
+
+      });
+    }
+  }
+
+  let result = [];
+
+  Object.keys(hivesMap).forEach(hive => {
+
+    const h = hivesMap[hive];
+
+    let status = "OK";
+
+    if(h.swarm) status = "🚨 rojka!";
+    else if(h.inspections === 0) status = "❌ brak kontroli";
+    else if(h.inspections === 1) status = "⚠️ mało przeglądów";
+
+    result.push(`Ul ${hive}: ${status}`);
+  });
+
+  if(result.length === 0){
+    result.push("Brak danych o ulach (dodaj np. 'Ul 1 przegląd')");
+  }
+
+  return result;
+}
+
   function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
@@ -1936,17 +1998,23 @@ if(searchInput && resultsContainer){
     else swarmText="✅ NISKIE ryzyko rojki";
 
     let summary=[];
-    summary.push("🔍 Przeglądy: "+inspections);
-    summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
-    if(!feeding) summary.push("🍯 Brak karmienia");
-    if(!treatment) summary.push("💊 Brak leczenia");
-    if(honey) summary.push("🍯 Było miodobranie");
+summary.push("🔍 Przeglądy: "+inspections);
+summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
+if(!feeding) summary.push("🍯 Brak karmienia");
+if(!treatment) summary.push("💊 Brak leczenia");
+if(honey) summary.push("🍯 Było miodobranie");
 
-    if(tasks.length>0){
-      let tasksHtml = tasks.map(t=>{
-        return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`;
-      }).join("");
-      summary.push("🛠 Nadchodzące prace:<br>"+tasksHtml);
+// 🐝 ANALIZA ULI
+const hiveAnalysis = analyzeHives();
+summary.push("<br><b>🐝 Stan uli:</b><br>" + hiveAnalysis.join("<br>"));
+
+// Nadchodzące prace
+if(tasks.length>0){
+  let tasksHtml = tasks.map(t=>{
+    return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`;
+  }).join("");
+  summary.push("🛠 Nadchodzące prace:<br>"+tasksHtml);
+}
     }
 
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
