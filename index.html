@@ -1644,9 +1644,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
   let textarea = null;
   let currentDay = null;
-  let currentMonth = null;
 
-  // --- MARKERY I IKONY + KOLOROWE ---
+  // --- MARKERY I IKONY ---
   function updateMarkers() {
     const today = new Date();
     const dayNow = String(today.getDate()).padStart(2,"0");
@@ -1687,19 +1686,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
 
         if(icons.length === 0) icons.push("📒");
-
-        // --- KOLOR MARKERA ---
-        let statusColor = "green"; // domyślnie OK
-        if(text.includes("rój") || text.includes("rojka")) statusColor = "red";       // 🚨 Rojka
-        else if(text.includes("przegląd") || text.includes("kontrola")) statusColor = "green"; // OK
-        else statusColor = "orange"; // notatka bez kontroli itp.
-
-        marker.style.color = statusColor;
-        marker.style.fontWeight = "bold";
-        marker.style.marginLeft = "4px";
         marker.innerHTML = icons.join(" ");
-
-        span.after(marker);
+        span.after(marker); 
       }
 
       if(day === dayNow && month === monthNow) td.classList.add("today");
@@ -1731,6 +1719,34 @@ document.addEventListener("DOMContentLoaded", function() {
     updateMarkers();
     loadWeatherAndAssist();
   };
+
+  // --- WYSZUKIWARKA NOTATEK ---
+  const searchInput = document.getElementById('search-notes');
+  const resultsContainer = document.getElementById('search-results');
+  if(searchInput && resultsContainer){
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase().trim();
+      resultsContainer.innerHTML = '';
+      document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
+      if (!query) return;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const note = (localStorage.getItem(key) || "").toLowerCase();
+        if(note.includes(query)){
+          const div = document.createElement('div');
+          div.className = 'search-result-item';
+          div.textContent = key + ": " + note;
+          resultsContainer.appendChild(div);
+
+          const [dd, mm] = key.split('.');
+          const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+          if(dayElem) dayElem.classList.add('highlight-day');
+          div.addEventListener('click', () => { if(dayElem){dayElem.scrollIntoView({behavior:"smooth", block:"center"}); dayElem.click();} });
+        }
+      }
+    });
+  }
 
   function scrollToToday() {
     const today = new Date();
@@ -1806,7 +1822,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
+  // --- ASYSTENT PSZCZELARZA 7 DNI + AI ---
   async function loadWeatherAndAssist(){
     const weatherData = await loadWeather5Days();
     updateSmartAssistant(weatherData);
@@ -1816,35 +1832,43 @@ document.addEventListener("DOMContentLoaded", function() {
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
-    const monthStr=(today.getMonth()+1).toString().padStart(2,"0");
 
-    let inspections=0,feeding=false,treatment=false,swarm=false,honey=false;
-    let tasks = [];
+    const upcomingTasks = [];
+    for(let offset=0; offset<7; offset++){
+      const d = new Date(); d.setDate(today.getDate()+offset);
+      const day = d.getDate().toString().padStart(2,"0");
+      const month = (d.getMonth()+1).toString().padStart(2,"0");
+      const key = `${day}.${month}.2026`;
+      const note = (localStorage.getItem(key) || "").toLowerCase();
 
-    for(let d=1;d<=31;d++){
-      const key=d.toString().padStart(2,"0")+"."+monthStr+".2026";
-      const note=(localStorage.getItem(key)||"").toLowerCase();
-
-      if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
-      if(note.includes("karmienie")) feeding=true;
-      if(note.includes("leczenie")) treatment=true;
-      if(note.includes("rój")) swarm=true;
-      if(note.includes("miód")) honey=true;
-
-      if(!note.includes("ramka z miodem") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki z miodem`, key});
-      if(!note.includes("nastawka") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie nastawki`, key});
-      if(!note.includes("ramka pracy") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki pracy`, key});
-      if(!note.includes("ramka trutowa") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki trutowej`, key});
-      if(!note.includes("ramka z węzą") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki z węzą`, key});
+      if(!note.includes("przegląd")) upcomingTasks.push({text:`${day}.${month} ➤ Wykonaj przegląd uli`, key});
+      if(!note.includes("karmienie") && d.getMonth()>=3 && d.getMonth()<=8) upcomingTasks.push({text:`${day}.${month} ➤ Sprawdź karmienie pszczół`, key});
+      if(!note.includes("leczenie") && (d.getMonth()>=3 && d.getMonth()<=5)) upcomingTasks.push({text:`${day}.${month} ➤ Rozważ leczenie warrozy`, key});
+      if(!note.includes("miodobranie") && d.getMonth()>=5 && d.getMonth()<=7) upcomingTasks.push({text:`${day}.${month} ➤ Przygotuj miodobranie`, key});
+      if(!note.includes("ramka z węzą")) upcomingTasks.push({text:`${day}.${month} ➤ Sprawdź węzę i ramki`, key});
     }
 
-    let swarmRisk=0;
-    const month=today.getMonth()+1;
-    if(month==4) swarmRisk+=20;
-    else if(month==5) swarmRisk+=40;
-    else if(month==6) swarmRisk+=30;
-    if(inspections==0) swarmRisk+=30;
-    if(inspections==1) swarmRisk+=20;
+    const aiHints = [];
+    if(weatherData){
+      if(weatherData.beeStatus.includes("IDEALNE")) aiHints.push("🌞 Dzisiaj pszczoły mogą intensywnie wychodzić – planuj przegląd lub karmienie rano.");
+      else if(weatherData.beeStatus.includes("ŚREDNIE")) aiHints.push("⚠️ Pogoda umiarkowana, ogranicz ruch przy ulach do minimum.");
+      else aiHints.push("❄ Pszczoły nie wychodzą, prace wewnątrz ula lub przygotowanie sprzętu.");
+    }
+
+    let inspections = 0, swarm = false;
+    for(let offset=0; offset<7; offset++){
+      const d = new Date(); d.setDate(today.getDate()+offset);
+      const day = d.getDate().toString().padStart(2,"0");
+      const month = (d.getMonth()+1).toString().padStart(2,"0");
+      const note = (localStorage.getItem(`${day}.${month}.2026`)||"").toLowerCase();
+      if(note.includes("przegląd") || note.includes("kontrola")) inspections++;
+      if(note.includes("rój")) swarm = true;
+    }
+
+    let swarmRisk = 0;
+    const month = today.getMonth()+1;
+    if(month==4) swarmRisk+=20; else if(month==5) swarmRisk+=40; else if(month==6) swarmRisk+=30;
+    if(inspections==0) swarmRisk+=30; else if(inspections==1) swarmRisk+=20;
     if(swarm) swarmRisk+=30;
     if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
     if(swarmRisk>100) swarmRisk=100;
@@ -1854,16 +1878,18 @@ document.addEventListener("DOMContentLoaded", function() {
     else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
     else swarmText="✅ NISKIE ryzyko rojki";
 
-    let summary=[];
-    summary.push("🔍 Przeglądy: "+inspections);
+    let summary = [];
+    summary.push("🔍 Przeglądy w najbliższych 7 dniach: "+inspections);
     summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
-    if(!feeding) summary.push("🍯 Brak karmienia");
-    if(!treatment) summary.push("💊 Brak leczenia");
-    if(honey) summary.push("🍯 Było miodobranie");
+    if(aiHints.length) summary.push("💡 Podpowiedzi AI:<br>"+aiHints.join("<br>"));
 
-    if(tasks.length>0){
-      let tasksHtml = tasks.map(t=>`<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`).join("");
-      summary.push("🛠 Nadchodzące prace:<br>"+tasksHtml);
+    const uniqueTasks = [];
+    const seen = new Set();
+    upcomingTasks.forEach(t=>{ if(!seen.has(t.text)){ uniqueTasks.push(t); seen.add(t.text); } });
+
+    if(uniqueTasks.length>0){
+      let tasksHtml = uniqueTasks.map(t=>`<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`).join("");
+      summary.push("🛠 Nadchodzące prace 7 dni:<br>"+tasksHtml);
     }
 
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
