@@ -1644,6 +1644,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
   let textarea = null;
   let currentDay = null;
+  let currentMonth = null;
 
   // --- MARKERY I IKONY ---
   function updateMarkers() {
@@ -1670,6 +1671,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         let icons = [];
         const text = noteData.toLowerCase();
+
         if(text.includes("miód") || text.includes("miodobranie")) icons.push("🍯");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
         if(text.includes("leczenie") || text.includes("warroza") || text.includes("apiwarol")) icons.push("💊");
@@ -1695,100 +1697,8 @@ document.addEventListener("DOMContentLoaded", function() {
       const tDay = String(tomorrow.getDate()).padStart(2,"0");
       const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
       if(day === tDay && month === tMonth) td.classList.add("tomorrow");
-function showHiveHistory(hiveNumber){
-
-  const resultsContainer = document.getElementById('search-results');
-  resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
-
-  let found = false;
-
-  for(let i=0;i<localStorage.length;i++){
-
-    const key = localStorage.key(i);
-
-    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
-    const note = (localStorage.getItem(key) || "").toLowerCase();
-
-    if(note.includes("ul "+hiveNumber)){
-
-      found = true;
-
-      const div = document.createElement('div');
-      div.innerHTML = `<b>${key}</b> ➤ ${note}`;
-      div.style.marginBottom = "5px";
-
-      resultsContainer.appendChild(div);
-    }
+    });
   }
-
-  if(!found){
-    resultsContainer.innerHTML += "Brak wpisów dla tego ula";
-  }
-}
-/ =========================
-// 🔍 WYSZUKIWARKA PRO + KLIKALNE ULE
-// =========================
-
-const searchInput = document.getElementById('search-notes');
-const resultsContainer = document.getElementById('search-results');
-
-if(searchInput && resultsContainer){
-
-  searchInput.addEventListener('input', () => {
-
-    const query = searchInput.value.toLowerCase().trim();
-    resultsContainer.innerHTML = '';
-
-    document.querySelectorAll('.day-number')
-      .forEach(d => d.classList.remove('highlight-day'));
-
-    if(!query) return;
-
-    for(let i=0;i<localStorage.length;i++){
-
-      const key = localStorage.key(i);
-
-      // ✅ tylko notatki (daty)
-      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
-      const note = (localStorage.getItem(key) || "").toLowerCase();
-
-      if(note.includes(query)){
-
-        const div = document.createElement('div');
-
-        // 🔥 TU SĄ KLIKALNE ULE
-        div.innerHTML = `
-          <b>${key}</b><br>
-          <span>
-            ${note.replace(/ul\s*(\d+)/g, (m,n)=> 
-              `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
-            )}
-          </span>
-        `;
-
-        div.style.padding = "5px";
-        div.style.borderBottom = "1px solid #ddd";
-        div.style.cursor = "pointer";
-
-        resultsContainer.appendChild(div);
-
-        const [dd, mm] = key.split('.');
-        const dayEl = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
-
-        if(dayEl) dayEl.classList.add('highlight-day');
-
-        div.onclick = () => {
-          if(dayEl){
-            dayEl.scrollIntoView({behavior:"smooth", block:"center"});
-            dayEl.click();
-          }
-        };
-      }
-    }
-  });
-}
 
   // --- OTWIERANIE NOTATKI PO KLIKU ---
   document.querySelectorAll("td .day-number").forEach(span => {
@@ -1808,60 +1718,59 @@ if(searchInput && resultsContainer){
     if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
     const key = currentDay + "." + currentMonth + ".2026";
     if(textarea) localStorage.setItem(key, textarea.value);
-    updateMarkers();
-    loadWeatherAndAssist();
-  };
 
- // --- WYSZUKIWARKA NOTATEK (NAPRAWIONA) ---
+    // --- WYSZUKIWARKA NOTATEK ---
 const searchInput = document.getElementById('search-notes');
 const resultsContainer = document.getElementById('search-results');
 
 if(searchInput && resultsContainer){
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase().trim();
+        resultsContainer.innerHTML = '';
 
-  searchInput.addEventListener('input', () => {
+        // Najpierw usuwamy podświetlenia z wszystkich dni
+        document.querySelectorAll('.day-number').forEach(day => {
+            day.classList.remove('highlight-day');
+        });
 
-    const query = searchInput.value.toLowerCase().trim();
-    resultsContainer.innerHTML = '';
+        if (!query) return; // jeśli pole puste, nic nie robimy
 
-    document.querySelectorAll('.day-number')
-      .forEach(d => d.classList.remove('highlight-day'));
+        // Przeglądamy wszystkie notatki w localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (!key.startsWith('notes-')) continue;
 
-    if(!query) return;
+            try {
+                const note = JSON.parse(localStorage.getItem(key));
+                if (note && note.content && note.content.toLowerCase().includes(query)) {
+                    // Tworzymy element listy wyników
+                    const div = document.createElement('div');
+                    div.className = 'search-result-item';
+                    div.textContent = `${key.slice(6)}: ${note.content}`;
+                    resultsContainer.appendChild(div);
 
-    for(let i=0;i<localStorage.length;i++){
+                    // Podświetlamy odpowiedni dzień w kalendarzu
+                    const [dd, mm, yyyy] = key.slice(6).split('.');
+                    const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+                    if(dayElem) dayElem.classList.add('highlight-day');
 
-      const key = localStorage.key(i);
-
-      // ✅ FILTR – tylko daty typu 01.02.2026
-      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
-      const note = (localStorage.getItem(key) || "").toLowerCase();
-
-      if(note.includes(query)){
-
-        const div = document.createElement('div');
-        div.textContent = key + ": " + note;
-        div.style.padding = "4px";
-        div.style.borderBottom = "1px solid #ddd";
-        div.style.cursor = "pointer";
-
-        resultsContainer.appendChild(div);
-
-        const [dd, mm] = key.split('.');
-        const dayEl = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
-
-        if(dayEl) dayEl.classList.add('highlight-day');
-
-        div.onclick = () => {
-          if(dayEl){
-            dayEl.scrollIntoView({behavior:"smooth", block:"center"});
-            dayEl.click();
-          }
-        };
-      }
-    }
-  });
+                    // Kliknięcie w wynik przenosi do notatki
+                    div.addEventListener('click', () => {
+                        if(dayElem){
+                            dayElem.scrollIntoView({behavior: "smooth", block: "center"});
+                            dayElem.click(); // otwiera panel notatki
+                        }
+                    });
+                }
+            } catch(e) {
+                console.error('Błąd parsowania notatki:', key, e);
+            }
+        }
+    });
 }
+    updateMarkers();
+    loadWeatherAndAssist();
+  };
 
   function scrollToToday() {
     const today = new Date();
@@ -1871,7 +1780,47 @@ if(searchInput && resultsContainer){
     if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
-  // --- POGODA 5 DNI + GPS ---
+  // --- WYSZUKIWARKA NOTATEK ---
+  const searchInput = document.getElementById('search-notes');
+  const resultsContainer = document.getElementById('search-results');
+  if(searchInput && resultsContainer){
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase();
+      resultsContainer.innerHTML = '';
+      document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
+      if(!query) return;
+
+      for(let i=0;i<localStorage.length;i++){
+        const key = localStorage.key(i);
+        if(key.startsWith('notes-')){
+          try{
+            const noteObj = JSON.parse(localStorage.getItem(key));
+            const noteText = noteObj?.content ?? noteObj ?? "";
+            if(noteText.toLowerCase().includes(query)){
+              const div = document.createElement('div');
+              div.textContent = `${key.slice(6)}: ${noteText}`;
+              div.style.padding = "3px 5px"; div.style.cursor="pointer";
+              div.style.borderBottom="1px solid #eee";
+              resultsContainer.appendChild(div);
+
+              const [dd, mm, yyyy] = key.slice(6).split('.');
+              const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+              if(dayElem) dayElem.classList.add('highlight-day');
+
+              div.addEventListener('click', () => {
+                if(dayElem){
+                  dayElem.scrollIntoView({behavior:"smooth", block:"center"});
+                  dayElem.click();
+                }
+              });
+            }
+          } catch(e){ console.error('Błąd parsowania notatki:', key,e); }
+        }
+      }
+    });
+  }
+
+  // --- POGODA 5 DNI + DZIŚ ---
   function loadWeather5Days() {
     return new Promise((resolve)=>{
       const weatherBox = document.getElementById("weather-data");
@@ -1937,40 +1886,7 @@ if(searchInput && resultsContainer){
     });
   }
 
-function showHiveHistory(hiveNumber){
-
-  const resultsContainer = document.getElementById('search-results');
-  resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
-
-  let found = false;
-
-  for(let i=0;i<localStorage.length;i++){
-
-    const key = localStorage.key(i);
-
-    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
-    const note = (localStorage.getItem(key) || "").toLowerCase();
-
-    if(note.includes("ul "+hiveNumber)){
-
-      found = true;
-
-      const div = document.createElement('div');
-      div.innerHTML = `<b>${key}</b> ➤ ${note}`;
-      div.style.marginBottom = "5px";
-
-      resultsContainer.appendChild(div);
-    }
-  }
-
-  if(!found){
-    resultsContainer.innerHTML += "Brak wpisów dla tego ula";
-  }
-}
-
-
-  // --- ASYSTENT PSZCZELARZA 7 DNI + AI ---
+  // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
   async function loadWeatherAndAssist(){
     const weatherData = await loadWeather5Days();
     updateSmartAssistant(weatherData);
@@ -1980,43 +1896,36 @@ function showHiveHistory(hiveNumber){
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
+    const monthStr=(today.getMonth()+1).toString().padStart(2,"0");
 
-    const upcomingTasks = [];
-    for(let offset=0; offset<7; offset++){
-      const d = new Date(); d.setDate(today.getDate()+offset);
-      const day = d.getDate().toString().padStart(2,"0");
-      const month = (d.getMonth()+1).toString().padStart(2,"0");
-      const key = `${day}.${month}.2026`;
-      const note = (localStorage.getItem(key) || "").toLowerCase();
+    let inspections=0,feeding=false,treatment=false,swarm=false,honey=false;
+    let tasks = [];
 
-      if(!note.includes("przegląd")) upcomingTasks.push({text:`${day}.${month} ➤ Wykonaj przegląd uli`, key});
-      if(!note.includes("karmienie") && d.getMonth()>=3 && d.getMonth()<=8) upcomingTasks.push({text:`${day}.${month} ➤ Sprawdź karmienie pszczół`, key});
-      if(!note.includes("leczenie") && (d.getMonth()>=3 && d.getMonth()<=5)) upcomingTasks.push({text:`${day}.${month} ➤ Rozważ leczenie warrozy`, key});
-      if(!note.includes("miodobranie") && d.getMonth()>=5 && d.getMonth()<=7) upcomingTasks.push({text:`${day}.${month} ➤ Przygotuj miodobranie`, key});
-      if(!note.includes("ramka z węzą")) upcomingTasks.push({text:`${day}.${month} ➤ Sprawdź węzę i ramki`, key});
+    for(let d=1;d<=31;d++){
+      const key=d.toString().padStart(2,"0")+"."+monthStr+".2026";
+      const note=(localStorage.getItem(key)||"").toLowerCase();
+
+      if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
+      if(note.includes("karmienie")) feeding=true;
+      if(note.includes("leczenie")) treatment=true;
+      if(note.includes("rój")) swarm=true;
+      if(note.includes("miód")) honey=true;
+
+      // Nadchodzące prace - tylko jeśli nie wykonane
+      if(!note.includes("ramka z miodem") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki z miodem`, key});
+      if(!note.includes("nastawka") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie nastawki`, key});
+      if(!note.includes("ramka pracy") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki pracy`, key});
+      if(!note.includes("ramka trutowa") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki trutowej`, key});
+      if(!note.includes("ramka z węzą") && d>=today.getDate()) tasks.push({text:`${d}.${monthStr} ➤ Dodanie ramki z węzą`, key});
     }
 
-    const aiHints = [];
-    if(weatherData){
-      if(weatherData.beeStatus.includes("IDEALNE")) aiHints.push("🌞 Dzisiaj pszczoły mogą intensywnie wychodzić – planuj przegląd lub karmienie rano.");
-      else if(weatherData.beeStatus.includes("ŚREDNIE")) aiHints.push("⚠️ Pogoda umiarkowana, ogranicz ruch przy ulach do minimum.");
-      else aiHints.push("❄ Pszczoły nie wychodzą, prace wewnątrz ula lub przygotowanie sprzętu.");
-    }
-
-    let inspections = 0, swarm = false;
-    for(let offset=0; offset<7; offset++){
-      const d = new Date(); d.setDate(today.getDate()+offset);
-      const day = d.getDate().toString().padStart(2,"0");
-      const month = (d.getMonth()+1).toString().padStart(2,"0");
-      const note = (localStorage.getItem(`${day}.${month}.2026`)||"").toLowerCase();
-      if(note.includes("przegląd") || note.includes("kontrola")) inspections++;
-      if(note.includes("rój")) swarm = true;
-    }
-
-    let swarmRisk = 0;
-    const month = today.getMonth()+1;
-    if(month==4) swarmRisk+=20; else if(month==5) swarmRisk+=40; else if(month==6) swarmRisk+=30;
-    if(inspections==0) swarmRisk+=30; else if(inspections==1) swarmRisk+=20;
+    let swarmRisk=0;
+    const month=today.getMonth()+1;
+    if(month==4) swarmRisk+=20;
+    else if(month==5) swarmRisk+=40;
+    else if(month==6) swarmRisk+=30;
+    if(inspections==0) swarmRisk+=30;
+    if(inspections==1) swarmRisk+=20;
     if(swarm) swarmRisk+=30;
     if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
     if(swarmRisk>100) swarmRisk=100;
@@ -2026,22 +1935,23 @@ function showHiveHistory(hiveNumber){
     else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
     else swarmText="✅ NISKIE ryzyko rojki";
 
-    let summary = [];
-    summary.push("🔍 Przeglądy w najbliższych 7 dniach: "+inspections);
+    let summary=[];
+    summary.push("🔍 Przeglądy: "+inspections);
     summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
-    if(aiHints.length) summary.push("💡 Podpowiedzi AI:<br>"+aiHints.join("<br>"));
+    if(!feeding) summary.push("🍯 Brak karmienia");
+    if(!treatment) summary.push("💊 Brak leczenia");
+    if(honey) summary.push("🍯 Było miodobranie");
 
-    const uniqueTasks = [];
-    const seen = new Set();
-    upcomingTasks.forEach(t=>{ if(!seen.has(t.text)){ uniqueTasks.push(t); seen.add(t.text); } });
-
-    if(uniqueTasks.length>0){
-      let tasksHtml = uniqueTasks.map(t=>`<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`).join("");
-      summary.push("🛠 Nadchodzące prace 7 dni:<br>"+tasksHtml);
+    if(tasks.length>0){
+      let tasksHtml = tasks.map(t=>{
+        return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`;
+      }).join("");
+      summary.push("🛠 Nadchodzące prace:<br>"+tasksHtml);
     }
 
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
 
+    // Kliknięcie w zadanie - oznacza jako wykonane
     box.querySelectorAll('div[data-key]').forEach(div=>{
       div.addEventListener('click', ()=>{
         const key = div.dataset.key;
@@ -2056,6 +1966,7 @@ function showHiveHistory(hiveNumber){
   updateMarkers();
   scrollToToday();
   loadWeatherAndAssist();
+
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
 
 });
