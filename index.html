@@ -1687,7 +1687,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
 
         if(icons.length === 0) icons.push("📒");
-       marker.innerHTML = "<b style='font-size:14px'>" + icons.join(" ") + "</b>";
+        marker.innerHTML = icons.join(" ") + " " + noteData.replace(/ul\s*(\d+)/g, (m,n)=>
           `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
         );
         span.after(marker); 
