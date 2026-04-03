@@ -1547,6 +1547,9 @@ font-weight:bold;
 
 </div> <!-- KONIEC stats -->
 
+<h3>📒 Notatki miesięczne</h3>
+<div id="notes-table-container"></div>
+
 </div><!-- TABELA ROJLIWOŚCI -->
 <div class="month">
 <h1>Dni największej rojliwości w 2026</h1>
@@ -1687,8 +1690,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
 
         if(icons.length === 0) icons.push("📒");
-        marker.innerHTML = icons.join(" ") + " " + noteData.replace(/ul\s*(\d+)/g, (m,n)=>
-          `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
+        marker.innerHTML = icons.join(" "); 
         );
         span.after(marker); 
       }
@@ -1938,6 +1940,7 @@ document.addEventListener("DOMContentLoaded", function() {
   updateMarkers();
   scrollToToday();
   loadWeatherAndAssist();
+  generateNotesTable();
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
 
 });
