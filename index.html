@@ -1641,7 +1641,6 @@ font-weight:bold;
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-
   let textarea = null;
   let currentDay = null;
   let currentMonth = null;
@@ -1688,7 +1687,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
-        span.after(marker);
+        span.after(marker); 
       }
 
       if(day === dayNow && month === monthNow) td.classList.add("today");
@@ -1729,7 +1728,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
-  // --- POGODA 5 DNI + DZIŚ ---
+  // --- POGODA + GPS ---
   function loadWeather5Days() {
     return new Promise((resolve)=>{
       const weatherBox = document.getElementById("weather-data");
@@ -1805,104 +1804,78 @@ document.addEventListener("DOMContentLoaded", function() {
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
-    const monthStr=(today.getMonth()+1).toString().padStart(2,"0");
 
-    let inspections=0,feeding=false,treatment=false,honey=false;
-    let tasks = [];
+    const tasksMap={}; // data => lista zadań
 
-    for(let offset=0; offset<7; offset++){
-      const date = new Date(); date.setDate(today.getDate()+offset);
+    for(let i=0;i<7;i++){
+      const date=new Date();
+      date.setDate(today.getDate()+i);
       const d=date.getDate().toString().padStart(2,"0");
       const m=(date.getMonth()+1).toString().padStart(2,"0");
       const key=d+"."+m+".2026";
       const note=(localStorage.getItem(key)||"").toLowerCase();
       let dayTasks=[];
 
-      if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
-      if(note.includes("karmienie")) feeding=true;
-      if(note.includes("leczenie")) treatment=true;
-      if(note.includes("rój")) swarm=true;
-      if(note.includes("miód")) honey=true;
-
-      if(!note.includes("przegląd")) dayTasks.push("wykonaj przegląd uli");
+      if(!note.includes("przegląd") && !note.includes("kontrola")) dayTasks.push("przegląd uli");
       if(!note.includes("karmienie")) dayTasks.push("sprawdź karmienie pszczół");
       if(!note.includes("leczenie")) dayTasks.push("rozważ leczenie warrozy");
       if(!note.includes("węza")) dayTasks.push("sprawdź węzę i ramki");
 
-      if(dayTasks.length>0) tasks.push({key,keyText:key, note:dayTasks.join(", ")});
+      if(dayTasks.length>0) tasksMap[key]=dayTasks.join(", ");
     }
 
-    // Generowanie HTML
-    if(tasks.length>0){
-      box.innerHTML="<b>📒 Asystent:</b><br>";
-      tasks.forEach(t=>{
-        const div=document.createElement("div");
-        div.style.cursor="pointer";
-        div.style.color="blue";
-        div.style.textDecoration="underline";
-        div.style.margin="2px 0";
-        div.dataset.key=t.key;
-        div.innerHTML=`${t.keyText} ➤ ${t.note}`;
-        div.addEventListener("click", ()=>{
-          const textarea=document.getElementById("notes-"+t.key.split(".")[1]);
-          if(textarea){
-            textarea.value = (textarea.value||"") + "\n"+t.note;
-            localStorage.setItem(t.key, textarea.value);
-            updateMarkers();
-            loadWeatherAndAssist();
-          }
-        });
-        box.appendChild(div);
-      });
-    } else box.innerHTML="<b>📒 Asystent:</b> Brak nadchodzących prac";
+    // AI tips
+    let aiTips=[];
+    for(const key in tasksMap){
+      if(tasksMap[key].includes("przegląd uli")) aiTips.push(`⚠️ ${key}: sprawdź matkę i czerw`);
+    }
+
+    // Wyświetlanie
+    let summary=[];
+    for(const key in tasksMap){
+      summary.push(`<b>${key}</b> ➤ ${tasksMap[key]}`);
+    }
+    if(aiTips.length>0) summary.push("<br>🤖 Podpowiedzi AI:<br>"+aiTips.join("<br>"));
+
+    box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
   }
 
-  // --- WYSZUKIWARKA NOTATEK (działa i ignoruje pogodę) ---
-  const searchInput = document.getElementById("search-notes");
-  if(searchInput){
-    searchInput.addEventListener("input", function(){
-      const query = this.value.toLowerCase().trim();
-      const resultsContainer = document.getElementById("search-results");
-      resultsContainer.innerHTML = "";
-      if(query==="") return;
+  // --- WYSZUKIWARKA NOTATEK ---
+  const searchInput = document.getElementById('search-notes');
+  const resultsContainer = document.getElementById('search-results');
+
+  if(searchInput && resultsContainer){
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase().trim();
+      resultsContainer.innerHTML = '';
+      document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
+      if(!query) return;
 
       for(let i=0;i<localStorage.length;i++){
         const key = localStorage.key(i);
         if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-        const note = (localStorage.getItem(key)||"").toLowerCase();
-        if(note.includes(query)){
-          const div = document.createElement("div");
-          div.style.marginBottom="5px";
-          div.style.cursor="pointer";
-          div.style.background="#f9f9f9";
-          div.style.padding="4px";
-          div.style.borderRadius="5px";
-          div.innerHTML = `<b>${key}</b>: ${localStorage.getItem(key)}`;
-          div.addEventListener("click", ()=>{
-            const parts = key.split(".");
-            const day = parts[0];
-            const month = parts[1];
-            const textarea = document.getElementById("notes-" + month);
-            if(textarea){
-              textarea.value = localStorage.getItem(key) || "";
-              textarea.focus();
-            }
-            const dayEl = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
-            if(dayEl) dayEl.scrollIntoView({behavior:"smooth", block:"center"});
-          });
+        const note = localStorage.getItem(key);
+        if(note && note.toLowerCase().includes(query)){
+          const [dd, mm] = key.split(".");
+          const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+          if(dayElem) dayElem.classList.add('highlight-day');
+          const div = document.createElement('div');
+          div.innerHTML = `<b>${key}</b> ➤ ${note}`;
+          div.style.marginBottom="3px";
+          div.addEventListener('click',()=>{ if(dayElem) dayElem.click(); });
           resultsContainer.appendChild(div);
         }
       }
-      if(resultsContainer.innerHTML==="") resultsContainer.innerHTML="Brak wyników";
     });
   }
 
+  // --- INIT ---
   updateMarkers();
   scrollToToday();
   loadWeatherAndAssist();
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
-
 });
 </script>
+
 </body>
 </html>
