@@ -1695,8 +1695,101 @@ document.addEventListener("DOMContentLoaded", function() {
       const tDay = String(tomorrow.getDate()).padStart(2,"0");
       const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
       if(day === tDay && month === tMonth) td.classList.add("tomorrow");
-    });
+function showHiveHistory(hiveNumber){
+
+  const resultsContainer = document.getElementById('search-results');
+  resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
+
+  let found = false;
+
+  for(let i=0;i<localStorage.length;i++){
+
+    const key = localStorage.key(i);
+
+    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+
+    const note = (localStorage.getItem(key) || "").toLowerCase();
+
+    if(note.includes("ul "+hiveNumber)){
+
+      found = true;
+
+      const div = document.createElement('div');
+      div.innerHTML = `<b>${key}</b> ➤ ${note}`;
+      div.style.marginBottom = "5px";
+
+      resultsContainer.appendChild(div);
+    }
   }
+
+  if(!found){
+    resultsContainer.innerHTML += "Brak wpisów dla tego ula";
+  }
+}
+
+/ =========================
+// 🔍 WYSZUKIWARKA PRO + KLIKALNE ULE
+// =========================
+
+const searchInput = document.getElementById('search-notes');
+const resultsContainer = document.getElementById('search-results');
+
+if(searchInput && resultsContainer){
+
+  searchInput.addEventListener('input', () => {
+
+    const query = searchInput.value.toLowerCase().trim();
+    resultsContainer.innerHTML = '';
+
+    document.querySelectorAll('.day-number')
+      .forEach(d => d.classList.remove('highlight-day'));
+
+    if(!query) return;
+
+    for(let i=0;i<localStorage.length;i++){
+
+      const key = localStorage.key(i);
+
+      // ✅ tylko notatki (daty)
+      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+
+      const note = (localStorage.getItem(key) || "").toLowerCase();
+
+      if(note.includes(query)){
+
+        const div = document.createElement('div');
+
+        // 🔥 TU SĄ KLIKALNE ULE
+        div.innerHTML = `
+          <b>${key}</b><br>
+          <span>
+            ${note.replace(/ul\s*(\d+)/g, (m,n)=> 
+              `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
+            )}
+          </span>
+        `;
+
+        div.style.padding = "5px";
+        div.style.borderBottom = "1px solid #ddd";
+        div.style.cursor = "pointer";
+
+        resultsContainer.appendChild(div);
+
+        const [dd, mm] = key.split('.');
+        const dayEl = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+
+        if(dayEl) dayEl.classList.add('highlight-day');
+
+        div.onclick = () => {
+          if(dayEl){
+            dayEl.scrollIntoView({behavior:"smooth", block:"center"});
+            dayEl.click();
+          }
+        };
+      }
+    }
+  });
+}
 
   // --- OTWIERANIE NOTATKI PO KLIKU ---
   document.querySelectorAll("td .day-number").forEach(span => {
@@ -1845,6 +1938,39 @@ if(searchInput && resultsContainer){
     });
   }
 
+function showHiveHistory(hiveNumber){
+
+  const resultsContainer = document.getElementById('search-results');
+  resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
+
+  let found = false;
+
+  for(let i=0;i<localStorage.length;i++){
+
+    const key = localStorage.key(i);
+
+    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+
+    const note = (localStorage.getItem(key) || "").toLowerCase();
+
+    if(note.includes("ul "+hiveNumber)){
+
+      found = true;
+
+      const div = document.createElement('div');
+      div.innerHTML = `<b>${key}</b> ➤ ${note}`;
+      div.style.marginBottom = "5px";
+
+      resultsContainer.appendChild(div);
+    }
+  }
+
+  if(!found){
+    resultsContainer.innerHTML += "Brak wpisów dla tego ula";
+  }
+}
+
+
   // --- ASYSTENT PSZCZELARZA 7 DNI + AI ---
   async function loadWeatherAndAssist(){
     const weatherData = await loadWeather5Days();
@@ -1852,81 +1978,173 @@ if(searchInput && resultsContainer){
   }
 
   function updateSmartAssistant(weatherData){
-    const box=document.getElementById("assistant-text");
-    if(!box) return;
-    const today=new Date();
 
-    const upcomingTasks = [];
-    for(let offset=0; offset<7; offset++){
-      const d = new Date(); d.setDate(today.getDate()+offset);
-      const day = d.getDate().toString().padStart(2,"0");
-      const month = (d.getMonth()+1).toString().padStart(2,"0");
-      const key = `${day}.${month}.2026`;
-      const note = (localStorage.getItem(key) || "").toLowerCase();
+  const box = document.getElementById("assistant-text");
+  if(!box) return;
 
-      if(!note.includes("przegląd")) upcomingTasks.push({text:`${day}.${month} ➤ Wykonaj przegląd uli`, key});
-      if(!note.includes("karmienie") && d.getMonth()>=3 && d.getMonth()<=8) upcomingTasks.push({text:`${day}.${month} ➤ Sprawdź karmienie pszczół`, key});
-      if(!note.includes("leczenie") && (d.getMonth()>=3 && d.getMonth()<=5)) upcomingTasks.push({text:`${day}.${month} ➤ Rozważ leczenie warrozy`, key});
-      if(!note.includes("miodobranie") && d.getMonth()>=5 && d.getMonth()<=7) upcomingTasks.push({text:`${day}.${month} ➤ Przygotuj miodobranie`, key});
-      if(!note.includes("ramka z węzą")) upcomingTasks.push({text:`${day}.${month} ➤ Sprawdź węzę i ramki`, key});
-    }
+  const today = new Date();
 
-    const aiHints = [];
-    if(weatherData){
-      if(weatherData.beeStatus.includes("IDEALNE")) aiHints.push("🌞 Dzisiaj pszczoły mogą intensywnie wychodzić – planuj przegląd lub karmienie rano.");
-      else if(weatherData.beeStatus.includes("ŚREDNIE")) aiHints.push("⚠️ Pogoda umiarkowana, ogranicz ruch przy ulach do minimum.");
-      else aiHints.push("❄ Pszczoły nie wychodzą, prace wewnątrz ula lub przygotowanie sprzętu.");
-    }
+  let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
 
-    let inspections = 0, swarm = false;
-    for(let offset=0; offset<7; offset++){
-      const d = new Date(); d.setDate(today.getDate()+offset);
-      const day = d.getDate().toString().padStart(2,"0");
-      const month = (d.getMonth()+1).toString().padStart(2,"0");
-      const note = (localStorage.getItem(`${day}.${month}.2026`)||"").toLowerCase();
-      if(note.includes("przegląd") || note.includes("kontrola")) inspections++;
-      if(note.includes("rój")) swarm = true;
-    }
+  // =====================
+  // 📊 ANALIZA NOTATEK (CAŁY MIESIĄC)
+  // =====================
+  const monthStr = String(today.getMonth()+1).padStart(2,"0");
 
-    let swarmRisk = 0;
-    const month = today.getMonth()+1;
-    if(month==4) swarmRisk+=20; else if(month==5) swarmRisk+=40; else if(month==6) swarmRisk+=30;
-    if(inspections==0) swarmRisk+=30; else if(inspections==1) swarmRisk+=20;
-    if(swarm) swarmRisk+=30;
-    if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
-    if(swarmRisk>100) swarmRisk=100;
+  for(let d=1; d<=31; d++){
 
-    let swarmText="";
-    if(swarmRisk>=70) swarmText="🚨 WYSOKIE ryzyko rojki!";
-    else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
-    else swarmText="✅ NISKIE ryzyko rojki";
+    const key = String(d).padStart(2,"0")+"."+monthStr+".2026";
+    const note = (localStorage.getItem(key)||"").toLowerCase();
 
-    let summary = [];
-    summary.push("🔍 Przeglądy w najbliższych 7 dniach: "+inspections);
-    summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
-    if(aiHints.length) summary.push("💡 Podpowiedzi AI:<br>"+aiHints.join("<br>"));
-
-    const uniqueTasks = [];
-    const seen = new Set();
-    upcomingTasks.forEach(t=>{ if(!seen.has(t.text)){ uniqueTasks.push(t); seen.add(t.text); } });
-
-    if(uniqueTasks.length>0){
-      let tasksHtml = uniqueTasks.map(t=>`<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">${t.text}</div>`).join("");
-      summary.push("🛠 Nadchodzące prace 7 dni:<br>"+tasksHtml);
-    }
-
-    box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
-
-    box.querySelectorAll('div[data-key]').forEach(div=>{
-      div.addEventListener('click', ()=>{
-        const key = div.dataset.key;
-        const note = localStorage.getItem(key) || "";
-        localStorage.setItem(key, note + "\n" + div.textContent + " [WYKONANE]");
-        updateMarkers();
-        loadWeatherAndAssist();
-      });
-    });
+    if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
+    if(note.includes("karmienie")) feeding=true;
+    if(note.includes("leczenie")) treatment=true;
+    if(note.includes("rój")||note.includes("rojka")) swarm=true;
+    if(note.includes("miód")||note.includes("miod")) honey=true;
   }
+
+  // =====================
+  // 🧠 NADCHODZĄCE 7 DNI (POPRAWIONE)
+  // =====================
+  let tasks = [];
+
+  for(let i=0; i<7; i++){
+
+    const date = new Date();
+    date.setDate(today.getDate() + i);
+
+    const d = String(date.getDate()).padStart(2,"0");
+    const m = String(date.getMonth()+1).padStart(2,"0");
+
+    const key = d + "." + m + ".2026";
+    const note = (localStorage.getItem(key) || "").toLowerCase();
+
+    let actions = [];
+
+    // 🔵 MASZ NOTATKĘ → pokazujemy ją
+    if(note){
+
+      let status = note.includes("[wykonane]") ? "✅" : "📌";
+      actions.push(`${status} ${note}`);
+
+    } else {
+
+      // 🔴 AI tylko gdy brak wpisu
+
+      if(m >= "04" && m <= "08"){
+        actions.push("przegląd uli");
+      }
+
+      if(m === "05" || m === "06"){
+        actions.push("kontrola rojki");
+      }
+
+      if(m >= "04"){
+        actions.push("sprawdź karmienie");
+        actions.push("sprawdź węzę i ramki");
+      }
+
+      if(m >= "08"){
+        actions.push("rozważ leczenie warrozy");
+      }
+    }
+
+    if(actions.length > 0){
+
+      tasks.push({
+        key,
+        text: `${key} ➤ ${actions.join(", ")}`
+      });
+    }
+  }
+
+  // =====================
+  // 🐝 RYZYKO ROJKI
+  // =====================
+  let swarmRisk=0;
+  const month=today.getMonth()+1;
+
+  if(month==4) swarmRisk+=20;
+  if(month==5) swarmRisk+=40;
+  if(month==6) swarmRisk+=30;
+
+  if(inspections==0) swarmRisk+=30;
+  if(inspections<2) swarmRisk+=20;
+  if(swarm) swarmRisk+=30;
+
+  if(weatherData && weatherData.beeStatus && weatherData.beeStatus.includes("IDEALNE")){
+    swarmRisk+=10;
+  }
+
+  if(swarmRisk>100) swarmRisk=100;
+
+  let swarmText="";
+  if(swarmRisk>=70) swarmText="🚨 WYSOKIE ryzyko rojki!";
+  else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
+  else swarmText="✅ NISKIE ryzyko rojki";
+
+  // =====================
+  // 🤖 AI PODPOWIEDZI
+  // =====================
+  let aiTips = [];
+
+  if(inspections < 2){
+    aiTips.push("⚠️ Za mało przeglądów – sprawdź matkę i czerw");
+  }
+
+  if(!feeding && month >= 7){
+    aiTips.push("🍯 Rozważ karmienie uzupełniające");
+  }
+
+  if(!treatment && month >= 8){
+    aiTips.push("💊 Brak leczenia – sprawdź warrozę");
+  }
+
+  // =====================
+  // 📋 PODSUMOWANIE
+  // =====================
+  let summary=[];
+
+  summary.push("🔍 Przeglądy: "+inspections);
+  summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
+
+  if(honey) summary.push("🍯 Wykonano miodobranie");
+
+  if(aiTips.length){
+    summary.push("<br><b>🤖 AI podpowiedzi:</b><br>"+aiTips.join("<br>"));
+  }
+
+  // =====================
+  // 🛠 NADCHODZĄCE PRACE
+  // =====================
+  if(tasks.length > 0){
+
+    let tasksHtml = tasks.map(t=>{
+      return `
+        <div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${t.key}">
+          ${t.text}
+        </div>
+      `;
+    }).join("");
+
+    summary.push("<br><b>🛠 Nadchodzące 7 dni:</b><br>"+tasksHtml);
+  }
+
+  box.innerHTML = "<b>📒 Asystent pszczelarza:</b><br>"+summary.join("<br>");
+
+  // =====================
+  // ✅ KLIK = WYKONANE
+  // =====================
+  box.querySelectorAll('[data-key]').forEach(div=>{
+    div.addEventListener('click', ()=>{
+      const key = div.dataset.key;
+      const note = localStorage.getItem(key) || "";
+      localStorage.setItem(key, note + "\n[WYKONANE]");
+      updateMarkers();
+      loadWeatherAndAssist();
+    });
+  });
+}
 
   updateMarkers();
   scrollToToday();
