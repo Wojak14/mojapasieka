@@ -1720,33 +1720,56 @@ document.addEventListener("DOMContentLoaded", function() {
     loadWeatherAndAssist();
   };
 
-  // --- WYSZUKIWARKA NOTATEK ---
-  const searchInput = document.getElementById('search-notes');
-  const resultsContainer = document.getElementById('search-results');
-  if(searchInput && resultsContainer){
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.toLowerCase().trim();
-      resultsContainer.innerHTML = '';
-      document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
-      if (!query) return;
+ // --- WYSZUKIWARKA NOTATEK (NAPRAWIONA) ---
+const searchInput = document.getElementById('search-notes');
+const resultsContainer = document.getElementById('search-results');
 
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        const note = (localStorage.getItem(key) || "").toLowerCase();
-        if(note.includes(query)){
-          const div = document.createElement('div');
-          div.className = 'search-result-item';
-          div.textContent = key + ": " + note;
-          resultsContainer.appendChild(div);
+if(searchInput && resultsContainer){
 
-          const [dd, mm] = key.split('.');
-          const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
-          if(dayElem) dayElem.classList.add('highlight-day');
-          div.addEventListener('click', () => { if(dayElem){dayElem.scrollIntoView({behavior:"smooth", block:"center"}); dayElem.click();} });
-        }
+  searchInput.addEventListener('input', () => {
+
+    const query = searchInput.value.toLowerCase().trim();
+    resultsContainer.innerHTML = '';
+
+    document.querySelectorAll('.day-number')
+      .forEach(d => d.classList.remove('highlight-day'));
+
+    if(!query) return;
+
+    for(let i=0;i<localStorage.length;i++){
+
+      const key = localStorage.key(i);
+
+      // ✅ FILTR – tylko daty typu 01.02.2026
+      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+
+      const note = (localStorage.getItem(key) || "").toLowerCase();
+
+      if(note.includes(query)){
+
+        const div = document.createElement('div');
+        div.textContent = key + ": " + note;
+        div.style.padding = "4px";
+        div.style.borderBottom = "1px solid #ddd";
+        div.style.cursor = "pointer";
+
+        resultsContainer.appendChild(div);
+
+        const [dd, mm] = key.split('.');
+        const dayEl = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+
+        if(dayEl) dayEl.classList.add('highlight-day');
+
+        div.onclick = () => {
+          if(dayEl){
+            dayEl.scrollIntoView({behavior:"smooth", block:"center"});
+            dayEl.click();
+          }
+        };
       }
-    });
-  }
+    }
+  });
+}
 
   function scrollToToday() {
     const today = new Date();
