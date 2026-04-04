@@ -2143,6 +2143,49 @@ document.getElementById('save-apiary').addEventListener('click', saveApiary);
 // Automatyczne odświeżanie pogody i asystenta co 2 minuty
 setInterval(()=>{ loadWeatherAndAssist(); }, 120000);
 
+// --- MODUŁ LOKALNYCH POWIADOMIEŃ DLA NADCHODZĄCYCH PRAC ---
+document.addEventListener('DOMContentLoaded', () => {
+  // 1️⃣ Prośba o zgodę
+  if ('Notification' in window) {
+    Notification.requestPermission().then(permission => {
+      console.log('Powiadomienia:', permission);
+    });
+  }
+
+  // 2️⃣ Funkcja wysyłająca powiadomienie
+  function sendLocalNotification(title, options) {
+    if (Notification.permission === 'granted') {
+      new Notification(title, options);
+    }
+  }
+
+  // 3️⃣ Funkcja do harmonogramu powiadomień z listy prac
+  function scheduleWorkNotifications() {
+    const worksList = document.querySelectorAll('#works-list li');
+    worksList.forEach((li, index) => {
+      const workTitle = li.innerText;
+      const notifyInMinutes = 1; // np. 1 minuta przed
+
+      // Czas opóźnienia w ms
+      const delay = notifyInMinutes * 60 * 1000;
+
+      setTimeout(() => {
+        sendLocalNotification('🐝 Pasieka PRO – nadchodząca praca', {
+          body: `Czas na: ${workTitle}`,
+          icon: 'icons/hive-128.png'
+        });
+      }, delay);
+    });
+  }
+
+  // 4️⃣ Automatyczne harmonogramowanie co uruchomienie / aktualizacja listy
+  const worksObserver = new MutationObserver(() => {
+    scheduleWorkNotifications();
+  });
+
+  const worksContainer = document.getElementById('works-list');
+  worksObserver.observe(worksContainer, { childList: true });
+
 });
 </script>
 
