@@ -1614,11 +1614,14 @@ function generateFamilyNotes() {
     for (let i = 1; i <= liczbaUli; i++) {
         const div = document.createElement('div');
         div.style.marginBottom = '6px';
-        div.innerHTML = `
-            <label>Ule ${i}: </label>
-            <input type="text" class="family-note" data-hive="${i}" style="width:80%;" 
-            value="${zapisaneNotatki[i] || ''}" placeholder="Notatka dla ula ${i}">
-        `;
+
+ div.innerHTML = `
+    <label>Ule ${i}: </label>
+    <input type="text" class="family-note" data-hive="${i}" 
+    style="width:80%;" 
+    value="${zapisaneNotatki[i] || ''}" 
+    placeholder="Notatka dla ula ${i}">
+`;
         familyContainer.appendChild(div);
     }
 }
