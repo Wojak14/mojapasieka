@@ -2118,19 +2118,30 @@ function generateHoneyForecast(){
   box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
 }
 
-  // --- URUCHOMIENIA STARTOWE ---
-  updateMarkers();
-  scrollToToday();
-  loadWeatherAndAssist();analyzeHivesPro();
-  generateHiveRanking();
-  generateHiveAlerts();
-  generateWeeklyPlanPro();
-  generateHoneyForecast();
-  runAIModule();
-  loadApiaryData();
-  hivesCountInput.addEventListener('change', generateFamilyNotes);
-  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
-  setInterval(()=>{ loadWeatherAndAssist(); },120000);
+ // --- URUCHOMIENIA STARTOWE ---
+updateMarkers();
+scrollToToday();
+loadWeatherAndAssist();
+analyzeHivesPro();
+generateHiveRanking();
+generateHiveAlerts();
+generateWeeklyPlanPro();
+generateHoneyForecast();
+generateFamilyNotes();
+runAIModule();
+loadApiary();
+
+// Podpięcie przycisków
+const hivesCountInput = document.getElementById('hives-count');
+const saveFamilyNotesBtn = document.getElementById('save-family-notes');
+
+hivesCountInput.addEventListener('change', generateFamilyNotes);
+saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
+
+document.getElementById('save-apiary').addEventListener('click', saveApiary);
+
+// Automatyczne odświeżanie pogody i asystenta co 2 minuty
+setInterval(()=>{ loadWeatherAndAssist(); }, 120000);
 
 });
 </script>
