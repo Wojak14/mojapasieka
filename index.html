@@ -202,21 +202,6 @@ margin-bottom:15px;
 
 </div>
 
-<!-- PANEL PASIEKI -->
-<h2>🛠 Panel pasieki</h2>
-Liczba uli: <input id="hives-count" type="number" min="1" value="5"><br>
-Zebrany miód (kg): <input id="honey-amount" type="number" min="0" value="0"><br>
-Notatki pasieki:<br>
-<textarea id="apiary-notes" rows="3"></textarea><br>
-<button onclick="saveApiary()">💾 Zapisz pasiekę</button>
-<div id="honey-total"></div>
-
-<!-- NOTATKI DLA RODZIN PSZCZELICH -->
-<div id="family-panel">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <div id="family-notes-container"></div>
-  <button id="save-family-notes">Zapisz notatki rodzin</button>
-</div>
 
 <!-- 🌼 SEZON -->
 <div id="season-info" style="
@@ -1559,6 +1544,22 @@ font-weight:bold;
     <br><br>
     <button onclick="saveNote()">Zapisz notatkę</button>
   </div>
+
+<!-- PANEL PASIEKI -->
+<h2>🛠 Panel pasieki</h2>
+Liczba uli: <input id="hives-count" type="number" min="1" value="25"><br>
+Zebrany miód (kg): <input id="honey-amount" type="number" min="0" value="0"><br>
+Notatki pasieki:<br>
+<textarea id="apiary-notes" rows="3"></textarea><br>
+<button onclick="saveApiary()">💾 Zapisz pasiekę</button>
+<div id="honey-total"></div>
+
+<!-- NOTATKI DLA RODZIN PSZCZELICH -->
+<div id="family-panel">
+  <strong>Notatki dla rodzin pszczelich:</strong><br>
+  <div id="family-notes-container"></div>
+  <button id="save-family-notes">Zapisz notatki rodzin</button>
+</div>
 
 </div><!-- TABELA ROJLIWOŚCI -->
 <div class="month">
