@@ -1545,13 +1545,12 @@ font-weight:bold;
     <button onclick="saveNote()">Zapisz notatkę</button>
   </div>
 
-<!-- PANEL PASIEKI -->
 <h2>🛠 Panel pasieki</h2>
-Liczba uli: <input id="hives-count" type="number" min="1" value="25"><br>
+Liczba uli: <input id="hives-count" type="number" min="1" value="22"><br>
 Zebrany miód (kg): <input id="honey-amount" type="number" min="0" value="0"><br>
 Notatki pasieki:<br>
-<textarea id="apiary-notes" rows="3"></textarea><br>
-<button onclick="saveApiary()">💾 Zapisz pasiekę</button>
+<textarea id="apiary-notes" rows="3" style="width:100%"></textarea><br>
+<button id="save-apiary">💾 Zapisz pasiekę</button>
 <div id="honey-total"></div>
 
 <!-- NOTATKI DLA RODZIN PSZCZELICH -->
@@ -2186,7 +2185,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const worksContainer = document.getElementById('works-list');
   worksObserver.observe(worksContainer, { childList: true });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const honeyInput = document.getElementById('honey-amount');
+  const notesInput = document.getElementById('apiary-notes');
+  const honeyTotal = document.getElementById('honey-total');
+  const saveBtn = document.getElementById('save-apiary');
+
+  // 1️⃣ Wczytanie zapisanych danych
+  function loadApiary() {
+    const honey = localStorage.getItem('apiary-honey-2026') || 0;
+    const notes = localStorage.getItem('apiary-notes-2026') || '';
+
+    honeyInput.value = honey;
+    notesInput.value = notes;
+    honeyTotal.innerText = `Zapisany miód: ${honey} kg`;
+  }
+
+  // 2️⃣ Zapis danych
+  function saveApiary() {
+    localStorage.setItem('apiary-honey-2026', honeyInput.value);
+    localStorage.setItem('apiary-notes-2026', notesInput.value);
+
+    honeyTotal.innerText = `Zapisany miód: ${honeyInput.value} kg`;
+    alert('✅ Notatki pasieki zapisane!');
+  }
+
+  // 3️⃣ Podpięcie przycisku
+  saveBtn.addEventListener('click', saveApiary);
+
+  // 4️⃣ Wczytanie przy starcie
+  loadApiary();
 });
+
 </script>
 
 </body>
