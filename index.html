@@ -215,6 +215,8 @@ font-weight:bold;
   <div id="search-results"></div>
 </div>
 
+
+
 </body>
 </html>
 
@@ -1485,6 +1487,26 @@ font-weight:bold;
 
 <div class="stats">
 
+<!-- 🐝 AI PASIEKA PRO MAX -->
+<div id="ai-pro-box" style="margin-top:20px;">
+
+  <h3>🐝 Analiza uli (AI)</h3>
+  <div id="hive-analysis">Ładowanie...</div>
+
+  <h3 style="margin-top:15px;">🏆 Ranking uli</h3>
+  <div id="hive-ranking"></div>
+
+  <h3 style="margin-top:15px;">🚨 Alerty uli</h3>
+  <div id="hive-alerts"></div>
+
+  <h3 style="margin-top:15px;">🤖 Plan pracy 7 dni</h3>
+  <div id="ai-plan"></div>
+
+  <h3 style="margin-top:15px;">🍯 Prognoza miodu</h3>
+  <div id="honey-forecast"></div>
+
+</div>
+
 <div id="weather-panel">
   <h3>🌤 Pogoda dla pasieki</h3>
   <div id="weather-data">Ładowanie...</div>
@@ -1932,10 +1954,186 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   };
 
+// =============================
+// 🧠 AI PASIEKA PRO MAX
+// =============================
+
+// 📊 ZBIERANIE DANYCH
+function getHiveData(){
+
+  let hiveStats = {};
+
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+
+    const note = (localStorage.getItem(key)||"").toLowerCase();
+    const matches = note.match(/ul\s*(\d+)/g);
+
+    if(matches){
+      matches.forEach(m=>{
+        const nr = m.match(/\d+/)[0];
+
+        if(!hiveStats[nr]){
+          hiveStats[nr] = {
+            inspections:0,
+            feeding:0,
+            treatment:0,
+            swarm:0,
+            honey:0,
+            score:0
+          };
+        }
+
+        if(note.includes("przegląd")) hiveStats[nr].inspections++;
+        if(note.includes("karmienie")) hiveStats[nr].feeding++;
+        if(note.includes("leczenie")) hiveStats[nr].treatment++;
+        if(note.includes("rój")) hiveStats[nr].swarm++;
+        if(note.includes("miód")) hiveStats[nr].honey++;
+      });
+    }
+  }
+
+  return hiveStats;
+}
+
+// 🐝 ANALIZA ULI
+function analyzeHivesPro(){
+
+  const box = document.getElementById("hive-analysis");
+  if(!box) return;
+
+  const data = getHiveData();
+  if(Object.keys(data).length===0){
+    box.innerHTML = "Brak danych";
+    return;
+  }
+
+  let html="";
+
+  Object.entries(data).forEach(([nr,d])=>{
+
+    let score = 0;
+    if(d.inspections>0) score+=30;
+    if(d.feeding>0) score+=20;
+    if(d.treatment>0) score+=20;
+    if(d.honey>0) score+=20;
+    if(d.swarm>0) score-=20;
+
+    d.score = score;
+
+    let status="", color="";
+    if(score>=70){status="🟢 SILNY";color="green";}
+    else if(score>=40){status="🟡 ŚREDNI";color="orange";}
+    else{status="🔴 SŁABY";color="red";}
+
+    html+=`<div><b>Ul ${nr}</b> → <span style="color:${color};font-weight:bold">${status}</span> (score: ${score})</div>`;
+  });
+
+  box.innerHTML = html;
+}
+
+// 🏆 RANKING
+function generateHiveRanking(){
+
+  const box = document.getElementById("hive-ranking");
+  if(!box) return;
+
+  const data = Object.entries(getHiveData());
+
+  data.forEach(([nr,d])=>{
+    d.score = (d.inspections*30)+(d.feeding*20)+(d.treatment*20)+(d.honey*20)-(d.swarm*20);
+  });
+
+  data.sort((a,b)=>b[1].score - a[1].score);
+
+  let html="";
+  data.forEach(([nr,d],i)=>{
+    html+=`<div>${i+1}. 🐝 Ul ${nr} → ${d.score} pkt</div>`;
+  });
+
+  box.innerHTML = html;
+}
+
+// 🚨 ALERTY
+function generateHiveAlerts(){
+
+  const box = document.getElementById("hive-alerts");
+  if(!box) return;
+
+  const data = getHiveData();
+
+  let alerts=[];
+
+  Object.entries(data).forEach(([nr,d])=>{
+    if(d.inspections===0) alerts.push(`🔍 Ul ${nr} bez przeglądu`);
+    if(d.treatment===0) alerts.push(`💊 Ul ${nr} brak leczenia`);
+    if(d.swarm>0) alerts.push(`🐝 Ul ${nr} ryzyko rojki`);
+  });
+
+  box.innerHTML = alerts.length ? alerts.join("<br>") : "✅ Brak alertów";
+}
+
+// 🤖 PLAN 7 DNI
+function generateWeeklyPlanPro(){
+
+  const box = document.getElementById("ai-plan");
+  if(!box) return;
+
+  const today = new Date();
+  let html="";
+
+  for(let i=0;i<7;i++){
+
+    const date = new Date();
+    date.setDate(today.getDate()+i);
+
+    const d = String(date.getDate()).padStart(2,"0");
+    const m = String(date.getMonth()+1).padStart(2,"0");
+    const key = d+"."+m+".2026";
+
+    const note = (localStorage.getItem(key)||"").toLowerCase();
+
+    let tasks=[];
+
+    if(!note.includes("przegląd")) tasks.push("🔍 przegląd");
+    if(!note.includes("karmienie")) tasks.push("🍯 karmienie");
+    if(!note.includes("leczenie")) tasks.push("💊 leczenie");
+
+    if(tasks.length===0) tasks.push("✅ OK");
+
+    html+=`<div><b>${key}</b> → ${tasks.join(", ")}</div>`;
+  }
+
+  box.innerHTML = html;
+}
+
+// 🍯 PROGNOZA MIODU
+function generateHoneyForecast(){
+
+  const box = document.getElementById("honey-forecast");
+  if(!box) return;
+
+  const data = getHiveData();
+
+  let total=0;
+
+  Object.values(data).forEach(d=>{
+    total += d.honey * 5; // 1 wpis ≈ 5kg
+  });
+
+  box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
+}
+
   // --- URUCHOMIENIA STARTOWE ---
   updateMarkers();
   scrollToToday();
-  loadWeatherAndAssist();
+  loadWeatherAndAssist();analyzeHivesPro();
+  generateHiveRanking();
+  generateHiveAlerts();
+  generateWeeklyPlanPro();
+  generateHoneyForecast();
+  runAIModule();
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
 
 });
