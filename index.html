@@ -141,12 +141,10 @@ border-radius:10px;
 margin-bottom:15px;
 ">
 
+<!-- ASYSTENT PSZCZELARZA -->
+<div id="bee-assistant" style="background:#e8f5e9; padding:10px; border-radius:10px; margin-bottom:15px;">
   <h3>🐝 Asystent pszczelarza</h3>
-
-  <div id="assistant-text">
-    Sprawdzanie zaleceń...
-  </div>
-
+  <div id="assistant-text">Sprawdzanie zaleceń...</div>
 </div>
 
 <button id="today-btn" onclick="scrollToToday()" style="
@@ -204,6 +202,22 @@ margin-bottom:15px;
 
 </div>
 
+<!-- PANEL PASIEKI -->
+<h2>🛠 Panel pasieki</h2>
+Liczba uli: <input id="hives-count" type="number" min="1" value="5"><br>
+Zebrany miód (kg): <input id="honey-amount" type="number" min="0" value="0"><br>
+Notatki pasieki:<br>
+<textarea id="apiary-notes" rows="3"></textarea><br>
+<button onclick="saveApiary()">💾 Zapisz pasiekę</button>
+<div id="honey-total"></div>
+
+<!-- NOTATKI DLA RODZIN PSZCZELICH -->
+<div id="family-panel">
+  <strong>Notatki dla rodzin pszczelich:</strong><br>
+  <div id="family-notes-container"></div>
+  <button id="save-family-notes">Zapisz notatki rodzin</button>
+</div>
+
 <!-- 🌼 SEZON -->
 <div id="season-info" style="
 margin-bottom:10px;
@@ -214,8 +228,6 @@ font-weight:bold;
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
 </div>
-
-
 
 </body>
 </html>
@@ -1548,27 +1560,79 @@ font-weight:bold;
     <button onclick="saveNote()">Zapisz notatkę</button>
   </div>
 
-  <!-- Panel pasieki -->
-  <div id="pasieka-panel">
-    <h3>Panel pasieki</h3>
-    <label>Liczba uli:</label><br>
-    <input type="number" id="hives-count" style="width:100%;"><br><br>
-    <label>Ilość miodu (kg):</label><br>
-    <input type="number" id="honey-amount" style="width:100%;"><br><br>
-    <label>Uwagi o pasiece:</label><br>
-    <textarea id="apiary-notes" rows="4" style="width:100%;"></textarea><br><br>
-    <button onclick="saveApiary()">Zapisz dane pasieki</button>
-  </div>
+// --- FUNKCJE POMOCNICZE ---
+function zapiszDoLocalStorage(klucz, dane) {
+    localStorage.setItem(klucz, JSON.stringify(dane));
+}
 
-  <!-- Notatki rodzin -->
-  <div id="family-panel">
-    <strong>Notatki dla rodzin pszczelich:</strong><br>
-    <textarea id="family-notes" rows="4" style="width:100%;" placeholder="Np. Ule 1-5: karmienie wykonane"></textarea>
-    <button onclick="saveFamilyNotes()">Zapisz notatki rodzin</button>
-  </div>
+function odczytajZLocalStorage(klucz) {
+    return JSON.parse(localStorage.getItem(klucz)) || null;
+}
 
-</div> <!-- KONIEC stats -->
+// --- PANEL PASIEKI ---
+const hivesCountInput = document.getElementById('hives-count');
+const honeyAmountInput = document.getElementById('honey-amount');
+const apiaryNotesInput = document.getElementById('apiary-notes');
+const honeyTotalDiv = document.getElementById('honey-total');
 
+// --- PANEL NOTATEK DLA RODZIN ---
+const familyContainer = document.getElementById('family-notes-container');
+const saveFamilyNotesBtn = document.getElementById('save-family-notes');
+
+// --- FUNKCJE PANELU PASIEKI ---
+function loadApiaryData() {
+    const zapisanePasieka = odczytajZLocalStorage('pasieka_data');
+    if (zapisanePasieka) {
+        hivesCountInput.value = zapisanePasieka.hives;
+        honeyAmountInput.value = zapisanePasieka.honey;
+        apiaryNotesInput.value = zapisanePasieka.notes;
+        honeyTotalDiv.textContent = `Łączny miód: ${zapisanePasieka.honey} kg`;
+    } else {
+        honeyTotalDiv.textContent = `Łączny miód: ${honeyAmountInput.value} kg`;
+    }
+    generateFamilyNotes(); // generuje pola notatek rodzin
+}
+
+function saveApiary() {
+    const dane = {
+        hives: Number(hivesCountInput.value),
+        honey: Number(honeyAmountInput.value),
+        notes: apiaryNotesInput.value
+    };
+    zapiszDoLocalStorage('pasieka_data', dane);
+    honeyTotalDiv.textContent = `Łączny miód: ${dane.honey} kg`;
+    alert('Dane pasieki zapisane!');
+    generateFamilyNotes(); // odświeża pola rodzin po zmianie liczby uli
+}
+
+// --- FUNKCJE NOTATEK DLA RODZIN ---
+function generateFamilyNotes() {
+    const liczbaUli = Number(hivesCountInput.value);
+    const zapisaneNotatki = odczytajZLocalStorage('family_notes') || {};
+    familyContainer.innerHTML = '';
+
+    for (let i = 1; i <= liczbaUli; i++) {
+        const div = document.createElement('div');
+        div.style.marginBottom = '6px';
+        div.innerHTML = `
+            <label>Ule ${i}: </label>
+            <input type="text" class="family-note" data-hive="${i}" style="width:80%;" 
+            value="${zapisaneNotatki[i] || ''}" placeholder="Notatka dla ula ${i}">
+        `;
+        familyContainer.appendChild(div);
+    }
+}
+
+function saveFamilyNotes() {
+    const inputs = familyContainer.querySelectorAll('.family-note');
+    const notatki = {};
+    inputs.forEach(input => {
+        const hive = input.dataset.hive;
+        notatki[hive] = input.value;
+    });
+    zapiszDoLocalStorage('family_notes', notatki);
+    alert('Notatki rodzin zapisane!');
+}
 </div><!-- TABELA ROJLIWOŚCI -->
 <div class="month">
 <h1>Dni największej rojliwości w 2026</h1>
@@ -1660,6 +1724,7 @@ font-weight:bold;
 – Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
 – Zachować higienę w ulu i narzędziach<br>
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
+<script src="app.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -2134,6 +2199,9 @@ function generateHoneyForecast(){
   generateWeeklyPlanPro();
   generateHoneyForecast();
   runAIModule();
+  loadApiaryData();
+  hivesCountInput.addEventListener('change', generateFamilyNotes);
+  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
 
 });
