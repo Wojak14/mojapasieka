@@ -1779,7 +1779,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
-  // --- POGODA 5 DNI + DZIŚ ---
+  // --- POGODA 5 DNI + DZIŚ + GPS ---
   function loadWeather5Days() {
     return new Promise((resolve)=>{
       const weatherBox = document.getElementById("weather-data");
@@ -1845,24 +1845,29 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
+  // --- ASYSTENT PSZCZELARZA ---
   async function loadWeatherAndAssist(){
     const weatherData = await loadWeather5Days();
     updateSmartAssistant(weatherData);
   }
 
+  // --- Poprawiony Asystent z datami startowymi ---
   function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
 
-    let inspections=0,feeding=false,treatment=false,swarm=false,honey=false;
+    let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
 
-    for(let d=0;d<7;d++){
-      const date=new Date(); date.setDate(today.getDate()+d);
+    const feedingStart = new Date(2026,7,20);    // 20 sierpnia
+    const treatmentStart = new Date(2026,8,21);  // 21 września
+
+    for(let d=0; d<7; d++){
+      const date = new Date();
+      date.setDate(today.getDate()+d);
       const key = String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
-      const note=(localStorage.getItem(key)||"").toLowerCase();
+      const note = (localStorage.getItem(key)||"").toLowerCase();
       let dayTasks=[];
 
       if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
@@ -1872,8 +1877,8 @@ document.addEventListener("DOMContentLoaded", function() {
       if(note.includes("miód")) honey=true;
 
       if(!note.includes("przegląd")) dayTasks.push("Wykonaj przegląd uli");
-      if(!note.includes("karmienie")) dayTasks.push("Sprawdź karmienie pszczół");
-      if(!note.includes("leczenie")) dayTasks.push("Rozważ leczenie warrozy");
+      if(!note.includes("karmienie") && date >= feedingStart) dayTasks.push("Sprawdź karmienie pszczół");
+      if(!note.includes("leczenie") && date >= treatmentStart) dayTasks.push("Rozważ leczenie warrozy");
       if(!note.includes("ramka")) dayTasks.push("Sprawdź węzę i ramki");
 
       if(dayTasks.length>0) tasksByDay[key]=dayTasks.join(", ");
@@ -1922,57 +1927,13 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // --- HISTORIA ULA ---
-  window.showHiveHistory = function(hiveNumber){
-    const resultsContainer = document.getElementById('search-results');
-    if(!resultsContainer) return;
-    resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
-    let found = false;
-
-    for(let i=0;i<localStorage.length;i++){
-      const key = localStorage.key(i);
-      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-      const note = (localStorage.getItem(key) || "").toLowerCase();
-      if(note.includes("ul "+hiveNumber)){
-        found = true;
-        const div = document.createElement('div');
-        div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g, (m,n)=>
-          `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
-        )}`;
-        div.style.marginBottom = "5px";
-        resultsContainer.appendChild(div);
-      }
-    }
-
-    if(!found){
-      resultsContainer.innerHTML += "Brak wpisów dla tego ula";
-    }
-  };
-
-  // ================================
-  // --- START ---
-  // ================================
+  // --- URUCHOMIENIA STARTOWE ---
   updateMarkers();
   scrollToToday();
   loadWeatherAndAssist();
-  analyzeHivesPro();
-  generateHiveRanking();
-  generateHiveAlerts();
-  generateWeeklyPlanPro();
-  generateHoneyForecast();
-
-  const hivesCountInput = document.getElementById('hives-count');
-  const saveFamilyNotesBtn = document.getElementById('save-family-notes');
-  const saveApiaryBtn = document.getElementById('save-apiary');
-
-  if(hivesCountInput) hivesCountInput.addEventListener('change', generateFamilyNotes);
-  if(saveFamilyNotesBtn) saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
-  if(saveApiaryBtn) saveApiaryBtn.addEventListener('click', saveApiary);
-
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
 
 });
 </script>
-
 </body>
 </html>
