@@ -1859,15 +1859,10 @@ document.addEventListener("DOMContentLoaded", function() {
     let inspections=0,feeding=false,treatment=false,swarm=false,honey=false;
     let tasksByDay={};
 
-// Ustaw daty startowe dla prac
-  const feedingStart = new Date(2026, 7, 20);     // sierpień = 7
-  const treatmentStart = new Date(2026, 8, 21);   // wrzesień = 8
-
     for(let d=0;d<7;d++){
       const date=new Date(); date.setDate(today.getDate()+d);
       const key = String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
-      const note=(localStora
-ge.getItem(key)||"").toLowerCase();
+      const note=(localStorage.getItem(key)||"").toLowerCase();
       let dayTasks=[];
 
       if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
