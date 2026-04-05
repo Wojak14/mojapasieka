@@ -1657,9 +1657,9 @@ Notatki pasieki:<br>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-  let textarea = null;
   let currentDay = null;
   let currentMonth = null;
+  let textarea = null;
 
   // --- MARKERY I IKONY ---
   function updateMarkers() {
@@ -1688,26 +1688,15 @@ document.addEventListener("DOMContentLoaded", function() {
         const text = noteData.toLowerCase();
         if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("apiwarol")) icons.push("💊");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("paski")) icons.push("🏷️");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("zakończenie leczenia")) icons.push("🛡️");
+        if(text.includes("leczenie") || text.includes("warroza")) icons.push("💊");
         if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
-        if(text.includes("przegląd") || text.includes("sprawdzenie")) icons.push("📋");
         if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
-        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
         if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
         if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
-        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦");
         if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
         if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
-        if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
-        if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-        if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");  
-
         if(icons.length === 0) icons.push("📒");
+
         marker.innerHTML = icons.join(" ");
         span.after(marker); 
       }
@@ -1745,7 +1734,6 @@ document.addEventListener("DOMContentLoaded", function() {
   // --- WYSZUKIWARKA NOTATEK ---
   const searchInput = document.getElementById('search-notes');
   const resultsContainer = document.getElementById('search-results');
-
   if(searchInput && resultsContainer){
     searchInput.addEventListener('input', () => {
       const query = searchInput.value.toLowerCase().trim();
@@ -1845,13 +1833,12 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-  // --- ASYSTENT PSZCZELARZA ---
+  // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE 7 DNI + ALERTY ---
   async function loadWeatherAndAssist(){
     const weatherData = await loadWeather5Days();
     updateSmartAssistant(weatherData);
   }
 
-  // --- Poprawiony Asystent z datami startowymi ---
   function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
@@ -1884,6 +1871,7 @@ document.addEventListener("DOMContentLoaded", function() {
       if(dayTasks.length>0) tasksByDay[key]=dayTasks.join(", ");
     }
 
+    // --- ALERTY I RYZYKO ROJKI ---
     let swarmRisk=0;
     const month=today.getMonth()+1;
     if(month==4) swarmRisk+=20;
@@ -1900,6 +1888,7 @@ document.addEventListener("DOMContentLoaded", function() {
     else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
     else swarmText="✅ NISKIE ryzyko rojki";
 
+    // --- PANEL ASYSTENTA ---
     let summary=[];
     summary.push("🔍 Przeglądy: "+inspections);
     summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
@@ -1916,6 +1905,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
 
+    // --- KLIKALNE TASKI ---
     box.querySelectorAll('div[data-key]').forEach(div=>{
       div.addEventListener('click', ()=>{
         const key = div.dataset.key;
@@ -1927,6 +1917,11 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
+  // --- HISTORIA ULI ---
+  window.showHiveHistory = function(hiveNumber){
+    alert("Pokazuję historię ul "+hiveNumber+" (można tu podpiąć własny panel historii)");
+  }
+
   // --- URUCHOMIENIA STARTOWE ---
   updateMarkers();
   scrollToToday();
@@ -1935,5 +1930,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
 });
 </script>
+
 </body>
 </html>
