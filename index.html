@@ -1683,28 +1683,16 @@ document.addEventListener("DOMContentLoaded", function() {
         const marker=document.createElement("span");
         marker.className="note-marker";
 
-          let icons = [];
-        const text = noteData.toLowerCase();
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("apiwarol")) icons.push("💊");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("paski")) icons.push("🏷️");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("leczenie") || text.includes("warroza") || text.includes("zakończenie leczenia")) icons.push("🛡️");
-        if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
-        if(text.includes("przegląd") || text.includes("sprawdzenie")) icons.push("📋");
-        if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
-        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
-        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-        if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
-        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦");
-        if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
-        if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
-        if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
-        if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-        if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️"); 
+        const icons=[];
+        const text=noteData.toLowerCase();
+        if(text.includes("miód")) icons.push("🫙");
+        if(text.includes("karmienie")) icons.push("🍯");
+        if(text.includes("leczenie")||text.includes("warroza")) icons.push("💊");
+        if(text.includes("przegląd")||text.includes("kontrola")) icons.push("🔍");
+        if(text.includes("rój")) icons.push("🐝");
+        if(text.includes("matka")) icons.push("👑");
+        if(text.includes("ramki")||text.includes("węza")) icons.push("🧱");
+        if(text.includes("nadstawka")) icons.push("📦");
         if(text.includes("pogoda")) icons.push("🌤️");
 
         marker.innerHTML = icons.length>0?icons.join(" "):"📒";
