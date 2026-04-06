@@ -1641,6 +1641,13 @@ Notatki pasieki:<br>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
+  function safe(fn){
+  try {
+    if(typeof fn === "function") fn();
+  } catch(e){
+    console.error("Błąd funkcji:", fn?.name, e);
+  }
+}
   let currentDay = null;
   let currentMonth = null;
   let textarea = null;
@@ -1690,7 +1697,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
         if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
         if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");
-        if(text.includes("pogoda") || text.includes("zimno")) icons.push("🌡");  
+        if(text.includes("pogoda") || text.includes("niska temparatura")) icons.push("🌡");  
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
@@ -1918,15 +1925,24 @@ if(alertBox){
   `;
 }
     // 🔹 GPS
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
-        ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
-        {timeout:8000}
-      );
-      } else fetchWeather(52.24,23.09,"Werpol (fallback)");
-    });
-  }
+if(navigator.geolocation){
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      fetchWeather(pos.coords.latitude, pos.coords.longitude, "GPS");
+    },
+    err=>{
+      console.warn("GPS błąd:", err);
+      fetchWeather(52.24, 23.09,"Werpol (fallback)");
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000
+    }
+  );
+} else {
+  fetchWeather(52.24,23.09,"Werpol (fallback)");
+}
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE 7 DNI + ALERTY ---
   async function loadWeatherAndAssist(){
@@ -1975,7 +1991,7 @@ if(alertBox){
     if(inspections==0) swarmRisk+=30;
     if(inspections==1) swarmRisk+=20;
     if(swarm) swarmRisk+=30;
-    if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
+    if(weatherData && weatherData.beeStatus && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
     if(swarmRisk>100) swarmRisk=100;
 
     let swarmText="";
@@ -2018,18 +2034,23 @@ if(alertBox){
   }
 
   // --- URUCHOMIENIA STARTOWE ---
-  updateMarkers();
-  scrollToToday();
-  loadWeatherAndAssist();
+ safe(updateMarkers);
+safe(scrollToToday);
+safe(loadWeatherAndAssist);
   setInterval(()=>{
   try {
-    loadWeatherAndAssist();
   } catch(e){
     console.error("Błąd odświeżania pogody:", e);
   }
 }, 120000);
 
+// 🔹 WYMUSZENIE STARTU POGODY + ASYSTENTA
+setTimeout(()=>{
+  safe(loadWeatherAndAssist);
+}, 1000);
+
 });
+
 </script>
 
 </body>
