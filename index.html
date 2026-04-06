@@ -193,6 +193,8 @@ margin-bottom:15px;
     🐝 Sprawdzanie warunków lotu pszczół...
   </div>
 
+<div id="alerts-list"></div>
+
 </div>
 
 
@@ -1690,7 +1692,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
         if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
         if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");  
+        if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");
+        if(text.includes("pogoda") || text.includes("zimno")) icons.push("🌡");  
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
@@ -1764,67 +1767,166 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // --- POGODA 5 DNI + DZIŚ + GPS ---
-  function loadWeather5Days() {
-    return new Promise((resolve)=>{
-      const weatherBox = document.getElementById("weather-data");
-      const forecastBox = document.getElementById("weather-forecast");
-      const beeBox = document.getElementById("bee-flight-alert");
-      const locationBox = document.getElementById("location-box");
+ function loadWeather5Days() {
+  return new Promise((resolve)=>{
 
-      function fetchWeather(lat, lon, label="Fallback") {
-        lat = Number(lat); lon = Number(lon);
-        if(isNaN(lat) || isNaN(lon)) { lat=52.24; lon=23.09; label="Werpol (fallback)"; }
-        if(locationBox) locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
+    const weatherBox = document.getElementById("weather-data");
+    const forecastBox = document.getElementById("weather-forecast");
+    const beeBox = document.getElementById("bee-flight-alert");
+    const locationBox = document.getElementById("location-box");
 
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
+    const CACHE_KEY = "weatherCache";
+    const CACHE_TIME = 10 * 60 * 1000; // 10 minut
 
-        fetch(url).then(r=>r.json()).then(data=>{
-          const cw = data.current_weather || {temperature:0,windspeed:0};
-          const todayMax = data.daily.temperature_2m_max[0];
-          const todayMin = data.daily.temperature_2m_min[0];
-          const todayWind = data.daily.windspeed_10m_max[0];
-          const todayRain = data.daily.precipitation_probability_max[0];
+    // 🔹 SPRAWDZENIE CACHE
+    const cached = localStorage.getItem(CACHE_KEY);
+    if(cached){
+      try {
+        const parsed = JSON.parse(cached);
+        if(Date.now() - parsed.time < CACHE_TIME){
+          renderWeather(parsed.data, parsed.label);
+          return resolve(parsed.data);
+        }
+      } catch(e){}
+    }
 
-          const beeStatus = (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" : (cw.temperature>=12 ? "🐝 ŚREDNIE":"❄ SŁABE");
-          const color = beeStatus.includes("IDEALNE")?"green":beeStatus.includes("ŚREDNIE")?"orange":"red";
+    function fetchWeather(lat, lon, label="Fallback") {
+      lat = Number(lat); lon = Number(lon);
 
-          if(weatherBox) weatherBox.innerHTML = `
-            <b>🌡 Dzisiaj:</b><br>
-            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
-            💨 Wiatr: ${todayWind} km/h<br>
-            🌧 Szansa opadów: ${todayRain}%<br>
-            <span style="color:${color};font-weight:bold">${beeStatus}</span>
-          `;
-
-          if(forecastBox){
-            const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
-            for(let i=1;i<=5;i++){
-              const date=new Date(); date.setDate(date.getDate()+i);
-              const d=date.getDate().toString().padStart(2,"0");
-              const m=(date.getMonth()+1).toString().padStart(2,"0");
-              const tMax=data.daily.temperature_2m_max[i] ?? 0;
-              const tMin=data.daily.temperature_2m_min[i] ?? 0;
-              const wind=data.daily.windspeed_10m_max[i] ?? 0;
-              const rain=data.daily.precipitation_probability_max[i] ?? 0;
-              const status=(tMax>=15 && wind<20)?"🐝 IDEALNE":(tMax>=12?"🐝 ŚREDNIE":"❄ SŁABE");
-              const color=status.includes("IDEALNE")?"green":status.includes("ŚREDNIE")?"orange":"red";
-              html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% <span style="color:${color};font-weight:bold">${status}</span></div>`;
-            }
-            forecastBox.innerHTML=html;
-          }
-
-          if(beeBox) beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
-          resolve({beeStatus});
-        }).catch(()=>resolve(null));
+      if(isNaN(lat) || isNaN(lon)) {
+        lat=52.24; lon=23.09;
+        label="Werpol (fallback)";
       }
 
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(
-          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
-          ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
-          {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
-        );
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
+
+      fetch(url)
+      .then(r=>r.json())
+      .then(data=>{
+
+        // 🔹 ZAPIS DO CACHE
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          time: Date.now(),
+          data: data,
+          label: label
+        }));
+
+        renderWeather(data, label);
+        resolve({beeStatus: getBeeStatus(data)});
+      })
+      .catch(()=>{
+        // fallback z cache jeśli API padnie
+        if(cached){
+          const parsed = JSON.parse(cached);
+          renderWeather(parsed.data, parsed.label);
+          return resolve({beeStatus: getBeeStatus(parsed.data)});
+        }
+        resolve(null);
+      });
+    }
+
+    function getBeeStatus(data){
+      const cw = data.current_weather || {temperature:0,windspeed:0};
+      return (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE"
+           : (cw.temperature>=12 ? "🐝 ŚREDNIE":"❄ SŁABE");
+    }
+
+    function renderWeather(data, label){
+      const cw = data.current_weather || {temperature:0,windspeed:0};
+      const todayMax = data.daily.temperature_2m_max[0];
+      const todayMin = data.daily.temperature_2m_min[0];
+      const todayWind = data.daily.windspeed_10m_max[0];
+      const todayRain = data.daily.precipitation_probability_max[0];
+
+      const beeStatus = getBeeStatus(data);
+      const color = beeStatus.includes("IDEALNE")?"green":beeStatus.includes("ŚREDNIE")?"orange":"red";
+
+      if(locationBox) locationBox.innerHTML =
+        `📍 ${label}`;
+
+      if(weatherBox) weatherBox.innerHTML = `
+        <b>🌡 Dzisiaj:</b><br>
+        Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
+        💨 Wiatr: ${todayWind} km/h<br>
+        🌧 Opady: ${todayRain}%<br>
+        <span style="color:${color};font-weight:bold">${beeStatus}</span>
+      `;
+
+      if(forecastBox){
+        const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
+        let html=`<b>📅 Prognoza 5 dni:</b><br>`;
+
+        for(let i=1;i<=5;i++){
+          const date=new Date(); date.setDate(date.getDate()+i);
+          const d=date.getDate().toString().padStart(2,"0");
+          const m=(date.getMonth()+1).toString().padStart(2,"0");
+
+          const tMax=data.daily.temperature_2m_max[i] ?? 0;
+          const tMin=data.daily.temperature_2m_min[i] ?? 0;
+          const wind=data.daily.windspeed_10m_max[i] ?? 0;
+          const rain=data.daily.precipitation_probability_max[i] ?? 0;
+
+          const status=(tMax>=15 && wind<20)?"🐝 IDEALNE"
+                      :(tMax>=12?"🐝 ŚREDNIE":"❄ SŁABE");
+
+          const color=status.includes("IDEALNE")?"green":status.includes("ŚREDNIE")?"orange":"red";
+
+          html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% <span style="color:${color};font-weight:bold">${status}</span></div>`;
+        }
+
+        forecastBox.innerHTML = html;
+      }
+
+      if(beeBox) beeBox.innerHTML =
+        `<b>🐝 Stan pszczół:</b> ${beeStatus}`;
+    }
+
+// --- ALERTY POGODOWE DLA PSZCZÓŁ ---
+let weatherAlert = "";
+let openHiveAdvice = "✅ Można otwierać ule";
+
+const storm = todayRain >= 70;
+const strongWind = todayWind >= 30;
+const mediumWind = todayWind >= 20;
+
+if(storm){
+  weatherAlert = "⛈️ UWAGA: Duże ryzyko burzy!";
+  openHiveAdvice = "🚫 NIE OTWIERAJ ula (burza)";
+}
+else if(strongWind){
+  weatherAlert = "💨 Silny wiatr!";
+  openHiveAdvice = "🚫 NIE OTWIERAJ ula (wiatr)";
+}
+else if(mediumWind){
+  weatherAlert = "🌬️ Umiarkowany wiatr";
+  openHiveAdvice = "⚠️ Otwieraj tylko krótko";
+}
+else if(cw.temperature < 12){
+  weatherAlert = "❄️ Zbyt zimno dla pszczół";
+  openHiveAdvice = "🚫 NIE OTWIERAJ ula (zimno)";
+}
+
+// 🔹 WYŚWIETLANIE ALERTU
+const alertBox = document.getElementById("alerts-list");
+if(alertBox){
+  let color = "green";
+  if(openHiveAdvice.includes("NIE")) color = "red";
+  else if(openHiveAdvice.includes("⚠️")) color = "orange";
+
+  alertBox.innerHTML = `
+    <div><b>${weatherAlert || "Brak zagrożeń pogodowych"}</b></div>
+    <div style="color:${color};font-weight:bold;margin-top:4px;">
+      ${openHiveAdvice}
+    </div>
+  `;
+}
+    // 🔹 GPS
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
+        ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
+        {timeout:8000}
+      );
       } else fetchWeather(52.24,23.09,"Werpol (fallback)");
     });
   }
@@ -1922,7 +2024,13 @@ document.addEventListener("DOMContentLoaded", function() {
   updateMarkers();
   scrollToToday();
   loadWeatherAndAssist();
-  setInterval(()=>{ loadWeatherAndAssist(); },120000);
+  setInterval(()=>{
+  try {
+    loadWeatherAndAssist();
+  } catch(e){
+    console.error("Błąd odświeżania pogody:", e);
+  }
+}, 120000);
 
 });
 </script>
