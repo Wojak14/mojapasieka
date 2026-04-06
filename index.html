@@ -1720,7 +1720,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
         if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
         if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
-        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦");
+        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦,🐝⬆️🐝");
         if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
         if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
         if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
@@ -1728,7 +1728,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
         if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
         if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");
-        if(text.includes("pogoda") || text.includes("niska temparatura")) icons.push("🌡");  
+        if(text.includes("pogoda") || text.includes("niska temparatura")) icons.push("🌡");
+        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("🐝⬆️🐝");  
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
