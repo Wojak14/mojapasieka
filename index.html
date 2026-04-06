@@ -1874,36 +1874,50 @@ document.addEventListener("DOMContentLoaded", function() {
     updateSmartAssistant(weatherData);
   }
 
-  function updateSmartAssistant(weatherData){
+ function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
-    const monthStr=(today.getMonth()+1).toString().padStart(2,"0");
 
-    let inspections=0,feeding=false,treatment=false,swarm=false,honey=false;
+    let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
 
-// Ustaw daty startowe dla prac
-  const feedingStart = new Date(2026, 7, 20);     // sierpień = 7
-  const treatmentStart = new Date(2026, 8, 21);   // wrzesień = 8
+    const feedingStart = new Date(2026,7,20);    // 20 sierpnia
+    const treatmentStart = new Date(2026,8,21);  // 21 września
 
-    for(let d=0;d<7;d++){
-      const date=new Date(); date.setDate(today.getDate()+d);
+    for(let d=0; d<7; d++){
+      const date = new Date();
+      date.setDate(today.getDate()+d);
       const key = String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
-      const note=(localStorage.getItem(key)||"").toLowerCase();
+      const note = (localStorage.getItem(key)||"").toLowerCase();
       let dayTasks=[];
+
       if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
       if(note.includes("karmienie")) feeding=true;
       if(note.includes("leczenie")) treatment=true;
       if(note.includes("rój")) swarm=true;
       if(note.includes("miód")) honey=true;
 
-      // Inteligentne sugestie
-      if(!note.includes("przegląd")) dayTasks.push("Wykonaj przegląd uli");
-      if(!note.includes("karmienie")) dayTasks.push("Sprawdź karmienie pszczół");
-      if(!note.includes("leczenie")) dayTasks.push("Rozważ leczenie warrozy");
-      if(!note.includes("ramka")) dayTasks.push("Sprawdź węzę i ramki");
+const dayNumber = date.getDate(); // numer dnia
 
+// 🔹 PRZEGLĄDY tylko w dni parzyste
+if(dayNumber % 2 === 0){
+  if(!note.includes("przegląd")) dayTasks.push("Wykonaj przegląd uli");
+}
+
+// 🔹 KARMIENIE
+if(!note.includes("karmienie") && date >= feedingStart)
+  dayTasks.push("Sprawdź karmienie pszczół");
+
+// 🔹 LECZENIE
+if(!note.includes("leczenie") && date >= treatmentStart)
+  dayTasks.push("Rozważ leczenie warrozy");
+
+// 🔹 RAMKI tylko w dni nieparzyste
+if(dayNumber % 2 !== 0){
+  if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
+    dayTasks.push("Sprawdź węzę i ramki");
+}
       if(dayTasks.length>0) tasksByDay[key]=dayTasks.join(", ");
     }
 
