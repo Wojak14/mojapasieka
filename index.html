@@ -17,30 +17,35 @@
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
+<div id="today"></div>
+<div id="upcoming"></div>
 }
+
 
 /* PODŚWIETLENIE DNIA W WYSZUKIWARCE */
 .highlight-day {
-  background-color: #ffe066 !important;
-  border-radius: 60%;
+  outline: 2px solid #ffcc00;
+  background-color: #fff4cc !important;
+  border-radius: 4px;
 }
 
 table {
-  width: 100%;
+  width:100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-bottom:20px;
 }
 
+
 th, td {
-  border: 1px solid #444;
-  padding: 6px;
-  text-align: center;
-  position: relative;
+  border:1px solid #444;
+  padding:6px;
+  text-align:center;
+  position:relative;
 }
 
 .day-number {
-  cursor: pointer;
-  font-weight: bold;
+  cursor:pointer;
+  font-weight:bold;
 }
 
 .has-note {
@@ -48,41 +53,40 @@ th, td {
 }
 
 .today {
-  border: 2px solid #4caf50;
+  border:2px solid #4caf50;
 }
 
 .tomorrow {
-  border: 2px solid #ff9800;
+  border:2px solid #ff9800;
 }
 
 .note-marker {
-  margin-left: 4px;
-  font-size: 14px;
+  margin-left:4px;
+  font-size:14px;
 }
 
 .highlight-search {
-  background-color: #ffeb3b;
-  border-radius: 4px;
-  padding: 2px 4px;
-  margin-left: 2px;
+  background-color:#ffeb3b;
+  border-radius:4px;
+  padding:2px 4px;
+  margin-left:2px;
 }
 
 #day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
-  padding: 10px;
-  border-radius: 10px;
-  margin-top: 15px;
-  background: #fff8e1;
+  padding:10px;
+  border-radius:10px;
+  margin-top:15px;
+  background:#fff8e1;
 }
 
 .notes {
-  width: 100%;
-  height: 80px;
+  width:100%;
+  height:80px;
 }
 
 #search-panel {
   margin: 10px 0;
 }
-
 #search-results {
   max-height: 200px;
   overflow-y: auto;
@@ -90,108 +94,33 @@ th, td {
   padding: 5px;
   background: #fffbea;
 }
-
 #search-results div {
   padding: 3px 5px;
   cursor: pointer;
 }
-
 #search-results div:hover {
   background-color: #fffaaa;
 }
+.highlight-day {
+  background-color: #ffe066 !important;
+  border-radius: 50%;
+}
 
 #autosave-status {
-  font-size: 13px;
-  margin-top: 4px;
-  color: green;
+  font-size:13px;
+  margin-top:4px;
+  color:green;
 }
 
-.green { background: #8BC34A; }
-.yellow { background: #FFEB3B; }
-.orange { background: #FF9800; }
-.red { background: #F44336; color: white; }
-.black { background: #000; color: white; }
+.green { background:#8BC34A; }
+.yellow { background:#FFEB3B; }
+.orange { background:#FF9800; }
+.red { background:#F44336; color:white; }
+.black { background:#000; color:white; }
 
 @media (max-width:600px) {
-  table, th, td { font-size: 12px; }
-  .notes { height: 60px; }
-}
-
-/* --- Migające alerty --- */
-@keyframes blink {
-  0%,50%,100% { opacity:1; }
-  25%,75% { opacity:0.3; }
-}
-
-/* --- Tooltip --- */
-.tooltip {
-  position: relative;
-  cursor: help;
-}
-.tooltip::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  background: #333;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  top: -1.5em;
-  left: 50%;
-  transform: translateX(-50%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-  z-index: 10;
-}
-.tooltip:hover::after {
-  opacity: 1;
-}
-
-/* --- Dni z notatką --- */
-.has-note {
-  background-color: #fffbe6;
-  border-radius: 4px;
-}
-.today {
-  border: 2px solid #f39c12;
-}
-.tomorrow {
-  border: 2px dashed #2ecc71;
-}
-
-/* --- Migający alert dla rojki --- */
-.blink-alert {
-  animation: blink 1s infinite;
-}
-
-/* --- Highlight dla wyszukiwarki --- */
-.highlight-day {
-  background-color: #f9e79f !important;
-}
-
-/* --- Mapa słów w notatkach --- */
-.wordmap span {
-  display:inline-block;
-  margin:2px;
-  padding:2px 4px;
-  border-radius:3px;
-  background:#eee;
-  font-size:12px;
-}
-.wordmap span.high {
-  background:#ffcc00;
-  font-weight:bold;
-}
-
-/* --- Panel uli --- */
-#hive-ranking, #hive-alerts, #weekly-plan, #honey-forecast {
-  background:#f4f6f7;
-  padding:10px;
-  border-radius:5px;
-  margin-bottom:10px;
-  font-size:14px;
+  table, th, td { font-size:12px; }
+  .notes { height:60px; }
 }
 </style>
 
@@ -199,13 +128,18 @@ th, td {
 
 <body>
 
+</html>
+
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Rojka | 🔴 Leczenie | ⬛ Zimowla</div>
 
 <h2>Kalendarz pszczelarski 2026</h2>
 
-<!-- TODAY & UPCOMING -->
-<div id="today"></div>
-<div id="upcoming"></div>
+<div id="bee-assistant" style="
+background:#e8f5e9;
+padding:10px;
+border-radius:10px;
+margin-bottom:15px;
+">
 
 <!-- ASYSTENT PSZCZELARZA -->
 <div id="bee-assistant" style="background:#e8f5e9; padding:10px; border-radius:10px; margin-bottom:15px;">
@@ -224,7 +158,7 @@ background:#FBC02D;
 cursor:pointer;
 font-weight:bold;
 ">
-  Przejdź do dzisiaj
+
 </button>
 
 <!-- 🌦 POGODA -->
@@ -234,8 +168,12 @@ padding:10px;
 border-radius:10px;
 margin-bottom:15px;
 ">
+
   <h3>🌦 Pogoda w pasiece</h3>
-  <div id="weather-data">Ładowanie pogody...</div>
+
+  <div id="weather-data">
+    Ładowanie pogody...
+  </div>
 
   <div id="location-box" style="
   background:#e3f2fd;
@@ -247,9 +185,10 @@ margin-bottom:15px;
     📍 Lokalizacja pasieki: sprawdzanie...
   </div>
 
-  <div id="weather-forecast" style="margin-top:8px; font-size:14px;"></div>
-
-
+  <div id="weather-forecast" style="
+  margin-top:8px;
+  font-size:14px;
+  "></div>
 
   <div id="bee-flight-alert" style="
   margin-top:10px;
@@ -260,12 +199,16 @@ margin-bottom:15px;
   ">
     🐝 Sprawdzanie warunków lotu pszczół...
   </div>
+
 </div>
 
-<!-- 🌼 SEZON -->
-<div id="season-info" style="margin-bottom:10px; font-weight:bold;"></div>
 
-<!-- WYSZUKIWARKA NOTATEK -->
+<!-- 🌼 SEZON -->
+<div id="season-info" style="
+margin-bottom:10px;
+font-weight:bold;
+"></div>
+
 <div id="search-panel">
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
@@ -744,7 +687,8 @@ margin-bottom:15px;
   <div class="green"><span class="day-number" data-day="08" data-month="05">8</span>Przegląd gniazd</div>
   <div class="orange">Bardzo wysoka rojliwość</div>
 </td>
-<td class="yellow"><span class="day-number" data-day="09" data-month="05">9</span>Miodobranie rzepakowe</td>
+<td class="yellow"><span class="day-number" data-day="09" data-month="05">9</span>Miodobranie rzepakowe</div>
+</td>
 <td>
   <div class="green"><span class="day-number" data-day="10" data-month="05">10</span>Prace pasieczne</div>
   <div class="orange">Rojki możliwe</div>
@@ -1501,7 +1445,6 @@ margin-bottom:15px;
 – Pełna zimowla<br>
 – Kontrola osypu i obserwacja zewnętrzna uli
 </div>
-
 <!-- Panel alertów -->
   <div id="alerts-box-12">
     <strong>Alerty pasieczne:</strong>
@@ -1529,73 +1472,208 @@ margin-bottom:15px;
 
 </div> <!-- KONIEC month-panels-12 -->
 
-
 <div class="page-break"></div>
 
-<!-- Panel alertów miesiąca 12 -->
-<div id="month-panels-12">
+<div class="stats"><!-- Panel alertów -->
   <div id="alerts-box-12">
     <strong>Alerty pasieczne:</strong>
     <div id="alerts-list-12">Brak alertów na dziś</div>
   </div>
 
-  <div id="weather-panel-12">
-    <div id="location-box-12"></div>
-    <div id="weather-data-12"></div>
-    <div id="weather-forecast-12"></div>
-    <div id="bee-flight-alert-12"></div>
-  </div>
-
-  <div id="assistant-text-12"></div>
-
-  <div id="apiary-panel-12">
-    <div id="hive-ranking-12"></div>
-    <div id="hive-alerts-12"></div>
-    <div id="weekly-plan-12"></div>
-    <div id="honey-forecast-12"></div>
-  </div>
-
-  <div id="search-container-12">
-    <input type="text" id="search-notes-12" placeholder="Szukaj w notatkach..." />
-    <div id="search-results-12"></div>
-  </div>
-
-  <div id="family-notes-panel-12">
-    <input type="number" id="hives-count-12" placeholder="Ilość rodzin" min="1" max="50" />
-    <button id="save-family-notes-12">Zapisz notatki rodzin</button>
-  </div>
-
+  <!-- Panel rojka / asystent -->
   <div id="swarm-box-12"></div>
   <div id="assistant-box-12"></div>
 
+
+  <!-- Licznik miodu i kontroli -->
   <div id="inspection-honey-12">
     <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
     <div id="honey-total-12">🫙 Zebrany miód w 2026: 0 kg</div>
   </div>
 
+  <!-- Notatki dnia -->
   <div id="day-note-box-12">
     <h3>Notatka dnia</h3>
     <textarea id="notes-12" rows="6" style="width:100%;"></textarea>
     <br><br>
     <button onclick="saveNote('12')">Zapisz notatkę</button>
   </div>
+
+
 </div> <!-- KONIEC month-panels-12 -->
 
 <div class="page-break"></div>
 
+<div class="stats">
+
 <!-- 🐝 AI PASIEKA PRO MAX -->
-<div id="ai-pro-box-12" style="margin-top:20px;">
+<div id="ai-pro-box" style="margin-top:20px;">
+
   <h3>🐝 Analiza uli (AI)</h3>
-  <div id="hive-analysis-12">Ładowanie...</div>
+  <div id="hive-analysis">Ładowanie...</div>
+
   <h3 style="margin-top:15px;">🏆 Ranking uli</h3>
-  <div id="hive-ranking-12"></div>
+  <div id="hive-ranking"></div>
+
   <h3 style="margin-top:15px;">🚨 Alerty uli</h3>
-  <div id="hive-alerts-12"></div>
+  <div id="hive-alerts"></div>
+
   <h3 style="margin-top:15px;">🤖 Plan pracy 7 dni</h3>
-  <div id="ai-plan-12"></div>
-  <h3 style="margin-top:15px;">🫙 Prognoza miodu</h3>
-  <div id="honey-forecast-12"></div>
+  <div id="ai-plan"></div>
+
+  <h3 style="margin-top:15px;">🍯 Prognoza miodu</h3>
+  <div id="honey-forecast"></div>
+
 </div>
+
+<div id="weather-panel">
+  <h3>🌤 Pogoda dla pasieki</h3>
+  <div id="weather-data">Ładowanie...</div>
+  <div id="weather-forecast"></div>
+  <div id="bee-flight-alert" style="margin-top:5px; font-weight:bold;"></div>
+</div>
+
+  <!-- Alerty pasieczne -->
+  <div id="alerts-box">
+    <strong>Alerty pasieczne:</strong>
+    <div id="alerts-list">Brak alertów na dziś</div>
+  </div>
+
+  <!-- Asystent pasieczny -->
+  <div id="assistant-box"></div>
+
+  <!-- Liczniki -->
+  <div id="inspection-count">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  <div id="honey-total">🫙 Zebrany miód w 2026: 0 kg</div>
+
+  <!-- Nadchodzące prace -->
+  <div id="upcoming-works">
+    <strong>📜 Nadchodzące prace w pasiece:</strong>
+    <ul id="works-list"></ul>
+  </div>
+
+  <!-- Notatki dnia -->
+  <div id="day-note-box">
+    <h3>Notatka dnia</h3>
+    <textarea id="notes" rows="6" style="width:100%;"></textarea>
+    <div id="quick-buttons" style="margin-top:8px;">
+      <button onclick="addQuick('przegląd')">🔍 Przegląd</button>
+      <button onclick="addQuick('miodobranie')">🫙 Miodobranie</button>
+      <button onclick="addQuick('karmienie')">🍯 Karmienie</button>
+      <button onclick="addQuick('leczenie')">💊 Leczenie</button>
+      <button onclick="addQuick('rój')">🐝 Rój</button>
+    </div>
+    <br><br>
+    <button onclick="saveNote()">Zapisz notatkę</button>
+  </div>
+
+<!-- PANEL PASIEKI -->
+<h2>🛠 Panel pasieki</h2>
+Liczba uli: <input id="hives-count" type="number" min="1" value="25"><br>
+Zebrany miód (kg): <input id="honey-amount" type="number" min="0" value="0"><br>
+Notatki pasieki:<br>
+<textarea id="apiary-notes" rows="3"></textarea><br>
+<button onclick="saveApiary()">💾 Zapisz pasiekę</button>
+<div id="honey-total"></div>
+
+<!-- NOTATKI DLA RODZIN PSZCZELICH -->
+<div id="family-panel">
+  <strong>Notatki dla rodzin pszczelich:</strong><br>
+  <div id="family-notes-container"></div>
+  <button id="save-family-notes">Zapisz notatki rodzin</button>
+</div>
+
+</div><!-- TABELA ROJLIWOŚCI -->
+<div class="month">
+<h1>Dni największej rojliwości w 2026</h1>
+<table>
+<tr><th>Miesiąc</th><th>Dni rojowe</th></tr>
+<tr><td>Marzec</td><td>17, 25</td></tr>
+<tr><td>Kwiecień</td><td>8, 15, 23</td></tr>
+<tr><td>Maj</td><td>5, 12, 20</td></tr>
+<tr><td>Czerwiec</td><td>3, 10, 18</td></tr>
+<tr><td>Lipiec</td><td>7, 15, 22</td></tr>
+<tr><td>Sierpień</td><td>5, 13, 21</td></tr>
+<tr><td>Wrzesień</td><td>2, 10, 18</td></tr>
+<tr><td>Październik</td><td>6, 14</td></tr>
+</table>
+<div class="notes"><strong>Uwagi:</strong> Dni rojowe należy obserwować, aby ewentualnie podzielić rodziny lub zastosować pułapki rojowe.</div>
+</div>
+
+<h3>🟩 Leczenie warrozy</h3>
+<table>
+<tr><th>Miesiąc</th><th>Działanie</th></tr>
+<tr><td>Marzec</td><td>Kontrola rodzin i leczenie warrozy 15-30</td></tr>
+<tr><td>Kwiecień</td><td>Leczenie warrozy chemiczne / paski 1-20</td></tr>
+<tr><td>Wrzesień</td><td>Leczenie po miodobraniu</td></tr>
+<tr><td>Październik</td><td>Kontrola osypu i końcowe leczenie</td></tr>
+</table>
+
+<h3>🧬🐝 Wychówka matki pszczelej</h3>
+
+<table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse; text-align: left;">
+<tr style="background-color:#e0e0e0; text-align:center;">
+<th>Etap</th>
+<th>Czas trwania</th>
+<th>Czynności pasieczne</th>
+<th>Uwagi</th>
+</tr>
+
+<tr style="background-color:#FFF3E0;">
+<td>Wybór komórek matecznych</td>
+<td>1 dzień</td>
+<td>Kontrola rojowisk, wybór larw do wychowu</td>
+<td>Wybierać larwy młodsze niż 24h</td>
+</tr>
+
+<tr style="background-color:#FFE0B2;">
+<td>Budowa komórek matecznych</td>
+<td>2–3 dni</td>
+<td>Uzupełnianie węzy, obserwacja larw</td>
+<td>Utrzymywać rój w cieple i wilgotności</td>
+</tr>
+
+<tr style="background-color:#FFCC80;">
+<td>Rozwój larwy matki</td>
+<td>4–5 dni</td>
+<td>Kontrola larw, ochrona przed robotnicami</td>
+<td>Nie przerywać pracy pszczół w komórkach</td>
+</tr>
+
+<tr style="background-color:#FFB74D;">
+<td>Przepoczwarczenie</td>
+<td>6–10 dzień</td>
+<td>Obserwacja poczwarek</td>
+<td>Zapobiegać uszkodzeniu komórek matecznych</td>
+</tr>
+
+<tr style="background-color:#FF9800;">
+<td>Wygryzanie się matki</td>
+<td>11–12 dzień</td>
+<td>Kontrola aktywności matki, przygotowanie ula do wprowadzenia</td>
+<td>Nowa matka jest gotowa do osadzenia</td>
+</tr>
+
+<tr style="background-color:#81C784;">
+<td>Wprowadzenie matki do rodziny</td>
+<td>12–14 dzień</td>
+<td>Osadzenie matki w ochronnej klatce, obserwacja akceptacji przez pszczoły</td>
+<td>Stopniowo wypuszczać matkę, by uniknąć agresji</td>
+</tr>
+
+<tr style="background-color:#A5D6A7;">
+<td>Okres adaptacji</td>
+<td>2–4 dni po wprowadzeniu</td>
+<td>Obserwacja akceptacji matki, kontrola czerwienia</td>
+<td>Monitorować akceptację matki i początek składania jaj</td>
+</tr>
+</table>
+
+<div class="notes">
+<strong>Uwagi ogólne:</strong><br>
+– Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
+– Zachować higienę w ulu i narzędziach<br>
+– Kontrolować temperaturę i wilgotność w komórkach matecznych
 <script src="app.js"></script>
 
 <script>
@@ -1605,40 +1683,47 @@ document.addEventListener("DOMContentLoaded", function() {
   let currentDay = null;
   let currentMonth = null;
 
-  // --- MAPA IKON Z TOOLTIPAMI ---
-let icons = [];
+  // --- MARKERY I IKONY ---
+  function updateMarkers() {
+    const today = new Date();
+    const dayNow = String(today.getDate()).padStart(2,"0");
+    const monthNow = String(today.getMonth()+1).padStart(2,"0");
+
+    document.querySelectorAll("td .day-number").forEach(span => {
+      const td = span.closest("td");
+      td.classList.remove("has-note","today","tomorrow");
+
+      const day = span.dataset.day.padStart(2,"0");
+      const month = span.dataset.month.padStart(2,"0");
+      const key = day + "." + month + ".2026";
+
+      const oldMarker = td.querySelector(".note-marker");
+      if(oldMarker) oldMarker.remove();
+
+      const noteData = localStorage.getItem(key);
+      if(noteData && noteData.trim() !== "") {
+        td.classList.add("has-note");
+        const marker = document.createElement("span");
+        marker.className = "note-marker";
+
+     let icons = [];
 const text = noteData.toLowerCase();
 
 // 🔥 MAPA SŁÓW → IKONY + TOOLTIPY + WAGA
 const ICON_MAP = [
-  // 🍯 MIÓD
   { keys: ["miód","miodobranie","odwirowanie","wirowanie"], icon: "🫙", tip: "Miodobranie", level: 2 },
-  // 🍯 KARMIENIE
   { keys: ["karmienie","syrop","ciasto","dokarmianie"], icon: "🍯", tip: "Karmienie", level: 2 },
-  // 💊 LECZENIE
   { keys: ["leczenie","warroza","apiwarol"], icon: "💊", tip: "Leczenie", level: 3 },
   { keys: ["paski","amitraza"], icon: "🏷️", tip: "Paski lecznicze", level: 3 },
   { keys: ["kwas","odparowywanie"], icon: "🌬️", tip: "Kwas / leczenie", level: 3 },
   { keys: ["zakończenie leczenia"], icon: "🛡️", tip: "Koniec leczenia", level: 2 },
-
-  // 🔍 PRZEGLĄDY
   { keys: ["przegląd","kontrola"], icon: "🔍", tip: "Przegląd ula", level: 2 },
   { keys: ["sprawdzenie","inspekcja"], icon: "📋", tip: "Sprawdzenie", level: 2 },
-
-  // 🐝 RÓJ
   { keys: ["rój","rojka","nastrój rojowy"], icon: "🐝", tip: "Rójka", level: 4, alert:true },
-
-  // 🌸 POŻYTEK
   { keys: ["pożytek","nektar","pyłek"], icon: "🌸", tip: "Pożytek", level: 1 },
-
-  // 👑 MATKA
   { keys: ["matka","wymiana matki","wychów matki pszczelej","matecznik"], icon: "👑", tip: "Matka pszczela", level: 2 },
-
-  // 🧱 RAMKI / KORPUSY
   { keys: ["ramki","węza","węzę"], icon: "🧱", tip: "Ramki / węza", level: 1 },
   { keys: ["nadstawka","korpus"], icon: "📦", tip: "Korpus / nadstawka", level: 1 },
-
-  // 🌦 POGODA
   { keys: ["deszcz"], icon: "🌧", tip: "Deszcz", level: 1 },
   { keys: ["wiatr"], icon: "💨", tip: "Wiatr", level: 1 },
   { keys: ["burza"], icon: "🌩️", tip: "Burza", level: 2 },
@@ -1647,63 +1732,21 @@ const ICON_MAP = [
   { keys: ["upał","gorąco"], icon: "🥵", tip: "Upał", level: 2 },
   { keys: ["pochmurno"], icon: "🌫️", tip: "Pochmurno", level: 1 },
   { keys: ["temperatura"], icon: "🌡", tip: "Temperatura", level: 1 },
-
-  // 🔧 SPRZĘT
   { keys: ["dymiarka"], icon: "💨🪵", tip: "Dymiarka", level: 1 },
   { keys: ["odsklepianie","widelec"], icon: "🍴", tip: "Odsklepianie", level: 1 },
   { keys: ["miodarka"], icon: "⚙️", tip: "Miodarka", level: 1 },
-
-  // 🧪 HIGIENA
   { keys: ["dezynfekcja"], icon: "🧴", tip: "Dezynfekcja", level: 1 },
-
-  // 🐣 CZERW
   { keys: ["czerw","czerwiowanie"], icon: "🐣", tip: "Czerw", level: 2 },
-
-  // 🏠 PASIEKA
   { keys: ["pasieka","ule"], icon: "🏠", tip: "Pasieka", level: 1 },
-
-  // 🚚 TRANSPORT
-  { keys: ["transport","przewóz","wędrówka"], icon: "🚚", tip: "Transport uli", level: 1 },
-
-  // 🧤 OCHRONA
-  { keys: ["kombinezon","ubranie","rękawice"], icon: "🧤", tip: "Ochrona pszczelarza", level: 1 },
-
-  // 🧊 EKSTREMALNA POGODA
   { keys: ["grad"], icon: "🧊", tip: "Grad", level: 2 },
   { keys: ["huragan"], icon: "🌀", tip: "Huragan", level: 3 },
-
-  // 🐝 RODZAJE PSZCZÓŁ
   { keys: ["robotnica"], icon: "🐝", tip: "Robotnica", level: 1 },
   { keys: ["truteń"], icon: "👨", tip: "Truteń", level: 1 }
-];
+];  
 
-// 🔥 WYKRYWANIE + TOOLTIP + ALERTY + KOLOR + LICZNIK
-const usedIcons = new Set();
-let alerts = [];
-
-ICON_MAP.forEach(item => {
-  if(item.keys.some(k => text.includes(k))){
-    if(!usedIcons.has(item.icon)){
-      const color = item.level>=3 ? "red" : item.level===2 ? "orange" : "green";
-      let html = `<span title="${item.tip}" style="color:${color};font-weight:bold">${item.icon}</span>`;
-      if(item.alert) html = `<span title="${item.tip}" style="color:${color};font-weight:bold;animation:blink 1s infinite">${item.icon}</span>`;
-      icons.push(html);
-      usedIcons.add(item.icon);
-      if(item.alert) alerts.push(item.tip);
-    }
-  }
-});
-
-// 📒 fallback
-if(icons.length===0) icons.push(`<span title="Notatka">📒</span>`);
-
-// ⚡ aktualizacja licznika + alertów globalnych
-const iconCounter = icons.length;
-if(alerts.length>0) console.log("🚨 ALERTY w notatce:", alerts.join(", "), " | Ikon w notatce:", iconCounter);
-
-// 🚀 render
-marker.innerHTML = icons.join(" ");
-        span.after(marker);
+        if(icons.length === 0) icons.push("📒");
+        marker.innerHTML = icons.join(" ");
+        span.after(marker); 
       }
 
       if(day === dayNow && month === monthNow) td.classList.add("today");
@@ -1715,12 +1758,12 @@ marker.innerHTML = icons.join(" ");
   }
 
   // --- OTWIERANIE NOTATKI PO KLIKU ---
-  document.querySelectorAll("td .day-number").forEach(span=>{
-    span.addEventListener("click",()=>{
+  document.querySelectorAll("td .day-number").forEach(span => {
+    span.addEventListener("click", () => {
       currentDay = span.dataset.day.padStart(2,"0");
       currentMonth = span.dataset.month.padStart(2,"0");
-      textarea = document.getElementById("notes-"+currentMonth);
-      const key = currentDay+"."+currentMonth+".2026";
+      textarea = document.getElementById("notes-" + currentMonth);
+      const key = currentDay + "." + currentMonth + ".2026";
       if(textarea){
         textarea.value = localStorage.getItem(key) || "";
         textarea.focus();
@@ -1728,61 +1771,102 @@ marker.innerHTML = icons.join(" ");
     });
   });
 
-  window.saveNote = function(){
+  window.saveNote = function() {
     if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
-    const key = currentDay+"."+currentMonth+".2026";
+    const key = currentDay + "." + currentMonth + ".2026";
     if(textarea) localStorage.setItem(key, textarea.value);
     updateMarkers();
     loadWeatherAndAssist();
   };
 
-  // --- FUNKCJE POGODY + LOT PSZCZÓŁ ---
-  async function loadWeatherAndAssist(){
-    const data = await loadWeather5Days();
-    updateSmartAssistant(data);
+  // --- WYSZUKIWARKA NOTATEK ---
+  const searchInput = document.getElementById('search-notes');
+  const resultsContainer = document.getElementById('search-results');
+
+  if(searchInput && resultsContainer){
+    searchInput.addEventListener('input', () => {
+      const query = searchInput.value.toLowerCase().trim();
+      resultsContainer.innerHTML = '';
+      document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
+      if (!query) return;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+        const note = localStorage.getItem(key);
+        if(note && note.toLowerCase().includes(query)){
+          const div = document.createElement('div');
+          div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g,(m,n)=>
+            `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
+          )}`;
+          resultsContainer.appendChild(div);
+          const [dd, mm] = key.split('.');
+          const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+          if(dayElem) dayElem.classList.add('highlight-day');
+        }
+      }
+    });
   }
 
-  async function loadWeather5Days(){
-    return new Promise(resolve=>{
+  function scrollToToday() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2,"0");
+    const month = String(today.getMonth()+1).padStart(2,"0");
+    const todayEl = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
+    if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
+  }
+
+  // --- POGODA 5 DNI + DZIŚ ---
+  function loadWeather5Days() {
+    return new Promise((resolve)=>{
       const weatherBox = document.getElementById("weather-data");
       const forecastBox = document.getElementById("weather-forecast");
       const beeBox = document.getElementById("bee-flight-alert");
       const locationBox = document.getElementById("location-box");
 
-      function fetchWeather(lat,lon,label="Fallback"){
-        lat=Number(lat); lon=Number(lon);
-        if(isNaN(lat)||isNaN(lon)){ lat=52.24; lon=23.09; label="Werpol (fallback)"; }
-        if(locationBox) locationBox.innerHTML=`📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
+      function fetchWeather(lat, lon, label="Fallback") {
+        lat = Number(lat); lon = Number(lon);
+        if(isNaN(lat) || isNaN(lon)) { lat=52.24; lon=23.09; label="Werpol (fallback)"; }
+        if(locationBox) locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
 
-        const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
 
         fetch(url).then(r=>r.json()).then(data=>{
-          const cw=data.current_weather||{temperature:0,windspeed:0};
-          const todayMax=data.daily.temperature_2m_max[0];
-          const todayMin=data.daily.temperature_2m_min[0];
-          const todayWind=data.daily.windspeed_10m_max[0];
-          const todayRain=data.daily.precipitation_probability_max[0];
-          const beeStatus=(cw.temperature>=15 && cw.windspeed<20)?"🐝 IDEALNE":(cw.temperature>=12?"🐝 ŚREDNIE":"❄ SŁABE");
-          const color=beeStatus.includes("IDEALNE")?"green":beeStatus.includes("ŚREDNIE")?"orange":"red";
+          const cw = data.current_weather || {temperature:0,windspeed:0};
+          const todayMax = data.daily.temperature_2m_max[0];
+          const todayMin = data.daily.temperature_2m_min[0];
+          const todayWind = data.daily.windspeed_10m_max[0];
+          const todayRain = data.daily.precipitation_probability_max[0];
 
-          if(weatherBox) weatherBox.innerHTML=`<b>🌡 Dzisiaj:</b><br>Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>💨 Wiatr: ${todayWind} km/h<br>🌧 Szansa opadów: ${todayRain}%<br><span style="color:${color};font-weight:bold">${beeStatus}</span>`;
+          const beeStatus = (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" : (cw.temperature>=12 ? "🐝 ŚREDNIE":"❄ SŁABE");
+          const color = beeStatus.includes("IDEALNE")?"green":beeStatus.includes("ŚREDNIE")?"orange":"red";
+
+          if(weatherBox) weatherBox.innerHTML = `
+            <b>🌡 Dzisiaj:</b><br>
+            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
+            💨 Wiatr: ${todayWind} km/h<br>
+            🌧 Szansa opadów: ${todayRain}%<br>
+            <span style="color:${color};font-weight:bold">${beeStatus}</span>
+          `;
+
           if(forecastBox){
             const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 5 dni:</b><br>`;
+            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
             for(let i=1;i<=5;i++){
               const date=new Date(); date.setDate(date.getDate()+i);
               const d=date.getDate().toString().padStart(2,"0");
               const m=(date.getMonth()+1).toString().padStart(2,"0");
-              const tMax=data.daily.temperature_2m_max[i]||0;
-              const tMin=data.daily.temperature_2m_min[i]||0;
-              const wind=data.daily.windspeed_10m_max[i]||0;
-              const rain=data.daily.precipitation_probability_max[i]||0;
+              const tMax=data.daily.temperature_2m_max[i] ?? 0;
+              const tMin=data.daily.temperature_2m_min[i] ?? 0;
+              const wind=data.daily.windspeed_10m_max[i] ?? 0;
+              const rain=data.daily.precipitation_probability_max[i] ?? 0;
               const status=(tMax>=15 && wind<20)?"🐝 IDEALNE":(tMax>=12?"🐝 ŚREDNIE":"❄ SŁABE");
-              const c=status.includes("IDEALNE")?"green":status.includes("ŚREDNIE")?"orange":"red";
-              html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% <span style="color:${c};font-weight:bold">${status}</span></div>`;
+              const color=status.includes("IDEALNE")?"green":status.includes("ŚREDNIE")?"orange":"red";
+              html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% <span style="color:${color};font-weight:bold">${status}</span></div>`;
             }
             forecastBox.innerHTML=html;
           }
+
           if(beeBox) beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
           resolve({beeStatus});
         }).catch(()=>resolve(null));
@@ -1792,41 +1876,74 @@ marker.innerHTML = icons.join(" ");
         navigator.geolocation.getCurrentPosition(
           pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
           ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
-          {enableHighAccuracy:true,timeout:8000,maximumAge:300000}
+          {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
         );
       } else fetchWeather(52.24,23.09,"Werpol (fallback)");
     });
   }
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
-  function updateSmartAssistant(weatherData){
+  async function loadWeatherAndAssist(){
+    const weatherData = await loadWeather5Days();
+    updateSmartAssistant(weatherData);
+  }
+
+ function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
+
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
-    for(let d=0;d<7;d++){
-      const date=new Date(); date.setDate(today.getDate()+d);
-      const key=String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
-      const note=(localStorage.getItem(key)||"").toLowerCase();
+
+    const feedingStart = new Date(2026,7,20);    // 20 sierpnia
+    const treatmentStart = new Date(2026,8,21);  // 21 września
+
+    for(let d=0; d<7; d++){
+      const date = new Date();
+      date.setDate(today.getDate()+d);
+      const key = String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
+      const note = (localStorage.getItem(key)||"").toLowerCase();
       let dayTasks=[];
+
       if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
       if(note.includes("karmienie")) feeding=true;
       if(note.includes("leczenie")) treatment=true;
       if(note.includes("rój")) swarm=true;
       if(note.includes("miód")) honey=true;
 
-      if(date.getDate()%2===0 && !note.includes("przegląd")) dayTasks.push("Wykonaj przegląd uli");
-      if(!note.includes("karmienie") && date >= new Date(2026,7,20)) dayTasks.push("Sprawdź karmienie pszczół");
-      if(!note.includes("leczenie") && date >= new Date(2026,8,21)) dayTasks.push("Rozważ leczenie warrozy");
-      if(date.getDate()%2!==0 && !note.includes("ramka") && !note.includes("ramki") && !note.includes("węza")) dayTasks.push("Sprawdź węzę i ramki");
+const dayNumber = date.getDate(); // numer dnia
+
+// 🔹 PRZEGLĄDY tylko w dni parzyste
+if(dayNumber % 2 === 0){
+  if(!note.includes("przegląd")) dayTasks.push("Wykonaj przegląd uli");
+}
+
+// 🔹 KARMIENIE
+if(!note.includes("karmienie") && date >= feedingStart)
+  dayTasks.push("Sprawdź karmienie pszczół");
+
+// 🔹 LECZENIE
+if(!note.includes("leczenie") && date >= treatmentStart)
+  dayTasks.push("Rozważ leczenie warrozy");
+
+// 🔹 RAMKI tylko w dni nieparzyste
+if(dayNumber % 2 !== 0){
+  if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
+    dayTasks.push("Sprawdź węzę i ramki");
+}
       if(dayTasks.length>0) tasksByDay[key]=dayTasks.join(", ");
     }
 
+    // Swarm risk
     let swarmRisk=0;
     const month=today.getMonth()+1;
-    if(month==4) swarmRisk+=20; else if(month==5) swarmRisk+=40; else if(month==6) swarmRisk+=30;
-    if(inspections==0) swarmRisk+=30; if(inspections==1) swarmRisk+=20; if(swarm) swarmRisk+=30;
+    if(month==4) swarmRisk+=20;
+    else if(month==5) swarmRisk+=40;
+    else if(month==6) swarmRisk+=30;
+    if(inspections==0) swarmRisk+=30;
+    if(inspections==1) swarmRisk+=20;
+    if(swarm) swarmRisk+=30;
     if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
     if(swarmRisk>100) swarmRisk=100;
 
@@ -1835,39 +1952,247 @@ marker.innerHTML = icons.join(" ");
     else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
     else swarmText="✅ NISKIE ryzyko rojki";
 
+    // Asystent summary
     let summary=[];
     summary.push("🔍 Przeglądy: "+inspections);
     summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
     if(!feeding) summary.push("🍯 Brak karmienia");
     if(!treatment) summary.push("💊 Brak leczenia");
-    if(honey) summary.push("🫙 Było miodobranie");
+    if(honey) summary.push("🍯 Było miodobranie");
+
     if(Object.keys(tasksByDay).length>0){
-      let tasksHtml=Object.entries(tasksByDay).map(([k,t])=>`<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${k}">${k}: ${t}</div>`).join("");
+      let tasksHtml = Object.entries(tasksByDay).map(([key,text])=>{
+        return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${key}">${key}: ${text}</div>`;
+      }).join("");
       summary.push("🛠 Nadchodzące 7 dni:<br>"+tasksHtml);
     }
+
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
+
+    // Kliknięcie w zadanie - oznacza jako wykonane
     box.querySelectorAll('div[data-key]').forEach(div=>{
-      div.addEventListener('click',()=>{
-        const key=div.dataset.key;
-        const note=localStorage.getItem(key)||"";
-        localStorage.setItem(key,note+"\n"+div.textContent+" [WYKONANE]");
-        updateMarkers(); loadWeatherAndAssist();
+      div.addEventListener('click', ()=>{
+        const key = div.dataset.key;
+        const note = localStorage.getItem(key) || "";
+        localStorage.setItem(key, note + "\n" + div.textContent + " [WYKONANE]");
+        updateMarkers();
+        loadWeatherAndAssist();
       });
     });
   }
 
-  // --- URUCHAMIANIE ---
-  updateMarkers();
-  loadWeatherAndAssist();
+  // --- HISTORIA ULA PO KLIKU ---
+  window.showHiveHistory = function(hiveNumber){
+    const resultsContainer = document.getElementById('search-results');
+    if(!resultsContainer) return;
+    resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
+    let found = false;
 
-  function scrollToToday(){
-    const today=new Date();
-    const day=String(today.getDate()).padStart(2,"0");
-    const month=String(today.getMonth()+1).padStart(2,"0");
-    const el=document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
-    if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+    for(let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+      const note = (localStorage.getItem(key) || "").toLowerCase();
+      if(note.includes("ul "+hiveNumber)){
+        found = true;
+        const div = document.createElement('div');
+        div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g, (m,n)=>
+          `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
+        )}`;
+        div.style.marginBottom = "5px";
+        resultsContainer.appendChild(div);
+      }
+    }
+
+    if(!found){
+      resultsContainer.innerHTML += "Brak wpisów dla tego ula";
+    }
+  };
+
+// =============================
+// 🧠 AI PASIEKA PRO MAX
+// =============================
+
+// 📊 ZBIERANIE DANYCH
+function getHiveData(){
+
+  let hiveStats = {};
+
+  for(let i=0;i<localStorage.length;i++){
+    const key = localStorage.key(i);
+    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+
+    const note = (localStorage.getItem(key)||"").toLowerCase();
+    const matches = note.match(/ul\s*(\d+)/g);
+
+    if(matches){
+      matches.forEach(m=>{
+        const nr = m.match(/\d+/)[0];
+
+        if(!hiveStats[nr]){
+          hiveStats[nr] = {
+            inspections:0,
+            feeding:0,
+            treatment:0,
+            swarm:0,
+            honey:0,
+            score:0
+          };
+        }
+
+        if(note.includes("przegląd")) hiveStats[nr].inspections++;
+        if(note.includes("karmienie")) hiveStats[nr].feeding++;
+        if(note.includes("leczenie")) hiveStats[nr].treatment++;
+        if(note.includes("rój")) hiveStats[nr].swarm++;
+        if(note.includes("miód")) hiveStats[nr].honey++;
+      });
+    }
   }
+
+  return hiveStats;
+}
+
+// 🐝 ANALIZA ULI
+function analyzeHivesPro(){
+
+  const box = document.getElementById("hive-analysis");
+  if(!box) return;
+
+  const data = getHiveData();
+  if(Object.keys(data).length===0){
+    box.innerHTML = "Brak danych";
+    return;
+  }
+
+  let html="";
+
+  Object.entries(data).forEach(([nr,d])=>{
+
+    let score = 0;
+    if(d.inspections>0) score+=30;
+    if(d.feeding>0) score+=20;
+    if(d.treatment>0) score+=20;
+    if(d.honey>0) score+=20;
+    if(d.swarm>0) score-=20;
+
+    d.score = score;
+
+    let status="", color="";
+    if(score>=70){status="🟢 SILNY";color="green";}
+    else if(score>=40){status="🟡 ŚREDNI";color="orange";}
+    else{status="🔴 SŁABY";color="red";}
+
+    html+=`<div><b>Ul ${nr}</b> → <span style="color:${color};font-weight:bold">${status}</span> (score: ${score})</div>`;
+  });
+
+  box.innerHTML = html;
+}
+
+// 🏆 RANKING
+function generateHiveRanking(){
+
+  const box = document.getElementById("hive-ranking");
+  if(!box) return;
+
+  const data = Object.entries(getHiveData());
+
+  data.forEach(([nr,d])=>{
+    d.score = (d.inspections*30)+(d.feeding*20)+(d.treatment*20)+(d.honey*20)-(d.swarm*20);
+  });
+
+  data.sort((a,b)=>b[1].score - a[1].score);
+
+  let html="";
+  data.forEach(([nr,d],i)=>{
+    html+=`<div>${i+1}. 🐝 Ul ${nr} → ${d.score} pkt</div>`;
+  });
+
+  box.innerHTML = html;
+}
+
+// 🚨 ALERTY
+function generateHiveAlerts(){
+
+  const box = document.getElementById("hive-alerts");
+  if(!box) return;
+
+  const data = getHiveData();
+
+  let alerts=[];
+
+  Object.entries(data).forEach(([nr,d])=>{
+    if(d.inspections===0) alerts.push(`🔍 Ul ${nr} bez przeglądu`);
+    if(d.treatment===0) alerts.push(`💊 Ul ${nr} brak leczenia`);
+    if(d.swarm>0) alerts.push(`🐝 Ul ${nr} ryzyko rojki`);
+  });
+
+  box.innerHTML = alerts.length ? alerts.join("<br>") : "✅ Brak alertów";
+}
+
+// 🤖 PLAN 7 DNI
+function generateWeeklyPlanPro(){
+
+  const box = document.getElementById("ai-plan");
+  if(!box) return;
+
+  const today = new Date();
+  let html="";
+
+  for(let i=0;i<7;i++){
+
+    const date = new Date();
+    date.setDate(today.getDate()+i);
+
+    const d = String(date.getDate()).padStart(2,"0");
+    const m = String(date.getMonth()+1).padStart(2,"0");
+    const key = d+"."+m+".2026";
+
+    const note = (localStorage.getItem(key)||"").toLowerCase();
+
+    let tasks=[];
+
+    if(!note.includes("przegląd")) tasks.push("🔍 przegląd");
+    if(!note.includes("karmienie")) tasks.push("🍯 karmienie");
+    if(!note.includes("leczenie")) tasks.push("💊 leczenie");
+
+    if(tasks.length===0) tasks.push("✅ OK");
+
+    html+=`<div><b>${key}</b> → ${tasks.join(", ")}</div>`;
+  }
+
+  box.innerHTML = html;
+}
+
+// 🍯 PROGNOZA MIODU
+function generateHoneyForecast(){
+
+  const box = document.getElementById("honey-forecast");
+  if(!box) return;
+
+  const data = getHiveData();
+
+  let total=0;
+
+  Object.values(data).forEach(d=>{
+    total += d.honey * 5; // 1 wpis ≈ 5kg
+  });
+
+  box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
+}
+
+  // --- URUCHOMIENIA STARTOWE ---
+  updateMarkers();
   scrollToToday();
+  loadWeatherAndAssist();analyzeHivesPro();
+  generateHiveRanking();
+  generateHiveAlerts();
+  generateWeeklyPlanPro();
+  generateHoneyForecast();
+  runAIModule();
+  loadApiaryData();
+  hivesCountInput.addEventListener('change', generateFamilyNotes);
+  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
+  setInterval(()=>{ loadWeatherAndAssist(); },120000);
+
 });
 </script>
 
