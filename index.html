@@ -22,7 +22,7 @@ body {
 /* PODŚWIETLENIE DNIA W WYSZUKIWARCE */
 .highlight-day {
   background-color: #ffe066 !important;
-  border-radius: 50%;
+  border-radius: 60%;
 }
 
 table {
@@ -116,6 +116,83 @@ th, td {
   table, th, td { font-size: 12px; }
   .notes { height: 60px; }
 }
+
+/* --- Migające alerty --- */
+@keyframes blink {
+  0%,50%,100% { opacity:1; }
+  25%,75% { opacity:0.3; }
+}
+
+/* --- Tooltip --- */
+.tooltip {
+  position: relative;
+  cursor: help;
+}
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  background: #333;
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  top: -1.5em;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+.tooltip:hover::after {
+  opacity: 1;
+}
+
+/* --- Dni z notatką --- */
+.has-note {
+  background-color: #fffbe6;
+  border-radius: 4px;
+}
+.today {
+  border: 2px solid #f39c12;
+}
+.tomorrow {
+  border: 2px dashed #2ecc71;
+}
+
+/* --- Migający alert dla rojki --- */
+.blink-alert {
+  animation: blink 1s infinite;
+}
+
+/* --- Highlight dla wyszukiwarki --- */
+.highlight-day {
+  background-color: #f9e79f !important;
+}
+
+/* --- Mapa słów w notatkach --- */
+.wordmap span {
+  display:inline-block;
+  margin:2px;
+  padding:2px 4px;
+  border-radius:3px;
+  background:#eee;
+  font-size:12px;
+}
+.wordmap span.high {
+  background:#ffcc00;
+  font-weight:bold;
+}
+
+/* --- Panel uli --- */
+#hive-ranking, #hive-alerts, #weekly-plan, #honey-forecast {
+  background:#f4f6f7;
+  padding:10px;
+  border-radius:5px;
+  margin-bottom:10px;
+  font-size:14px;
+}
 </style>
 
 </head>
@@ -171,6 +248,8 @@ margin-bottom:15px;
   </div>
 
   <div id="weather-forecast" style="margin-top:8px; font-size:14px;"></div>
+
+
 
   <div id="bee-flight-alert" style="
   margin-top:10px;
@@ -1450,26 +1529,50 @@ margin-bottom:15px;
 
 </div> <!-- KONIEC month-panels-12 -->
 
+
 <div class="page-break"></div>
 
-<!-- Panel alertów miesiąca 12 (unikalne ID) -->
+<!-- Panel alertów miesiąca 12 -->
 <div id="month-panels-12">
   <div id="alerts-box-12">
     <strong>Alerty pasieczne:</strong>
     <div id="alerts-list-12">Brak alertów na dziś</div>
   </div>
 
- <!-- Panel rojka / asystent -->
+  <div id="weather-panel-12">
+    <div id="location-box-12"></div>
+    <div id="weather-data-12"></div>
+    <div id="weather-forecast-12"></div>
+    <div id="bee-flight-alert-12"></div>
+  </div>
+
+  <div id="assistant-text-12"></div>
+
+  <div id="apiary-panel-12">
+    <div id="hive-ranking-12"></div>
+    <div id="hive-alerts-12"></div>
+    <div id="weekly-plan-12"></div>
+    <div id="honey-forecast-12"></div>
+  </div>
+
+  <div id="search-container-12">
+    <input type="text" id="search-notes-12" placeholder="Szukaj w notatkach..." />
+    <div id="search-results-12"></div>
+  </div>
+
+  <div id="family-notes-panel-12">
+    <input type="number" id="hives-count-12" placeholder="Ilość rodzin" min="1" max="50" />
+    <button id="save-family-notes-12">Zapisz notatki rodzin</button>
+  </div>
+
   <div id="swarm-box-12"></div>
   <div id="assistant-box-12"></div>
 
-  <!-- Licznik miodu i kontroli -->
   <div id="inspection-honey-12">
     <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
     <div id="honey-total-12">🫙 Zebrany miód w 2026: 0 kg</div>
   </div>
 
-  <!-- Notatki dnia -->
   <div id="day-note-box-12">
     <h3>Notatka dnia</h3>
     <textarea id="notes-12" rows="6" style="width:100%;"></textarea>
@@ -1484,120 +1587,15 @@ margin-bottom:15px;
 <div id="ai-pro-box-12" style="margin-top:20px;">
   <h3>🐝 Analiza uli (AI)</h3>
   <div id="hive-analysis-12">Ładowanie...</div>
-
   <h3 style="margin-top:15px;">🏆 Ranking uli</h3>
   <div id="hive-ranking-12"></div>
-
   <h3 style="margin-top:15px;">🚨 Alerty uli</h3>
   <div id="hive-alerts-12"></div>
-
   <h3 style="margin-top:15px;">🤖 Plan pracy 7 dni</h3>
   <div id="ai-plan-12"></div>
-
-  <h3 style="margin-top:15px;">🍯 Prognoza miodu</h3>
+  <h3 style="margin-top:15px;">🫙 Prognoza miodu</h3>
   <div id="honey-forecast-12"></div>
 </div>
-
-<div id="weather-panel-12">
-  <h3>🌤 Pogoda dla pasieki</h3>
-  <div id="weather-data-12">Ładowanie...</div>
-  <div id="weather-forecast-12"></div>
-  <div id="bee-flight-alert-12" style="margin-top:5px; font-weight:bold;"></div>
-</div>
-
-<!-- Panel ogólny pasieki -->
-<div id="alerts-box-global">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-global">Brak alertów na dziś</div>
-</div>
-
-<div id="assistant-box-global"></div>
-
-<div id="inspection-count-global">✅ Kontrole wykonane w tym miesiącu: 0</div>
-<div id="honey-total-global">🫙 Zebrany miód w 2026: 0 kg</div>
-
-<div id="upcoming-works-global">
-  <strong>📜 Nadchodzące prace w pasiece:</strong>
-  <ul id="works-list-global"></ul>
-</div>
-
-<div id="day-note-box-global">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-global" rows="6" style="width:100%;"></textarea>
-  <div id="quick-buttons-global" style="margin-top:8px;">
-    <button onclick="addQuick('przegląd')">🔍 Przegląd</button>
-    <button onclick="addQuick('miodobranie')">🫙 Miodobranie</button>
-    <button onclick="addQuick('karmienie')">🍯 Karmienie</button>
-    <button onclick="addQuick('leczenie')">💊 Leczenie</button>
-    <button onclick="addQuick('rój')">🐝 Rój</button>
-  </div>
-  <br><br>
-  <button onclick="saveNote()">Zapisz notatkę</button>
-</div>
-
-<!-- PANEL PASIEKI -->
-<h2>🛠 Panel pasieki</h2>
-Liczba uli: <input id="hives-count" type="number" min="1" value="23"><br>
-Zebrany miód (kg): <input id="honey-amount" type="number" min="0" value="0"><br>
-Notatki pasieki:<br>
-<textarea id="apiary-notes" rows="3"></textarea><br>
-<button onclick="saveApiary()">💾 Zapisz pasiekę</button>
-<div id="honey-total-global-2"></div>
-
-<!-- NOTATKI DLA RODZIN PSZCZELICH -->
-<div id="family-panel-global">
-  <strong>Notatki dla rodzin pszczelich:</strong><br>
-  <div id="family-notes-container-global"></div>
-  <button id="save-family-notes-global">Zapisz notatki rodzin</button>
-</div>
-
-<!-- TABELA ROJLIWOŚCI -->
-<div class="month">
-<h1>Dni największej rojliwości w 2026</h1>
-<table>
-<tr><th>Miesiąc</th><th>Dni rojowe</th></tr>
-<tr><td>Marzec</td><td>17, 25</td></tr>
-<tr><td>Kwiecień</td><td>8, 15, 23</td></tr>
-<tr><td>Maj</td><td>5, 12, 20</td></tr>
-<tr><td>Czerwiec</td><td>3, 10, 18</td></tr>
-<tr><td>Lipiec</td><td>7, 15, 22</td></tr>
-<tr><td>Sierpień</td><td>5, 13, 21</td></tr>
-<tr><td>Wrzesień</td><td>2, 10, 18</td></tr>
-<tr><td>Październik</td><td>6, 14</td></tr>
-</table>
-<div class="notes"><strong>Uwagi:</strong> Dni rojowe należy obserwować, aby ewentualnie podzielić rodziny lub zastosować pułapki rojowe.</div>
-</div>
-
-<h3>🟩 Leczenie warrozy</h3>
-<table>
-<tr><th>Miesiąc</th><th>Działanie</th></tr>
-<tr><td>Marzec</td><td>Kontrola rodzin i leczenie warrozy 15-30</td></tr>
-<tr><td>Kwiecień</td><td>Leczenie warrozy chemiczne / paski 1-20</td></tr>
-<tr><td>Wrzesień</td><td>Leczenie po miodobraniu</td></tr>
-<tr><td>Październik</td><td>Kontrola osypu i końcowe leczenie</td></tr>
-</table>
-
-<h3>🧬🐝 Wychów matki pszczelej</h3>
-<table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse; text-align: left;">
-<tr style="background-color:#e0e0e0; text-align:center;">
-<th>Etap</th><th>Czas trwania</th><th>Czynności pasieczne</th><th>Uwagi</th>
-</tr>
-<tr style="background-color:#FFF3E0;"><td>Wybór komórek matecznych</td><td>1 dzień</td><td>Kontrola rojowisk, wybór larw do wychowu</td><td>Wybierać larwy młodsze niż 24h</td></tr>
-<tr style="background-color:#FFE0B2;"><td>Budowa komórek matecznych</td><td>2–3 dni</td><td>Uzupełnianie węzy, obserwacja larw</td><td>Utrzymywać rój w cieple i wilgotności</td></tr>
-<tr style="background-color:#FFCC80;"><td>Rozwój larwy matki</td><td>4–5 dni</td><td>Kontrola larw, ochrona przed robotnicami</td><td>Nie przerywać pracy pszczół w komórkach</td></tr>
-<tr style="background-color:#FFB74D;"><td>Przepoczwarczenie</td><td>6–10 dzień</td><td>Obserwacja poczwarek</td><td>Zapobiegać uszkodzeniu komórek matecznych</td></tr>
-<tr style="background-color:#FF9800;"><td>Wygryzanie się matki</td><td>11–12 dzień</td><td>Kontrola aktywności matki, przygotowanie ula do wprowadzenia</td><td>Nowa matka jest gotowa do osadzenia</td></tr>
-<tr style="background-color:#81C784;"><td>Wprowadzenie matki do rodziny</td><td>12–14 dzień</td><td>Osadzenie matki w ochronnej klatce, obserwacja akceptacji przez pszczoły</td><td>Stopniowo wypuszczać matkę, by uniknąć agresji</td></tr>
-<tr style="background-color:#A5D6A7;"><td>Okres adaptacji</td><td>2–4 dni po wprowadzeniu</td><td>Obserwacja akceptacji matki, kontrola czerwienia</td><td>Monitorować akceptację matki i początek składania jaj</td></tr>
-</table>
-
-<div class="notes">
-<strong>Uwagi ogólne:</strong><br>
-– Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
-– Zachować higienę w ulu i narzędziach<br>
-– Kontrolować temperaturę i wilgotność w komórkach matecznych
-</div>
-
 <script src="app.js"></script>
 
 <script>
@@ -1608,76 +1606,103 @@ document.addEventListener("DOMContentLoaded", function() {
   let currentMonth = null;
 
   // --- MAPA IKON Z TOOLTIPAMI ---
-  const iconMap = [
-    {emoji:"🫙", keywords:["miód","miodobranie","zbiory"], tooltip:"Miodobranie"},
-    {emoji:"🍯", keywords:["karmienie","syrop","ciasto"], tooltip:"Karmienie pszczół"},
-    {emoji:"💊", keywords:["leczenie","warroza","apiwarol"], tooltip:"Leczenie warrozy"},
-    {emoji:"🏷️", keywords:["paski"], tooltip:"Paski do leczenia"},
-    {emoji:"🌬️", keywords:["kwas"], tooltip:"Kwas w leczeniu"},
-    {emoji:"🛡️", keywords:["zakończenie leczenia"], tooltip:"Zakończenie leczenia"},
-    {emoji:"🔍", keywords:["przegląd","kontrola"], tooltip:"Przegląd uli"},
-    {emoji:"📋", keywords:["sprawdzenie"], tooltip:"Sprawdzenie stanu uli"},
-    {emoji:"🐝", keywords:["rój","rojka","robotnica"], tooltip:"Rój / robotnice"},
-    {emoji:"🌸", keywords:["pożytek","nektar","pyłek"], tooltip:"Pożytek"},
-    {emoji:"👑", keywords:["matka","wymiana matki","wychów matki pszczelej"], tooltip:"Matka pszczela"},
-    {emoji:"🧱", keywords:["ramki","węza"], tooltip:"Ramki/Węza"},
-    {emoji:"📦", keywords:["nadstawka"], tooltip:"Nadstawka"},
-    {emoji:"🌧", keywords:["deszcz"], tooltip:"Opady deszczu"},
-    {emoji:"💨", keywords:["wiatr","dymiarka"], tooltip:"Wiatr / Dymiarka"},
-    {emoji:"🌩️", keywords:["burza"], tooltip:"Burza"},
-    {emoji:"❄️", keywords:["śnieg"], tooltip:"Śnieg"},
-    {emoji:"🥶", keywords:["mróz","zimno"], tooltip:"Mróz / zimno"},
-    {emoji:"🥵", keywords:["gorąco","upał"], tooltip:"Upał"},
-    {emoji:"🌫️", keywords:["pochmurno","mgła"], tooltip:"Pochmurno / mgła"},
-    {emoji:"🌡", keywords:["niska temperatura"], tooltip:"Niska temperatura"},
-    {emoji:"🧴", keywords:["dezynfekcja"], tooltip:"Dezynfekcja"},
-    {emoji:"🐛", keywords:["odrobaczanie"], tooltip:"Odrobaczanie"},
-    {emoji:"🕵️‍♂️", keywords:["inspekcja"], tooltip:"Inspekcja"},
-    {emoji:"🏃‍♂️🐝", keywords:["ucieczka pszczół"], tooltip:"Ucieczka pszczół"},
-    {emoji:"🐣", keywords:["czerwiowanie"], tooltip:"Czerwiowanie"},
-    {emoji:"🧊", keywords:["grad"], tooltip:"Grad"},
-    {emoji:"🌪️", keywords:["tornado"], tooltip:"Tornado"},
-    {emoji:"🌀", keywords:["huragan"], tooltip:"Huragan"},
-    {emoji:"🧹", keywords:["miotła","odsklepianie"], tooltip:"Odsklepianie / miotła"},
-    {emoji:"🎉", keywords:["nowy rok"], tooltip:"Nowy Rok"},
-    {emoji:"🏠", keywords:["ule","pasieka"], tooltip:"Pasieka / ul"},
-    {emoji:"👨‍🌾", keywords:["trutnie"], tooltip:"Trutnie"},
-    {emoji:"💨🪵", keywords:["dym"], tooltip:"Dymiarka"},
-    // Dodaj kolejne słowa/ikonki do 50+
-  ];
+let icons = [];
+const text = noteData.toLowerCase();
 
-  // --- FUNKCJA MARKERÓW I TOOLTIPÓW ---
-  function updateMarkers() {
-    const today = new Date();
-    const dayNow = String(today.getDate()).padStart(2,"0");
-    const monthNow = String(today.getMonth()+1).padStart(2,"0");
+// 🔥 MAPA SŁÓW → IKONY + TOOLTIPY + WAGA
+const ICON_MAP = [
+  // 🍯 MIÓD
+  { keys: ["miód","miodobranie","odwirowanie","wirowanie"], icon: "🫙", tip: "Miodobranie", level: 2 },
+  // 🍯 KARMIENIE
+  { keys: ["karmienie","syrop","ciasto","dokarmianie"], icon: "🍯", tip: "Karmienie", level: 2 },
+  // 💊 LECZENIE
+  { keys: ["leczenie","warroza","apiwarol"], icon: "💊", tip: "Leczenie", level: 3 },
+  { keys: ["paski","amitraza"], icon: "🏷️", tip: "Paski lecznicze", level: 3 },
+  { keys: ["kwas","odparowywanie"], icon: "🌬️", tip: "Kwas / leczenie", level: 3 },
+  { keys: ["zakończenie leczenia"], icon: "🛡️", tip: "Koniec leczenia", level: 2 },
 
-    document.querySelectorAll("td .day-number").forEach(span => {
-      const td = span.closest("td");
-      td.classList.remove("has-note","today","tomorrow");
+  // 🔍 PRZEGLĄDY
+  { keys: ["przegląd","kontrola"], icon: "🔍", tip: "Przegląd ula", level: 2 },
+  { keys: ["sprawdzenie","inspekcja"], icon: "📋", tip: "Sprawdzenie", level: 2 },
 
-      const day = span.dataset.day.padStart(2,"0");
-      const month = span.dataset.month.padStart(2,"0");
-      const key = day + "." + month + ".2026";
+  // 🐝 RÓJ
+  { keys: ["rój","rojka","nastrój rojowy"], icon: "🐝", tip: "Rójka", level: 4, alert:true },
 
-      const oldMarker = td.querySelector(".note-marker");
-      if(oldMarker) oldMarker.remove();
+  // 🌸 POŻYTEK
+  { keys: ["pożytek","nektar","pyłek"], icon: "🌸", tip: "Pożytek", level: 1 },
 
-      const noteData = localStorage.getItem(key);
-      if(noteData && noteData.trim() !== "") {
-        td.classList.add("has-note");
-        const marker = document.createElement("span");
-        marker.className = "note-marker";
+  // 👑 MATKA
+  { keys: ["matka","wymiana matki","wychów matki pszczelej","matecznik"], icon: "👑", tip: "Matka pszczela", level: 2 },
 
-        const text = noteData.toLowerCase();
-        let icons = [];
-        iconMap.forEach(item=>{
-          if(item.keywords.some(word=>text.includes(word))){
-            icons.push(`<span title="${item.tooltip}">${item.emoji}</span>`);
-          }
-        });
-        if(icons.length===0) icons.push("📒"); // default
-        marker.innerHTML = icons.join(" ");
+  // 🧱 RAMKI / KORPUSY
+  { keys: ["ramki","węza","węzę"], icon: "🧱", tip: "Ramki / węza", level: 1 },
+  { keys: ["nadstawka","korpus"], icon: "📦", tip: "Korpus / nadstawka", level: 1 },
+
+  // 🌦 POGODA
+  { keys: ["deszcz"], icon: "🌧", tip: "Deszcz", level: 1 },
+  { keys: ["wiatr"], icon: "💨", tip: "Wiatr", level: 1 },
+  { keys: ["burza"], icon: "🌩️", tip: "Burza", level: 2 },
+  { keys: ["śnieg"], icon: "❄️", tip: "Śnieg", level: 2 },
+  { keys: ["mróz","zimno"], icon: "🥶", tip: "Zimno", level: 2 },
+  { keys: ["upał","gorąco"], icon: "🥵", tip: "Upał", level: 2 },
+  { keys: ["pochmurno"], icon: "🌫️", tip: "Pochmurno", level: 1 },
+  { keys: ["temperatura"], icon: "🌡", tip: "Temperatura", level: 1 },
+
+  // 🔧 SPRZĘT
+  { keys: ["dymiarka"], icon: "💨🪵", tip: "Dymiarka", level: 1 },
+  { keys: ["odsklepianie","widelec"], icon: "🍴", tip: "Odsklepianie", level: 1 },
+  { keys: ["miodarka"], icon: "⚙️", tip: "Miodarka", level: 1 },
+
+  // 🧪 HIGIENA
+  { keys: ["dezynfekcja"], icon: "🧴", tip: "Dezynfekcja", level: 1 },
+
+  // 🐣 CZERW
+  { keys: ["czerw","czerwiowanie"], icon: "🐣", tip: "Czerw", level: 2 },
+
+  // 🏠 PASIEKA
+  { keys: ["pasieka","ule"], icon: "🏠", tip: "Pasieka", level: 1 },
+
+  // 🚚 TRANSPORT
+  { keys: ["transport","przewóz","wędrówka"], icon: "🚚", tip: "Transport uli", level: 1 },
+
+  // 🧤 OCHRONA
+  { keys: ["kombinezon","ubranie","rękawice"], icon: "🧤", tip: "Ochrona pszczelarza", level: 1 },
+
+  // 🧊 EKSTREMALNA POGODA
+  { keys: ["grad"], icon: "🧊", tip: "Grad", level: 2 },
+  { keys: ["huragan"], icon: "🌀", tip: "Huragan", level: 3 },
+
+  // 🐝 RODZAJE PSZCZÓŁ
+  { keys: ["robotnica"], icon: "🐝", tip: "Robotnica", level: 1 },
+  { keys: ["truteń"], icon: "👨", tip: "Truteń", level: 1 }
+];
+
+// 🔥 WYKRYWANIE + TOOLTIP + ALERTY + KOLOR + LICZNIK
+const usedIcons = new Set();
+let alerts = [];
+
+ICON_MAP.forEach(item => {
+  if(item.keys.some(k => text.includes(k))){
+    if(!usedIcons.has(item.icon)){
+      const color = item.level>=3 ? "red" : item.level===2 ? "orange" : "green";
+      let html = `<span title="${item.tip}" style="color:${color};font-weight:bold">${item.icon}</span>`;
+      if(item.alert) html = `<span title="${item.tip}" style="color:${color};font-weight:bold;animation:blink 1s infinite">${item.icon}</span>`;
+      icons.push(html);
+      usedIcons.add(item.icon);
+      if(item.alert) alerts.push(item.tip);
+    }
+  }
+});
+
+// 📒 fallback
+if(icons.length===0) icons.push(`<span title="Notatka">📒</span>`);
+
+// ⚡ aktualizacja licznika + alertów globalnych
+const iconCounter = icons.length;
+if(alerts.length>0) console.log("🚨 ALERTY w notatce:", alerts.join(", "), " | Ikon w notatce:", iconCounter);
+
+// 🚀 render
+marker.innerHTML = icons.join(" ");
         span.after(marker);
       }
 
