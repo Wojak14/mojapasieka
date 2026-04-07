@@ -1706,43 +1706,36 @@ document.addEventListener("DOMContentLoaded", function() {
         const marker = document.createElement("span");
         marker.className = "note-marker";
 
-     let icons = [];
-const text = noteData.toLowerCase();
-
-// 🔥 MAPA SŁÓW → IKONY + TOOLTIPY + WAGA
-const ICON_MAP = [
-  { keys: ["miód","miodobranie","odwirowanie","wirowanie"], icon: "🫙", tip: "Miodobranie", level: 2 },
-  { keys: ["karmienie","syrop","ciasto","dokarmianie"], icon: "🍯", tip: "Karmienie", level: 2 },
-  { keys: ["leczenie","warroza","apiwarol"], icon: "💊", tip: "Leczenie", level: 3 },
-  { keys: ["paski","amitraza"], icon: "🏷️", tip: "Paski lecznicze", level: 3 },
-  { keys: ["kwas","odparowywanie"], icon: "🌬️", tip: "Kwas / leczenie", level: 3 },
-  { keys: ["zakończenie leczenia"], icon: "🛡️", tip: "Koniec leczenia", level: 2 },
-  { keys: ["przegląd","kontrola"], icon: "🔍", tip: "Przegląd ula", level: 2 },
-  { keys: ["sprawdzenie","inspekcja"], icon: "📋", tip: "Sprawdzenie", level: 2 },
-  { keys: ["rój","rojka","nastrój rojowy"], icon: "🐝", tip: "Rójka", level: 4, alert:true },
-  { keys: ["pożytek","nektar","pyłek"], icon: "🌸", tip: "Pożytek", level: 1 },
-  { keys: ["matka","wymiana matki","wychów matki pszczelej","matecznik"], icon: "👑", tip: "Matka pszczela", level: 2 },
-  { keys: ["ramki","węza","węzę"], icon: "🧱", tip: "Ramki / węza", level: 1 },
-  { keys: ["nadstawka","korpus"], icon: "📦", tip: "Korpus / nadstawka", level: 1 },
-  { keys: ["deszcz"], icon: "🌧", tip: "Deszcz", level: 1 },
-  { keys: ["wiatr"], icon: "💨", tip: "Wiatr", level: 1 },
-  { keys: ["burza"], icon: "🌩️", tip: "Burza", level: 2 },
-  { keys: ["śnieg"], icon: "❄️", tip: "Śnieg", level: 2 },
-  { keys: ["mróz","zimno"], icon: "🥶", tip: "Zimno", level: 2 },
-  { keys: ["upał","gorąco"], icon: "🥵", tip: "Upał", level: 2 },
-  { keys: ["pochmurno"], icon: "🌫️", tip: "Pochmurno", level: 1 },
-  { keys: ["temperatura"], icon: "🌡", tip: "Temperatura", level: 1 },
-  { keys: ["dymiarka"], icon: "💨🪵", tip: "Dymiarka", level: 1 },
-  { keys: ["odsklepianie","widelec"], icon: "🍴", tip: "Odsklepianie", level: 1 },
-  { keys: ["miodarka"], icon: "⚙️", tip: "Miodarka", level: 1 },
-  { keys: ["dezynfekcja"], icon: "🧴", tip: "Dezynfekcja", level: 1 },
-  { keys: ["czerw","czerwiowanie"], icon: "🐣", tip: "Czerw", level: 2 },
-  { keys: ["pasieka","ule"], icon: "🏠", tip: "Pasieka", level: 1 },
-  { keys: ["grad"], icon: "🧊", tip: "Grad", level: 2 },
-  { keys: ["huragan"], icon: "🌀", tip: "Huragan", level: 3 },
-  { keys: ["robotnica"], icon: "🐝", tip: "Robotnica", level: 1 },
-  { keys: ["truteń"], icon: "👨", tip: "Truteń", level: 1 }
-];  
+      let icons = [];
+        const text = noteData.toLowerCase();
+        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
+        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
+        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
+        if(text.includes("leczenie") || text.includes("paski")) icons.push("🏷️");
+        if(text.includes("leczenie") || text.includes("kwas")) icons.push("🌬️");
+        if(text.includes("leczenie") || text.includes("zakończenie leczenia")) icons.push("🛡️");
+        if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
+        if(text.includes("przegląd") || text.includes("sprawdzenie")) icons.push("📋");
+        if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
+        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
+        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
+        if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
+        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦");
+        if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
+        if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
+        if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
+        if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
+        if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
+        if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
+        if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");
+        if(text.includes("pogoda") || text.includes("niska temparatura")) icons.push("🌡");
+        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦");
+        if(text.includes("trutnie")) icons.push("👨‍🌾");
+        if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
+        if(text.includes("słonecznie")) icons.push("☀️");
+        if(text.includes("mgła")) icons.push("🌁");
+        if(text.includes("grad")) icons.push("🧊");
+        if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹"); 
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
