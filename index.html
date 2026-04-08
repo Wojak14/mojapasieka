@@ -1842,22 +1842,41 @@ document.addEventListener("DOMContentLoaded", function() {
           `;
 
           if(forecastBox){
-            const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 16 dni od jutra:</b><br>`;
-            for(let i=1;i<=16;i++){
-              const date=new Date(); date.setDate(date.getDate()+i);
-              const d=date.getDate().toString().padStart(2,"0");
-              const m=(date.getMonth()+1).toString().padStart(2,"0");
-              const tMax=data.daily.temperature_2m_max[i] ?? 0;
-              const tMin=data.daily.temperature_2m_min[i] ?? 0;
-              const wind=data.daily.windspeed_10m_max[i] ?? 0;
-              const rain=data.daily.precipitation_probability_max[i] ?? 0;
-              const status=(tMax>=15 && wind<20)?"🐝 IDEALNE":(tMax>=12?"🐝 ŚREDNIE":"❄ SŁABE");
-              const color=status.includes("IDEALNE")?"green":status.includes("ŚREDNIE")?"orange":"red";
-              html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% <span style="color:${color};font-weight:bold">${status}</span></div>`;
-            }
-            forecastBox.innerHTML=html;
-          }
+        const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
+        let html=`<b>📅 Prognoza 16 dni od jutra:</b><br>`;
+
+        for(let i=1;i<=16;i++){
+
+          const date=new Date();
+          date.setDate(date.getDate()+i);
+
+          const d=date.getDate().toString().padStart(2,"0");
+          const m=(date.getMonth()+1).toString().padStart(2,"0");
+
+          const tMax=data.daily.temperature_2m_max[i] ?? 0;
+          const tMin=data.daily.temperature_2m_min[i] ?? 0;
+          const wind=data.daily.windspeed_10m_max[i] ?? 0;
+          const rain=data.daily.precipitation_probability_max[i] ?? 0;
+
+          const status=(tMax>=15 && wind<20)
+            ? "🐝 IDEALNE"
+            : (tMax>=12 ? "🐝 ŚREDNIE":"❄ SŁABE");
+
+          const color=status.includes("IDEALNE")
+            ? "green"
+            : status.includes("ŚREDNIE") ? "orange":"red";
+
+          html+=`<div>
+            <b>${days[date.getDay()]} ${d}.${m}</b>
+            🌡 ${tMin}-${tMax}°C
+            💨 ${wind} km/h
+            🌧 ${rain}%
+            <span style="color:${color};font-weight:bold">${status}</span>
+          </div>`;
+        }
+
+        forecastBox.innerHTML=html;
+      }
 
           if(beeBox) beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
           resolve({beeStatus});
