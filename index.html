@@ -1810,46 +1810,54 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // --- POGODA 16 DNI + DZIŚ ---
 function loadWeather16Days() {
-  return new Promise((resolve)=>{
-
+  return new Promise((resolve) => {
     const weatherBox = document.getElementById("weather-data");
     const forecastBox = document.getElementById("weather-forecast");
     const locationBox = document.getElementById("location-box");
 
     const CACHE_KEY = "weatherCache";
-    const CACHE_TIME = 15 * 60 * 1000; // 15 min
+    const CACHE_TIME = 15 * 60 * 1000; // 15 minut
 
-    function getCache(){
+    function getCache() {
       const c = localStorage.getItem(CACHE_KEY);
-      if(!c) return null;
+      if (!c) return null;
       const parsed = JSON.parse(c);
-      if(Date.now() - parsed.time > CACHE_TIME) return null;
+      if (Date.now() - parsed.time > CACHE_TIME) return null;
       return parsed.data;
     }
 
-    function setCache(data){
-      localStorage.setItem(CACHE_KEY, JSON.stringify({
-        time: Date.now(),
-        data: data
-      }));
+    function setCache(data) {
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify({ time: Date.now(), data: data })
+      );
     }
 
-    function render(data, label, lat, lon){
-      if(locationBox)
-        locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
+    function render(data, label, lat, lon) {
+      if (locationBox)
+        locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(
+          3
+        )},${lon.toFixed(3)})`;
 
-      const cw = data.current_weather || {temperature:0,windspeed:0};
+      const cw = data.current_weather || { temperature: 0, windspeed: 0 };
       const todayMax = data.daily.temperature_2m_max[0];
       const todayMin = data.daily.temperature_2m_min[0];
       const todayWind = data.daily.windspeed_10m_max[0];
       const todayRain = data.daily.precipitation_probability_max[0];
 
-      const beeStatus = (cw.temperature>=15 && cw.windspeed<20)
-        ? "🐝 IDEALNE"
-        : (cw.temperature>=12 ? "🐝 ŚREDNIE":"❄ SŁABE");
-      const color = beeStatus.includes("IDEALNE")?"green":beeStatus.includes("ŚREDNIE")?"orange":"red";
+      const beeStatus =
+        cw.temperature >= 15 && cw.windspeed < 20
+          ? "🐝 IDEALNE"
+          : cw.temperature >= 12
+          ? "🐝 ŚREDNIE"
+          : "❄ SŁABE";
+      const color = beeStatus.includes("IDEALNE")
+        ? "green"
+        : beeStatus.includes("ŚREDNIE")
+        ? "orange"
+        : "red";
 
-      if(weatherBox){
+      if (weatherBox) {
         weatherBox.innerHTML = `
           <b>🌡 Dzisiaj:</b><br>
           Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
@@ -1859,25 +1867,30 @@ function loadWeather16Days() {
         `;
       }
 
-      if(forecastBox){
-        const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-        let html=`<b>📅 Prognoza 16 dni od jutra:</b><br>`;
+      if (forecastBox) {
+        const days = ["Nd", "Pn", "Wt", "Śr", "Cz", "Pt", "Sb"];
+        let html = `<b>📅 Prognoza 16 dni od jutra:</b><br>`;
 
-        for(let i=1;i<=16;i++){
-          const date=new Date();
-          date.setDate(date.getDate()+i);
-          const d=date.getDate().toString().padStart(2,"0");
-          const m=(date.getMonth()+1).toString().padStart(2,"0");
+        for (let i = 1; i <= 16; i++) {
+          const date = new Date();
+          date.setDate(date.getDate() + i);
+          const d = date.getDate().toString().padStart(2, "0");
+          const m = (date.getMonth() + 1).toString().padStart(2, "0");
 
           const tMax = data.daily.temperature_2m_max[i] ?? 0;
           const tMin = data.daily.temperature_2m_min[i] ?? 0;
           const wind = data.daily.windspeed_10m_max[i] ?? 0;
           const rain = data.daily.precipitation_probability_max[i] ?? 0;
 
-          const status=(tMax>=15 && wind<20)?"🐝 IDEALNE":(tMax>=12?"🐝 ŚREDNIE":"❄ SŁABE");
-          const color=status.includes("IDEALNE")?"green":status.includes("ŚREDNIE")?"orange":"red";
+          const status =
+            tMax >= 15 && wind < 20 ? "🐝 IDEALNE" : tMax >= 12 ? "🐝 ŚREDNIE" : "❄ SŁABE";
+          const color = status.includes("IDEALNE")
+            ? "green"
+            : status.includes("ŚREDNIE")
+            ? "orange"
+            : "red";
 
-          html+=`<div>
+          html += `<div>
             <b>${days[date.getDay()]} ${d}.${m}</b>
             🌡 ${tMin}-${tMax}°C
             💨 ${wind} km/h
@@ -1886,57 +1899,57 @@ function loadWeather16Days() {
           </div>`;
         }
 
-        forecastBox.innerHTML=html;
+        forecastBox.innerHTML = html;
       }
 
       resolve();
     }
 
-    async function fetchMeteo(lat, lon){
+    async function fetchMeteo(lat, lon) {
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto&forecast_days=16`;
       const r = await fetch(url);
       return await r.json();
     }
 
-    async function fetchOpenWeather(lat, lon){
-      const apiKey = "TWÓJ_API_KEY"; // wstaw własny
+    async function fetchOpenWeather(lat, lon) {
+      const apiKey = "TWÓJ_API_KEY";
       const url = `https://api.openweathermap.org/data/2.5/forecast/daily?lat=${lat}&lon=${lon}&cnt=16&appid=${apiKey}&units=metric`;
       const r = await fetch(url);
       return await r.json();
     }
 
-    async function fetchAll(lat, lon, label){
+    async function fetchAll(lat, lon, label) {
       try {
         const data = await fetchMeteo(lat, lon);
         setCache(data);
         render(data, label, lat, lon);
-      } catch(e){
+      } catch (e) {
         console.log("Fallback OpenWeather");
         try {
           const ow = await fetchOpenWeather(lat, lon);
           const converted = {
-            current_weather:{
+            current_weather: {
               temperature: ow.list[0].temp.day,
-              windspeed: ow.list[0].speed
+              windspeed: ow.list[0].speed,
             },
-            daily:{
-              temperature_2m_max: ow.list.map(d=>d.temp.max),
-              temperature_2m_min: ow.list.map(d=>d.temp.min),
-              windspeed_10m_max: ow.list.map(d=>d.speed),
-              precipitation_probability_max: ow.list.map(()=>0)
-            }
+            daily: {
+              temperature_2m_max: ow.list.map((d) => d.temp.max),
+              temperature_2m_min: ow.list.map((d) => d.temp.min),
+              windspeed_10m_max: ow.list.map((d) => d.speed),
+              precipitation_probability_max: ow.list.map(() => 0),
+            },
           };
           setCache(converted);
           render(converted, "OpenWeather", lat, lon);
-        } catch(err){
+        } catch (err) {
           console.log("Brak danych pogodowych");
         }
       }
     }
 
-    function start(lat, lon, label){
+    function start(lat, lon, label) {
       const cache = getCache();
-      if(cache){
+      if (cache) {
         render(cache, label, lat, lon);
       } else {
         fetchAll(lat, lon, label);
@@ -1944,20 +1957,39 @@ function loadWeather16Days() {
     }
 
     // 🔹 START GPS + fallback Werpol
-    navigator.geolocation.getCurrentPosition(
-      pos => { start(pos.coords.latitude, pos.coords.longitude, "GPS"); },
-      err => { start(52.24, 23.09, "Werpol (fallback)"); }
-    );
+    function initWeather() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            start(pos.coords.latitude, pos.coords.longitude, "GPS");
+          },
+          () => {
+            // GPS niedostępny
+            start(52.24, 23.09, "Werpol (fallback)");
+          }
+        );
+      } else {
+        start(52.24, 23.09, "Werpol (fallback)");
+      }
+    }
+
+    initWeather();
 
     // 🔹 GLOBALNY REFRESH
-    window.refreshWeather = function(){
-      navigator.geolocation.getCurrentPosition(
-        pos => { fetchAll(pos.coords.latitude, pos.coords.longitude, "GPS"); },
-        err => { fetchAll(52.24, 23.09, "Werpol (fallback)"); }
-      );
-    };
-  });
-}
+    window.refreshWeather = function () {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            fetchAll(pos.coords.latitude, pos.coords.longitude, "GPS");
+          },
+          () => {
+            fetchAll(52.24, 23.09, "Werpol (fallback)");
+          }
+        );
+      } else {
+        fetchAll(52.24, 23.09, "Werpol (fallback)");
+      }
+    }
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
   async function loadWeatherAndAssist(){
