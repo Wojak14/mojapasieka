@@ -1,4 +1,4 @@
-const CACHE_NAME = "pasieka-2026-v6";
+const CACHE_NAME = "pasieka-2026-final-v1";
 
 const ASSETS = [
   "./",
@@ -11,10 +11,8 @@ const ASSETS = [
 // ================= INSTALL =================
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
-
   self.skipWaiting();
 });
 
@@ -29,7 +27,6 @@ self.addEventListener("activate", event => {
       )
     )
   );
-
   self.clients.claim();
 });
 
@@ -38,7 +35,7 @@ self.addEventListener("fetch", event => {
 
   const request = event.request;
 
-  // ===== API POGODY =====
+  // 🔹 API pogody (cache + fallback)
   if (request.url.includes("api.open-meteo.com")) {
     event.respondWith(
       fetch(request)
@@ -52,19 +49,20 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // ===== NAWIGACJA (PWA FIX) =====
+  // 🔹 NAWIGACJA (offline działa zawsze)
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request).catch(() => caches.match("./index.html"))
+      caches.match("./index.html")
     );
     return;
   }
 
-  // ===== RESZTA =====
+  // 🔹 RESZTA (cache first)
   event.respondWith(
     caches.match(request).then(cached => {
-      return cached || fetch(request).then(response => {
+      if (cached) return cached;
 
+      return fetch(request).then(response => {
         if (!response || response.status !== 200) return response;
 
         const clone = response.clone();

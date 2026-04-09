@@ -1587,29 +1587,23 @@ Notatki pasieki:<br>
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
-    <div>🍯 pachnący nektar / karmienie / syrop / ciasto / plastry</div>
-    <div>🥛 glukoza</div>
-    <div>🍬 cukier</div>
+    <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
     <div>🌬️ kwas</div>
     <div>🛡️ zakończenie leczenia</div>
     <div>🧴 dezynfekcja</div>
-    <div>🐛 odrobaczanie</div>
-    <div>🔍 przegląd / kontrola</div>
-    <div>📋 sprawdzenie / tabela</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rojka / robotnica</div>
+    <div>🔍 przegląd</div>
+    <div>📋 sprawdzenie</div>
+    <div>🕵️‍♂️ kontrola</div>
+    <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek / nektar / pyłek</div>
-    <div>🌺 kwiaty</div>
-    <div>🍎 sad</div>
-    <div>🌾 łąka</div>
+    <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerwiowanie</div>
+    <div>🐣 czerw</div>
     <div>🧱 ramki / węza</div>
     <div>📦 nadstawka</div>
-    <div>🌧 pogoda / deszcz</div>
+    <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
     <div>🌩️ burza</div>
     <div>❄️ śnieg / zima</div>
@@ -1617,26 +1611,14 @@ Notatki pasieki:<br>
     <div>🥵 gorąco / upał</div>
     <div>🌫️ pochmurno</div>
     <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie / lato</div>
+    <div>☀️ słonecznie</div>
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
-    <div>🌪️ tornado</div>
-    <div>🌀 huragan</div>
-    <div>🧹 miotła / odsklepianie</div>
+    <div>🧹 odsklepianie</div>
     <div>💨🪵 dymiarka</div>
-    <div>🪵 ramka / węza</div>
-    <div>⚠️ zagrożenie / choroba</div>
-    <div>🚨 alarm / ryzyko</div>
-    <div>🌱 wiosna</div>
-    <div>🌞 lato</div>
-    <div>🍂 jesień</div>
+    <div>🪵 węza</div>
     <div>🎉 nowy rok</div>
     <div>🎄 święta</div>
-    <div>📝 notatka</div>
-    <div>📆 plan</div>
-    <div>📊 grafik</div>
-    <div>📈 diagram</div>
-    <div>✅ kontrola jakości</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
@@ -1869,60 +1851,81 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // --- POGODA 5 DNI + DZIŚ ---
-  function loadWeather5Days() {
-    return new Promise((resolve)=>{
-      const weatherBox = document.getElementById("weather-data");
-      const forecastBox = document.getElementById("weather-forecast");
-      const beeBox = document.getElementById("bee-flight-alert");
-      const locationBox = document.getElementById("location-box");
+ function loadWeather5Days() {
+  return new Promise((resolve)=>{
 
-      function fetchWeather(lat, lon, label="Fallback") {
-        lat = Number(lat); lon = Number(lon);
-        if(isNaN(lat) || isNaN(lon)) { lat=52.24; lon=23.09; label="Werpol (fallback)"; }
-        if(locationBox) locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
+    const weatherBox = document.getElementById("weather-data");
+    const forecastBox = document.getElementById("weather-forecast");
+    const beeBox = document.getElementById("bee-flight-alert");
+    const locationBox = document.getElementById("location-box");
 
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
+    const CACHE_KEY = "weather_cache";
+    const CACHE_TIME = 2 * 60 * 1000; // 🔥 2 minuty
 
-        fetch(url).then(r=>r.json()).then(data=>{
-          const cw = data.current_weather || {temperature:0,windspeed:0};
-          const todayMax = data.daily.temperature_2m_max[0];
-          const todayMin = data.daily.temperature_2m_min[0];
-          const todayWind = data.daily.windspeed_10m_max[0];
-          const todayRain = data.daily.precipitation_probability_max[0];
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
 
-          const beeStatus = (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" : (cw.temperature>=12 ? "🐝 ŚREDNIE":"❄ SŁABE");
-          const color = beeStatus.includes("IDEALNE")?"green":beeStatus.includes("ŚREDNIE")?"orange":"red";
+    function render(data, label){
+      const cw = data.current_weather || {temperature:0,windspeed:0};
 
-          if(weatherBox) weatherBox.innerHTML = `
-            <b>🌡 Dzisiaj:</b><br>
-            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
-            💨 Wiatr: ${todayWind} km/h<br>
-            🌧 Szansa opadów: ${todayRain}%<br>
-            <span style="color:${color};font-weight:bold">${beeStatus}</span>
-          `;
+      if(locationBox) locationBox.innerHTML = `📍 ${label}`;
 
-          if(forecastBox){
-            const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 6 dni od jutra:</b><br>`;
-            for(let i=1;i<=6;i++){
-              const date=new Date(); date.setDate(date.getDate()+i);
-              const d=date.getDate().toString().padStart(2,"0");
-              const m=(date.getMonth()+1).toString().padStart(2,"0");
-              const tMax=data.daily.temperature_2m_max[i] ?? 0;
-              const tMin=data.daily.temperature_2m_min[i] ?? 0;
-              const wind=data.daily.windspeed_10m_max[i] ?? 0;
-              const rain=data.daily.precipitation_probability_max[i] ?? 0;
-              const status=(tMax>=15 && wind<20)?"🐝 IDEALNE":(tMax>=12?"🐝 ŚREDNIE":"❄ SŁABE");
-              const color=status.includes("IDEALNE")?"green":status.includes("ŚREDNIE")?"orange":"red";
-              html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}% <span style="color:${color};font-weight:bold">${status}</span></div>`;
-            }
-            forecastBox.innerHTML=html;
-          }
-
-          if(beeBox) beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
-          resolve({beeStatus});
-        }).catch(()=>resolve(null));
+      if(weatherBox){
+        weatherBox.innerHTML = `
+          <b>🌡 Dzisiaj:</b><br>
+          Temp: ${cw.temperature}°C<br>
+          💨 Wiatr: ${cw.windspeed} km/h
+        `;
       }
+
+      if(forecastBox){
+        const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
+        let html=`<b>📅 Prognoza 16 dni od jutra:</b><br>`;
+
+        for(let i=1;i<=16;i++){
+          const date=new Date();
+          date.setDate(date.getDate()+i);
+
+          const d=date.getDate().toString().padStart(2,"0");
+          const m=(date.getMonth()+1).toString().padStart(2,"0");
+
+          const tMax=data.daily.temperature_2m_max[i] ?? 0;
+          const tMin=data.daily.temperature_2m_min[i] ?? 0;
+          const rain=data.daily.precipitation_probability_max[i] ?? 0;
+
+          html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 🌧 ${rain}%</div>`;
+        }
+
+        forecastBox.innerHTML = html;
+      }
+
+      if(beeBox) beeBox.innerHTML = `🐝 Temp: ${cw.temperature}°C`;
+
+      resolve({beeStatus:"OK"});
+    }
+
+    function fetchWeather(lat, lon){
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&current_weather=true&timezone=auto`;
+
+      fetch(url)
+        .then(r=>r.json())
+        .then(data=>{
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            time: Date.now(),
+            data: data
+          }));
+          render(data,"GPS");
+        })
+        .catch(()=>{
+          if(cached) render(cached.data,"CACHE");
+          else resolve(null);
+        });
+    }
+
+    // 🔥 użyj cache jeśli świeży
+    if(cached && (Date.now() - cached.time < CACHE_TIME)){
+      render(cached.data,"CACHE");
+      return;
+    }
 
       if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
@@ -1948,8 +1951,8 @@ document.addEventListener("DOMContentLoaded", function() {
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
 
-    const feedingStart = new Date(2026,7,20);    // 20 sierpnia
-    const treatmentStart = new Date(2026,8,21);  // 21 września
+    const feedingStart = new Date(2026,8,20);    // 20 sierpnia
+    const treatmentStart = new Date(2026,9,21);  // 21 września
 
     for(let d=0; d<7; d++){
       const date = new Date();
@@ -2174,7 +2177,7 @@ function generateHiveAlerts(){
   Object.entries(data).forEach(([nr,d])=>{
     if(d.inspections===0) alerts.push(`🔍 Ul ${nr} bez przeglądu`);
     if(d.treatment===0) alerts.push(`💊 Ul ${nr} brak leczenia`);
-    if(d.swarm>0) alerts.push(`🐝 Ul ${nr} ryzyko rojki`);
+    if(d.swarm>0) alerts.push(`🐝 Ul ${nr} ryzyko rójki`);
   });
 
   box.innerHTML = alerts.length ? alerts.join("<br>") : "✅ Brak alertów";
@@ -2232,20 +2235,41 @@ function generateHoneyForecast(){
 }
 
   // --- URUCHOMIENIA STARTOWE ---
-  updateMarkers();
-  scrollToToday();
-  loadWeatherAndAssist();analyzeHivesPro();
-  generateHiveRanking();
-  generateHiveAlerts();
-  generateWeeklyPlanPro();
-  generateHoneyForecast();
-  runAIModule();
-  loadApiaryData();
-  hivesCountInput.addEventListener('change', generateFamilyNotes);
-  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
-  setInterval(()=>{ loadWeatherAndAssist(); },120000);
+updateMarkers();
+scrollToToday();
+loadWeatherAndAssist();
 
-});
+analyzeHivesPro();
+generateHiveRanking();
+generateHiveAlerts();
+generateWeeklyPlanPro();
+generateHoneyForecast();
+
+// 🔒 zabezpieczenia
+if(typeof runAIModule === "function") runAIModule();
+if(typeof loadApiaryData === "function") loadApiaryData();
+
+if(typeof hivesCountInput !== "undefined" && hivesCountInput){
+  hivesCountInput.addEventListener('change', generateFamilyNotes);
+}
+
+if(typeof saveFamilyNotesBtn !== "undefined" && saveFamilyNotesBtn){
+  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
+}
+
+// 🔥 AUTO REFRESH 2 MIN
+setInterval(()=>{
+  loadWeatherAndAssist();
+}, 120000);;
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .then(() => console.log("✅ SW działa"))
+      .catch(err => console.log("❌ SW błąd:", err));
+  });
+}
+
 </script>
 
 </body>
