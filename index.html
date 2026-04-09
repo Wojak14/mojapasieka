@@ -1865,20 +1865,63 @@ document.addEventListener("DOMContentLoaded", function() {
       if(locationBox) locationBox.innerHTML = `📍 ${label}`;
       if(weatherBox) weatherBox.innerHTML = `<b>🌡 Dzisiaj:</b><br>Temp: ${cw.temperature}°C<br>💨 Wiatr: ${cw.windspeed} km/h`;
       if(forecastBox){
-        const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-        let html=`<b>📅 Prognoza 16 dni od jutra:</b><br>`;
-        const maxDays = data.daily.temperature_2m_max.length;
-        for(let i=1;i<maxDays;i++){
-          const date=new Date();
-          date.setDate(date.getDate()+i);
-          const d=date.getDate().toString().padStart(2,"0");
-          const m=(date.getMonth()+1).toString().padStart(2,"0");
-          const tMax=data.daily.temperature_2m_max[i] ?? 0;
-          const tMin=data.daily.temperature_2m_min[i] ?? 0;
-          const rain=data.daily.precipitation_probability_max[i] ?? 0;
-          html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 🌧 ${rain}%</div>`;
-        }
-        forecastBox.innerHTML = html;
+
+
+let html=`<b>📅 Prognoza 16 dni od jutra:</b><br>`;
+
+// Funkcja wybiera odpowiednią ikonkę pogodową
+const weatherIcons = (rain, wind, tMax, tMin, snow, frost, fog, hail, weatherCode) => {
+  // grad
+  if(hail || weatherCode===99) return "🧊";          
+  // burza
+  if(weatherCode>=95) return "🌩️";     
+  // intensywny deszcz
+  if(rain>=70) return "🌧️";      
+  // lekki deszcz
+  if(rain>=30) return "🌦️";      
+  // śnieg
+  if(snow) return "❄️";          
+  // mróz
+  if(frost) return "🥶";         
+  // upał
+  if(tMax>=30) return "🥵";      
+  // mgła
+  if(fog) return "🌁";           
+  // słonecznie
+  if(rain<30 && tMax>15 && tMin>0) return "☀️"; 
+  // częściowe zachmurzenie
+  return "⛅";
+};
+
+for(let i = 1; i < maxDays; i++){
+  const date = new Date();
+  date.setDate(date.getDate() + i);
+
+  const d = date.getDate().toString().padStart(2,"0");
+  const m = (date.getMonth() + 1).toString().padStart(2,"0");
+
+  const tMax = data.daily.temperature_2m_max[i] ?? 0;
+  const tMin = data.daily.temperature_2m_min[i] ?? 0;
+  const rain = data.daily.precipitation_probability_max[i] ?? 0;
+  const wind = data.daily.windspeed_10m_max ? data.daily.windspeed_10m_max[i] : 0;
+  const weatherCode = data.daily.weathercode ? data.daily.weathercode[i] : 0;
+
+  // dodatkowe warunki
+  const snow = tMin <= 0 && rain > 20;
+  const frost = tMin <= 0;
+  const fog = weatherCode === 45 || weatherCode === 48;
+  const hail = false; // API nie zawsze zwraca grad
+
+  const icon = weatherIcons(rain, wind, tMax, tMin, snow, frost, fog, hail, weatherCode);
+
+  html += `<div style="margin:2px 0; font-size:14px;">
+    <b>${days[date.getDay()]} ${d}.${m}</b> 
+    ${icon} 🌡 ${tMin}-${tMax}°C 🌧 ${rain}% 💨 ${wind} km/h
+  </div>`;
+}
+
+forecastBox.innerHTML = html;
+
       }
       if(beeBox) beeBox.innerHTML = `🐝 Temp: ${cw.temperature}°C`;
       return {beeStatus:"OK"};
@@ -1896,13 +1939,14 @@ document.addEventListener("DOMContentLoaded", function() {
           resolve(render(data,"GPS"));
         }).catch(()=>{ if(cached) resolve(render(cached.data,"CACHE")); else resolve(null); });
       }
+
       if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
-          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude),
-          ()=>fetchWeather(52.24,23.09),
+          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
+          ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
           {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
         );
-      } else fetchWeather(52.24,23.09);
+      } else fetchWeather(52.24,23.09,"Werpol (fallback)");
     });
   }
 
