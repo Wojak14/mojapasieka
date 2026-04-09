@@ -1748,7 +1748,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const marker = document.createElement("span");
         marker.className = "note-marker";
 
-      let icons = [];
+        let icons = [];
         const text = noteData.toLowerCase();
         if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
@@ -1831,8 +1831,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(note && note.toLowerCase().includes(query)){
           const div = document.createElement('div');
           div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g,(m,n)=>
-            `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
-          )}`;
+            `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>` )}`;
           resultsContainer.appendChild(div);
           const [dd, mm] = key.split('.');
           const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
@@ -1851,89 +1850,59 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // --- POGODA 5 DNI + DZIŚ ---
- function loadWeather5Days() {
-  return new Promise((resolve)=>{
-
-    const weatherBox = document.getElementById("weather-data");
-    const forecastBox = document.getElementById("weather-forecast");
-    const beeBox = document.getElementById("bee-flight-alert");
-    const locationBox = document.getElementById("location-box");
-
+  async function loadWeather5Days() {
     const CACHE_KEY = "weather_cache";
-    const CACHE_TIME = 2 * 60 * 1000; // 🔥 2 minuty
-
-    const cached = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
-
-    function render(data, label){
+    const CACHE_TIME = 2 * 60 * 1000; // 2 min
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch(e){ cached=null; }
+    
+    function render(data,label){
+      const weatherBox = document.getElementById("weather-data");
+      const forecastBox = document.getElementById("weather-forecast");
+      const beeBox = document.getElementById("bee-flight-alert");
+      const locationBox = document.getElementById("location-box");
       const cw = data.current_weather || {temperature:0,windspeed:0};
-
       if(locationBox) locationBox.innerHTML = `📍 ${label}`;
-
-      if(weatherBox){
-        weatherBox.innerHTML = `
-          <b>🌡 Dzisiaj:</b><br>
-          Temp: ${cw.temperature}°C<br>
-          💨 Wiatr: ${cw.windspeed} km/h
-        `;
-      }
-
+      if(weatherBox) weatherBox.innerHTML = `<b>🌡 Dzisiaj:</b><br>Temp: ${cw.temperature}°C<br>💨 Wiatr: ${cw.windspeed} km/h`;
       if(forecastBox){
         const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
         let html=`<b>📅 Prognoza 16 dni od jutra:</b><br>`;
-
-        for(let i=1;i<=16;i++){
+        const maxDays = data.daily.temperature_2m_max.length;
+        for(let i=1;i<maxDays;i++){
           const date=new Date();
           date.setDate(date.getDate()+i);
-
           const d=date.getDate().toString().padStart(2,"0");
           const m=(date.getMonth()+1).toString().padStart(2,"0");
-
           const tMax=data.daily.temperature_2m_max[i] ?? 0;
           const tMin=data.daily.temperature_2m_min[i] ?? 0;
           const rain=data.daily.precipitation_probability_max[i] ?? 0;
-
           html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 🌧 ${rain}%</div>`;
         }
-
         forecastBox.innerHTML = html;
       }
-
       if(beeBox) beeBox.innerHTML = `🐝 Temp: ${cw.temperature}°C`;
-
-      resolve({beeStatus:"OK"});
+      return {beeStatus:"OK"};
     }
 
-    function fetchWeather(lat, lon){
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&current_weather=true&timezone=auto`;
-
-      fetch(url)
-        .then(r=>r.json())
-        .then(data=>{
-          localStorage.setItem(CACHE_KEY, JSON.stringify({
-            time: Date.now(),
-            data: data
-          }));
-          render(data,"GPS");
-        })
-        .catch(()=>{
-          if(cached) render(cached.data,"CACHE");
-          else resolve(null);
-        });
+    if(cached && (Date.now()-cached.time < CACHE_TIME)){
+      return render(cached.data,"CACHE");
     }
 
-    // 🔥 użyj cache jeśli świeży
-    if(cached && (Date.now() - cached.time < CACHE_TIME)){
-      render(cached.data,"CACHE");
-      return;
-    }
-
+    return new Promise(resolve=>{
+      function fetchWeather(lat,lon){
+        const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&current_weather=true&timezone=auto`;
+        fetch(url).then(r=>r.json()).then(data=>{
+          localStorage.setItem(CACHE_KEY,JSON.stringify({time:Date.now(),data}));
+          resolve(render(data,"GPS"));
+        }).catch(()=>{ if(cached) resolve(render(cached.data,"CACHE")); else resolve(null); });
+      }
       if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(
-          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
-          ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
+          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude),
+          ()=>fetchWeather(52.24,23.09),
           {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
         );
-      } else fetchWeather(52.24,23.09,"Werpol (fallback)");
+      } else fetchWeather(52.24,23.09);
     });
   }
 
@@ -1943,7 +1912,7 @@ document.addEventListener("DOMContentLoaded", function() {
     updateSmartAssistant(weatherData);
   }
 
- function updateSmartAssistant(weatherData){
+  function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
@@ -1951,8 +1920,8 @@ document.addEventListener("DOMContentLoaded", function() {
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
 
-    const feedingStart = new Date(2026,8,20);    // 20 sierpnia
-    const treatmentStart = new Date(2026,9,21);  // 21 września
+    const feedingStart = new Date(2026,8,20);
+    const treatmentStart = new Date(2026,9,21);
 
     for(let d=0; d<7; d++){
       const date = new Date();
@@ -1967,37 +1936,22 @@ document.addEventListener("DOMContentLoaded", function() {
       if(note.includes("rój")) swarm=true;
       if(note.includes("miód")) honey=true;
 
-const dayNumber = date.getDate(); // numer dnia
+      const dayNumber = date.getDate();
+      if(dayNumber%2===0 && !note.includes("przegląd")) dayTasks.push("Wykonaj przegląd uli");
+      if(date>=feedingStart && !note.includes("karmienie")) dayTasks.push("Sprawdź karmienie pszczół");
+      if(date>=treatmentStart && !note.includes("leczenie")) dayTasks.push("Rozważ leczenie warrozy");
+      if(dayNumber%2!==0 && !note.includes("ramka") && !note.includes("węza") && !note.includes("węzę")) dayTasks.push("Sprawdź węzę i ramki");
 
-// 🔹 PRZEGLĄDY tylko w dni parzyste
-if(dayNumber % 2 === 0){
-  if(!note.includes("przegląd")) dayTasks.push("Wykonaj przegląd uli");
-}
-
-// 🔹 KARMIENIE
-if(!note.includes("karmienie") && date >= feedingStart)
-  dayTasks.push("Sprawdź karmienie pszczół");
-
-// 🔹 LECZENIE
-if(!note.includes("leczenie") && date >= treatmentStart)
-  dayTasks.push("Rozważ leczenie warrozy");
-
-// 🔹 RAMKI tylko w dni nieparzyste
-if(dayNumber % 2 !== 0){
-  if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
-    dayTasks.push("Sprawdź węzę i ramki");
-}
       if(dayTasks.length>0) tasksByDay[key]=dayTasks.join(", ");
     }
 
-    // Swarm risk
     let swarmRisk=0;
     const month=today.getMonth()+1;
     if(month==4) swarmRisk+=20;
     else if(month==5) swarmRisk+=40;
     else if(month==6) swarmRisk+=30;
     if(inspections==0) swarmRisk+=30;
-    if(inspections==1) swarmRisk+=20;
+    else if(inspections==1) swarmRisk+=20;
     if(swarm) swarmRisk+=30;
     if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
     if(swarmRisk>100) swarmRisk=100;
@@ -2007,7 +1961,6 @@ if(dayNumber % 2 !== 0){
     else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
     else swarmText="✅ NISKIE ryzyko rojki";
 
-    // Asystent summary
     let summary=[];
     summary.push("🔍 Przeglądy: "+inspections);
     summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
@@ -2023,8 +1976,6 @@ if(dayNumber % 2 !== 0){
     }
 
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
-
-    // Kliknięcie w zadanie - oznacza jako wykonane
     box.querySelectorAll('div[data-key]').forEach(div=>{
       div.addEventListener('click', ()=>{
         const key = div.dataset.key;
@@ -2042,7 +1993,6 @@ if(dayNumber % 2 !== 0){
     if(!resultsContainer) return;
     resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
     let found = false;
-
     for(let i=0;i<localStorage.length;i++){
       const key = localStorage.key(i);
       if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
@@ -2051,225 +2001,67 @@ if(dayNumber % 2 !== 0){
         found = true;
         const div = document.createElement('div');
         div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g, (m,n)=>
-          `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
-        )}`;
+          `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>` )}`;
         div.style.marginBottom = "5px";
         resultsContainer.appendChild(div);
       }
     }
-
-    if(!found){
-      resultsContainer.innerHTML += "Brak wpisów dla tego ula";
-    }
+    if(!found) resultsContainer.innerHTML += "Brak wpisów dla tego ula";
   };
 
-// =============================
-// 🧠 AI PASIEKA PRO MAX
-// =============================
+  // =============================
+  // 🧠 AI PASIEKA PRO MAX
+  // =============================
 
-// 📊 ZBIERANIE DANYCH
-function getHiveData(){
-
-  let hiveStats = {};
-
-  for(let i=0;i<localStorage.length;i++){
-    const key = localStorage.key(i);
-    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
-    const note = (localStorage.getItem(key)||"").toLowerCase();
-    const matches = note.match(/ul\s*(\d+)/g);
-
-    if(matches){
-      matches.forEach(m=>{
-        const nr = m.match(/\d+/)[0];
-
-        if(!hiveStats[nr]){
-          hiveStats[nr] = {
-            inspections:0,
-            feeding:0,
-            treatment:0,
-            swarm:0,
-            honey:0,
-            score:0
-          };
-        }
-
-        if(note.includes("przegląd")) hiveStats[nr].inspections++;
-        if(note.includes("karmienie")) hiveStats[nr].feeding++;
-        if(note.includes("leczenie")) hiveStats[nr].treatment++;
-        if(note.includes("rój")) hiveStats[nr].swarm++;
-        if(note.includes("miód")) hiveStats[nr].honey++;
-      });
+  // 📊 ZBIERANIE DANYCH
+  function getHiveData(){
+    let hiveStats = {};
+    for(let i=0;i<localStorage.length;i++){
+      const key = localStorage.key(i);
+      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+      const note = (localStorage.getItem(key)||"").toLowerCase();
+      const matches = note.match(/ul\s*(\d+)/g);
+      if(matches){
+        matches.forEach(m=>{
+          const nr = m.match(/\d+/)[0];
+          if(!hiveStats[nr]) hiveStats[nr]={inspections:0,feeding:0,treatment:0,swarm:0,honey:0,score:0};
+          if(note.includes("przegląd")) hiveStats[nr].inspections++;
+          if(note.includes("karmienie")) hiveStats[nr].feeding++;
+          if(note.includes("leczenie")) hiveStats[nr].treatment++;
+          if(note.includes("rój")) hiveStats[nr].swarm++;
+          if(note.includes("miód")) hiveStats[nr].honey++;
+        });
+      }
     }
+    return hiveStats;
   }
 
-  return hiveStats;
-}
-
-// 🐝 ANALIZA ULI
-function analyzeHivesPro(){
-
-  const box = document.getElementById("hive-analysis");
-  if(!box) return;
-
-  const data = getHiveData();
-  if(Object.keys(data).length===0){
-    box.innerHTML = "Brak danych";
-    return;
+  // 🐝 ANALIZA ULI
+  function analyzeHivesPro(){
+    const box = document.getElementById("hive-analysis");
+    if(!box) return;
+    const data = getHiveData();
+    if(Object.keys(data).length===0){ box.innerHTML = "Brak danych"; return; }
+    let html="";
+    Object.entries(data).forEach(([nr,d])=>{
+      let score = (d.inspections>0?30:0)+(d.feeding>0?20:0)+(d.treatment>0?20:0)+(d.honey>0?20:0)-(d.swarm>0?20:0);
+      d.score = score;
+      let status="", color="";
+      if(score>=70){status="🟢 SILNY";color="green";}
+      else if(score>=40){status="🟡 ŚREDNI";color="orange";}
+      else{status="🔴 SŁABY";color="red";}
+      html+=`<div>Ul ${nr}: ${status} (score: ${score})</div>`;
+    });
+    box.innerHTML=html;
   }
 
-  let html="";
-
-  Object.entries(data).forEach(([nr,d])=>{
-
-    let score = 0;
-    if(d.inspections>0) score+=30;
-    if(d.feeding>0) score+=20;
-    if(d.treatment>0) score+=20;
-    if(d.honey>0) score+=20;
-    if(d.swarm>0) score-=20;
-
-    d.score = score;
-
-    let status="", color="";
-    if(score>=70){status="🟢 SILNY";color="green";}
-    else if(score>=40){status="🟡 ŚREDNI";color="orange";}
-    else{status="🔴 SŁABY";color="red";}
-
-    html+=`<div><b>Ul ${nr}</b> → <span style="color:${color};font-weight:bold">${status}</span> (score: ${score})</div>`;
-  });
-
-  box.innerHTML = html;
-}
-
-// 🏆 RANKING
-function generateHiveRanking(){
-
-  const box = document.getElementById("hive-ranking");
-  if(!box) return;
-
-  const data = Object.entries(getHiveData());
-
-  data.forEach(([nr,d])=>{
-    d.score = (d.inspections*30)+(d.feeding*20)+(d.treatment*20)+(d.honey*20)-(d.swarm*20);
-  });
-
-  data.sort((a,b)=>b[1].score - a[1].score);
-
-  let html="";
-  data.forEach(([nr,d],i)=>{
-    html+=`<div>${i+1}. 🐝 Ul ${nr} → ${d.score} pkt</div>`;
-  });
-
-  box.innerHTML = html;
-}
-
-// 🚨 ALERTY
-function generateHiveAlerts(){
-
-  const box = document.getElementById("hive-alerts");
-  if(!box) return;
-
-  const data = getHiveData();
-
-  let alerts=[];
-
-  Object.entries(data).forEach(([nr,d])=>{
-    if(d.inspections===0) alerts.push(`🔍 Ul ${nr} bez przeglądu`);
-    if(d.treatment===0) alerts.push(`💊 Ul ${nr} brak leczenia`);
-    if(d.swarm>0) alerts.push(`🐝 Ul ${nr} ryzyko rójki`);
-  });
-
-  box.innerHTML = alerts.length ? alerts.join("<br>") : "✅ Brak alertów";
-}
-
-// 🤖 PLAN 7 DNI
-function generateWeeklyPlanPro(){
-
-  const box = document.getElementById("ai-plan");
-  if(!box) return;
-
-  const today = new Date();
-  let html="";
-
-  for(let i=0;i<7;i++){
-
-    const date = new Date();
-    date.setDate(today.getDate()+i);
-
-    const d = String(date.getDate()).padStart(2,"0");
-    const m = String(date.getMonth()+1).padStart(2,"0");
-    const key = d+"."+m+".2026";
-
-    const note = (localStorage.getItem(key)||"").toLowerCase();
-
-    let tasks=[];
-
-    if(!note.includes("przegląd")) tasks.push("🔍 przegląd");
-    if(!note.includes("karmienie")) tasks.push("🍯 karmienie");
-    if(!note.includes("leczenie")) tasks.push("💊 leczenie");
-
-    if(tasks.length===0) tasks.push("✅ OK");
-
-    html+=`<div><b>${key}</b> → ${tasks.join(", ")}</div>`;
-  }
-
-  box.innerHTML = html;
-}
-
-// 🍯 PROGNOZA MIODU
-function generateHoneyForecast(){
-
-  const box = document.getElementById("honey-forecast");
-  if(!box) return;
-
-  const data = getHiveData();
-
-  let total=0;
-
-  Object.values(data).forEach(d=>{
-    total += d.honey * 5; // 1 wpis ≈ 5kg
-  });
-
-  box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
-}
-
-  // --- URUCHOMIENIA STARTOWE ---
-updateMarkers();
-scrollToToday();
-loadWeatherAndAssist();
-
-analyzeHivesPro();
-generateHiveRanking();
-generateHiveAlerts();
-generateWeeklyPlanPro();
-generateHoneyForecast();
-
-// 🔒 zabezpieczenia
-if(typeof runAIModule === "function") runAIModule();
-if(typeof loadApiaryData === "function") loadApiaryData();
-
-if(typeof hivesCountInput !== "undefined" && hivesCountInput){
-  hivesCountInput.addEventListener('change', generateFamilyNotes);
-}
-
-if(typeof saveFamilyNotesBtn !== "undefined" && saveFamilyNotesBtn){
-  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
-}
-
-// 🔥 AUTO REFRESH 2 MIN
-setInterval(()=>{
+  // --- INICJALIZACJA ---
+  updateMarkers();
+  scrollToToday();
   loadWeatherAndAssist();
-}, 120000);;
+  analyzeHivesPro();
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./service-worker.js")
-      .then(() => console.log("✅ SW działa"))
-      .catch(err => console.log("❌ SW błąd:", err));
-  });
-}
-
+});
 </script>
 
 </body>

@@ -1,9 +1,11 @@
-const CACHE_NAME = "pasieka-2026-final-v1";
+const CACHE_NAME = "pasieka-2026-final-v2";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./app.js",
+  "./style.css",
   "./bee_icon_192x192.png",
   "./bee_icon_512x512.png"
 ];
@@ -32,7 +34,6 @@ self.addEventListener("activate", event => {
 
 // ================= FETCH =================
 self.addEventListener("fetch", event => {
-
   const request = event.request;
 
   // 🔹 API pogody (cache + fallback)
@@ -49,7 +50,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // 🔹 NAWIGACJA (offline działa zawsze)
+  // 🔹 Nawigacja SPA (offline fallback do index.html)
   if (request.mode === "navigate") {
     event.respondWith(
       caches.match("./index.html")
@@ -57,7 +58,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // 🔹 RESZTA (cache first)
+  // 🔹 Reszta plików (cache first)
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
@@ -69,6 +70,11 @@ self.addEventListener("fetch", event => {
         caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
 
         return response;
+      }).catch(() => {
+        // fallback dla obrazów i ikon
+        if (request.destination === "image") {
+          return caches.match("./bee_icon_192x192.png");
+        }
       });
     })
   );
