@@ -1,11 +1,9 @@
-const CACHE_NAME = "pasieka-2026-final-v2";
+const CACHE_NAME = "pasieka-2026-v6";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./app.js",
-  "./style.css",
   "./bee_icon_192x192.png",
   "./bee_icon_512x512.png"
 ];
@@ -13,8 +11,10 @@ const ASSETS = [
 // ================= INSTALL =================
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
   );
+
   self.skipWaiting();
 });
 
@@ -29,14 +29,16 @@ self.addEventListener("activate", event => {
       )
     )
   );
+
   self.clients.claim();
 });
 
 // ================= FETCH =================
 self.addEventListener("fetch", event => {
+
   const request = event.request;
 
-  // 🔹 API pogody (cache + fallback)
+  // ===== API POGODY =====
   if (request.url.includes("api.open-meteo.com")) {
     event.respondWith(
       fetch(request)
@@ -50,31 +52,25 @@ self.addEventListener("fetch", event => {
     return;
   }
 
-  // 🔹 Nawigacja SPA (offline fallback do index.html)
+  // ===== NAWIGACJA (PWA FIX) =====
   if (request.mode === "navigate") {
     event.respondWith(
-      caches.match("./index.html")
+      fetch(request).catch(() => caches.match("./index.html"))
     );
     return;
   }
 
-  // 🔹 Reszta plików (cache first)
+  // ===== RESZTA =====
   event.respondWith(
     caches.match(request).then(cached => {
-      if (cached) return cached;
+      return cached || fetch(request).then(response => {
 
-      return fetch(request).then(response => {
         if (!response || response.status !== 200) return response;
 
         const clone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
 
         return response;
-      }).catch(() => {
-        // fallback dla obrazów i ikon
-        if (request.destination === "image") {
-          return caches.match("./bee_icon_192x192.png");
-        }
       });
     })
   );
