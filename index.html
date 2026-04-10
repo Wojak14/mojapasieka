@@ -176,32 +176,31 @@ margin-bottom:15px;
   </div>
 
   <div id="location-box" style="
-  background:#e3f2fd;
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
-  font-size:14px;
+    background:#e3f2fd;
+    padding:10px;
+    border-radius:10px;
+    margin-top:10px;
+    font-size:14px;
   ">
     📍 Lokalizacja pasieki: sprawdzanie...
   </div>
 
   <div id="weather-forecast" style="
-  margin-top:8px;
-  font-size:14px;
+    margin-top:8px;
+    font-size:14px;
   "></div>
 
   <div id="bee-flight-alert" style="
-  margin-top:10px;
-  padding:8px;
-  background:#e8f5e9;
-  border-radius:8px;
-  font-weight:bold;
+    margin-top:10px;
+    padding:8px;
+    background:#e8f5e9;
+    border-radius:8px;
+    font-weight:bold;
   ">
     🐝 Sprawdzanie warunków lotu pszczół...
   </div>
 
 </div>
-
 
 <!-- 🌼 SEZON -->
 <div id="season-info" style="
@@ -283,29 +282,6 @@ font-weight:bold;
 - ⬛ - zimowla, nie otwierać uli, mozliwa jedynie kontrola zewnętrzna i kontrola osypu
 </div>
 
-<!-- Panel alertów, rojka, asystent -->
-<div id="alerts-box-01">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-01">Brak alertów na dziś</div>
-</div>
-
-<div id="swarm-box-01"></div>
-<div id="assistant-box-01"></div>
-
-<!-- Licznik miodu -->
-<div id="inspection-honey-01">
-  <div id="inspection-count-01">✅ Kontrole wykonane w tym miesiącu: 0</div>
-</div>
-
-
-<!-- Notatki dnia -->
-<div id="day-note-box-01">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-01" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button type="button" onclick="saveNote('01')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -318,7 +294,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -346,6 +322,29 @@ font-weight:bold;
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
   </div>
+</div>
+
+<!-- Panel alertów, rojka, asystent -->
+<div id="alerts-box-01">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-01">Brak alertów na dziś</div>
+</div>
+
+<div id="swarm-box-01"></div>
+<div id="assistant-box-01"></div>
+
+<!-- Licznik miodu -->
+<div id="inspection-honey-01">
+  <div id="inspection-count-01">✅ Kontrole wykonane w tym miesiącu: 0</div>
+</div>
+
+
+<!-- Notatki dnia -->
+<div id="day-note-box-01">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-01" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button type="button" onclick="saveNote('01')">Zapisz notatkę</button>
 </div>
 
 
@@ -416,29 +415,6 @@ font-weight:bold;
 – 🟧 dni pomarańczowe: wzrost ryzyka rojliwości przy silnych rodzinach,⬛- zimowla 
 </div>
 
-<!-- Alerty pasieczne -->
-<div id="alerts-box-02">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-02">Brak alertów na dziś</div>
-</div>
-
-<div id="swarm-box-02"></div>
-<div id="assistant-box-02"></div>
-
-
-<!-- Licznik miodu -->
-<div id="inspection-honey-02">
-  <div id="inspection-count-02">✅ Kontrole wykonane w tym miesiącu: 0</div>
-</div>
-
-<!-- Notatki dnia -->
-<div id="day-note-box-02">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-02" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button onclick="saveNote('02')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -451,7 +427,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -481,6 +457,28 @@ font-weight:bold;
   </div>
 </div>
 
+<!-- Alerty pasieczne -->
+<div id="alerts-box-02">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-02">Brak alertów na dziś</div>
+</div>
+
+<div id="swarm-box-02"></div>
+<div id="assistant-box-02"></div>
+
+
+<!-- Licznik miodu -->
+<div id="inspection-honey-02">
+  <div id="inspection-count-02">✅ Kontrole wykonane w tym miesiącu: 0</div>
+</div>
+
+<!-- Notatki dnia -->
+<div id="day-note-box-02">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-02" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote('02')">Zapisz notatkę</button>
+</div>
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -576,28 +574,6 @@ font-weight:bold;
 – 🟧 Dni z podziałem koloru = prace + obserwacja rojowa
 </div>
 
-<!-- Alerty pasieczne -->
-<div id="alerts-box-03">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-03">Brak alertów na dziś</div>
-</div>
-
-<div id="swarm-box-03"></div>
-<div id="assistant-box-03"></div>
-
-<!-- Licznik miodu -->
-<div id="inspection-honey-03">
-  <div id="inspection-count-03">✅ Kontrole wykonane w tym miesiącu: 0</div>
-</div>
-
-<!-- Notatki dnia -->
-<div id="day-note-box-03">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-03" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button onclick="saveNote('03')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -610,7 +586,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -638,6 +614,28 @@ font-weight:bold;
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
   </div>
+</div>
+
+<!-- Alerty pasieczne -->
+<div id="alerts-box-03">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-03">Brak alertów na dziś</div>
+</div>
+
+<div id="swarm-box-03"></div>
+<div id="assistant-box-03"></div>
+
+<!-- Licznik miodu -->
+<div id="inspection-honey-03">
+  <div id="inspection-count-03">✅ Kontrole wykonane w tym miesiącu: 0</div>
+</div>
+
+<!-- Notatki dnia -->
+<div id="day-note-box-03">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-03" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote('03')">Zapisz notatkę</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -747,12 +745,6 @@ font-weight:bold;
 – 🟧 Dni dwukolorowe = prace + rojliwość
 </div>
 
-<!-- Alerty pasieczne -->
-<div id="alerts-box-04">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-04">Brak alertów na dziś</div>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -765,7 +757,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -794,6 +786,13 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
   </div>
 </div>
+
+<!-- Alerty pasieczne -->
+<div id="alerts-box-04">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-04">Brak alertów na dziś</div>
+</div>
+
 
 <div id="swarm-box-04"></div>
 <div id="assistant-box-04"></div>
@@ -941,29 +940,6 @@ font-weight:bold;
 – 🟨 Miodobrania mogą występować razem z rojkami
 </div>
 
-<!-- Alerty pasieczne -->
-<div id="alerts-box-05">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-05">Brak alertów na dziś</div>
-</div>
-
-<div id="swarm-box-05"></div>
-<div id="assistant-box-05"></div>
-
-<!-- Licznik miodu -->
-<div id="inspection-honey-05">
-  <div id="inspection-count-05">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  <div id="honey-total-05">🫙 Zebrany miód w 2026: 0 kg</div>
-</div>
-
-<!-- Notatki dnia -->
-<div id="day-note-box-05">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-05" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button onclick="saveNote('05')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -976,7 +952,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1004,6 +980,29 @@ font-weight:bold;
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
   </div>
+</div>
+
+<!-- Alerty pasieczne -->
+<div id="alerts-box-05">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-05">Brak alertów na dziś</div>
+</div>
+
+<div id="swarm-box-05"></div>
+<div id="assistant-box-05"></div>
+
+<!-- Licznik miodu -->
+<div id="inspection-honey-05">
+  <div id="inspection-count-05">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  <div id="honey-total-05">🫙 Zebrany miód w 2026: 0 kg</div>
+</div>
+
+<!-- Notatki dnia -->
+<div id="day-note-box-05">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-05" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote('05')">Zapisz notatkę</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1083,30 +1082,6 @@ font-weight:bold;
 – Po 15 czerwca pasieka się stabilizuje
 </div>
 
-<!-- Alerty pasieczne -->
-<div id="alerts-box-06">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-06">Brak alertów na dziś</div>
-</div>
-
-<div id="swarm-box-06"></div>
-<div id="assistant-box-06"></div>
-
-
-<!-- Licznik miodu -->
-<div id="inspection-honey-06">
-  <div id="inspection-count-06">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  <div id="honey-total-06">🫙 Zebrany miód w 2026: 0 kg</div>
-</div>
-
-<!-- Notatki dnia -->
-<div id="day-note-box-06">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-06" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button onclick="saveNote('06')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -1119,7 +1094,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1149,6 +1124,29 @@ font-weight:bold;
   </div>
 </div>
 
+<!-- Alerty pasieczne -->
+<div id="alerts-box-06">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-06">Brak alertów na dziś</div>
+</div>
+
+<div id="swarm-box-06"></div>
+<div id="assistant-box-06"></div>
+
+
+<!-- Licznik miodu -->
+<div id="inspection-honey-06">
+  <div id="inspection-count-06">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  <div id="honey-total-06">🫙 Zebrany miód w 2026: 0 kg</div>
+</div>
+
+<!-- Notatki dnia -->
+<div id="day-note-box-06">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-06" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote('06')">Zapisz notatkę</button>
+</div>
 
 </div> <!-- zamknięcie miesiąca -->
 <div class="page-break"></div>
@@ -1218,29 +1216,6 @@ font-weight:bold;
     – Przygotowanie do późnych pożytków
  </div>
 
-  <!-- Panel alertów, rojka, asystent -->
-  <div id="alerts-box-07">
-    <strong>Alerty pasieczne:</strong>
-    <div id="alerts-list-07">Brak alertów na dziś</div>
-  </div>
-
-  <div id="swarm-box-07"></div>
-  <div id="assistant-box-07"></div>
-
-  <!-- Licznik miodu -->
-  <div id="inspection-honey-07">
-    <div id="inspection-count-07">✅ Kontrole wykonane w tym miesiącu: 0</div>
-    <div id="honey-total-07">🫙 Zebrany miód w 2026: 0 kg</div>
-  </div>
-
-  <!-- Notatki dnia -->
-  <div id="day-note-box-07">
-    <h3>Notatka dnia</h3>
-    <textarea id="notes-07" rows="6" style="width:100%;"></textarea>
-    <br><br>
-    <button onclick="saveNote('07')">Zapisz notatkę</button>
-  </div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -1253,7 +1228,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1282,6 +1257,29 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
   </div>
 </div>
+
+  <!-- Panel alertów, rojka, asystent -->
+  <div id="alerts-box-07">
+    <strong>Alerty pasieczne:</strong>
+    <div id="alerts-list-07">Brak alertów na dziś</div>
+  </div>
+
+  <div id="swarm-box-07"></div>
+  <div id="assistant-box-07"></div>
+
+  <!-- Licznik miodu -->
+  <div id="inspection-honey-07">
+    <div id="inspection-count-07">✅ Kontrole wykonane w tym miesiącu: 0</div>
+    <div id="honey-total-07">🫙 Zebrany miód w 2026: 0 kg</div>
+  </div>
+
+  <!-- Notatki dnia -->
+  <div id="day-note-box-07">
+    <h3>Notatka dnia</h3>
+    <textarea id="notes-07" rows="6" style="width:100%;"></textarea>
+    <br><br>
+    <button onclick="saveNote('07')">Zapisz notatkę</button>
+  </div>
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -1357,28 +1355,6 @@ font-weight:bold;
     – Brak nastroju rojowego (rodziny wygaszone)
   </div>
 
-<!-- Panel alertów, rojka, asystent -->
-<div id="alerts-box-08">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-08">Brak alertów na dziś</div>
-</div>
-
-<div id="swarm-box-08"></div>
-<div id="assistant-box-08"></div>
-
-<!-- Licznik miodu -->
-<div id="inspection-honey-08">
-  <div id="inspection-count-08">✅ Kontrole wykonane w tym miesiącu: 0</div>
-</div>
-
-<!-- Notatki dnia -->
-<div id="day-note-box-08">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-08" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button onclick="saveNote('08')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -1391,7 +1367,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1421,6 +1397,27 @@ font-weight:bold;
   </div>
 </div>
 
+<!-- Panel alertów, rojka, asystent -->
+<div id="alerts-box-08">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-08">Brak alertów na dziś</div>
+</div>
+
+<div id="swarm-box-08"></div>
+<div id="assistant-box-08"></div>
+
+<!-- Licznik miodu -->
+<div id="inspection-honey-08">
+  <div id="inspection-count-08">✅ Kontrole wykonane w tym miesiącu: 0</div>
+</div>
+
+<!-- Notatki dnia -->
+<div id="day-note-box-08">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-08" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote('08')">Zapisz notatkę</button>
+</div>
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -1492,29 +1489,6 @@ font-weight:bold;
 – Kontrole i przeglądy uli regularnie<br>
 </div>
 
-<!-- Panel alertów -->
-<div id="alerts-box-09">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-09">Brak alertów na dziś</div>
-</div>
-
-<!-- Panele dodatkowe -->
-<div id="swarm-box-09"></div>
-<div id="assistant-box-09"></div>
-
-<!-- Licznik miodu -->
-<div id="inspection-honey-09">
-  <div id="inspection-count-09">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  </div>
-
-<!-- Notatki dnia -->
-<div id="day-note-box-09">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-09" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button onclick="saveNote('09')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -1527,7 +1501,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1555,6 +1529,29 @@ font-weight:bold;
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
   </div>
+</div>
+
+<!-- Panel alertów -->
+<div id="alerts-box-09">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-09">Brak alertów na dziś</div>
+</div>
+
+<!-- Panele dodatkowe -->
+<div id="swarm-box-09"></div>
+<div id="assistant-box-09"></div>
+
+<!-- Licznik miodu -->
+<div id="inspection-honey-09">
+  <div id="inspection-count-09">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  </div>
+
+<!-- Notatki dnia -->
+<div id="day-note-box-09">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-09" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote('09')">Zapisz notatkę</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1629,28 +1626,6 @@ font-weight:bold;
 – Dni ciepłe (obloty) przy sprzyjającej pogodzie<br>
 </div>
 
-<!-- Panel alertów -->
-<div id="alerts-box-10">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-10">Brak alertów na dziś</div>
-</div>
-
-<div id="swarm-box-10"></div>
-<div id="assistant-box-10"></div>
-
-<!-- Licznik miodu -->
-<div id="inspection-honey-10">
-  <div id="inspection-count-10">✅ Kontrole wykonane w tym miesiącu: 0</div>
-</div>
-
-<!-- Notatki dnia -->
-<div id="day-note-box-10">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-10" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button onclick="saveNote('10')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -1663,7 +1638,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1691,6 +1666,28 @@ font-weight:bold;
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
   </div>
+</div>
+
+<!-- Panel alertów -->
+<div id="alerts-box-10">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-10">Brak alertów na dziś</div>
+</div>
+
+<div id="swarm-box-10"></div>
+<div id="assistant-box-10"></div>
+
+<!-- Licznik miodu -->
+<div id="inspection-honey-10">
+  <div id="inspection-count-10">✅ Kontrole wykonane w tym miesiącu: 0</div>
+</div>
+
+<!-- Notatki dnia -->
+<div id="day-note-box-10">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-10" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote('10')">Zapisz notatkę</button>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1767,30 +1764,6 @@ font-weight:bold;
 – Po zakończeniu leczenia pełna zimowla<br>
 </div>
 
-<!-- Panel alertów -->
-<div id="alerts-box-11">
-  <strong>Alerty pasieczne:</strong>
-  <div id="alerts-list-11">Brak alertów na dziś</div>
-</div>
-
-<!-- Panel rojka / asystent -->
-<div id="swarm-box-11"></div>
-<div id="assistant-box-11"></div>
-
-
-<!-- Licznik miodu i kontroli -->
-<div id="inspection-honey-11">
-  <div id="inspection-count-11">✅ Kontrole wykonane w tym miesiącu: 0</div>
-</div>
-
-<!-- Notatki dnia -->
-<div id="day-note-box-11">
-  <h3>Notatka dnia</h3>
-  <textarea id="notes-11" rows="6" style="width:100%;"></textarea>
-  <br><br>
-  <button onclick="saveNote('11')">Zapisz notatkę</button>
-</div>
-
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
@@ -1803,7 +1776,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1833,6 +1806,29 @@ font-weight:bold;
   </div>
 </div>
 
+<!-- Panel alertów -->
+<div id="alerts-box-11">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-11">Brak alertów na dziś</div>
+</div>
+
+<!-- Panel rojka / asystent -->
+<div id="swarm-box-11"></div>
+<div id="assistant-box-11"></div>
+
+
+<!-- Licznik miodu i kontroli -->
+<div id="inspection-honey-11">
+  <div id="inspection-count-11">✅ Kontrole wykonane w tym miesiącu: 0</div>
+</div>
+
+<!-- Notatki dnia -->
+<div id="day-note-box-11">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-11" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote('11')">Zapisz notatkę</button>
+</div>
 
 <!-- Panel sezonowy / informacje dodatkowe -->
 <div id="season-info-11"></div>
@@ -1907,29 +1903,6 @@ font-weight:bold;
 – Pełna zimowla<br>
 – Kontrola osypu i obserwacja zewnętrzna uli
 </div>
-<!-- Panel alertów -->
-  <div id="alerts-box-12">
-    <strong>Alerty pasieczne:</strong>
-    <div id="alerts-list-12">Brak alertów na dziś</div>
-  </div>
-
-  <!-- Panel rojka / asystent -->
-  <div id="swarm-box-12"></div>
-  <div id="assistant-box-12"></div>
-
-
-  <!-- Licznik miodu i kontroli -->
-  <div id="inspection-honey-12">
-    <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  </div>
-
-  <!-- Notatki dnia -->
-  <div id="day-note-box-12">
-    <h3>Notatka dnia</h3>
-    <textarea id="notes-12" rows="6" style="width:100%;"></textarea>
-    <br><br>
-    <button onclick="saveNote('12')">Zapisz notatkę</button>
-  </div>
 
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
@@ -1943,7 +1916,7 @@ font-weight:bold;
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1973,6 +1946,29 @@ font-weight:bold;
   </div>
 </div>
 
+<!-- Panel alertów -->
+  <div id="alerts-box-12">
+    <strong>Alerty pasieczne:</strong>
+    <div id="alerts-list-12">Brak alertów na dziś</div>
+  </div>
+
+  <!-- Panel rojka / asystent -->
+  <div id="swarm-box-12"></div>
+  <div id="assistant-box-12"></div>
+
+
+  <!-- Licznik miodu i kontroli -->
+  <div id="inspection-honey-12">
+    <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  </div>
+
+  <!-- Notatki dnia -->
+  <div id="day-note-box-12">
+    <h3>Notatka dnia</h3>
+    <textarea id="notes-12" rows="6" style="width:100%;"></textarea>
+    <br><br>
+    <button onclick="saveNote('12')">Zapisz notatkę</button>
+  </div>
 
 </div> <!-- KONIEC month-panels-12 -->
 
@@ -2099,7 +2095,7 @@ Notatki pasieki:<br>
     <div>🧴 dezynfekcja</div>
     <div>🔍 przegląd</div>
     <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ kontrola</div>
+    <div>🕵️‍♂️ inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -2417,6 +2413,20 @@ document.addEventListener("DOMContentLoaded", function() {
           {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
         );
       } else fetchWeather(52.24,23.09,"Werpol (fallback)");
+
+// 🔥 NAZWA MIEJSCOWOŚCI
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+    .then(r=>r.json())
+    .then(loc=>{
+      const city =
+        loc.address.city ||
+        loc.address.town ||
+        loc.address.village ||
+        loc.address.hamlet ||
+        "Nieznana lokalizacja";
+
+      document.getElementById("location-box").innerHTML =
+        `📍 ${city} (${lat.toFixed(3)}, ${lon.toFixed(3)})`;
     });
   }
 
