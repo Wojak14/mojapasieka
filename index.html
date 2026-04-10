@@ -5,128 +5,94 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kalendarz Pszczelarski 2026</title>
 
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FBC02D">
-
 <style>
 html, body {
-  margin: 0;
-  padding: 0;
-  font-family: Arial, sans-serif;
-
-  width: 100%;
-  min-width: 1200px;
-
-  overflow-x: auto;
-  overflow-y: auto;
+  margin:0;
+  padding:0;
+  font-family:Arial;
+  min-width:1200px;
+  overflow-x:auto;
 }
 
-#icon-legend {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 10px 0;
-  box-sizing: border-box;
-  -webkit-overflow-scrolling: touch;
-}
-
-#icon-legend div {
-  white-space: nowrap;
-  font-size: 14px;
-}
-
-.note-marker {
-  display: block;
-  font-size: 14px;
-  margin-top: 2px;
-}
-
-.has-note {
-  background: #fff59d;
-}
-
-.today {
-  outline: 2px solid green;
-}
-
-/* KALENDARZ */
+/* ===== KALENDARZ ===== */
 table {
-  width: 100%;
-  min-width: 1100px;
-  border-collapse: collapse;
+  width:100%;
+  min-width:1100px;
+  border-collapse:collapse;
 }
 
 td {
-  min-width: 120px;
-  height: 90px;
-  border: 1px solid #ccc;
-  vertical-align: top;
-  white-space: nowrap;
-  position: relative;
+  min-width:120px;
+  height:90px;
+  border:1px solid #ccc;
+  vertical-align:top;
+  position:relative;
+  white-space:nowrap;
 }
 
 .day-number {
-  font-weight: bold;
-  cursor: pointer;
+  font-weight:bold;
+  cursor:pointer;
 }
 
-.has-note { background:#fff59d; }
-.today { border:2px solid #4caf50; }
-.tomorrow { border:2px solid #ff9800; }
+/* ===== KOLORY ===== */
+.has-note { background:#fff59d !important; }
+
+.today {
+  background:#ffe082 !important;
+  border:2px solid #4caf50 !important;
+}
+
+.tomorrow {
+  background:#c8e6c9 !important;
+  border:2px solid #ff9800 !important;
+}
 
 .highlight-day {
-  outline: 2px solid red;
+  outline:3px solid red !important;
   background:#ffe066 !important;
 }
 
+/* ===== IKONY ===== */
 .note-marker {
   display:block;
   font-size:12px;
+  margin-top:2px;
 }
 
-/* PODSEKCJE */
+/* ===== SEKCJE ===== */
 #assistant-text,
 #weather-data,
 #weather-forecast,
-#bee-flight-alert,
-#hive-analysis,
-#hive-ranking,
-#hive-alerts,
-#ai-plan,
-#honey-forecast,
-#icon-legend {
+#bee-flight-alert {
   width:100%;
   min-width:1100px;
   box-sizing:border-box;
 }
 
-/* SEARCH */
-#search-results {
-  max-height:220px;
-  overflow-y:auto;
-  border:1px solid #ccc;
-  background:#fffbea;
+/* ===== LEGENDA ===== */
+#icon-legend {
+  display:flex;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  gap:10px;
 }
 
-/* LEGENDA */
 #icon-legend div {
-  display:inline-block;
-  margin:4px 8px;
+  white-space:nowrap;
+  font-size:14px;
 }
 
-/* MOBILE FIX */
+/* MOBILE */
 @media (max-width:600px){
   html, body { min-width:1200px; }
 }
 </style>
-
 </head>
 
 <body>
 
-</html>
+
 
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Rojka | 🔴 Leczenie | ⬛ Zimowla</div>
 
@@ -138,22 +104,12 @@ td {
 <div id="weather-forecast"></div>
 <div id="bee-flight-alert"></div>
 
-<input id="search-notes" placeholder="Szukaj...">
+<input id="search-notes" placeholder="Szukaj notatek...">
 <div id="search-results"></div>
 
-<textarea id="notes" style="width:100%;height:80px;"></textarea>
-<button onclick="saveNote()">Zapisz</button>
-
-<!-- AI -->
-<div id="hive-analysis"></div>
-<div id="hive-ranking"></div>
-<div id="hive-alerts"></div>
-<div id="ai-plan"></div>
-<div id="honey-forecast"></div>
-
+<table id="calendar">
 
 </body>
-
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
@@ -2330,178 +2286,131 @@ document.addEventListener("DOMContentLoaded", () => {
 
 let currentDay=null;
 let currentMonth=null;
-let textarea=document.getElementById("notes");
+const textarea=document.getElementById("notes");
 
-  // =========================
-  // MARKERY I IKONY
-  // =========================
-  function updateMarkers() {
-    const today = new Date();
-    const dayNow = String(today.getDate()).padStart(2,"0");
-    const monthNow = String(today.getMonth()+1).padStart(2,"0");
+/* ================= IKONY (PEŁNE) ================= */
+function getIcons(text){
+  let icons=[];
 
-    document.querySelectorAll("td .day-number").forEach(span => {
-      const td = span.closest("td");
-      td.classList.remove("has-note","today","tomorrow");
+  if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
+  if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
+  if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
+  if(text.includes("paski")) icons.push("🏷️");
+  if(text.includes("kwas")) icons.push("🌬️");
+  if(text.includes("zakończenie leczenia")) icons.push("🛡️");
+  if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
+  if(text.includes("sprawdzenie")) icons.push("📋");
+  if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
+  if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
+  if(text.includes("matka")) icons.push("👑");
+  if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
+  if(text.includes("nadstawka")) icons.push("📦");
+  if(text.includes("deszcz")) icons.push("🌧");
+  if(text.includes("wiatr")) icons.push("💨");
+  if(text.includes("burza")) icons.push("🌩️");
+  if(text.includes("śnieg")) icons.push("❄️");
+  if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
+  if(text.includes("upał") || text.includes("gorąco")) icons.push("🥵");
+  if(text.includes("pochmurno")) icons.push("🌫️");
+  if(text.includes("niska temperatura")) icons.push("🌡");
+  if(text.includes("trutnie")) icons.push("👨‍🌾");
+  if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
+  if(text.includes("słonecznie")) icons.push("☀️");
+  if(text.includes("mgła")) icons.push("🌁");
+  if(text.includes("grad")) icons.push("🧊");
+  if(text.includes("odsklepianie")) icons.push("🧹");
 
-      const day = span.dataset.day.padStart(2,"0");
-      const month = span.dataset.month.padStart(2,"0");
-      const key = day + "." + month + ".2026";
+  return icons.length ? icons : ["📒"];
+}
 
-      const oldMarker = td.querySelector(".note-marker");
-      if(oldMarker) oldMarker.remove();
+/* ================= MARKERY ================= */
+function updateMarkers(){
+  const today=new Date();
+  const dayNow=String(today.getDate()).padStart(2,"0");
+  const monthNow=String(today.getMonth()+1).padStart(2,"0");
 
-      const noteData = localStorage.getItem(key);
+  document.querySelectorAll(".day-number").forEach(span=>{
+    const td=span.closest("td");
 
-      if(noteData && noteData.trim() !== "") {
-        td.classList.add("has-note");
+    td.classList.remove("has-note","today","tomorrow");
 
-        const marker = document.createElement("span");
-        marker.className = "note-marker";
+    const d=span.dataset.day.padStart(2,"0");
+    const m=span.dataset.month.padStart(2,"0");
+    const key=`${d}.${m}.2026`;
 
-        let icons = [];
-        const text = noteData.toLowerCase();
+    const note=localStorage.getItem(key);
 
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
-        if(text.includes("paski")) icons.push("🏷️");
-        if(text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
-        if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
-        if(text.includes("matka")) icons.push("👑");
-        if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
-        if(text.includes("burza")) icons.push("🌩️");
-        if(text.includes("wiatr")) icons.push("💨");
-        if(text.includes("słonecznie")) icons.push("☀️");
-        if(text.includes("mgła")) icons.push("🌁");
+    const old=td.querySelector(".note-marker");
+    if(old) old.remove();
 
-        if(icons.length === 0) icons.push("📒");
+    if(note && note.trim()!==""){
+      td.classList.add("has-note");
 
-        marker.innerHTML = icons.join(" ");
-        span.after(marker);
-      }
+      const marker=document.createElement("span");
+      marker.className="note-marker";
 
-      if(day === dayNow && month === monthNow) td.classList.add("today");
-
-      const tomorrow = new Date();
-      tomorrow.setDate(today.getDate()+1);
-
-      const tDay = String(tomorrow.getDate()).padStart(2,"0");
-      const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
-
-      if(day === tDay && month === tMonth) td.classList.add("tomorrow");
-    });
-  }
-
-  // =========================
-  // KLIK DNIA
-  // =========================
-  document.querySelectorAll("td .day-number").forEach(span => {
-    span.addEventListener("click", () => {
-      currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = span.dataset.month.padStart(2,"0");
-
-      textarea = document.getElementById("notes-" + currentMonth);
-
-      const key = currentDay + "." + currentMonth + ".2026";
-
-      if(textarea){
-        textarea.value = localStorage.getItem(key) || "";
-        textarea.focus();
-      }
-    });
-  });
-
-  window.saveNote = function() {
-    if(!currentDay) return alert("Kliknij dzień");
-    const key = currentDay + "." + currentMonth + ".2026";
-
-    if(textarea) localStorage.setItem(key, textarea.value);
-
-    updateMarkers();
-    loadWeatherAndAssist();
-  };
-
-  // =========================
-  // POGODA (NAPRAWIONE + STABILNE GPS)
-  // =========================
-  function loadWeather5Days() {
-    return new Promise((resolve)=>{
-
-      function fetchWeather(lat, lon, label="GPS") {
-
-        if(isNaN(lat) || isNaN(lon)){
-          lat = 52.24;
-          lon = 23.09;
-          label = "fallback";
-        }
-
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
-
-        fetch(url)
-        .then(r=>r.json())
-        .then(data=>{
-
-          const cw = data.current_weather || {};
-
-          const beeStatus =
-            (cw.temperature >= 15 && cw.windspeed < 20)
-            ? "🐝 IDEALNE"
-            : (cw.temperature >= 12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
-
-          resolve({ beeStatus, data });
-
-        })
-        .catch(()=>resolve(null));
-      }
-
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(
-          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
-          ()=>fetchWeather(52.24,23.09,"fallback"),
-          {timeout:8000}
-        );
-      } else {
-        fetchWeather(52.24,23.09,"fallback");
-      }
-    });
-  }
-
-  // =========================
-  // ASYSTENT
-  // =========================
-  async function loadWeatherAndAssist(){
-    const weatherData = await loadWeather5Days();
-
-    const box = document.getElementById("assistant-text");
-    if(!box) return;
-
-    let text = "📒 Asystent działa";
-
-    if(weatherData?.beeStatus){
-      text += "<br>🐝 " + weatherData.beeStatus;
+      marker.innerHTML=getIcons(note.toLowerCase()).join(" ");
+      span.after(marker);
     }
 
-    box.innerHTML = text;
-  }
+    if(d===dayNow && m===monthNow) td.classList.add("today");
 
-  // =========================
-  // SAFE INIT (NAPRAWIA CRASHE)
-  // =========================
-  function safe(fn){
-    try { fn(); } catch(e){ console.log("Błąd:", e); }
-  }
+    const t=new Date();
+    t.setDate(today.getDate()+1);
 
-  // =========================
-  // START
-  // =========================
+    if(d===String(t.getDate()).padStart(2,"0") &&
+       m===String(t.getMonth()+1).padStart(2,"0")){
+      td.classList.add("tomorrow");
+    }
+  });
+}
+
+/* ================= SAVE ================= */
+window.saveNote=function(){
+  if(!currentDay) return alert("Kliknij dzień");
+  const key=`${currentDay}.${currentMonth}.2026`;
+  localStorage.setItem(key,textarea.value);
   updateMarkers();
-  loadWeatherAndAssist();
+  loadWeather();
+}
 
-  setInterval(loadWeatherAndAssist, 120000);
+/* ================= CLICK ================= */
+document.querySelectorAll(".day-number").forEach(el=>{
+  el.addEventListener("click",()=>{
+    currentDay=el.dataset.day;
+    currentMonth=el.dataset.month;
+    textarea.value=localStorage.getItem(`${currentDay}.${currentMonth}.2026`)||"";
+  });
+});
+
+/* ================= GPS + WEATHER ================= */
+function loadWeather(){
+  const lat=52.24;
+  const lon=23.09; // WERPOL fallback
+
+  fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min&current_weather=true&timezone=auto`)
+  .then(r=>r.json())
+  .then(d=>{
+    document.getElementById("weather-data").innerHTML=
+    "🌡 "+d.current_weather.temperature+"°C";
+
+    let html="📅 5 dni:<br>";
+    for(let i=1;i<=5;i++){
+      const day=d.daily.temperature_2m_max[i];
+      html+=`D+${i}: ${day}°C<br>`;
+    }
+    document.getElementById("weather-forecast").innerHTML=html;
+  });
+}
+
+/* ================= START ================= */
+updateMarkers();
+loadWeather();
+
+setInterval(loadWeather,120000);
 
 });
 </script>
+
 </body>
 </html>
