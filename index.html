@@ -15,10 +15,9 @@
 
 <style>
 body {
+body {
   font-family: Arial, sans-serif;
   margin: 10px;
-<div id="today"></div>
-<div id="upcoming"></div>
 }
 
 
@@ -306,57 +305,60 @@ font-weight:bold;
   <button type="button" onclick="saveNote('01')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
   <b>Legenda ikon:</b>
+
   <div id="icon-legend" style="
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-sizing: border-box;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
-
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -448,51 +450,60 @@ font-weight:bold;
   <button onclick="saveNote('02')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
-
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -610,50 +621,60 @@ font-weight:bold;
   <button onclick="saveNote('03')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
-</div>>
+</div>
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -789,48 +810,58 @@ font-weight:bold;
 </div>
 
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
@@ -985,48 +1016,58 @@ font-weight:bold;
   <button onclick="saveNote('05')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
@@ -1131,51 +1172,60 @@ font-weight:bold;
   <button onclick="saveNote('06')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
-
 
 </div> <!-- zamknięcie miesiąca -->
 <div class="page-break"></div>
@@ -1268,48 +1318,58 @@ font-weight:bold;
     <button onclick="saveNote('07')">Zapisz notatkę</button>
   </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
@@ -1409,48 +1469,58 @@ font-weight:bold;
   <button onclick="saveNote('08')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
@@ -1547,48 +1617,58 @@ font-weight:bold;
   <button onclick="saveNote('09')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
@@ -1686,48 +1766,58 @@ font-weight:bold;
   <button onclick="saveNote('10')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">>
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
@@ -1829,48 +1919,58 @@ font-weight:bold;
   <button onclick="saveNote('11')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
@@ -1971,48 +2071,58 @@ font-weight:bold;
     <button onclick="saveNote('12')">Zapisz notatkę</button>
   </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
@@ -2129,48 +2239,58 @@ Notatki pasieki:<br>
   <button id="save-family-notes">Zapisz notatki rodzin</button>
 </div>
 
-<div id="icon-legend" style="
-  display:flex !important;
-  flex-direction:row !important;
-  flex-wrap:nowrap !important;
-  overflow-x:auto !important;
-">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
+<div style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+  
+  <b>Legenda ikon:</b>
+
+  <div id="icon-legend" style="
+    display:flex;
+    flex-direction:row;
+    flex-wrap:nowrap;
+    overflow-x:auto;
+    gap:10px;
+    padding:10px 0;
+    box-sizing:border-box;
+    -webkit-overflow-scrolling: touch;
+  ">
+
+    <div style="white-space:nowrap;">🫙 miód / miodobranie</div>
+    <div style="white-space:nowrap;">🍯 karmienie / syrop / ciasto</div>
+    <div style="white-space:nowrap;">💊 leczenie / warroza / apiwarol</div>
+    <div style="white-space:nowrap;">🏷️ paski</div>
+    <div style="white-space:nowrap;">🌬️ kwas</div>
+    <div style="white-space:nowrap;">🛡️ zakończenie leczenia</div>
+    <div style="white-space:nowrap;">🧴 dezynfekcja</div>
+    <div style="white-space:nowrap;">🔍 przegląd</div>
+    <div style="white-space:nowrap;">📋 sprawdzenie</div>
+    <div style="white-space:nowrap;">🕵️‍♂️ inspekcja</div>
+    <div style="white-space:nowrap;">🐝 rój / rójka</div>
+    <div style="white-space:nowrap;">🏃‍♂️🐝 ucieczka pszczół</div>
+    <div style="white-space:nowrap;">🌸 pożytek</div>
+    <div style="white-space:nowrap;">👑 matka / wymiana matki</div>
+    <div style="white-space:nowrap;">🐣 czerw</div>
+    <div style="white-space:nowrap;">🧱 ramki / węza</div>
+    <div style="white-space:nowrap;">📦 nadstawka</div>
+    <div style="white-space:nowrap;">🌧 deszcz</div>
+    <div style="white-space:nowrap;">💨 wiatr</div>
+    <div style="white-space:nowrap;">🌩️ burza</div>
+    <div style="white-space:nowrap;">❄️ śnieg / zima</div>
+    <div style="white-space:nowrap;">🥶 mróz</div>
+    <div style="white-space:nowrap;">🥵 upał</div>
+    <div style="white-space:nowrap;">🌫️ pochmurno</div>
+    <div style="white-space:nowrap;">🌡 niska temp.</div>
+    <div style="white-space:nowrap;">☀️ słonecznie</div>
+    <div style="white-space:nowrap;">🌁 mgła</div>
+    <div style="white-space:nowrap;">🧊 grad</div>
+    <div style="white-space:nowrap;">🧹 odsklepianie</div>
+    <div style="white-space:nowrap;">💨🪵 dymiarka</div>
+    <div style="white-space:nowrap;">🪵 węza</div>
+    <div style="white-space:nowrap;">🎉 nowy rok</div>
+    <div style="white-space:nowrap;">🎄 święta</div>
+    <div style="white-space:nowrap;">🏠 ule / pasieka</div>
+    <div style="white-space:nowrap;">👨‍🌾 trutnie</div>
+    <div style="white-space:nowrap;">🐝🌿 dzikie pszczoły</div>
+
   </div>
 </div>
 
