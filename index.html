@@ -122,6 +122,36 @@ th, td {
   table, th, td { font-size:12px; }
   .notes { height:60px; }
 }
+
+.weatherRow{
+  display:flex;
+  flex-direction:row;
+  gap:10px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:8px;
+}
+
+.weatherBox{
+  flex:0 0 auto;
+  min-width:150px;
+  background:#1f1f1f;
+  color:white;
+  border-radius:14px;
+  padding:12px;
+  scroll-snap-align:start;
+}
+
+.label{
+  font-size:12px;
+  opacity:0.7;
+}
+
+.value{
+  font-size:16px;
+  font-weight:bold;
+}
+
 </style>
 
 </head>
@@ -162,43 +192,35 @@ font-weight:bold;
 </button>
 
 <!-- 🌦 POGODA -->
-<div id="weather-box" style="
-background:#fff8e1;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
+<!-- 🌤️ PANEL GPS + POGODA (NOWY ANDROID UI) -->
+<div id="weatherPanel">
 
-  <h3>🌦 Pogoda w pasiece</h3>
+  <div class="weatherRow">
 
-  <div id="weather-data">
-    Ładowanie pogody...
+    <div class="weatherBox">
+      <div class="label">📍 Lokalizacja</div>
+      <div id="locationName" class="value">Ładowanie...</div>
+    </div>
+
+    <div class="weatherBox">
+      <div class="label">🌡️ Temperatura</div>
+      <div id="temp" class="value">--</div>
+    </div>
+
+    <div class="weatherBox">
+      <div class="label">🌬️ Wiatr</div>
+      <div id="wind" class="value">--</div>
+    </div>
+
+    <div class="weatherBox">
+      <div class="label">🐝 Stan pszczół</div>
+      <div id="beeStatus" class="value">--</div>
+    </div>
+
   </div>
 
-  <div id="location-box" style="
-    background:#e3f2fd;
-    padding:10px;
-    border-radius:10px;
-    margin-top:10px;
-    font-size:14px;
-  ">
-    📍 Lokalizacja pasieki: sprawdzanie...
-  </div>
-
-  <div id="weather-forecast" style="
-    margin-top:8px;
-    font-size:14px;
-  "></div>
-
-  <div id="bee-flight-alert" style="
-    margin-top:10px;
-    padding:8px;
-    background:#e8f5e9;
-    border-radius:8px;
-    font-weight:bold;
-  ">
-    🐝 Sprawdzanie warunków lotu pszczół...
-  </div>
+  <div id="weather-forecast" style="margin-top:10px;"></div>
+  <div id="bee-flight-alert" style="margin-top:10px;"></div>
 
 </div>
 
@@ -2027,10 +2049,18 @@ font-weight:bold;
 </div>
 
 <div id="weather-panel">
-  <h3>🌤 Pogoda dla pasieki</h3>
-  <div id="weather-data">Ładowanie...</div>
-  <div id="weather-forecast"></div>
-  <div id="bee-flight-alert" style="margin-top:5px; font-weight:bold;"></div>
+
+  <h3>🌦 Pogoda w pasiece</h3>
+
+<div id="weather-data">
+  Ładowanie pogody...
+</div>
+
+<!-- 🔥 NOWE POLA (WKLEJ TUTAJ) -->
+<div style="margin-top:10px;">
+  <div>🌡️ Temperatura: <span id="temp"></span></div>
+  <div>🌬️ Wiatr: <span id="wind"></span></div>
+  <div>🐝 Stan pszczół: <span id="beeStatus"></span></div>
 </div>
 
   <!-- Alerty pasieczne -->
@@ -2375,18 +2405,14 @@ document.addEventListener("DOMContentLoaded", function() {
           const beeStatus = (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" : (cw.temperature>=12 ? "🐝 ŚREDNIE":"❄ SŁABE");
           const color = beeStatus.includes("IDEALNE")?"green":beeStatus.includes("ŚREDNIE")?"orange":"red";
 
-          if(weatherBox) weatherBox.innerHTML = `
-            <b>🌡 Dzisiaj:</b><br>
-            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
-            💨 Wiatr: ${todayWind} km/h<br>
-            🌧 Szansa opadów: ${todayRain}%<br>
-            <span style="color:${color};font-weight:bold">${beeStatus}</span>
-          `;
+          document.getElementById("temp").innerText = cw.temperature + "°C";
+document.getElementById("wind").innerText = cw.windspeed + " km/h";
+document.getElementById("beeStatus").innerText = beeStatus;
 
           if(forecastBox){
             const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
-            for(let i=1;i<=5;i++){
+            let html=`<b>📅 Prognoza 7 dni od jutra:</b><br>`;
+            for(let i=1;i<=7;i++){
               const date=new Date(); date.setDate(date.getDate()+i);
               const d=date.getDate().toString().padStart(2,"0");
               const m=(date.getMonth()+1).toString().padStart(2,"0");
