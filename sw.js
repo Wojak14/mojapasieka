@@ -1,9 +1,10 @@
-const CACHE_NAME = "pasieka-2026-v6";
+const CACHE_NAME = "pasieka-2026-v7";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
+  "./app.js", // 🔥 ważne!
   "./bee_icon_192x192.png",
   "./bee_icon_512x512.png"
 ];
@@ -14,7 +15,6 @@ self.addEventListener("install", event => {
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(ASSETS))
   );
-
   self.skipWaiting();
 });
 
@@ -29,7 +29,6 @@ self.addEventListener("activate", event => {
       )
     )
   );
-
   self.clients.claim();
 });
 
@@ -47,12 +46,14 @@ self.addEventListener("fetch", event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, clone));
           return response;
         })
-        .catch(() => caches.match(request))
+        .catch(() => {
+          return caches.match(request).then(res => res || new Response("{}"));
+        })
     );
     return;
   }
 
-  // ===== NAWIGACJA (PWA FIX) =====
+  // ===== NAWIGACJA =====
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request).catch(() => caches.match("./index.html"))
