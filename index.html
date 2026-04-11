@@ -122,6 +122,27 @@ th, td {
   table, th, td { font-size:12px; }
   .notes { height:60px; }
 }
+
+/* 📱 ANDROID / MOBILE - ikony jedna pod drugą */
+@media (max-width: 600px) {
+
+ #icon-legend > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 5px;
+}
+
+  #icon-legend {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 600px) {
+  #icon-legend > div {
+    grid-template-columns: 1fr;
+  }
+}
+
 </style>
 
 </head>
