@@ -126,11 +126,9 @@ th, td {
 /* 📱 ANDROID / MOBILE - ikony jedna pod drugą */
 @media (max-width: 600px) {
 
- #icon-legend > div {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 5px;
-}
+  #icon-legend > div {
+    grid-template-columns: 1fr !important;
+  }
 
   #icon-legend {
     width: 100% !important;
@@ -2471,19 +2469,8 @@ if(dayNumber % 2 !== 0){
   if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
     dayTasks.push("Sprawdź węzę i ramki");
 }
-    // ❄️ blokowanie słabych warunków
-const isGoodWeather =
-  weatherData &&
-  (weatherData.beeStatus.includes("IDEALNE") ||
-   weatherData.beeStatus.includes("ŚREDNIE"));
-
-if (isGoodWeather) {
-  if (dayTasks.length > 0) {
-    tasksByDay[key] = dayTasks.join(", ");
-  }
-} else {
-  tasksByDay[key] = "❄️ SŁABE warunki – brak prac w pasiece";
-}
+      if(dayTasks.length>0) tasksByDay[key]=dayTasks.join(", ");
+    }
 
     // Swarm risk
     let swarmRisk=0;
