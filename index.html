@@ -2283,7 +2283,7 @@ function getIcons(noteData) {
   if (/roj|rojka|ucieczka/.test(text)) icons.push("🐝");
   if (/pozytek|nektar|pylek|kwitnienie/.test(text)) icons.push("🌸");
   if (/matka|wymiana matki|wychow/.test(text)) icons.push("👑");
-  if (/czerw/.test(text)) icons.push("🐣"); // 
+  if (/czerw/.test(text)) icons.push("🐣"); // ✅ NAPRAWIONE (brakowało!)
   if (/ramki|weza/.test(text)) icons.push("🧱");
   if (/nadstawka/.test(text)) icons.push("📦");
   if (/deszcz/.test(text)) icons.push("🌧");
@@ -2297,6 +2297,7 @@ function getIcons(noteData) {
   if (/slonecznie/.test(text)) icons.push("☀️");
   if (/mgla/.test(text)) icons.push("🌁");
   if (/grad/.test(text)) icons.push("🧊");
+
   if (/trutnie/.test(text)) icons.push("👨‍🌾");
   if (/odsklepianie|miotla/.test(text)) icons.push("🧹");
 
