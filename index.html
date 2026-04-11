@@ -2259,41 +2259,49 @@ document.addEventListener("DOMContentLoaded", function() {
         const marker = document.createElement("span");
         marker.className = "note-marker";
 
-         let icons = [];
-        const text = noteData.toLowerCase();
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
-        if(text.includes("leczenie") || text.includes("paski")) icons.push("🏷️");
-        if(text.includes("leczenie") || text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("leczenie") || text.includes("zakończenie leczenia")) icons.push("🛡️");
-        if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
-        if(text.includes("przegląd") || text.includes("sprawdzenie")) icons.push("📋");
-        if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
-        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
-        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-        if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
-        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦");
-        if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
-        if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
-        if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
-        if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-        if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");
-        if(text.includes("pogoda") || text.includes("niska temperatura")) icons.push("🌡");
-        if(text.includes("trutnie")) icons.push("👨‍🌾");
-        if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
-        if(text.includes("słonecznie")) icons.push("☀️");
-        if(text.includes("mgła")) icons.push("🌁");
-        if(text.includes("grad")) icons.push("🧊");
-        if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹"); 
+function getIcons(noteData) {
 
-        if(icons.length === 0) icons.push("📒");
-        marker.innerHTML = icons.join(" ");
-        span.after(marker); 
-      }
+  if (!noteData) return [];
 
+  // normalizacja (PL znaki + małe litery)
+  const text = noteData
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  let icons = [];
+
+  if (/miod|miodobranie|zbior/.test(text)) icons.push("🫙");
+  if (/karmienie|syrop|ciasto/.test(text)) icons.push("🍯");
+  if (/leczenie|warroza|apiwarol/.test(text)) icons.push("💊");
+  if (/paski/.test(text)) icons.push("🏷️");
+  if (/kwas/.test(text)) icons.push("🌬️");
+  if (/zakonczenie leczenia/.test(text)) icons.push("🛡️");
+  if (/przeglad|kontrola|inspekcja/.test(text)) icons.push("🔍");
+  if (/sprawdzenie/.test(text)) icons.push("📋");
+  if (/obserwacja/.test(text)) icons.push("🕵️‍♂️");
+  if (/roj|rojka|ucieczka/.test(text)) icons.push("🐝");
+  if (/pozytek|nektar|pylek|kwitnienie/.test(text)) icons.push("🌸");
+  if (/matka|wymiana matki|wychow/.test(text)) icons.push("👑");
+  if (/czerw/.test(text)) icons.push("🐣"); // 
+  if (/ramki|weza/.test(text)) icons.push("🧱");
+  if (/nadstawka/.test(text)) icons.push("📦");
+  if (/deszcz/.test(text)) icons.push("🌧");
+  if (/wiatr/.test(text)) icons.push("💨");
+  if (/burza/.test(text)) icons.push("🌩️");
+  if (/snieg/.test(text)) icons.push("❄️");
+  if (/mroz|zimno/.test(text)) icons.push("🥶");
+  if (/goraco|upal/.test(text)) icons.push("🥵");
+  if (/pochmurno/.test(text)) icons.push("🌫️");
+  if (/niska temperatura/.test(text)) icons.push("🌡");
+  if (/slonecznie/.test(text)) icons.push("☀️");
+  if (/mgla/.test(text)) icons.push("🌁");
+  if (/grad/.test(text)) icons.push("🧊");
+  if (/trutnie/.test(text)) icons.push("👨‍🌾");
+  if (/odsklepianie|miotla/.test(text)) icons.push("🧹");
+
+  return icons;
+}
       if(day === dayNow && month === monthNow) td.classList.add("today");
       const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
       const tDay = String(tomorrow.getDate()).padStart(2,"0");
