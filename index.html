@@ -2388,8 +2388,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
           if(forecastBox){
             const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
-            for(let i=1;i<=5;i++){
+            let html=`<b>📅 Prognoza 7 dni od jutra:</b><br>`;
+            for(let i=1;i<=7;i++){
               const date=new Date(); date.setDate(date.getDate()+i);
               const d=date.getDate().toString().padStart(2,"0");
               const m=(date.getMonth()+1).toString().padStart(2,"0");
@@ -2409,15 +2409,30 @@ document.addEventListener("DOMContentLoaded", function() {
         }).catch(()=>resolve(null));
       }
 
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(
-          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
-          ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
-          {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
-        );
-      } else fetchWeather(52.24,23.09,"Werpol (fallback)");
-    });
+function initGPSWeather(){
+  function fetchSafe(lat, lon, label){
+    try {
+      fetchWeather(lat, lon, label);
+    } catch(e){
+      console.warn("Weather error:", e);
+    }
   }
+
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        fetchSafe(pos.coords.latitude, pos.coords.longitude, "GPS");
+      },
+      err => {
+        console.warn("GPS fallback:", err.message);
+        fetchSafe(52.24, 23.09, "Werpol (fallback)");
+      },
+      { enableHighAccuracy:true, timeout:8000, maximumAge:300000 }
+    );
+  } else {
+    fetchSafe(52.24, 23.09, "Werpol (fallback)");
+  }
+}
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
   async function loadWeatherAndAssist(){
@@ -2470,10 +2485,10 @@ if(dayNumber % 2 !== 0){
     dayTasks.push("Sprawdź węzę i ramki");
 }
      // ❄️ blokowanie słabych warunków
+const beeStatus = weatherData?.beeStatus || "";
 const isGoodWeather =
-  weatherData &&
-  (weatherData.beeStatus.includes("IDEALNE") ||
-   weatherData.beeStatus.includes("ŚREDNIE"));
+  beeStatus.includes("IDEALNE") ||
+  beeStatus.includes("ŚREDNIE");
 
 if (isGoodWeather) {
   if (dayTasks.length > 0) {
@@ -2731,21 +2746,27 @@ function generateHoneyForecast(){
 }
 
   // --- URUCHOMIENIA STARTOWE ---
-  updateMarkers();
-  scrollToToday();
-  loadWeatherAndAssist();analyzeHivesPro();
-  generateHiveRanking();
-  generateHiveAlerts();
-  generateWeeklyPlanPro();
-  generateHoneyForecast();
-  runAIModule();
-  loadApiaryData();
-  loadWeather5Days();
-  loadGPS();
-  updateSmartAssistant();
-  hivesCountInput.addEventListener('change', generateFamilyNotes);
-  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
-  setInterval(()=>{ loadWeatherAndAssist(); },120000);
+  unction safeRun(fn){
+  try { fn(); } catch(e){ console.warn("Błąd modułu:", e); }
+}
+
+updateMarkers();
+scrollToToday();
+
+// 🔥 GPS + pogoda + AI (1 łańcuch)
+loadWeatherAndAssist();
+
+// 🔥 osobne AI moduły
+safeRun(analyzeHivesPro);
+safeRun(generateHiveRanking);
+safeRun(generateHiveAlerts);
+safeRun(generateWeeklyPlanPro);
+safeRun(generateHoneyForecast);
+
+// auto refresh
+setInterval(() => {
+  loadWeatherAndAssist();
+}, 120000);
 
 });
 </script>
