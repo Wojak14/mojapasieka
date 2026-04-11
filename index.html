@@ -2221,8 +2221,11 @@ let textarea = null;
 let currentDay = null;
 let currentMonth = null;
 
+// =======================
+// 🔥 IKONY (FINAL FIX)
+// =======================
 function getIcons(noteData){
-  if(!noteData) return [];
+  if(!noteData || !noteData.trim()) return [];
 
   const text = noteData.toLowerCase()
     .normalize("NFD")
@@ -2264,11 +2267,16 @@ function getIcons(noteData){
 }
 
 // =======================
-// 📅 MARKERY
+// 📅 MARKERY (FIX)
 // =======================
 function updateMarkers(){
   document.querySelectorAll("td .day-number").forEach(span=>{
+
+    if(!span.dataset.day || !span.dataset.month) return;
+
     const td = span.closest("td");
+    if(!td) return;
+
     td.classList.remove("has-note");
 
     const day = span.dataset.day.padStart(2,"0");
@@ -2280,7 +2288,7 @@ function updateMarkers(){
 
     const noteData = localStorage.getItem(key);
 
-    if(noteData){
+    if(noteData && noteData.trim() !== ""){
       td.classList.add("has-note");
 
       const marker=document.createElement("span");
@@ -2295,7 +2303,7 @@ function updateMarkers(){
 }
 
 // =======================
-// 🌍 POGODA + GPS (NAPRAWA)
+// 🌍 POGODA + GPS (STABLE)
 // =======================
 function loadWeather5Days(){
   return new Promise(resolve=>{
@@ -2306,7 +2314,7 @@ function loadWeather5Days(){
       fetch(url)
         .then(r=>r.json())
         .then(data=>{
-          const cw=data.current_weather||{temperature:0,windspeed:0};
+          const cw=data?.current_weather || {temperature:0,windspeed:0};
 
           const beeStatus =
             (cw.temperature>=15 && cw.windspeed<20) ? "IDEALNE" :
@@ -2317,21 +2325,34 @@ function loadWeather5Days(){
         .catch(()=>resolve({beeStatus:"SŁABE"}));
     }
 
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude),
-        ()=>fetchWeather(52.24,23.09),
-        {timeout:8000}
-      );
-    }else{
-      fetchWeather(52.24,23.09);
-    }
+    if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      console.log("GPS OK", pos.coords);
 
-  });
+      fetchWeather(
+        pos.coords.latitude,
+        pos.coords.longitude,
+        "GPS"
+      );
+    },
+    err => {
+      console.log("GPS ERROR", err.message);
+
+      fetchWeather(52.24, 23.09, "Fallback Werpol");
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 15000, // 🔥 było za mało
+      maximumAge: 0
+    }
+  );
+} else {
+  fetchWeather(52.24, 23.09, "Fallback Werpol");
 }
 
 // =======================
-// 🤖 ASYSTENT (NAPRAWA)
+// 🤖 ASYSTENT (FIX)
 // =======================
 async function loadWeatherAndAssist(){
   const weatherData = await loadWeather5Days();
@@ -2380,11 +2401,15 @@ function updateSmartAssistant(weatherData){
 }
 
 // =======================
-// 🚀 START
+// 🚀 START (SAFE)
 // =======================
 updateMarkers();
 loadWeatherAndAssist();
-setInterval(loadWeatherAndAssist,120000);
+
+// zabezpieczenie przed duplikacją intervala
+if(!window.weatherInterval){
+  window.weatherInterval = setInterval(loadWeatherAndAssist,120000);
+}
 
 });
 </script>
