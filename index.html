@@ -2305,50 +2305,94 @@ function updateMarkers(){
 // =======================
 // 🌍 POGODA + GPS (STABLE)
 // =======================
-function loadWeather5Days(){
-  return new Promise(resolve=>{
+function loadWeather5Days() {
 
-    function fetchWeather(lat,lon){
-      const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+  return new Promise(resolve => {
+
+    const weatherBox = document.getElementById("weather-data");
+    const locationBox = document.getElementById("location-box");
+
+    function fetchWeather(lat, lon, label) {
+
+      console.log("📍 GPS:", lat, lon);
+
+      if (locationBox) {
+        locationBox.innerHTML = `📍 ${label} (${lat.toFixed(3)}, ${lon.toFixed(3)})`;
+      }
+
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`;
 
       fetch(url)
-        .then(r=>r.json())
-        .then(data=>{
-          const cw=data?.current_weather || {temperature:0,windspeed:0};
+        .then(r => r.json())
+        .then(data => {
 
-          const beeStatus =
-            (cw.temperature>=15 && cw.windspeed<20) ? "IDEALNE" :
-            (cw.temperature>=12 ? "ŚREDNIE" : "SŁABE");
+          console.log("🌦 API:", data);
 
-          resolve({beeStatus});
+          const cw = data.current_weather;
+
+          if (!cw) {
+            if (weatherBox) weatherBox.innerHTML = "❌ Brak danych pogodowych";
+            resolve({ beeStatus: "SŁABE" });
+            return;
+          }
+
+          const temp = cw.temperature;
+          const wind = cw.windspeed;
+
+          let beeStatus =
+            (temp >= 15 && wind < 20) ? "🐝 IDEALNE" :
+            (temp >= 12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
+
+          if (weatherBox) {
+            weatherBox.innerHTML = `
+              🌡 ${temp}°C<br>
+              💨 ${wind} km/h<br>
+              <b>${beeStatus}</b>
+            `;
+          }
+
+          resolve({ beeStatus });
+
         })
-        .catch(()=>resolve({beeStatus:"SŁABE"}));
+        .catch(err => {
+          console.log("❌ API ERROR:", err);
+          if (weatherBox) weatherBox.innerHTML = "❌ Błąd pogody";
+          resolve({ beeStatus: "SŁABE" });
+        });
     }
 
+    // 🔥 GPS START
     if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      console.log("GPS OK", pos.coords);
 
-      fetchWeather(
-        pos.coords.latitude,
-        pos.coords.longitude,
-        "GPS"
+      navigator.geolocation.getCurrentPosition(
+
+        pos => {
+          fetchWeather(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            "GPS OK"
+          );
+        },
+
+        err => {
+          console.log("❌ GPS ERROR:", err.message);
+
+          fetchWeather(52.24, 23.09, "Fallback Werpol");
+        },
+
+        {
+          enableHighAccuracy: true,
+          timeout: 15000,
+          maximumAge: 0
+        }
+
       );
-    },
-    err => {
-      console.log("GPS ERROR", err.message);
 
-      fetchWeather(52.24, 23.09, "Fallback Werpol");
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 15000, // 🔥 było za mało
-      maximumAge: 0
+    } else {
+      fetchWeather(52.24, 23.09, "Brak GPS");
     }
-  );
-} else {
-  fetchWeather(52.24, 23.09, "Fallback Werpol");
+
+  });
 }
 
 // =======================
