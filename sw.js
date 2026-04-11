@@ -1,5 +1,6 @@
-const CACHE_NAME = "pasieka-2026-final";
+const CACHE_NAME = "pasieka-2026-final-v2";
 
+// pliki do cache (tylko najważniejsze!)
 const ASSETS = [
   "./",
   "./index.html",
@@ -8,7 +9,9 @@ const ASSETS = [
   "./bee_icon_512x512.png"
 ];
 
-// INSTALL
+// =======================
+// 📦 INSTALL
+// =======================
 self.addEventListener("install", e => {
   self.skipWaiting();
   e.waitUntil(
@@ -16,7 +19,9 @@ self.addEventListener("install", e => {
   );
 });
 
-// ACTIVATE
+// =======================
+// 🔄 ACTIVATE
+// =======================
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -30,10 +35,20 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
-// FETCH
+// =======================
+// 🌐 FETCH (FINAL FIX)
+// =======================
 self.addEventListener("fetch", e => {
 
-  // 🔹 NAVIGATION (offline fallback)
+  const url = e.request.url;
+
+  // 🔥 1. NIE CACHE API (GPS + POGODA MUSZĄ DZIAŁAĆ NA ŻYWO)
+  if (url.includes("api.open-meteo.com")) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // 🔥 2. NAVIGATION (offline fallback)
   if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request).catch(() => caches.match("./index.html"))
@@ -41,32 +56,21 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // 🔹 WEATHER API CACHE
-  if (e.request.url.includes("api.open-meteo.com")) {
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-          return res;
-        })
-        .catch(() => caches.match(e.request))
-    );
-    return;
-  }
-
-  // 🔹 STATIC CACHE STRATEGY
+  // 🔥 3. RESZTA (cache + fallback)
   e.respondWith(
     caches.match(e.request).then(res => {
       return res || fetch(e.request).then(response => {
 
+        // tylko poprawne odpowiedzi
         if (!response || response.status !== 200) return response;
 
         const clone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
 
         return response;
-      });
+
+      }).catch(() => caches.match("./index.html"));
     })
   );
+
 });
