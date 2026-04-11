@@ -20,9 +20,11 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.map(k => {
-        if (k !== CACHE_NAME) return caches.delete(k);
-      }))
+      Promise.all(
+        keys.map(k => {
+          if (k !== CACHE_NAME) return caches.delete(k);
+        })
+      )
     )
   );
   self.clients.claim();
@@ -31,6 +33,7 @@ self.addEventListener("activate", e => {
 // FETCH
 self.addEventListener("fetch", e => {
 
+  // 🔹 NAVIGATION (offline fallback)
   if (e.request.mode === "navigate") {
     e.respondWith(
       fetch(e.request).catch(() => caches.match("./index.html"))
@@ -38,29 +41,21 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  e.respondWith(
-  self.addEventListener("fetch", e => {
-
-  if (e.request.mode === "navigate") {
+  // 🔹 WEATHER API CACHE
+  if (e.request.url.includes("api.open-meteo.com")) {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match("./index.html"))
+      fetch(e.request)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
+          return res;
+        })
+        .catch(() => caches.match(e.request))
     );
     return;
   }
 
-if (e.request.url.includes("api.open-meteo.com")) {
-  e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then(c => c.put(e.request, clone));
-        return res;
-      })
-      .catch(() => caches.match(e.request))
-  );
-  return;
-}
-
+  // 🔹 STATIC CACHE STRATEGY
   e.respondWith(
     caches.match(e.request).then(res => {
       return res || fetch(e.request).then(response => {
