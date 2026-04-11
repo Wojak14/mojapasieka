@@ -2726,6 +2726,9 @@ function generateHoneyForecast(){
   generateHoneyForecast();
   runAIModule();
   loadApiaryData();
+  loadWeather5Days();
+  loadGPS();
+  updateSmartAssistant();
   hivesCountInput.addEventListener('change', generateFamilyNotes);
   saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
