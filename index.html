@@ -2263,23 +2263,21 @@ function updateMarkers(){
   const dayNow = String(today.getDate()).padStart(2,"0");
   const monthNow = String(today.getMonth()+1).padStart(2,"0");
 
-  document.querySelectorAll("td .day-number").forEach(span=>{
-    const td = span.closest("td");
-    if(!td) return;
+document.querySelectorAll("td .day-number").forEach(span => {
+  span.addEventListener("click", () => {
 
-    td.classList.remove("has-note","today","tomorrow");
+    currentDay = span.dataset.day.padStart(2,"0");
+    currentMonth = span.dataset.month.padStart(2,"0");
+    const key = currentDay + "." + currentMonth + ".2026";
 
-    const day = span.dataset.day.padStart(2,"0");
-    const month = span.dataset.month.padStart(2,"0");
-    const key = day+"."+month+".2026";
+    textarea = document.querySelector("textarea[id^='notes-']");
 
-    const old = td.querySelector(".note-marker");
-    if(old) old.remove();
-
-    const noteData = localStorage.getItem(key);
-
-    if(noteData && noteData.trim() !== ""){
-      td.classList.add("has-note");
+    if(textarea){
+      textarea.value = localStorage.getItem(key) || "";
+      textarea.focus();
+    } else {
+      console.log("❌ Brak textarea");
+    }
 
       const marker=document.createElement("span");
       marker.className="note-marker";
@@ -2400,11 +2398,6 @@ function loadWeather5Days(){
 // =======================
 // 🤖 ASYSTENT
 // =======================
-async function loadWeatherAndAssist(){
-  const weatherData = await loadWeather5Days();
-  updateSmartAssistant(weatherData);
-}
-
 function updateSmartAssistant(weatherData){
 
   const box=document.getElementById("assistant-text");
@@ -2426,28 +2419,46 @@ function updateSmartAssistant(weatherData){
 
     let tasks=[];
 
-    if(!note.includes("przegląd")) tasks.push("🔍");
-    if(!note.includes("karmienie")) tasks.push("🍯");
+    if(!note.includes("przegląd")) tasks.push("🔍 przegląd");
+    if(!note.includes("karmienie")) tasks.push("🍯 karmienie");
 
-    const good =
-      weatherData &&
-      (weatherData.beeStatus==="IDEALNE" || weatherData.beeStatus==="ŚREDNIE");
+    // 🔥 POPRAWIONY WARUNEK LOTU
+    let good = true;
+
+    if(weatherData){
+
+      if(i === 0){
+        // DZISIAJ
+        const temp = weatherData.current?.temperature || 0;
+        const wind = weatherData.current?.windspeed || 0;
+
+        good = (temp >= 12 && wind < 25);
+      }
+      else if(weatherData.forecast){
+        // KOLEJNE DNI
+        const tMax = weatherData.forecast.temperature_2m_max[i] || 0;
+        const wind = weatherData.forecast.windspeed_10m_max[i] || 0;
+        const rain = weatherData.forecast.precipitation_probability_max[i] || 0;
+
+        good = (tMax >= 12 && wind < 25 && rain < 60);
+      }
+    }
 
     if(!good){
-      html+=`<div>${key} ❄ brak warunków</div>`;
+      html+=`<div style="color:red">${key} ❄ brak warunków</div>`;
     }else{
-      html+=`<div>${key} → ${tasks.join(" ")}</div>`;
+      html+=`<div style="color:green">${key} → ${tasks.join(" ")}</div>`;
     }
   }
 
   box.innerHTML = html;
-}
-
-// =======================
+}// =======================
 // 🐝 NOTATKI RODZIN
 // =======================
 function generateFamilyNotes(){
 
+  const savedCount = localStorage.getItem("hives-count");
+  if(savedCount) countInput.value = savedCount;
   const container=document.getElementById("family-notes-container");
   const countInput=document.getElementById("hives-count");
 
@@ -2482,7 +2493,8 @@ function saveFamilyNotes(){
   for(let i=1;i<=count;i++){
     const el=document.getElementById("hive-"+i);
     if(el){
-      localStorage.setItem("hive-note-"+i, el.value);
+    localStorage.setItem("hive-note-"+i, el.value);
+    localStorage.setItem("hives-count", count);
     }
   }
 
@@ -2491,22 +2503,44 @@ function saveFamilyNotes(){
 
 function loadFamilyNotes(){
 
-  const count=document.getElementById("hives-count").value;
+  const count = Number(document.getElementById("hives-count").value);
 
   for(let i=1;i<=count;i++){
-    const el=document.getElementById("hive-"+i);
+
+    const el = document.getElementById("hive-"+i);
+
     if(el){
-      el.value = localStorage.getItem("hive-note-"+i) || "";
+      const saved = localStorage.getItem("hive-note-"+i);
+      if(saved !== null){
+        el.value = saved;
+      }
     }
   }
 }
+  
+
+window.saveNote = function(){
+
+  if(!currentDay){
+    alert("Kliknij dzień!");
+    return;
+  }
+
+  const key = currentDay + "." + currentMonth + ".2026";
+
+  if(textarea){
+    localStorage.setItem(key, textarea.value);
+  }
 
 // =======================
 // 🚀 START
 // =======================
 updateMarkers();
 generateFamilyNotes();
+loadFamilyNotes(); // 🔥 DODAJ TO
 loadWeatherAndAssist();
+
+setTimeout(scrollToToday, 300);
 
 setInterval(loadWeatherAndAssist,120000);
 
@@ -2517,6 +2551,7 @@ const countInput=document.getElementById("hives-count");
 if(countInput) countInput.addEventListener("change", generateFamilyNotes);
 
 });
+
 </script>
 
 </body>
