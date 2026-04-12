@@ -2098,9 +2098,11 @@ Notatki pasieki:<br>
 <div id="honey-total"></div>
 
 <!-- NOTATKI DLA RODZIN PSZCZELICH -->
-<div id="family-panel" style="margin-top:15px; padding:10px; border:1px solid #ccc; border-radius:8px;">
-
-  <strong>🐝 Notatki dla rodzin pszczelich:</strong><br><br>
+<div id="family-panel">
+  <strong>Notatki dla rodzin pszczelich:</strong><br>
+  <div id="family-notes-container"></div>
+  <button id="save-family-notes">Zapisz notatki rodzin</button>
+</div>>
 
   Ilość uli: 
   <input type="number" id="hives-count" value="25" min="1" style="width:60px;">
@@ -2474,31 +2476,55 @@ function updateSmartAssistant(weatherData){
 
   let html = "<b>📒 Asystent:</b><br>";
 
+  const current = weatherData?.current || null;
+  const forecast = weatherData?.forecast || weatherData?.daily || null;
+
   for(let i=0;i<7;i++){
 
     const date = new Date();
     date.setDate(date.getDate()+i);
 
     const key =
-      String(date.getDate()).padStart(2,"0")+"."+
-      String(date.getMonth()+1).padStart(2,"0")+
-      ".2026";
+      String(date.getDate()).padStart(2,"0") + "." +
+      String(date.getMonth()+1).padStart(2,"0") + ".2026";
 
-    const note = (localStorage.getItem(key)||"").toLowerCase();
+    const note = (localStorage.getItem(key) || "").toLowerCase();
 
     let tasks = [];
-
     if(!note.includes("przegląd")) tasks.push("🔍 przegląd");
     if(!note.includes("karmienie")) tasks.push("🍯 karmienie");
 
-    const good =
-      weatherData &&
-      (weatherData.beeStatus === "IDEALNE" ||
-       weatherData.beeStatus === "ŚREDNIE");
+    // =======================
+    // 🐝 WARUNEK LOTU (FIX MAX)
+    // =======================
+    let good = false;
 
+    const temp = current?.temperature ?? 0;
+    const wind = current?.windspeed ?? 0;
+
+    if(i === 0){
+
+      // DZISIAJ
+      good = (temp >= 12 && wind < 25);
+
+    } else if(forecast){
+
+      const tMax = forecast.temperature_2m_max?.[i] ?? 0;
+      const windF = forecast.windspeed_10m_max?.[i] ?? 99;
+      const rain = forecast.precipitation_probability_max?.[i] ?? 100;
+
+      good =
+        (tMax >= 12) &&
+        (windF < 25) &&
+        (rain < 60);
+    }
+
+    // =======================
+    // 📌 RENDER (POPRAWNY)
+    // =======================
     if(!good){
       html += `<div style="color:red">${key} ❄ brak warunków</div>`;
-    }else{
+    } else {
       html += `<div style="color:green">${key} → ${tasks.join(" ")}</div>`;
     }
   }
