@@ -151,14 +151,7 @@ th, td {
 
 <h2>Kalendarz pszczelarski 2026</h2>
 
-<div id="bee-assistant" style="
-background:#e8f5e9;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
-
-<!-- ASYSTENT PSZCZELARZA -->
+<!-- ✅ ASYSTENT (TYLKO 1 RAZ) -->
 <div id="bee-assistant" style="background:#e8f5e9; padding:10px; border-radius:10px; margin-bottom:15px;">
   <h3>🐝 Asystent pszczelarza</h3>
   <div id="assistant-text">Sprawdzanie zaleceń...</div>
@@ -175,60 +168,46 @@ background:#FBC02D;
 cursor:pointer;
 font-weight:bold;
 ">
-
+DZIŚ
 </button>
 
 <!-- 🌦 POGODA -->
-<div id="weather-box" style="
-background:#fff8e1;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
+<div id="weather-box" style="background:#fff8e1;padding:10px;border-radius:10px;margin-bottom:15px;">
 
   <h3>🌦 Pogoda w pasiece</h3>
 
-  <div id="weather-data">
-    Ładowanie pogody...
+  <div id="weather-data">Ładowanie pogody...</div>
+
+  <div id="location-box" style="background:#e3f2fd;padding:10px;border-radius:10px;margin-top:10px;">
+    📍 Lokalizacja: ...
   </div>
 
-  <div id="location-box" style="
-  background:#e3f2fd;
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
-  font-size:14px;
-  ">
-    📍 Lokalizacja pasieki: sprawdzanie...
-  </div>
+  <div id="weather-forecast"></div>
 
-  <div id="weather-forecast" style="
-  margin-top:8px;
-  font-size:14px;
-  "></div>
-
-  <div id="bee-flight-alert" style="
-  margin-top:10px;
-  padding:8px;
-  background:#e8f5e9;
-  border-radius:8px;
-  font-weight:bold;
-  ">
-    🐝 Sprawdzanie warunków lotu pszczół...
-  </div>
+  <div id="bee-flight-alert">🐝 Sprawdzanie warunków...</div>
 
 </div>
 
-
-<!-- 🌼 SEZON -->
-<div id="season-info" style="
-margin-bottom:10px;
-font-weight:bold;
-"></div>
-
+<!-- 🔍 SEARCH -->
 <div id="search-panel">
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
+</div>
+
+<!-- ✅ KLUCZOWE: TEXTAREA MUSI BYĆ PER MIESIĄC -->
+<div id="notes-system" style="display:none;">
+  <textarea id="notes-01"></textarea>
+  <textarea id="notes-02"></textarea>
+  <textarea id="notes-03"></textarea>
+  <textarea id="notes-04"></textarea>
+  <textarea id="notes-05"></textarea>
+  <textarea id="notes-06"></textarea>
+  <textarea id="notes-07"></textarea>
+  <textarea id="notes-08"></textarea>
+  <textarea id="notes-09"></textarea>
+  <textarea id="notes-10"></textarea>
+  <textarea id="notes-11"></textarea>
+  <textarea id="notes-12"></textarea>
 </div>
 
 </body>
@@ -2270,23 +2249,24 @@ function updateMarkers(){
     const td = span.closest("td");
     if(!td) return;
 
-    td.classList.remove("today","tomorrow","has-note");
-
     const day = String(span.dataset.day).padStart(2,"0");
     const month = String(span.dataset.month).padStart(2,"0");
-    const key = day + "." + month + ".2026";
+    const key = `${day}.${month}.2026`;
 
-    const noteData = localStorage.getItem(key);
+    td.classList.remove("today","tomorrow","has-note");
 
     const old = td.querySelector(".note-marker");
     if(old) old.remove();
+
+    const noteData = localStorage.getItem(key);
 
     if(noteData && noteData.trim() !== ""){
 
       td.classList.add("has-note");
 
-      let icons = [];
       const text = noteData.toLowerCase();
+
+      let icons = [];
 
       if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
       if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
@@ -2315,7 +2295,7 @@ function updateMarkers(){
       if(text.includes("święta")) icons.push("🎄");
       if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
 
-      if(icons.length === 0) icons.push("📒");
+     if(icons.length === 0) icons.push("📒");
 
       const marker = document.createElement("span");
       marker.className = "note-marker";
@@ -2336,7 +2316,7 @@ function updateMarkers(){
 }
 
 // =======================
-// 📌 CLICK + NOTATKI
+// 📌 CLICK + NOTATKI (FIX)
 // =======================
 document.querySelectorAll("td .day-number").forEach(span => {
 
@@ -2345,7 +2325,7 @@ document.querySelectorAll("td .day-number").forEach(span => {
     currentDay = String(span.dataset.day).padStart(2,"0");
     currentMonth = String(span.dataset.month).padStart(2,"0");
 
-    const key = currentDay + "." + currentMonth + ".2026";
+    const key = `${currentDay}.${currentMonth}.2026`;
 
     textarea = document.querySelector("textarea[id^='notes-']");
 
@@ -2363,7 +2343,7 @@ window.saveNote = function(){
     return;
   }
 
-  const key = currentDay + "." + currentMonth + ".2026";
+  const key = `${currentDay}.${currentMonth}.2026`;
 
   if(textarea){
     localStorage.setItem(key, textarea.value);
@@ -2374,7 +2354,7 @@ window.saveNote = function(){
 };
 
 // =======================
-// 🌍 POGODA + GPS
+// 🌍 POGODA + GPS (FIXED)
 // =======================
 function loadWeather5Days(){
 
@@ -2393,11 +2373,10 @@ function loadWeather5Days(){
       if(isNaN(lat) || isNaN(lon)){
         lat = 52.24;
         lon = 23.09;
-        label = "Fallback";
       }
 
       if(locationBox){
-        locationBox.innerHTML = `📍 ${label}: ${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+        locationBox.innerHTML = `📍 ${label}`;
       }
 
       const url =
@@ -2420,12 +2399,10 @@ function loadWeather5Days(){
             (temp >= 12) ? "ŚREDNIE" : "SŁABE";
 
           if(weatherBox){
-            weatherBox.innerHTML =
-              `🌡 ${temp}°C<br>💨 ${wind} km/h<br><b>${beeStatus}</b>`;
+            weatherBox.innerHTML = `🌡 ${temp}°C 💨 ${wind} km/h<br><b>${beeStatus}</b>`;
           }
 
           if(forecastBox){
-
             let html = "<b>📅 5 dni:</b><br>";
 
             for(let i=1;i<=5;i++){
@@ -2450,7 +2427,7 @@ function loadWeather5Days(){
             beeBox.innerHTML = "🐝 " + beeStatus;
           }
 
-          resolve({beeStatus});
+          resolve({beeStatus, current: cw, forecast: data.daily});
         })
         .catch(()=>{
           resolve({beeStatus:"SŁABE"});
@@ -2458,8 +2435,8 @@ function loadWeather5Days(){
     }
 
     navigator.geolocation.getCurrentPosition(
-      pos=>fetchWeather(pos.coords.latitude, pos.coords.longitude, "GPS OK"),
-      ()=>fetchWeather(52.24, 23.09, "Fallback"),
+      pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
+      ()=>fetchWeather(52.24,23.09,"Fallback"),
       {enableHighAccuracy:true, timeout:10000}
     );
 
@@ -2467,7 +2444,7 @@ function loadWeather5Days(){
 }
 
 // =======================
-// 🤖 ASYSTENT
+// 🤖 ASYSTENT (FIX FINAL)
 // =======================
 function updateSmartAssistant(weatherData){
 
@@ -2476,8 +2453,8 @@ function updateSmartAssistant(weatherData){
 
   let html = "<b>📒 Asystent:</b><br>";
 
-  const current = weatherData?.current || null;
-  const forecast = weatherData?.forecast || weatherData?.daily || null;
+  const current = weatherData?.current;
+  const forecast = weatherData?.forecast;
 
   for(let i=0;i<7;i++){
 
@@ -2488,43 +2465,27 @@ function updateSmartAssistant(weatherData){
       String(date.getDate()).padStart(2,"0") + "." +
       String(date.getMonth()+1).padStart(2,"0") + ".2026";
 
-    const note = (localStorage.getItem(key) || "").toLowerCase();
+    const note = (localStorage.getItem(key)||"").toLowerCase();
 
     let tasks = [];
-    if(!note.includes("przegląd")) tasks.push("🔍 przegląd");
-    if(!note.includes("karmienie")) tasks.push("🍯 karmienie");
+    if(!note.includes("przegląd")) tasks.push("🔍");
+    if(!note.includes("karmienie")) tasks.push("🍯");
 
-    // =======================
-    // 🐝 WARUNEK LOTU (FIX MAX)
-    // =======================
     let good = false;
 
-    const temp = current?.temperature ?? 0;
-    const wind = current?.windspeed ?? 0;
+    if(i===0){
+      good = (current?.temperature>=12 && current?.windspeed<25);
+    }else{
+      const t = forecast?.temperature_2m_max?.[i] ?? 0;
+      const w = forecast?.windspeed_10m_max?.[i] ?? 99;
+      const r = forecast?.precipitation_probability_max?.[i] ?? 100;
 
-    if(i === 0){
-
-      // DZISIAJ
-      good = (temp >= 12 && wind < 25);
-
-    } else if(forecast){
-
-      const tMax = forecast.temperature_2m_max?.[i] ?? 0;
-      const windF = forecast.windspeed_10m_max?.[i] ?? 99;
-      const rain = forecast.precipitation_probability_max?.[i] ?? 100;
-
-      good =
-        (tMax >= 12) &&
-        (windF < 25) &&
-        (rain < 60);
+      good = (t>=12 && w<25 && r<60);
     }
 
-    // =======================
-    // 📌 RENDER (POPRAWNY)
-    // =======================
     if(!good){
       html += `<div style="color:red">${key} ❄ brak warunków</div>`;
-    } else {
+    }else{
       html += `<div style="color:green">${key} → ${tasks.join(" ")}</div>`;
     }
   }
@@ -2545,23 +2506,17 @@ updateMarkers();
 loadWeatherAndAssist();
 
 setTimeout(()=>{
-  const today = new Date();
-  const d = String(today.getDate()).padStart(2,"0");
-  const m = String(today.getMonth()+1).padStart(2,"0");
+  const d = String(new Date().getDate()).padStart(2,"0");
+  const m = String(new Date().getMonth()+1).padStart(2,"0");
 
   const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
   if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
-}, 300);
+},300);
 
 setInterval(loadWeatherAndAssist,120000);
 
-const saveBtn = document.getElementById("save-family-notes");
-if(saveBtn) saveBtn.addEventListener("click", saveFamilyNotes);
-
-const countInput = document.getElementById("hives-count");
-if(countInput) countInput.addEventListener("change", generateFamilyNotes);
-
 });
+
 </script>
 
 </body>
