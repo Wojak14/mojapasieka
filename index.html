@@ -2241,8 +2241,11 @@ let currentMonth = null;
 function updateMarkers(){
 
   const today = new Date();
-  const dayNow = String(today.getDate()).padStart(2,"0");
-  const monthNow = String(today.getMonth()+1).padStart(2,"0");
+  const d = String(today.getDate()).padStart(2,"0");
+  const m = String(today.getMonth()+1).padStart(2,"0");
+
+  goToDay(d, m);
+}
 
   document.querySelectorAll("td .day-number").forEach(span => {
 
@@ -2496,24 +2499,34 @@ function updateSmartAssistant(weatherData){
 // =======================
 // 🚀 START
 // =======================
-function loadWeatherAndAssist(){
-  loadWeather5Days().then(data=>{
-    updateSmartAssistant(data);
-  });
-}
-
 updateMarkers();
 loadWeatherAndAssist();
+function goToDay(day, month){
 
-setTimeout(()=>{
-  const d = String(new Date().getDate()).padStart(2,"0");
-  const m = String(new Date().getMonth()+1).padStart(2,"0");
+  const el = document.querySelector(
+    `.day-number[data-day="${day}"][data-month="${month}"]`
+  );
 
-  const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
-  if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
-},300);
+  if(!el){
+    console.log("❌ Nie znaleziono dnia:", day, month);
+    return;
+  }
 
-setInterval(loadWeatherAndAssist,120000);
+  const table = el.closest("table");
+
+  if(table){
+    table.scrollIntoView({
+      behavior:"smooth",
+      block:"start"
+    });
+  }
+
+  el.classList.add("today");
+}
+
+setTimeout(scrollToToday, 300);
+
+setInterval(loadWeatherAndAssist, 120000);
 
 });
 
