@@ -1,40 +1,29 @@
+✅ GOTOWY HTML (WKLEJ CAŁOŚĆ)
 <!DOCTYPE html>
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
 <title>Kalendarz Pszczelarski 2026</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#FBC02D">
 
 <link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
 <link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
 
-<link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
-
 <style>
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
-<div id="today"></div>
-<div id="upcoming"></div>
 }
 
-
-/* PODŚWIETLENIE DNIA W WYSZUKIWARCE */
-.highlight-day {
-  outline: 2px solid #ffcc00;
-  background-color: #fff4cc !important;
-  border-radius: 4px;
-}
-
+/* TABELA */
 table {
   width:100%;
   border-collapse: collapse;
   margin-bottom:20px;
 }
-
 
 th, td {
   border:1px solid #444;
@@ -48,174 +37,92 @@ th, td {
   font-weight:bold;
 }
 
-.has-note {
-  background-color: #fff59d;
-}
-
-.today {
-  border:2px solid #4caf50;
-}
-
-.tomorrow {
-  border:2px solid #ff9800;
-}
+.has-note { background-color:#fff59d; }
+.today { border:2px solid #4caf50; }
+.tomorrow { border:2px solid #ff9800; }
 
 .note-marker {
   margin-left:4px;
   font-size:14px;
 }
 
-.highlight-search {
-  background-color:#ffeb3b;
-  border-radius:4px;
-  padding:2px 4px;
-  margin-left:2px;
+/* SEARCH */
+#search-panel { margin:10px 0; }
+
+#search-results {
+  max-height:200px;
+  overflow-y:auto;
+  border:1px solid #ccc;
+  padding:5px;
+  background:#fffbea;
 }
 
-#day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
+#search-results div:hover {
+  background:#fffaaa;
+}
+
+/* BOXES */
+#day-note-box, #alerts-box, #inspection-honey {
   padding:10px;
   border-radius:10px;
   margin-top:15px;
   background:#fff8e1;
 }
 
-.notes {
-  width:100%;
-  height:80px;
-}
-
-#search-panel {
-  margin: 10px 0;
-}
-#search-results {
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  padding: 5px;
-  background: #fffbea;
-}
-#search-results div {
-  padding: 3px 5px;
-  cursor: pointer;
-}
-#search-results div:hover {
-  background-color: #fffaaa;
-}
-.highlight-day {
-  background-color: #ffe066 !important;
-  border-radius: 50%;
-}
-
-#autosave-status {
-  font-size:13px;
-  margin-top:4px;
-  color:green;
-}
-
+/* KOLORY */
 .green { background:#8BC34A; }
-.yellow { background:#FFEB3B; }
-.orange { background:#FF9800; }
 .red { background:#F44336; color:white; }
 .black { background:#000; color:white; }
 
-@media (max-width:600px) {
+/* MOBILE */
+@media (max-width:600px){
   table, th, td { font-size:12px; }
-  .notes { height:60px; }
 }
 </style>
-
 </head>
 
 <body>
 
-</html>
-
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Rojka | 🔴 Leczenie | ⬛ Zimowla</div>
 
-<h2>Kalendarz pszczelarski 2026</h2>
+<h2>🐝 Kalendarz pszczelarski 2026</h2>
 
-<div id="bee-assistant" style="
-background:#e8f5e9;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
-
-<!-- ASYSTENT PSZCZELARZA -->
-<div id="bee-assistant" style="background:#e8f5e9; padding:10px; border-radius:10px; margin-bottom:15px;">
+<!-- ASYSTENT -->
+<div id="bee-assistant" style="background:#e8f5e9;padding:10px;border-radius:10px;margin-bottom:15px;">
   <h3>🐝 Asystent pszczelarza</h3>
-  <div id="assistant-text">Sprawdzanie zaleceń...</div>
+  <div id="assistant-box">Ładowanie...</div>
 </div>
 
-<button id="today-btn" onclick="scrollToToday()" style="
-margin-top:8px;
-margin-bottom:10px;
+<!-- PRZYCISK -->
+<button onclick="scrollToToday()" style="
 padding:8px 12px;
-font-size:14px;
 border:none;
 border-radius:8px;
 background:#FBC02D;
-cursor:pointer;
 font-weight:bold;
-">
-
+cursor:pointer;">
+📍 Przejdź do dziś
 </button>
 
-<!-- 🌦 POGODA -->
-<div id="weather-box" style="
-background:#fff8e1;
-padding:10px;
-border-radius:10px;
-margin-bottom:15px;
-">
-
-  <h3>🌦 Pogoda w pasiece</h3>
-
-  <div id="weather-data">
-    Ładowanie pogody...
-  </div>
-
-  <div id="location-box" style="
-  background:#e3f2fd;
-  padding:10px;
-  border-radius:10px;
-  margin-top:10px;
-  font-size:14px;
-  ">
-    📍 Lokalizacja pasieki: sprawdzanie...
-  </div>
-
-  <div id="weather-forecast" style="
-  margin-top:8px;
-  font-size:14px;
-  "></div>
-
-  <div id="bee-flight-alert" style="
-  margin-top:10px;
-  padding:8px;
-  background:#e8f5e9;
-  border-radius:8px;
-  font-weight:bold;
-  ">
-    🐝 Sprawdzanie warunków lotu pszczół...
-  </div>
-
+<!-- POGODA -->
+<div id="weather-box" style="background:#fff8e1;padding:10px;border-radius:10px;margin-top:15px;">
+  <h3>🌦 Pogoda</h3>
+  <div id="weather-data">Ładowanie...</div>
 </div>
 
-
-<!-- 🌼 SEZON -->
-<div id="season-info" style="
-margin-bottom:10px;
-font-weight:bold;
-"></div>
-
+<!-- SEARCH -->
 <div id="search-panel">
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
 </div>
 
-</body>
-</html>
+<!-- NOTATKI -->
+<div id="day-note-box">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-04" rows="5" style="width:100%;"></textarea>
+  <br><br>
+  <button onclick="saveNote()">Zapisz</button>
+</div>
 
 
 <!-- STYCZEŃ 2026 -->
@@ -2220,102 +2127,126 @@ Notatki pasieki:<br>
 – Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
 – Zachować higienę w ulu i narzędziach<br>
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
-<script src="app.js"></script>
 
 <script>
+<script src="app.js"></script>
+
 document.addEventListener("DOMContentLoaded", function() {
 
-  let textarea = null;
-  let currentDay = null;
-  let currentMonth = null;
+let textarea=null;
+let currentDay=null;
+let currentMonth=null;
 
-  // --- MARKERY I IKONY ---
-  function updateMarkers() {
-    const today = new Date();
-    const dayNow = String(today.getDate()).padStart(2,"0");
-    const monthNow = String(today.getMonth()+1).padStart(2,"0");
+// =============================
+// 📌 MARKERY + IKONY
+// =============================
+function updateMarkers(){
 
-    document.querySelectorAll("td .day-number").forEach(span => {
-      const td = span.closest("td");
-      td.classList.remove("has-note","today","tomorrow");
+  const today=new Date();
+  const dayNow=String(today.getDate()).padStart(2,"0");
+  const monthNow=String(today.getMonth()+1).padStart(2,"0");
 
-      const day = span.dataset.day.padStart(2,"0");
-      const month = span.dataset.month.padStart(2,"0");
-      const key = day + "." + month + ".2026";
+  document.querySelectorAll(".day-number").forEach(span=>{
 
-      const oldMarker = td.querySelector(".note-marker");
-      if(oldMarker) oldMarker.remove();
+    const td=span.closest("td");
+    if(!td) return;
 
-      const noteData = localStorage.getItem(key);
-      if(noteData && noteData.trim() !== "") {
-        td.classList.add("has-note");
-        const marker = document.createElement("span");
-        marker.className = "note-marker";
+    td.classList.remove("has-note","today","tomorrow");
 
-         let icons = [];
-        const text = noteData.toLowerCase();
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
-        if(text.includes("leczenie") || text.includes("paski")) icons.push("🏷️");
-        if(text.includes("leczenie") || text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("leczenie") || text.includes("zakończenie leczenia")) icons.push("🛡️");
-        if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
-        if(text.includes("przegląd") || text.includes("sprawdzenie")) icons.push("📋");
-        if(text.includes("rój") || text.includes("rojka")) icons.push("🐝");
-        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
-        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-        if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
-        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦");
-        if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
-        if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
-        if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
-        if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-        if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");
-        if(text.includes("pogoda") || text.includes("niska temperatura")) icons.push("🌡");
-        if(text.includes("trutnie")) icons.push("👨‍🌾");
-        if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
-        if(text.includes("słonecznie")) icons.push("☀️");
-        if(text.includes("mgła")) icons.push("🌁");
-        if(text.includes("grad")) icons.push("🧊");
-        if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹"); 
+    const day=span.dataset.day.padStart(2,"0");
+    const month=span.dataset.month.padStart(2,"0");
+    const key=day+"."+month+".2026";
 
-        if(icons.length === 0) icons.push("📒");
-        marker.innerHTML = icons.join(" ");
-        span.after(marker); 
-      }
+    const old=td.querySelector(".note-marker");
+    if(old) old.remove();
 
-      if(day === dayNow && month === monthNow) td.classList.add("today");
-      const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
-      const tDay = String(tomorrow.getDate()).padStart(2,"0");
-      const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
-      if(day === tDay && month === tMonth) td.classList.add("tomorrow");
-    });
-  }
+    const note=(localStorage.getItem(key)||"").toLowerCase();
 
-  // --- OTWIERANIE NOTATKI PO KLIKU ---
-  document.querySelectorAll("td .day-number").forEach(span => {
-    span.addEventListener("click", () => {
-      currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = span.dataset.month.padStart(2,"0");
-      textarea = document.getElementById("notes-" + currentMonth);
-      const key = currentDay + "." + currentMonth + ".2026";
-      if(textarea){
-        textarea.value = localStorage.getItem(key) || "";
-        textarea.focus();
-      }
-    });
+    if(note){
+      td.classList.add("has-note");
+       
+       let icons = [];
+
+if(note.includes("miód") || note.includes("miodobranie")) icons.push("🫙");
+if(note.includes("karmienie") || note.includes("syrop") || note.includes("ciasto")) icons.push("🍯");
+if(note.includes("leczenie")) icons.push("💊");
+if(note.includes("paski")) icons.push("🏷️");
+if(note.includes("kwas")) icons.push("🌬️");
+if(note.includes("zakończenie leczenia")) icons.push("🛡️");
+if(note.includes("przegląd") || note.includes("kontrola")) icons.push("🔍");
+if(note.includes("sprawdzenie")) icons.push("📋");
+if(note.includes("inspekcja")) icons.push("🕵️‍♂️");
+if(note.includes("rój") || note.includes("rojka")) icons.push("🐝");
+if(note.includes("pożytek") || note.includes("nektar") || note.includes("pyłek")) icons.push("🌸");
+if(note.includes("matka") || note.includes("wymiana matki")) icons.push("👑");
+if(note.includes("ramki") || note.includes("węza")) icons.push("🧱");
+if(note.includes("nadstawka")) icons.push("📦");
+if(note.includes("deszcz")) icons.push("🌧");
+if(note.includes("wiatr")) icons.push("💨");
+if(note.includes("burza")) icons.push("🌩️");
+if(note.includes("śnieg")) icons.push("❄️");
+if(note.includes("mróz") || note.includes("zimno")) icons.push("🥶");
+if(note.includes("gorąco") || note.includes("upał")) icons.push("🥵");
+if(note.includes("pochmurno")) icons.push("🌫️");
+if(note.includes("niska temperatura")) icons.push("🌡");
+if(note.includes("słonecznie")) icons.push("☀️");
+if(note.includes("mgła")) icons.push("🌁");
+if(note.includes("grad")) icons.push("🧊");
+if(note.includes("trutnie")) icons.push("👨‍🌾");
+if(note.includes("odsklepianie") || note.includes("miotła")) icons.push("🧹"); 
+
+if(icons.length===0) icons.push("📒");
+
+      const marker=document.createElement("span");
+      marker.className="note-marker";
+      marker.innerHTML=icons.join(" ");
+
+      span.after(marker);
+    }
+
+      if(day===dayNow && month===monthNow) td.classList.add("today");
+
+    const tomorrow=new Date();
+    tomorrow.setDate(today.getDate()+1);
+
+    if(day===String(tomorrow.getDate()).padStart(2,"0") &&
+       month===String(tomorrow.getMonth()+1).padStart(2,"0")){
+      td.classList.add("tomorrow");
+    }
+
   });
+}}
 
-  window.saveNote = function() {
-    if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
-    const key = currentDay + "." + currentMonth + ".2026";
-    if(textarea) localStorage.setItem(key, textarea.value);
-    updateMarkers();
-    loadWeatherAndAssist();
-  };
+  // =============================
+// 📌 KLIK W DZIEŃ
+// =============================
+document.querySelectorAll(".day-number").forEach(span=>{
+  span.addEventListener("click",()=>{
+    currentDay=span.dataset.day.padStart(2,"0");
+    currentMonth=span.dataset.month.padStart(2,"0");
+
+    textarea=document.getElementById("notes-"+currentMonth);
+    const key=currentDay+"."+currentMonth+".2026";
+
+    if(textarea){
+      textarea.value=localStorage.getItem(key)||"";
+      textarea.focus();
+    }
+  });
+});
+
+  // =============================
+// 💾 ZAPIS
+// =============================
+window.saveNote=function(){
+  if(!currentDay) return alert("Kliknij dzień");
+
+  const key=currentDay+"."+currentMonth+".2026";
+  if(textarea) localStorage.setItem(key, textarea.value);
+
+  updateMarkers();
+  runAI();
+};
 
   // --- WYSZUKIWARKA NOTATEK ---
   const searchInput = document.getElementById('search-notes');
