@@ -1977,6 +1977,7 @@ cursor:pointer;">
     <button onclick="saveNote()">Zapisz notatkę</button>
   </div>
 
+<!-- PANEL PASIEKI -->
 <div id="apiary-panel">
 
 <h3>🛠 Panel pasieki</h3>
@@ -2368,12 +2369,6 @@ window.saveNote=function(){
   }
 
  function updateSmartAssistant(weatherData){
-const badWeather = weatherData && weatherData.beeStatus && weatherData.beeStatus.includes("SŁABE");
-
-if (badWeather) {
-  box.innerHTML = "❌ ZŁE WARUNKI LOTU – BRAK PRAC NA 7 DNI";
-  return;
-}
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
