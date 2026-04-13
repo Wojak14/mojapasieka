@@ -163,6 +163,13 @@ margin-bottom:15px;
   <div id="assistant-text">Sprawdzanie zaleceń...</div>
 </div>
 
+div.innerHTML = `
+  <b>Ul ${i}</b>
+  <textarea id="hive_${i}" oninput="localStorage.setItem('hive_${i}', this.value)">
+    ${saved}
+  </textarea>
+`;
+
 <button id="today-btn" onclick="scrollToToday()" style="
 margin-top:8px;
 margin-bottom:10px;
@@ -2102,6 +2109,9 @@ font-weight:bold;
 <button onclick="saveApiary()">💾 Zapisz pasiekę</button><hr>
 
 <h4>🐝 Notatki rodzin pszczelich (25 uli)</h4>
+<input id="hivesCount" type="number" value="23" min="1" max="100">
+<div id="hiveTable"></div>
+<button id="saveFamilyNotesBtn">💾 Zapisz notatki uli</button
 <div id="hiveTable"></div>
 <button onclick="saveHiveNotes()">💾 Zapisz notatki rodzin</button>
 </div>
@@ -2329,15 +2339,15 @@ function updateMarkers(){
     const old = td.querySelector(".note-marker");
     if(old) old.remove();
 
-    const note = (localStorage.getItem(key) || "").toLowerCase();
-    const text = note; 
+const rawNote = localStorage.getItem(key) || "";
+const text = rawNote.toLowerCase();
 
-    if(text.trim() !== ""){
-      td.classList.add("has-note");
+if(text){
+  td.classList.add("has-note");
 
-      let icons = [];;
+  let icons = [];
 
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
+        if(text.includes("miód") || const texttext.includes("miodobranie")) icons.push("🫙");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
         if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
         if(text.includes("leczenie") || text.includes("paski")) icons.push("🏷️");
@@ -2504,7 +2514,7 @@ function updateMarkers(){
           }
 
           if(beeBox) beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
-          resolve({beeStatus});
+          resolve({ beeStatus: beeStatus || "❄ SŁABE" });
         }).catch(()=>resolve(null));
       }
 
@@ -2830,13 +2840,21 @@ function generateHoneyForecast(){
   // =============================
   // 🌍 START SYSTEMU
   // =============================
-  initHiveTable();
-  updateMarkers();
+ initHiveTable();
+updateMarkers();
+
+setTimeout(() => {
   scrollToToday();
+}, 300);
 
   loadApiary();
 
   setInterval(updateMarkers, 60000);
+
+setInterval(() => {
+  updateMarkers();
+  loadWeatherAndAssist();
+}, 120000);
 
 });
 </script>
