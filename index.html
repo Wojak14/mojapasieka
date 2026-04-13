@@ -122,29 +122,13 @@ th, td {
   table, th, td { font-size:12px; }
   .notes { height:60px; }
 }
-
-#hiveTable {
-  display:grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap:6px;
-}
-
-.hive-box {
-  border:1px solid #ccc;
-  padding:5px;
-  font-size:12px;
-}
-
-.hive-box textarea {
-  width:100%;
-  height:50px;
-}
-
 </style>
 
 </head>
 
 <body>
+
+</html>
 
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Rojka | 🔴 Leczenie | ⬛ Zimowla</div>
 
@@ -162,13 +146,6 @@ margin-bottom:15px;
   <h3>🐝 Asystent pszczelarza</h3>
   <div id="assistant-text">Sprawdzanie zaleceń...</div>
 </div>
-
-div.innerHTML = `
-  <b>Ul ${i}</b>
-  <textarea id="hive_${i}" oninput="localStorage.setItem('hive_${i}', this.value)">
-    ${saved}
-  </textarea>
-`;
 
 <button id="today-btn" onclick="scrollToToday()" style="
 margin-top:8px;
@@ -2095,25 +2072,19 @@ font-weight:bold;
   </div>
 
 <!-- PANEL PASIEKI -->
-<div id="apiary-panel">
+<h2>🛠 Panel pasieki</h2>
+Liczba uli: <input id="hives-count" type="number" min="1" value="25"><br>
+Zebrany miód (kg): <input id="honey-amount" type="number" min="0" value="0"><br>
+Notatki pasieki:<br>
+<textarea id="apiary-notes" rows="3"></textarea><br>
+<button onclick="saveApiary()">💾 Zapisz pasiekę</button>
+<div id="honey-total"></div>
 
-<h3>🛠 Panel pasieki</h3>
-
-<label>Liczba uli:</label>
-<input type="number" id="hivesCount" value="25" min="1" max="100"><br><br>
-<label>Zebrany miód (kg):</label>
-<input type="number" id="honeyTotal" value="0"><br><br>
-
-<h4>📝 Notatki pasieki</h4>
-<textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
-<button onclick="saveApiary()">💾 Zapisz pasiekę</button><hr>
-
-<h4>🐝 Notatki rodzin pszczelich (25 uli)</h4>
-<input id="hivesCount" type="number" value="23" min="1" max="100">
-<div id="hiveTable"></div>
-<button id="saveFamilyNotesBtn">💾 Zapisz notatki uli</button
-<div id="hiveTable"></div>
-<button onclick="saveHiveNotes()">💾 Zapisz notatki rodzin</button>
+<!-- NOTATKI DLA RODZIN PSZCZELICH -->
+<div id="family-panel">
+  <strong>Notatki dla rodzin pszczelich:</strong><br>
+  <div id="family-notes-container"></div>
+  <button id="save-family-notes">Zapisz notatki rodzin</button>
 </div>
 
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
@@ -2258,96 +2229,32 @@ document.addEventListener("DOMContentLoaded", function() {
   let currentDay = null;
   let currentMonth = null;
 
-  // =============================
-  // 🐝 TABLICA ULI
-  // =============================
-  function initHiveTable(){
-    const countEl = document.getElementById("hivesCount");
-    const box = document.getElementById("hiveTable");
-    if(!countEl || !box) return;
+  // --- MARKERY I IKONY ---
+  function updateMarkers() {
+    const today = new Date();
+    const dayNow = String(today.getDate()).padStart(2,"0");
+    const monthNow = String(today.getMonth()+1).padStart(2,"0");
 
-    const count = parseInt(countEl.value || 25);
-    box.innerHTML = "";
+    document.querySelectorAll("td .day-number").forEach(span => {
+      const td = span.closest("td");
+      td.classList.remove("has-note","today","tomorrow");
 
-    for(let i=1;i<=count;i++){
-      const saved = localStorage.getItem("hive_"+i) || "";
+      const day = span.dataset.day.padStart(2,"0");
+      const month = span.dataset.month.padStart(2,"0");
+      const key = day + "." + month + ".2026";
 
-      const div = document.createElement("div");
-      div.className="hive-box";
+      const oldMarker = td.querySelector(".note-marker");
+      if(oldMarker) oldMarker.remove();
 
-      div.innerHTML = `
-        <b>Ul ${i}</b>
-        <textarea id="hive_${i}">${saved}</textarea>
-      `;
+      const noteData = localStorage.getItem(key);
+      if(noteData && noteData.trim() !== "") {
+        td.classList.add("has-note");
+        const marker = document.createElement("span");
+        marker.className = "note-marker";
 
-      box.appendChild(div);
-    }
-  }
-
-  function saveHiveNotes(){
-    const count = parseInt(document.getElementById("hivesCount")?.value || 25);
-
-    for(let i=1;i<=count;i++){
-      const el = document.getElementById("hive_"+i);
-      if(!el) continue;
-      localStorage.setItem("hive_"+i, el.value);
-    }
-
-    alert("Zapisano notatki rodzin 🐝");
-  }
-
-  function saveApiary(){
-    const honey = document.getElementById("honeyTotal")?.value || 0;
-    const notes = document.getElementById("apiaryNotes")?.value || "";
-
-    localStorage.setItem("apiary_honey", honey);
-    localStorage.setItem("apiary_notes", notes);
-
-    alert("Zapisano pasiekę 🛠");
-  }
-
-  function loadApiary(){
-    const honey = document.getElementById("honeyTotal");
-    const notes = document.getElementById("apiaryNotes");
-
-    if(honey) honey.value = localStorage.getItem("apiary_honey") || 0;
-    if(notes) notes.value = localStorage.getItem("apiary_notes") || "";
-
-    initHiveTable();
-  }
-
-  // =============================
-  // 📌 MARKERY NOTATEK
-  // =============================
-function updateMarkers(){
-
-  const today = new Date();
-  const dayNow = String(today.getDate()).padStart(2,"0");
-  const monthNow = String(today.getMonth()+1).padStart(2,"0");
-
-  document.querySelectorAll(".day-number").forEach(span=>{
-
-    const td = span.closest("td");
-    if(!td) return;
-
-    td.classList.remove("has-note","today","tomorrow");
-
-    const day = span.dataset.day.padStart(2,"0");
-    const month = span.dataset.month.padStart(2,"0");
-    const key = day+"."+month+".2026";
-
-    const old = td.querySelector(".note-marker");
-    if(old) old.remove();
-
-const rawNote = localStorage.getItem(key) || "";
-const text = rawNote.toLowerCase();
-
-if(text){
-  td.classList.add("has-note");
-
-  let icons = [];
-
-        if(text.includes("miód") || const texttext.includes("miodobranie")) icons.push("🫙");
+         let icons = [];
+        const text = noteData.toLowerCase();
+        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
         if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
         if(text.includes("leczenie") || text.includes("paski")) icons.push("🏷️");
@@ -2376,36 +2283,25 @@ if(text){
         if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹"); 
 
         if(icons.length === 0) icons.push("📒");
+        marker.innerHTML = icons.join(" ");
+        span.after(marker); 
+      }
 
-      const marker = document.createElement("span");
-      marker.className = "note-marker";
-      marker.innerHTML = icons.join(" ");
-      span.after(marker);
-    }
+      if(day === dayNow && month === monthNow) td.classList.add("today");
+      const tomorrow = new Date(); tomorrow.setDate(today.getDate()+1);
+      const tDay = String(tomorrow.getDate()).padStart(2,"0");
+      const tMonth = String(tomorrow.getMonth()+1).padStart(2,"0");
+      if(day === tDay && month === tMonth) td.classList.add("tomorrow");
+    });
+  }
 
-       if(day === dayNow && month === monthNow) td.classList.add("today");
-
-    const tomorrow = new Date();
-    tomorrow.setDate(today.getDate()+1);
-
-    if(day === String(tomorrow.getDate()).padStart(2,"0") &&
-       month === String(tomorrow.getMonth()+1).padStart(2,"0")){
-      td.classList.add("tomorrow");
-    }
-  });
-}
-
- // =============================
-  // 💾 KLIK W DZIEŃ
-  // =============================
-  document.querySelectorAll(".day-number").forEach(span=>{
-    span.addEventListener("click",()=>{
+  // --- OTWIERANIE NOTATKI PO KLIKU ---
+  document.querySelectorAll("td .day-number").forEach(span => {
+    span.addEventListener("click", () => {
       currentDay = span.dataset.day.padStart(2,"0");
       currentMonth = span.dataset.month.padStart(2,"0");
-
-      textarea = document.getElementById("notes-"+currentMonth);
-      const key = currentDay+"."+currentMonth+".2026";
-
+      textarea = document.getElementById("notes-" + currentMonth);
+      const key = currentDay + "." + currentMonth + ".2026";
       if(textarea){
         textarea.value = localStorage.getItem(key) || "";
         textarea.focus();
@@ -2413,46 +2309,42 @@ if(text){
     });
   });
 
-
-  window.saveNote = function(){
-    if(!currentDay) return alert("Kliknij dzień");
-    const key = currentDay+"."+currentMonth+".2026";
-
-    if(textarea){
-      localStorage.setItem(key, textarea.value);
-    }
-
+  window.saveNote = function() {
+    if(!currentDay){ alert("Najpierw kliknij dzień w kalendarzu"); return; }
+    const key = currentDay + "." + currentMonth + ".2026";
+    if(textarea) localStorage.setItem(key, textarea.value);
     updateMarkers();
     loadWeatherAndAssist();
   };
 
-  / =============================
-  // 🔍 WYSZUKIWARKA
-  // =============================
-  const searchInput = document.getElementById("search-notes");
-  const resultsContainer = document.getElementById("search-results");
+  // --- WYSZUKIWARKA NOTATEK ---
+  const searchInput = document.getElementById('search-notes');
+  const resultsContainer = document.getElementById('search-results');
 
   if(searchInput && resultsContainer){
-    searchInput.addEventListener("input",()=>{
+    searchInput.addEventListener('input', () => {
       const query = searchInput.value.toLowerCase().trim();
-      resultsContainer.innerHTML = "";
+      resultsContainer.innerHTML = '';
+      document.querySelectorAll('.day-number').forEach(day => day.classList.remove('highlight-day'));
+      if (!query) return;
 
-      if(!query) return;
-
-      for(let i=0;i<localStorage.length;i++){
+      for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
         const note = localStorage.getItem(key);
         if(note && note.toLowerCase().includes(query)){
-          const div = document.createElement("div");
-          div.innerHTML = `<b>${key}</b> ➤ ${note}`;
+          const div = document.createElement('div');
+          div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g,(m,n)=>
+            `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
+          )}`;
           resultsContainer.appendChild(div);
+          const [dd, mm] = key.split('.');
+          const dayElem = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+          if(dayElem) dayElem.classList.add('highlight-day');
         }
       }
     });
   }
-
 
   function scrollToToday() {
     const today = new Date();
@@ -2497,8 +2389,8 @@ if(text){
 
           if(forecastBox){
             const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 7 dni od jutra:</b><br>`;
-            for(let i=1;i<=7;i++){
+            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
+            for(let i=1;i<=5;i++){
               const date=new Date(); date.setDate(date.getDate()+i);
               const d=date.getDate().toString().padStart(2,"0");
               const m=(date.getMonth()+1).toString().padStart(2,"0");
@@ -2514,7 +2406,7 @@ if(text){
           }
 
           if(beeBox) beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
-          resolve({ beeStatus: beeStatus || "❄ SŁABE" });
+          resolve({beeStatus});
         }).catch(()=>resolve(null));
       }
 
@@ -2825,36 +2717,19 @@ function generateHoneyForecast(){
   box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
 }
 
-  // =============================
-  // 📍 START
-  // =============================
-  function scrollToToday(){
-    const today = new Date();
-    const d = String(today.getDate()).padStart(2,"0");
-    const m = String(today.getMonth()+1).padStart(2,"0");
-
-    const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
-    if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
-  }
-
-  // =============================
-  // 🌍 START SYSTEMU
-  // =============================
- initHiveTable();
-updateMarkers();
-
-setTimeout(() => {
-  scrollToToday();
-}, 300);
-
-  loadApiary();
-
-  setInterval(updateMarkers, 60000);
-
-setInterval(() => {
+  // --- URUCHOMIENIA STARTOWE ---
   updateMarkers();
-  loadWeatherAndAssist();
-}, 120000);
+  scrollToToday();
+  loadWeatherAndAssist();analyzeHivesPro();
+  generateHiveRanking();
+  generateHiveAlerts();
+  generateWeeklyPlanPro();
+  generateHoneyForecast();
+  runAIModule();
+  loadApiaryData();
+  hivesCountInput.addEventListener('change', generateFamilyNotes);
+  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
+  setInterval(()=>{ loadWeatherAndAssist(); },120000);
 
 });
 </script>
