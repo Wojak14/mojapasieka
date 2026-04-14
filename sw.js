@@ -1,33 +1,26 @@
-const CACHE_NAME = "pasieka-2026-final-v2";
+const CACHE_NAME = "pasieka-finalboss-v1";
 
-// pliki do cache (tylko najważniejsze!)
 const ASSETS = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./bee_icon_192x192.png",
-  "./bee_icon_512x512.png"
+  "/",
+  "/index.html",
+  "/manifest.json"
 ];
 
-// =======================
-// 📦 INSTALL
-// =======================
+// Instalacja
 self.addEventListener("install", e => {
-  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
+  self.skipWaiting();
 });
 
-// =======================
-// 🔄 ACTIVATE
-// =======================
+// Aktywacja
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys.map(k => {
-          if (k !== CACHE_NAME) return caches.delete(k);
+        keys.map(key => {
+          if (key !== CACHE_NAME) return caches.delete(key);
         })
       )
     )
@@ -35,42 +28,28 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
-// =======================
-// 🌐 FETCH (FINAL FIX)
-// =======================
+// Fetch (NAJWAŻNIEJSZE)
 self.addEventListener("fetch", e => {
+  const req = e.request;
 
-  const url = e.request.url;
-
-  // 🔥 1. NIE CACHE API (GPS + POGODA MUSZĄ DZIAŁAĆ NA ŻYWO)
-  if (url.includes("api.open-meteo.com")) {
-    e.respondWith(fetch(e.request));
-    return;
-  }
-
-  // 🔥 2. NAVIGATION (offline fallback)
-  if (e.request.mode === "navigate") {
+  // API (pogoda)
+  if (req.url.includes("api.open-meteo.com")) {
     e.respondWith(
-      fetch(e.request).catch(() => caches.match("./index.html"))
+      fetch(req)
+        .then(res => {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, copy));
+          return res;
+        })
+        .catch(() => caches.match(req))
     );
     return;
   }
 
-  // 🔥 3. RESZTA (cache + fallback)
+  // STRONY (offline fallback)
   e.respondWith(
-    caches.match(e.request).then(res => {
-      return res || fetch(e.request).then(response => {
-
-        // tylko poprawne odpowiedzi
-        if (!response || response.status !== 200) return response;
-
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-
-        return response;
-
-      }).catch(() => caches.match("./index.html"));
-    })
+    fetch(req)
+      .then(res => res)
+      .catch(() => caches.match(req).then(r => r || caches.match("/index.html")))
   );
-
 });
