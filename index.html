@@ -2068,8 +2068,7 @@ font-weight:bold;
 <textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
 <button onclick="saveApiary()">💾 Zapisz pasiekę</button><hr>
 
-<h4>🐝 Notatki rodzin pszczelich (25 uli)</h4>
-<textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
+<h4>🐝 Notatki rodzin pszczelich</h4>
 <input id="hivesCount" type="number" value="25" min="1" max="100">
 <button id="saveFamilyNotesBtn">💾 Zapisz notatki uli</button>
 <div id="hiveTable"></div>
@@ -2351,10 +2350,17 @@ document.addEventListener("DOMContentLoaded", function() {
       const beeBox = document.getElementById("bee-flight-alert");
       const locationBox = document.getElementById("location-box");
 
-      function fetchWeather(lat, lon, label="Fallback") {
-        lat = Number(lat); lon = Number(lon);
-        if(isNaN(lat) || isNaN(lon)) { lat=52.24; lon=23.09; label="Werpol (fallback)"; }
-        if(locationBox) locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
+  function fetchWeatherData(lat, lon, label="Fallback") {
+  lat = Number(lat); lon = Number(lon);
+  if (isNaN(lat) || isNaN(lon)) {
+    lat = 52.24;
+    lon = 23.09;
+    label = "Werpol (fallback)";
+  }
+        if (locationBox) {
+    locationBox.innerHTML =
+      `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
+  }
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
 
