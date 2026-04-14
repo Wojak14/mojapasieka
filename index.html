@@ -621,7 +621,6 @@ font-weight:bold;
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
     <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
     <div>🎉 nowy rok</div>
     <div>🎄 święta</div>
     <div>🏠 ule / pasieka</div>
@@ -2266,6 +2265,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
         if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
         if(text.includes("dezynfekcja")) icons.push("🧴") 
+        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝")
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
