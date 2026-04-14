@@ -36,25 +36,11 @@ table {
 }
 
 
-media screen and (orientation: portrait) {
-  body {
-    transform: rotate(0deg);
-  }
-}
-
 @media screen and (orientation: landscape) {
-  body {
+  #app {
     transform: rotate(90deg);
-    transform-origin: left top;
-    width: 100vh;
-    height: 100vw;
-    overflow-x: hidden;
-    position: absolute;
-    top: 100%;
-    left: 0;
   }
 }
-
 
 th, td {
   border:1px solid #444;
@@ -2254,22 +2240,22 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
         if(text.includes("leczenie") || text.includes("paski")) icons.push("🏷️");
         if(text.includes("leczenie") || text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("leczenie") || text.includes("zakończenie leczenia")) icons.push("🛡️");
-        if(text.includes("przegląd") || text.includes("kontrola")) icons.push("🔍");
-        if(text.includes("przegląd") || text.includes("sprawdzenie")) icons.push("📋");
+        if(text.includes("zakończenie leczenia")) icons.push("🛡️");
+        if(text.includes("przegląd")) icons.push("🔍");
+        if(text.includes("sprawdzenie")) icons.push("📋");
         if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
         if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
         if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-        if(text.includes("ramki") || text.includes("węza")) icons.push("🧱");
-        if(text.includes("ramki") || text.includes("nadstawka")) icons.push("📦");
-        if(text.includes("pogoda") || text.includes("deszcz")) icons.push("🌧");
-        if(text.includes("pogoda") || text.includes("wiatr")) icons.push("💨");
-        if(text.includes("pogoda") || text.includes("burza")) icons.push("🌩️");
-        if(text.includes("pogoda") || text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("pogoda") || text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-        if(text.includes("pogoda") || text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pogoda") || text.includes("pochmurno")) icons.push("🌫️");
-        if(text.includes("pogoda") || text.includes("niska temperatura")) icons.push("🌡");
+        if(text.includes("węza")) icons.push("🧱");
+        if(text.includes("nadstawka")) icons.push("📦");
+        if(text.includes("deszcz")) icons.push("🌧");
+        if(text.includes("wiatr")) icons.push("💨");
+        if(text.includes("burza")) icons.push("🌩️");
+        if(text.includes("śnieg")) icons.push("❄️");
+        if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
+        if(text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
+        if(text.includes("pochmurno")) icons.push("🌫️");
+        if(text.includes("niska temperatura")) icons.push("🌡");
         if(text.includes("trutnie")) icons.push("👨‍🌾");
         if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
         if(text.includes("słonecznie")) icons.push("☀️");
