@@ -1,4 +1,4 @@
-const CACHE_NAME = "pasieka-finalboss-v1";
+const CACHE_NAME = "pasieka-v6";
 
 const ASSETS = [
   "/",
@@ -6,15 +6,16 @@ const ASSETS = [
   "/manifest.json"
 ];
 
-// Instalacja
+// INSTALL
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(ASSETS))
   );
   self.skipWaiting();
 });
 
-// Aktywacja
+// ACTIVATE
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -28,28 +29,20 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
-// Fetch (NAJWAŻNIEJSZE)
+// FETCH (NAJWAŻNIEJSZE)
 self.addEventListener("fetch", e => {
-  const req = e.request;
+  if (e.request.method !== "GET") return;
 
-  // API (pogoda)
-  if (req.url.includes("api.open-meteo.com")) {
-    e.respondWith(
-      fetch(req)
-        .then(res => {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(c => c.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
-    return;
-  }
-
-  // STRONY (offline fallback)
   e.respondWith(
-    fetch(req)
-      .then(res => res)
-      .catch(() => caches.match(req).then(r => r || caches.match("/index.html")))
+    caches.match(e.request).then(cached => {
+      return cached || fetch(e.request)
+        .then(res => {
+          return caches.open("pasieka-v6").then(cache => {
+            cache.put(e.request, res.clone());
+            return res;
+          });
+        })
+        .catch(() => caches.match("/index.html"));
+    })
   );
-});
+}));
