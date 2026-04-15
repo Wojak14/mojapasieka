@@ -2351,6 +2351,32 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   // --- POGODA 5 DNI + DZIŚ ---
+
+async function getLocationData(lat, lon) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`;
+
+  const res = await fetch(url);
+  const data = await res.json();
+
+  const addr = data.address || {};
+
+  const city =
+    addr.city ||
+    addr.town ||
+    addr.village ||
+    addr.county ||
+    "Nieznane miasto";
+
+  const road = addr.road || "";
+  const house = addr.house_number || "";
+  const country = addr.country || "";
+
+  return {
+    city,
+    fullAddress: `${road} ${house}, ${city}, ${country}`.replace(/ ,/g, ",").trim()
+  };
+}
+
   function loadWeather5Days() {
     return new Promise((resolve)=>{
       const weatherBox = document.getElementById("weather-data");
@@ -2361,7 +2387,14 @@ document.addEventListener("DOMContentLoaded", function() {
       function fetchWeather(lat, lon, label="Fallback") {
         lat = Number(lat); lon = Number(lon);
         if(isNaN(lat) || isNaN(lon)) { lat=52.24; lon=23.09; label="Werpol (fallback)"; }
-        if(locationBox) locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
+        getLocationData(lat, lon).then(loc => {
+  if(locationBox) {
+    locationBox.innerHTML =
+      `📍 ${loc.city}<br>
+       🏠 ${loc.fullAddress}<br>
+       🌐 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+  }
+});
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
 
