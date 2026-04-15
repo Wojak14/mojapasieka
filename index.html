@@ -2059,7 +2059,7 @@ font-weight:bold;
 <h3>🛠 Panel pasieki</h3>
 
 <label>Liczba uli:</label>
-<input type="number" id="hivesCount" value="22" min="1" max="100"><br><br>
+<input type="number" id="hivesCount" value="23" min="1" max="100"><br><br>
 
 <label>Zebrany miód (kg):</label>
 <input type="number" id="honeyTotal" value="0"><br><br>
@@ -2069,16 +2069,6 @@ font-weight:bold;
 <button onclick="saveApiary()">💾 Zapisz pasiekę</button>
 
 <hr>
-
-<h4>🐝 Notatki rodzin pszczelich</h4>
-
-<div id="hiveTable"></div>
-
-<button id="saveFamilyNotesBtn" onclick="saveHiveNotes()">
-💾 Zapisz notatki rodzin
-</button>
-
-</div>
 
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
@@ -2418,8 +2408,8 @@ async function getLocationData(lat, lon) {
 
           if(forecastBox){
             const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
-            for(let i=1;i<=5;i++){
+            let html=`<b>📅 Prognoza 7 dni od jutra:</b><br>`;
+            for(let i=1;i<=7;i++){
               const date=new Date(); date.setDate(date.getDate()+i);
               const d=date.getDate().toString().padStart(2,"0");
               const m=(date.getMonth()+1).toString().padStart(2,"0");
@@ -2448,6 +2438,22 @@ async function getLocationData(lat, lon) {
       } else fetchWeather(52.24,23.09,"Werpol (fallback)");
     });
   }
+
+setInterval(() => {
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    localStorage.setItem("lastGPS", JSON.stringify({
+      lat,
+      lon,
+      time: Date.now()
+    }));
+
+    console.log("🐝 GPS zapisany:", lat, lon);
+  });
+}, 2 * 60 * 1000);
+
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
   async function loadWeatherAndAssist(){
