@@ -173,6 +173,32 @@ table, div, section {
   box-sizing: border-box;
 }
 
+/* 🔥 ULTRA CZYTELNY TRYB */
+body.ultra td {
+  height: 85px;          /* większe komórki */
+}
+
+body.ultra .day-number {
+  font-size: 16px;       /* 🔥 duże cyfry dni */
+  font-weight: bold;
+}
+
+body.ultra td div {
+  font-size: 14px;       /* 🔥 większy tekst */
+  line-height: 1.3;
+}
+
+body.ultra td span {
+  font-size: 13px;
+  padding: 3px 5px;
+}
+
+/* 🔥 lepsze odstępy */
+body.ultra td {
+  padding: 6px;
+}
+
+
 </style>
 
 </head>
@@ -183,6 +209,10 @@ table, div, section {
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Rojka | 🔴 Leczenie | ⬛ Zimowla</div>
 
 <h2>Kalendarz pszczelarski 2026</h2>
+
+<div style="margin:10px 0;">
+  <button onclick="toggleUltra()">🔍 Tryb czytelny</button>
+</div>
 
 <!-- ASYSTENT PSZCZELARZA -->
 
@@ -2090,6 +2120,8 @@ font-weight:bold;
   </div>
 
 <div id="apiary-panel">
+
+<button onclick="toggleUltra()">🔍 Tryb czytelny</button>
 
 <h3>🛠 Panel pasieki</h3>
 
