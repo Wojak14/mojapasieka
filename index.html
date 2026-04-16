@@ -1,40 +1,32 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-<meta charset="UTF-8">
-<title>Kalendarz Pszczelarski 2026</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#FBC02D">
-
-<link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
-
-<link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
-
 <style>
-
-/* 🔥 BASE */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 10px;
 }
 
-/* 🔥 PODŚWIETLENIE DNIA */
+/* PODŚWIETLENIE DNIA W WYSZUKIWARCE */
 .highlight-day {
   outline: 2px solid #ffcc00;
   background-color: #fff4cc !important;
   border-radius: 4px;
 }
 
-/* 🔥 KALENDARZ */
 table {
   width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
   margin-bottom: 20px;
+}
+
+td {
+  border:1px solid #444;
+  height:65px;              /* 🔥 kompakt */
+  padding:3px;
+  vertical-align: top;
+  text-align:center;
+  font-size:10px;
+  overflow-y:auto;
 }
 
 th {
@@ -43,61 +35,61 @@ th {
   font-size:12px;
 }
 
-td {
-  border:1px solid #444;
-  height:65px;
-  padding:3px;
-  vertical-align: top;
-  text-align:center;
-  font-size:10px;
-  overflow: hidden; /* 🔥 brak scrolla */
-  word-wrap: break-word;
-}
-
-/* 🔥 NUMER DNIA */
+/* 🔥 dzień */
 .day-number {
-  font-size:25px;
+  font-size:11px;
   font-weight:bold;
   cursor:pointer;
 }
 
-/* 🔥 TEKST W KOMÓRCE (OBCIĘCIE) */
-td div {
-  font-size:11px;
-  line-height:1.1;
-
-  display: -webkit-box;
-  -webkit-line-clamp: 3;   /* max 3 linie */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.has-note {
+  background-color: #fff59d;
 }
 
-/* 🔥 TAGI */
-td span {
-  font-size:15px;
-  padding:7px 8px;
-  display:inline-block;
-  border-radius:9px;
+.today {
+  border:2px solid #4caf50;
 }
 
-/* 🔥 STATUSY */
-.has-note { background-color:#fff59d; }
-.today { border:2px solid #4caf50; }
-.tomorrow { border:2px solid #ff9800; }
+.tomorrow {
+  border:2px solid #ff9800;
+}
 
 .note-marker {
-  margin-left:9px;
-  font-size:12px;
+  margin-left:4px;
+  font-size:14px;
 }
 
-/* 🔥 WYSZUKIWARKA */
+
+/* 🔥 tekst w komórkach */
+td div {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+/* 🔥 pomarańczowe bloki */
+td span {
+  font-size: 10px;
+  padding: 2px 3px;
+  display: inline-block;
+}
+
+/* 🔥 ograniczenie wysokości komórki */
+td {
+  max-height: 80px;
+}
+
+/* 🔥 przewijanie zamiast rozciągania */
+td {
+  overflow-y: auto;
+}
+
 .highlight-search {
   background-color:#ffeb3b;
-  border-radius:9px;
-  padding:7px 9px;
+  border-radius:4px;
+  padding:2px 4px;
+  margin-left:2px;
 }
 
-/* 🔥 BOXy */
 #day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
   padding:10px;
   border-radius:10px;
@@ -105,70 +97,70 @@ td span {
   background:#fff8e1;
 }
 
-/* 🔥 NOTATKI */
 .notes {
   width:100%;
   height:80px;
 }
 
-/* 🔥 SEARCH */
-#search-panel { margin:10px 0; }
-
+#search-panel {
+  margin: 10px 0;
+}
 #search-results {
-  max-height:200px;
-  overflow-y:auto;
-  border:6px solid #ccc;
-  padding:5px;
-  background:#fffbea;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 5px;
+  background: #fffbea;
 }
-
 #search-results div {
-  padding:3px 5px;
-  cursor:pointer;
+  padding: 3px 5px;
+  cursor: pointer;
 }
-
 #search-results div:hover {
-  background-color:#fffaaa;
+  background-color: #fffaaa;
+}
+.highlight-day {
+  background-color: #ffe066 !important;
+  border-radius: 50%;
 }
 
-/* 🔥 STATUS KOLORÓW */
+#autosave-status {
+  font-size:13px;
+  margin-top:4px;
+  color:green;
+}
+
 .green { background:#8BC34A; }
 .yellow { background:#FFEB3B; }
 .orange { background:#FF9800; }
 .red { background:#F44336; color:white; }
 .black { background:#000; color:white; }
 
+@media (max-width:600px) {
+  table, th, td { font-size:12px; }
+  .notes { height:60px; }
+}
+
 /* 🔥 FULLSCREEN FIX */
 html, body {
-  width:100%;
-  margin:0;
-  padding:0;
-  overflow-x:hidden;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body {
+  display: block;
 }
 
 table, div, section {
-  width:100%;
-  box-sizing:border-box;
-}
-
-/* 🔥 MOBILE HARD */
-@media (max-width:600px) {
-
-  td {
-    height:60px;
-    font-size:10px;
-  }
-
-  .day-number {
-    font-size:10px;
-  }
-
-  .notes {
-    height:60px;
-  }
+  width: 100%;
+  box-sizing: border-box;
 }
 
 </style>
+
+</head>
 
 <body>
 
