@@ -2355,22 +2355,10 @@ document.addEventListener("DOMContentLoaded", function() {
       const beeBox = document.getElementById("bee-flight-alert");
       const locationBox = document.getElementById("location-box");
 
-      function fetchWeather(lat, lon, label="Fallback", loc=null)
+      function fetchWeather(lat, lon, label="Fallback") {
         lat = Number(lat); lon = Number(lon);
         if(isNaN(lat) || isNaN(lon)) { lat=52.24; lon=23.09; label="Werpol (fallback)"; }
-        if(locationBox){
-
-        locationBox.innerHTML = `
-    📍 ${loc ? loc.city : "Nieznane miejsce"}<br>
-    🏠 ${loc ? loc.fullAddress : ""}<br>
-    🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}<br>
-    🕒 ${new Date().toLocaleTimeString("pl-PL", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit"
-    })}
-  `;
-};
+        if(locationBox) locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
 
@@ -2416,27 +2404,14 @@ document.addEventListener("DOMContentLoaded", function() {
       }
 
       if(navigator.geolocation){
-     navigator.geolocation.getCurrentPosition(
-  async (pos)=>{
-
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-
-    const loc = await getLocationData(lat, lon);
-
-    fetchWeather(lat, lon, "GPS", loc);
-  },
-
-  (err)=>{
-    fetchWeather(52.24, 23.09, "Werpol (fallback)");
-  },
-
-  {
-    enableHighAccuracy: true,
-    timeout: 8000,
-    maximumAge: 300000
+        navigator.geolocation.getCurrentPosition(
+          pos=>fetchWeather(pos.coords.latitude,pos.coords.longitude,"GPS"),
+          ()=>fetchWeather(52.24,23.09,"Werpol (fallback)"),
+          {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
+        );
+      } else fetchWeather(52.24,23.09,"Werpol (fallback)");
+    });
   }
-);}
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
   async function loadWeatherAndAssist(){
