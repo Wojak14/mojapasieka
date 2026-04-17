@@ -28,43 +28,22 @@ body {
 }
 
 table {
-  width: 100%;
-  table-layout: fixed;
+  width:100%;
   border-collapse: collapse;
-  margin-bottom: 20px;
+  margin-bottom:20px;
 }
 
-td {
+
+th, td {
   border:1px solid #444;
-  height:65px;              /* 🔥 kompakt */
-  padding:3px;
-  vertical-align: top;
+  padding:6px;
   text-align:center;
-  font-size:10px;
-  overflow-y:auto;
+  position:relative;
 }
 
-td {
-  width: 14.28%;
-  aspect-ratio: 1 / 1; /* 🔥 robi idealny kwadrat */
-  vertical-align: top;
-  position: relative;
-  padding: 4px;
-}
-
-
-th {
-  border:1px solid #444;
-  padding:4px;
-  font-size:13px;
-}
-
-/* 🔥 dzień */
 .day-number {
-  font-size: 20px; /* było małe */
-  font-weight: bold;
-  display: block;
-  margin-bottom: 4px;
+  cursor:pointer;
+  font-weight:bold;
 }
 
 .has-note {
@@ -82,30 +61,6 @@ th {
 .note-marker {
   margin-left:4px;
   font-size:14px;
-}
-
-
-/* 🔥 TEKST W KOMÓRKACH – ŚREDNI */
-td div {
-  font-size: 15px;   /* 👈 większy tekst */
-  line-height: 1.2;
-}
-
-/* 🔥 pomarańczowe bloki */
-td span {
-  font-size: 10px;
-  padding: 2px 3px;
-  display: inline-block;
-}
-
-/* 🔥 ograniczenie wysokości komórki */
-td {
-  max-height: 80px;
-}
-
-/* 🔥 przewijanie zamiast rozciągania */
-td {
-  overflow-y: auto;
 }
 
 .highlight-search {
@@ -144,6 +99,10 @@ td {
 #search-results div:hover {
   background-color: #fffaaa;
 }
+.highlight-day {
+  background-color: #ffe066 !important;
+  border-radius: 50%;
+}
 
 #autosave-status {
   font-size:13px;
@@ -158,8 +117,8 @@ td {
 .black { background:#000; color:white; }
 
 @media (max-width:600px) {
-  table, th, td { font-size:14px; }
-  .notes { height:70px; }
+  table, th, td { font-size:12px; }
+  .notes { height:60px; }
 }
 
 /* 🔥 FULLSCREEN FIX */
@@ -179,76 +138,6 @@ table, div, section {
   box-sizing: border-box;
 }
 
-/* 🔥 ULTRA CZYTELNY TRYB */
-body.ultra td {
-  height: 85px;          /* większe komórki */
-}
-
-body.ultra .day-number {
-  font-size: 16px;       /* 🔥 duże cyfry dni */
-  font-weight: bold;
-}
-
-body.ultra td div {
-  font-size: 16px;       /* 🔥 większy tekst */
-  line-height: 1.3;
-}
-
-body.ultra td span {
-  font-size: 13px;
-  padding: 3px 5px;
-}
-
-/* 🔥 lepsze odstępy */
-body.ultra td {
-  padding: 6px;
-}
-
-@keyframes pulseAlert {
-  0% { box-shadow: 0 0 5px red; }
-  50% { box-shadow: 0 0 20px red; }
-  100% { box-shadow: 0 0 5px red; }
-}
-
-.alert-pulse {
-  animation: pulseAlert 1s infinite;
-}
-
-/* =========================
-   🐝 KALENDARZ – TRYB CZYTELNY
-   ========================= */
-
-td {
-  width: 14.28%;
-  aspect-ratio: 1 / 1; /* 🔥 kwadrat */
-  vertical-align: top;
-  position: relative;
-  padding: 4px;
-  font-size: 15px;
-  line-height: 1.2;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
-  font-weight: 600;
-}
-
-.day-number {
-  font-size: 20px;
-  font-weight: bold;
-  display: block;
-  margin-bottom: 4px;
-}
-
-/* 🔥 TRYB SENIOR */
-body.large-mode td {
-  font-size: 18px;
-}
-
-body.large-mode .day-number {
-  font-size: 24px;
-}
-
-
 </style>
 
 </head>
@@ -259,10 +148,6 @@ body.large-mode .day-number {
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Rojka | 🔴 Leczenie | ⬛ Zimowla</div>
 
 <h2>Kalendarz pszczelarski 2026</h2>
-
-<div style="margin:10px 0;">
-  <button onclick="toggleUltra()">🔍 Tryb czytelny</button>
-</div>
 
 <!-- ASYSTENT PSZCZELARZA -->
 
@@ -275,8 +160,6 @@ body.large-mode .day-number {
 
 <div id="today"></div>
 <div id="upcoming"></div>
-
-
 
 <button id="today-btn" onclick="scrollToToday()" style="
 margin-top:8px;
@@ -331,33 +214,6 @@ margin-bottom:15px;
     🐝 Sprawdzanie warunków lotu pszczół...
   </div>
 
-<div id="beeAlert30" style="
-  margin-top:8px;
-  padding:8px;
-  border-radius:8px;
-  font-weight:bold;
-"></div>
-
-<div id="beeWorkWindow" style="
-  margin-top:8px;
-  padding:8px;
-  border-radius:8px;
-  font-weight:bold;
-  background:#e3f2fd;
-">
-  ⏰ Szukanie najlepszego okna pracy...
-</div>
-
-<div id="swarmAI" style="
-  margin-top:10px;
-  padding:10px;
-  background:#111;
-  color:#fff;
-  border-radius:10px;
-">
-  🐝 Rojenie AI ładowanie...
-</div>
-
 </div>
 
 
@@ -374,6 +230,7 @@ font-weight:bold;
 
 </body>
 </html>
+
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
