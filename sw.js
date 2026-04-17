@@ -45,4 +45,16 @@ self.addEventListener("fetch", e => {
         .catch(() => caches.match("/index.html"));
     })
   );
-}));
+});
+
+// =========================
+// 🔔 PUSH OBSŁUGA
+// =========================
+
+self.addEventListener("notificationclick", function(event) {
+  event.notification.close();
+
+  event.waitUntil(
+    clients.openWindow("/")
+  );
+});
