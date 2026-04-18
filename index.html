@@ -2429,32 +2429,18 @@ function fetchWeather(lat, lon, label, loc = null){
     second: "2-digit"
   });
 
-// 🧠 NAZWA MIEJSCOWOŚCI + ULICA (reverse geocoding)
-const city =
-  loc?.city ||
-  loc?.town ||
-  loc?.village ||
-  loc?.municipality ||
-  loc?.county ||
-  "Nieznana lokalizacja";
+  // 🧠 NAZWA MIEJSCOWOŚCI
+  const city = loc?.city || loc?.village || loc?.town || "Nieznana lokalizacja";
+  const address = loc?.display_name || "";
 
-const street =
-  loc?.road ||
-  loc?.pedestrian ||
-  loc?.footway ||
-  loc?.street ||
-  "brak ulicy";
-
-const address = loc?.display_name || `${street}, ${city}`;
-
-if (locationBox) {
-  locationBox.innerHTML = `
-    📍 <b>${city}</b><br>
-    🏠 ${street}<br>
-    🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}<br>
-    🕒 ${timeNow}
-  `;
-}
+  if(locationBox){
+    locationBox.innerHTML = `
+      📍 <b>${city}</b><br>
+      🏠 ${address}<br>
+      🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}<br>
+      🕒 ${timeNow}
+    `;
+  }
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
 
