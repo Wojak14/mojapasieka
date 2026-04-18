@@ -2312,8 +2312,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
         if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
         if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
-        if(text.includes("dezynfekcja")) icons.push("🧴") 
-        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝")
+        if(text.includes("dezynfekcja")) icons.push("🧴"); 
+        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
@@ -2807,7 +2807,8 @@ function generateHoneyForecast(){
   // --- URUCHOMIENIA STARTOWE ---
   updateMarkers();
   scrollToToday();
-  loadWeatherAndAssist();analyzeHivesPro();
+  loadWeatherAndAssist();
+  analyzeHivesPro();
   generateHiveRanking();
   generateHiveAlerts();
   generateWeeklyPlanPro();
