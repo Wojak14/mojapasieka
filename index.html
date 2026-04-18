@@ -28,28 +28,30 @@ body {
 }
 
 table {
-  width: 100%;
-  table-layout: fixed;
+  width:100%;
   border-collapse: collapse;
+  margin-bottom:20px;
 }
 
 
-th {
-  border: 1px solid #444;
-  padding: 6px;
-  font-size: 13px;
-  text-align: center;
+th, td {
+  border:1px solid #444;
+  text-align:center;
+  position:relative;
 }
 
 td {
   width: 14.28%;
-  aspect-ratio: 1 / 1;   /* KWADRAT */
-  border: 1px solid #444;
-  padding: 4px;
+  aspect-ratio: 1 / 1;
   vertical-align: top;
 
-  font-size: 14px;
-  font-weight: 600;
+  padding: 3px;
+  font-size: 13px;
+  line-height: 1.1;
+
+  word-break: break-word;
+  overflow: hidden;
+}
 
 .day-number {
   font-size: 18px;
@@ -171,6 +173,7 @@ table, div, section {
   }
 }
 
+
 </style>
 
 </head>
@@ -260,10 +263,6 @@ font-weight:bold;
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
 </div>
-
-</body>
-</html>
-
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
@@ -2305,8 +2304,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
         if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
         if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
-        if(text.includes("dezynfekcja")) icons.push("🧴") 
-        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝")
+        if(text.includes("dezynfekcja")) icons.push("🧴"); 
+        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
@@ -2380,7 +2379,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
-  // --- POGODA 6 DNI + DZIŚ ---
+  // --- POGODA 5 DNI + DZIŚ ---
 async function getLocationData(lat, lon){
   try{
     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
@@ -2498,6 +2497,21 @@ function fetchWeather(lat, lon, label, loc = null){
       fetchWeather(lat, lon, "GPS", loc);
 
     },
+
+    ()=>{
+      fetchWeather(52.24, 23.09, "Fallback");
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 8000,
+      maximumAge: 300000
+    }
+  );
+
+} else {
+  fetchWeather(52.24, 23.09, "Fallback");
+}
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
   async function loadWeatherAndAssist(){
@@ -2797,18 +2811,39 @@ function generateHoneyForecast(){
 }
 
   // --- URUCHOMIENIA STARTOWE ---
-  updateMarkers();
-  scrollToToday();
-  loadWeatherAndAssist();analyzeHivesPro();
-  generateHiveRanking();
-  generateHiveAlerts();
-  generateWeeklyPlanPro();
-  generateHoneyForecast();
-  runAIModule();
-  loadApiaryData();
-  hivesCountInput.addEventListener('change', generateFamilyNotes);
-  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
-  setInterval(()=>{ loadWeatherAndAssist(); },120000);
+
+try{ updateMarkers(); }catch(e){ console.warn("updateMarkers error", e); }
+try{ scrollToToday(); }catch(e){ console.warn("scrollToToday error", e); }
+try{ loadWeatherAndAssist(); }catch(e){ console.warn("weather start error", e); }
+try{ analyzeHivesPro(); }catch(e){}
+try{ generateHiveRanking(); }catch(e){}
+try{ generateHiveAlerts(); }catch(e){}
+try{ generateWeeklyPlanPro(); }catch(e){}
+try{ generateHoneyForecast(); }catch(e){}
+try{ runAIModule(); }catch(e){}
+try{ loadApiaryData(); }catch(e){}
+
+// --- EVENTY (zabezpieczone)
+try{
+  if(typeof hivesCountInput !== "undefined" && hivesCountInput){
+    hivesCountInput.addEventListener('change', generateFamilyNotes);
+  }
+}catch(e){}
+
+try{
+  if(typeof saveFamilyNotesBtn !== "undefined" && saveFamilyNotesBtn){
+    saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
+  }
+}catch(e){}
+
+// --- ODŚWIEŻANIE POGODY (bez crashy)
+setInterval(()=>{
+  try{
+    loadWeatherAndAssist();
+  }catch(e){
+    console.warn("weather loop error", e);
+  }
+},120000);;
 
 });
 </script>
