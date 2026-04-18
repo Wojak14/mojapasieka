@@ -113,10 +113,6 @@ td {
 #search-results div:hover {
   background-color: #fffaaa;
 }
-.highlight-day {
-  background-color: #ffe066 !important;
-  border-radius: 50%;
-}
 
 #autosave-status {
   font-size:13px;
@@ -267,10 +263,6 @@ font-weight:bold;
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
 </div>
-
-</body>
-</html>
-
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
@@ -2404,10 +2396,24 @@ async function getLocationData(lat, lon){
       const beeBox = document.getElementById("bee-flight-alert");
       const locationBox = document.getElementById("location-box");
 
-      function fetchWeather(lat, lon, label, loc = null){
+function fetchWeather(lat, lon, label, loc = null){
 
   lat = Number(lat);
   lon = Number(lon);
+
+  // 🔥 AUTO POBIERANIE MIEJSCOWOŚCI
+  if(!loc){
+    getLocationData(lat, lon)
+      .then(locationData=>{
+        fetchWeather(lat, lon, label, locationData);
+      })
+      .catch(()=>{
+        // jeśli reverse geocode nie działa – jedziemy dalej bez danych
+        fetchWeather(lat, lon, label, {});
+      });
+
+    return;
+  }
 
   if(isNaN(lat) || isNaN(lon)){
     lat = 52.24;
@@ -2805,19 +2811,39 @@ function generateHoneyForecast(){
 }
 
   // --- URUCHOMIENIA STARTOWE ---
-  updateMarkers();
-  scrollToToday();
-  loadWeatherAndAssist();
-  analyzeHivesPro();
-  generateHiveRanking();
-  generateHiveAlerts();
-  generateWeeklyPlanPro();
-  generateHoneyForecast();
-  runAIModule();
-  loadApiaryData();
-  hivesCountInput.addEventListener('change', generateFamilyNotes);
-  saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
-  setInterval(()=>{ loadWeatherAndAssist(); },120000);
+
+try{ updateMarkers(); }catch(e){ console.warn("updateMarkers error", e); }
+try{ scrollToToday(); }catch(e){ console.warn("scrollToToday error", e); }
+try{ loadWeatherAndAssist(); }catch(e){ console.warn("weather start error", e); }
+try{ analyzeHivesPro(); }catch(e){}
+try{ generateHiveRanking(); }catch(e){}
+try{ generateHiveAlerts(); }catch(e){}
+try{ generateWeeklyPlanPro(); }catch(e){}
+try{ generateHoneyForecast(); }catch(e){}
+try{ runAIModule(); }catch(e){}
+try{ loadApiaryData(); }catch(e){}
+
+// --- EVENTY (zabezpieczone)
+try{
+  if(typeof hivesCountInput !== "undefined" && hivesCountInput){
+    hivesCountInput.addEventListener('change', generateFamilyNotes);
+  }
+}catch(e){}
+
+try{
+  if(typeof saveFamilyNotesBtn !== "undefined" && saveFamilyNotesBtn){
+    saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
+  }
+}catch(e){}
+
+// --- ODŚWIEŻANIE POGODY (bez crashy)
+setInterval(()=>{
+  try{
+    loadWeatherAndAssist();
+  }catch(e){
+    console.warn("weather loop error", e);
+  }
+},120000);;
 
 });
 </script>
