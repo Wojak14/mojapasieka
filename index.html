@@ -2383,7 +2383,16 @@ document.addEventListener("DOMContentLoaded", function() {
     if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
-  // --- POGODA 5 DNI + DZIŚ ---
+  // --- POGODA 6 DNI + DZIŚ ---
+async function getLocationData(lat, lon){
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+    const data = await res.json();
+    return data.address || data;
+  }catch(e){
+    return null;
+  }
+}
   function loadWeather5Days() {
     return new Promise((resolve)=>{
       const weatherBox = document.getElementById("weather-data");
@@ -2391,10 +2400,50 @@ document.addEventListener("DOMContentLoaded", function() {
       const beeBox = document.getElementById("bee-flight-alert");
       const locationBox = document.getElementById("location-box");
 
-      function fetchWeather(lat, lon, label="Fallback") {
-        lat = Number(lat); lon = Number(lon);
-        if(isNaN(lat) || isNaN(lon)) { lat=52.24; lon=23.09; label="Werpol (fallback)"; }
-        if(locationBox) locationBox.innerHTML = `📍 Lokalizacja: ${label} (${lat.toFixed(3)},${lon.toFixed(3)})`;
+function fetchWeather(lat, lon, label, loc = null){
+
+  lat = Number(lat);
+  lon = Number(lon);
+
+  // 🔥 AUTO POBIERANIE MIEJSCOWOŚCI
+  if(!loc){
+    getLocationData(lat, lon)
+      .then(locationData=>{
+        fetchWeather(lat, lon, label, locationData);
+      })
+      .catch(()=>{
+        // jeśli reverse geocode nie działa – jedziemy dalej bez danych
+        fetchWeather(lat, lon, label, {});
+      });
+
+    return;
+  }
+
+  if(isNaN(lat) || isNaN(lon)){
+    lat = 52.24;
+    lon = 23.09;
+    label = "Werpol (fallback)";
+  }
+
+  // 🧠 GODZINA
+  const timeNow = new Date().toLocaleTimeString("pl-PL", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+
+  // 🧠 NAZWA MIEJSCOWOŚCI
+  const city = loc?.city || loc?.village || loc?.town || "Nieznana lokalizacja";
+  const address = loc?.display_name || "";
+
+  if(locationBox){
+    locationBox.innerHTML = `
+      📍 <b>${city}</b><br>
+      🏠 ${address}<br>
+      🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}<br>
+      🕒 ${timeNow}
+    `;
+  }
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
 
@@ -2418,8 +2467,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
           if(forecastBox){
             const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
-            for(let i=1;i<=5;i++){
+            let html=`<b>📅 Prognoza 6 dni od jutra:</b><br>`;
+            for(let i=1;i<=6;i++){
               const date=new Date(); date.setDate(date.getDate()+i);
               const d=date.getDate().toString().padStart(2,"0");
               const m=(date.getMonth()+1).toString().padStart(2,"0");
