@@ -55,23 +55,27 @@ td {
   position: absolute;
   inset: 0;
   padding: 4px;
+
   display: flex;
   flex-direction: column;
+
+  gap: 2px;
   overflow: hidden;
+
+  font-size: 14px; /* 🔥 klucz do skalowania ikon */
 }
 
 /* 🔥 NUMER DNIA */
 .day-number {
-  font-size: 18px;
+  font-size: 1.1em;
   font-weight: bold;
   line-height: 1;
-  margin-bottom: 2px;
 }
 
 /* 🔥 TEKST W DNIU (ZAWIJANIE + UCINANIE) */
 .day-text {
-  font-size: 12px;
-  line-height: 1.1;
+  font-size: 1em;
+  line-height: 1.2;
   overflow: hidden;
 
   display: -webkit-box;
@@ -81,10 +85,10 @@ td {
   word-break: break-word;
 }
 
-/* 🔥 IKONY */
+/* 🔥 IKONY → TERAZ SKALUJĄ SIĘ Z TEKSTU */
 .note-marker {
-  font-size: 12px;
-  margin-top: 2px;
+  font-size: 1em;   /* 🔥 było 12px */
+  line-height: 1;
 }
 
 /* 🔥 STANY */
@@ -152,11 +156,21 @@ td {
 .red { background:#F44336; color:white; }
 .black { background:#000; color:white; }
 
-/* 📱 MOBILE */
+/* 📱 MOBILE (ANDROID FIX) */
 @media (max-width: 600px) {
   th { font-size: 12px; }
-  .day-number { font-size: 16px; }
-  .day-text { font-size: 11px; }
+
+  .day-content {
+    font-size: 12px; /* 🔥 cała komórka skaluje się razem */
+  }
+
+  .day-number {
+    font-size: 1.1em;
+  }
+
+  .day-text {
+    font-size: 1em;
+  }
 }
 
 /* 🔥 FULLSCREEN FIX */
