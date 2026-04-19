@@ -2442,40 +2442,17 @@ function loadWeather5Days() {
   });
 
   // 🧠 NAZWA MIEJSCOWOŚCI
-const city =
-  loc?.city ||
-  loc?.town ||
-  loc?.village ||
-  loc?.municipality ||
-  loc?.county ||
-  "Nieznana lokalizacja";
+  const city = loc?.city || loc?.village || loc?.town || "Nieznana lokalizacja";
+  const address = loc?.display_name || "";
 
-// 🧠 ULICA
-const street =
-  loc?.road ||
-  loc?.pedestrian ||
-  loc?.footway ||
-  loc?.hamlet ||   // 🔥 ważne dla wsi!
-  "";
-
-// 🔥 LOGIKA WYŚWIETLANIA (KLUCZ)
-let streetLine = street ? `🏠 ${street}` : "";
-
-// 🧠 GODZINA
-const timeNow = new Date().toLocaleTimeString("pl-PL", {
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit"
-});
-
-if(locationBox){
-  locationBox.innerHTML = `
-    📍 <b>${city}</b><br>
-    ${streetLine}
-    🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}<br>
-    🕒 ${timeNow}
-  `;
-}
+  if(locationBox){
+    locationBox.innerHTML = `
+      📍 <b>${city}</b><br>
+      🏠 ${address}<br>
+      🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}<br>
+      🕒 ${timeNow}
+    `;
+  }
 
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
 
