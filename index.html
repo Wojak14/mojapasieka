@@ -20,7 +20,7 @@ body {
   padding: 10px;
 }
 
-/* PODŚWIETLENIE DNIA W WYSZUKIWARCE */
+/* 🔍 PODŚWIETLENIE */
 .highlight-day {
   outline: 2px solid #ffcc00;
   background-color: #fff4cc !important;
@@ -40,63 +40,70 @@ th {
   text-align: center;
 }
 
-/* 🔥 KWADRATOWE KOMÓRKI */
+/* 🔥 KWADRATOWE DNI */
 td {
   width: 14.28%;
   aspect-ratio: 1 / 1;
+  position: relative;
   border: 1px solid #444;
-  padding: 4px;
-  vertical-align: top;
-
-  font-size: 14px;
-  font-weight: 600;
-
+  padding: 0;
   overflow: hidden;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+}
+
+/* 🔥 WNĘTRZE KOMÓRKI */
+.day-content {
+  position: absolute;
+  inset: 0;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 /* 🔥 NUMER DNIA */
 .day-number {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: bold;
-  display: block;
-  margin-bottom: 4px;
+  line-height: 1;
+  margin-bottom: 2px;
 }
 
-.has-note { background-color: #fff59d; }
-.today { border:2px solid #4caf50; }
-.tomorrow { border:2px solid #ff9800; }
+/* 🔥 TEKST W DNIU (ZAWIJANIE + UCINANIE) */
+.day-text {
+  font-size: 12px;
+  line-height: 1.1;
+  overflow: hidden;
+
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
+
+  word-break: break-word;
+}
 
 /* 🔥 IKONY */
 .note-marker {
-  font-size: 14px;
+  font-size: 12px;
   margin-top: 2px;
-  display: inline-block;
 }
 
-.highlight-search {
-  background-color:#ffeb3b;
-  border-radius:4px;
-  padding:2px 4px;
-  margin-left:2px;
+/* 🔥 STANY */
+.has-note {
+  background-color: #fff59d;
 }
 
-#day-note-box, #alerts-box, #inspection-honey, #weather-alerts { 
-  padding:10px;
-  border-radius:10px;
-  margin-top:15px;
-  background:#fff8e1;
+.today {
+  border: 2px solid #4caf50;
 }
 
-.notes {
-  width:100%;
-  height:80px;
+.tomorrow {
+  border: 2px solid #ff9800;
 }
 
 /* 🔍 WYSZUKIWARKA */
-#search-panel { margin: 10px 0; }
+#search-panel {
+  margin: 10px 0;
+}
 
 #search-results {
   max-height: 200px;
@@ -115,20 +122,44 @@ td {
   background-color: #fffaaa;
 }
 
-#autosave-status {
-  font-size:13px;
-  margin-top:4px;
-  color:green;
+/* 📦 BOXy */
+#day-note-box,
+#alerts-box,
+#inspection-honey,
+#weather-alerts {
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 15px;
+  background: #fff8e1;
 }
 
-/* KOLORY */
+/* 📝 NOTATKI */
+.notes {
+  width: 100%;
+  height: 80px;
+}
+
+#autosave-status {
+  font-size: 13px;
+  margin-top: 4px;
+  color: green;
+}
+
+/* 🎨 KOLORY */
 .green { background:#8BC34A; }
 .yellow { background:#FFEB3B; }
 .orange { background:#FF9800; }
 .red { background:#F44336; color:white; }
 .black { background:#000; color:white; }
 
-/* 🔥 FULLSCREEN */
+/* 📱 MOBILE */
+@media (max-width: 600px) {
+  th { font-size: 12px; }
+  .day-number { font-size: 16px; }
+  .day-text { font-size: 11px; }
+}
+
+/* 🔥 FULLSCREEN FIX */
 html, body {
   width: 100%;
   margin: 0;
@@ -140,50 +171,7 @@ table, div, section {
   width: 100%;
   box-sizing: border-box;
 }
-
-/* 📱 TELEFON */
-@media (max-width: 600px) {
-  td {
-    font-size: 12px;
-    padding: 2px;
-  }
-
-  .day-number {
-    font-size: 18px;
-  }
-
-  td div {
-    font-size: 13px;
-    line-height: 1.2;
-  }
-
-  #location-box {
-    font-size: 12px;
-    line-height: 1.3;
-  }
-
-  .notes {
-    height: 60px;
-  }
-}
-
-/* 📱 MAŁE TELEFONY */
-@media (max-width: 480px) {
-  td {
-    font-size: 11px;
-  }
-
-  .day-number {
-    font-size: 16px;
-  }
-
-  #weather-box {
-    font-size: 12px;
-  }
-}
-
 </style>
-
 </head>
 
 <body>
@@ -2830,7 +2818,8 @@ function generateHoneyForecast(){
   // --- URUCHOMIENIA STARTOWE ---
   updateMarkers();
   scrollToToday();
-  loadWeatherAndAssist();analyzeHivesPro();
+  loadWeatherAndAssist();
+  analyzeHivesPro();
   generateHiveRanking();
   generateHiveAlerts();
   generateWeeklyPlanPro();
