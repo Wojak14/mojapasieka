@@ -62,11 +62,12 @@ th {
 }
 
 /* 🔥 NUMER DNIA */
-.day-number {
-  font-size: 1.1em;
-  font-weight: bold;
-  line-height: 1;
+.day-text {
+  font-size: 1em;
+  line-height: 1.2;
+  overflow: hidden;
 }
+
 
 /* 🔥 TEKST W DNIU (ZAWIJANIE + EMOJI SAFE) */
 .day-text {
@@ -76,20 +77,18 @@ th {
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
-  hyphens: auto;
 
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
+  /* 🔥 USUŃ CLAMP */
+  display: block;
 
   overflow: hidden;
-}
+}}
 
 /* 🔥 IKONY */
 .note-marker {
   font-size: 1em;
-  line-height: 1;
 }
+
 
 /* 🔥 STANY */
 .has-note {
@@ -2141,7 +2140,7 @@ font-weight:bold;
 <textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
 <button onclick="saveApiary()">💾 Zapisz pasiekę</button><hr>
 
-<h4>🐝 Notatki rodzin pszczelich (25 uli)</h4>
+<h4>🐝 Notatki rodzin pszczelich (23 uli)</h4>
 <textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
 <input id="hivesCount" type="number" value="23" min="1" max="100">
 <div id="hiveTable"></div>
@@ -2387,6 +2386,128 @@ document.addEventListener("DOMContentLoaded", function() {
         span.after(marker);
       }
 
+document.addEventListener("DOMContentLoaded", function() {
+
+  let textarea = null;
+  let currentDay = null;
+  let currentMonth = null;
+
+  // =========================
+  // 🧠 AI WARSTWA (NOWA)
+  // =========================
+  function applySmartColorsAndAlerts(td, text){
+
+    const t = (text || "").toLowerCase();
+
+    // 🎨 IKONY → KOLORY
+    if(t.includes("wiatr")) td.classList.add("icon-wind");
+    if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
+    if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
+    if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
+    if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
+
+    // ⚠️ ALERTY
+    if(t.includes("roj") || t.includes("rójka") || t.includes("ryzyko")){
+      td.classList.add("alert-high");
+    }
+    else if(t.includes("inspekcja") || t.includes("kontrola")){
+      td.classList.add("alert-medium");
+    }
+    else if(t.includes("wiatr") || t.includes("pogoda")){
+      td.classList.add("alert-low");
+    }
+  }
+
+    // --- MARKERY I IKONY ---
+  function updateMarkers() {
+    const today = new Date();
+    const dayNow = String(today.getDate()).padStart(2,"0");
+    const monthNow = String(today.getMonth()+1).padStart(2,"0");
+
+    document.querySelectorAll("td .day-number").forEach(span => {
+
+      const td = span.closest("td");
+      td.classList.remove("has-note","today","tomorrow","icon-wind","icon-search","icon-bee","icon-fire","icon-weather","alert-high","alert-medium","alert-low");
+
+      const day = span.dataset.day.padStart(2,"0");
+      const month = span.dataset.month.padStart(2,"0");
+      const key = day + "." + month + ".2026";
+
+      const oldMarker = td.querySelector(".note-marker");
+      if(oldMarker) oldMarker.remove();
+
+      const noteData = localStorage.getItem(key);
+
+      if(noteData && noteData.trim() !== "") {
+
+        td.classList.add("has-note");
+
+        // 🧠 AI WARSTWA (TU WCHODZI INTELIGENCJA)
+        applySmartColorsAndAlerts(td, noteData);
+
+        const marker = document.createElement("span");
+        marker.className = "note-marker";
+
+        let icons = [];
+        const text = noteData.toLowerCase();
+        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
+        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
+        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
+        if(text.includes("leczenie") || text.includes("paski")) icons.push("🏷️");
+        if(text.includes("leczenie") || text.includes("kwas")) icons.push("🌬️");
+        if(text.includes("zakończenie leczenia")) icons.push("🛡️");
+        if(text.includes("przegląd")) icons.push("🔍");
+        if(text.includes("sprawdzenie")) icons.push("📋");
+        if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
+        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
+        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
+        if(text.includes("węza")) icons.push("🧱");
+        if(text.includes("nadstawka")) icons.push("📦");
+        if(text.includes("deszcz")) icons.push("🌧");
+        if(text.includes("wiatr")) icons.push("💨");
+        if(text.includes("burza")) icons.push("🌩️");
+        if(text.includes("śnieg")) icons.push("❄️");
+        if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
+        if(text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
+        if(text.includes("pochmurno")) icons.push("🌫️");
+        if(text.includes("niska temperatura")) icons.push("🌡");
+        if(text.includes("trutnie")) icons.push("👨‍🌾");
+        if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
+        if(text.includes("słonecznie")) icons.push("☀️");
+        if(text.includes("mgła")) icons.push("🌁");
+        if(text.includes("grad")) icons.push("🧊");
+        if(text.includes("czerw")) icons.push("🐣");
+        if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
+        if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
+        if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
+        if(text.includes("dezynfekcja")) icons.push("🧴"); 
+        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
+
+      if(icons.length === 0) icons.push("📒");
+
+        marker.innerHTML = icons.join(" ");
+        span.after(marker);
+      }
+
+function autoScaleCalendarText(){
+
+  document.querySelectorAll("td").forEach(td => {
+
+    const content = td.querySelector(".day-content");
+    if(!content) return;
+
+    let size = 14; // start
+    let minSize = 8;
+
+    content.style.fontSize = size + "px";
+
+    while(content.scrollHeight > content.clientHeight && size > minSize){
+      size -= 1;
+      content.style.fontSize = size + "px";
+    }
+
+  });
+}
      if(day === dayNow && month === monthNow) td.classList.add("today");
 
       const tomorrow = new Date();
@@ -2418,6 +2539,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const key = currentDay + "." + currentMonth + ".2026";
     if(textarea) localStorage.setItem(key, textarea.value);
     updateMarkers();
+    setTimeout(autoScaleCalendarText, 50);
     loadWeatherAndAssist();
   };
 
@@ -2691,7 +2813,8 @@ if(dayNumber % 2 !== 0){
         const note = localStorage.getItem(key) || "";
         localStorage.setItem(key, note + "\n" + div.textContent + " [WYKONANE]");
         updateMarkers();
-        loadWeatherAndAssist();
+setTimeout(autoScaleCalendarText, 50);  // 🔥 DODAJ TU
+loadWeatherAndAssist();
       });
     });
   }
@@ -2896,6 +3019,7 @@ function generateHoneyForecast(){
 
   // --- START ---
   updateMarkers();
+  setTimeout(autoScaleCalendarText, 50);  // 🔥 DODAJ TU
   scrollToToday();
   loadWeatherAndAssist();
   analyzeHivesPro();
@@ -2910,6 +3034,7 @@ function generateHoneyForecast(){
   saveFamilyNotesBtn.addEventListener('click', saveFamilyNotes);
 
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
+  setTimeout(autoScaleCalendarText, 200);
 
 });
 
