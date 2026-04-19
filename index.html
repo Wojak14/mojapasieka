@@ -43,9 +43,8 @@ th {
 }
 
 /* 🔥 KWADRATOWE DNI */
-td {
   width: 14.28%;
-  aspect-ratio: 1 / 1;   /* 🔥 KWADRAT */
+  height: 14.28vw;   /* 🔥 KLUCZ — zawsze kwadrat względem ekranu */
   border: 1px solid #444;
   position: relative;
   padding: 0;
@@ -160,7 +159,7 @@ td {
 /* 📱 MOBILE (ANDROID FIX) */
 @media (max-width: 600px) {
   td {
-    aspect-ratio: 1 / 1;
+    height: 14.28vw; /* 🔥 stabilne na Androidzie */
   }
 
   .day-content {
@@ -2913,6 +2912,12 @@ function generateHoneyForecast(){
   setInterval(()=>{ loadWeatherAndAssist(); },120000);
 
 });
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("SW OK"))
+    .catch(err => console.log("SW ERROR", err));
+}
 </script>
 
 </body>
