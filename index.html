@@ -58,11 +58,11 @@ td {
 
   display: flex;
   flex-direction: column;
-
   gap: 2px;
+
   overflow: hidden;
 
-  font-size: 14px; /* 🔥 klucz do skalowania ikon */
+  font-size: 14px; /* skaluje całość */
 }
 
 /* 🔥 NUMER DNIA */
@@ -72,22 +72,26 @@ td {
   line-height: 1;
 }
 
-/* 🔥 TEKST W DNIU (ZAWIJANIE + UCINANIE) */
+/* 🔥 TEKST W DNIU (ZAWIJANIE + EMOJI SAFE) */
 .day-text {
   font-size: 1em;
   line-height: 1.2;
-  overflow: hidden;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
 
   display: -webkit-box;
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
 
-  word-break: break-word;
+  overflow: hidden;
 }
 
-/* 🔥 IKONY → TERAZ SKALUJĄ SIĘ Z TEKSTU */
+/* 🔥 IKONY */
 .note-marker {
-  font-size: 1em;   /* 🔥 było 12px */
+  font-size: 1em;
   line-height: 1;
 }
 
@@ -126,7 +130,7 @@ td {
   background-color: #fffaaa;
 }
 
-/* 📦 BOXy */
+/* 📦 BOXY */
 #day-note-box,
 #alerts-box,
 #inspection-honey,
@@ -161,15 +165,15 @@ td {
   th { font-size: 12px; }
 
   .day-content {
-    font-size: 12px; /* 🔥 cała komórka skaluje się razem */
+    font-size: 12px;
+  }
+
+  .day-text {
+    -webkit-line-clamp: 4; /* lepsze na małych ekranach */
   }
 
   .day-number {
     font-size: 1.1em;
-  }
-
-  .day-text {
-    font-size: 1em;
   }
 }
 
@@ -185,7 +189,9 @@ table, div, section {
   width: 100%;
   box-sizing: border-box;
 }
+
 </style>
+
 </head>
 
 <body>
