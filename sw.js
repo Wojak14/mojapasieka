@@ -1,27 +1,41 @@
-const CACHE_NAME = "pasieka-v6";
+const CACHE_NAME = "pasieka-2026-v6";
 
-const ASSETS = [
-  "/",
-  "/index.html",
-  "/manifest.json"
+const urlsToCache = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+
+  // 🔥 DODAJ SWOJE PLIKI
+  "./app.js",
+  "./script.js",
+  "./style.css",
+
+  // 🔥 IKONY
+  "./icons/icon-128.png",
+  "./icons/icon-192.png",
+  "./icons/icon-256.png",
+  "./icons/icon-512.png"
 ];
 
 // INSTALL
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(ASSETS))
+self.addEventListener("install", event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(urlsToCache);
+    })
   );
   self.skipWaiting();
 });
 
 // ACTIVATE
-self.addEventListener("activate", e => {
-  e.waitUntil(
+self.addEventListener("activate", event => {
+  event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
         keys.map(key => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
         })
       )
     )
@@ -29,32 +43,27 @@ self.addEventListener("activate", e => {
   self.clients.claim();
 });
 
-// FETCH (NAJWAŻNIEJSZE)
-self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
+// FETCH (OFFLINE)
+self.addEventListener("fetch", event => {
 
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      return cached || fetch(e.request)
+  // 🔥 API OPEN-METEO
+  if (event.request.url.includes("api.open-meteo.com")) {
+    event.respondWith(
+      fetch(event.request)
         .then(res => {
-          return caches.open("pasieka-v6").then(cache => {
-            cache.put(e.request, res.clone());
-            return res;
-          });
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return res;
         })
-        .catch(() => caches.match("/index.html"));
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // 🔥 NORMALNE PLIKI
+  event.respondWith(
+    caches.match(event.request).then(res => {
+      return res || fetch(event.request).catch(() => caches.match("./index.html"));
     })
-  );
-});
-
-// =========================
-// 🔔 PUSH OBSŁUGA
-// =========================
-
-self.addEventListener("notificationclick", function(event) {
-  event.notification.close();
-
-  event.waitUntil(
-    clients.openWindow("/")
   );
 });
