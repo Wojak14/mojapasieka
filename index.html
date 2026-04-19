@@ -2272,8 +2272,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
         if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
         if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
-        if(text.includes("dezynfekcja")) icons.push("🧴") 
-        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝")
+        if(text.includes("dezynfekcja")) icons.push("🧴"); 
+        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
 
         if(icons.length === 0) icons.push("📒");
         marker.innerHTML = icons.join(" ");
@@ -2347,7 +2347,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if(todayEl) todayEl.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
-  // --- POGODA 5 DNI + DZIŚ ---
+  // --- POGODA 6 DNI + DZIŚ ---
   function loadWeather5Days() {
     return new Promise((resolve)=>{
       const weatherBox = document.getElementById("weather-data");
@@ -2382,8 +2382,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
           if(forecastBox){
             const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-            let html=`<b>📅 Prognoza 5 dni od jutra:</b><br>`;
-            for(let i=1;i<=5;i++){
+            let html=`<b>📅 Prognoza 6 dni od jutra:</b><br>`;
+            for(let i=1;i<=6;i++){
               const date=new Date(); date.setDate(date.getDate()+i);
               const d=date.getDate().toString().padStart(2,"0");
               const m=(date.getMonth()+1).toString().padStart(2,"0");
