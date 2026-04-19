@@ -2311,6 +2311,37 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
+
+  // =========================
+  // 🧠 AI WARSTWA KOLORY + ALERTY
+  // =========================
+  function applySmartColorsAndAlerts(td, text){
+
+    const t = (text || "").toLowerCase();
+
+    td.classList.remove(
+      "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
+      "alert-high","alert-medium","alert-low"
+    );
+
+    if(t.includes("wiatr")) td.classList.add("icon-wind");
+    if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
+    if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
+    if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
+    if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
+
+    if(t.includes("roj") || t.includes("ryzyko")){
+      td.classList.add("alert-high");
+    }
+    else if(t.includes("inspekcja")){
+      td.classList.add("alert-medium");
+    }
+    else if(t.includes("wiatr")){
+      td.classList.add("alert-low");
+    }
+  }
+
+
   // =========================
   // 📅 MARKERY I IKONY
   // =========================
