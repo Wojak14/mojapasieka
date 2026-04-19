@@ -28,11 +28,13 @@ body {
 }
 
 table {
-  width: 100%;
-  border-collapse: collapse;
+ width: 100%;
   table-layout: fixed;
-}
+  border-collapse: collapse;
 
+  /* 🔥 KLUCZ: kontrola wielkości całego kalendarza */
+  max-width: 100%;
+}
 th {
   border: 1px solid #444;
   padding: 6px;
@@ -43,10 +45,10 @@ th {
 /* 🔥 KWADRATOWE DNI */
 td {
   width: 14.28%;
-  height: 0;
-  padding-top: 14.28%; /* 🔥 zamiast aspect-ratio */
-  position: relative;
+  aspect-ratio: 1 / 1;   /* 🔥 KWADRAT */
   border: 1px solid #444;
+  position: relative;
+  padding: 0;
   overflow: hidden;
 }
 
@@ -157,18 +159,17 @@ td {
 
 /* 📱 MOBILE (ANDROID FIX) */
 @media (max-width: 600px) {
-  th { font-size: 12px; }
-
-  .day-content {
-    font-size: 12px;
+  td {
+    aspect-ratio: 1 / 1;
   }
 
-  .day-text {
-    -webkit-line-clamp: 4; /* lepsze na małych ekranach */
+  .day-content {
+    padding: 2px;
+    font-size: 11px; /* 🔥 zmniejsza “przepełnienie” */
   }
 
   .day-number {
-    font-size: 1.1em;
+    font-size: 1em;
   }
 }
 
