@@ -7,8 +7,8 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#FBC02D">
 
-<link rel="icon" sizes="192x192" href="icons/icon-192.png">
-<link rel="icon" sizes="512x512" href="icons/icon-512.png">
+<link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
+<link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
 
 <link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
@@ -43,9 +43,8 @@ th {
 }
 
 /* 🔥 KWADRATOWE DNI */
-td {
   width: 14.28%;
-  aspect-ratio: 1 / 1; /* 🔥 KLUCZ */
+  height: 14.28vw;   /* 🔥 KLUCZ — zawsze kwadrat względem ekranu */
   border: 1px solid #444;
   position: relative;
   padding: 0;
@@ -66,12 +65,6 @@ td {
 .day-text {
   font-size: 1em;
   line-height: 1.2;
-
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
-
-  display: block;
   overflow: hidden;
 }
 
@@ -252,8 +245,6 @@ cursor:pointer;
 font-weight:bold;
 ">
 
-<button id="today-btn" onclick="scrollToToday()">
-📍 Przejdź do dzisiaj
 </button>
 
 <!-- 🌦 POGODA -->
@@ -2289,7 +2280,6 @@ font-weight:bold;
 – Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
 – Zachować higienę w ulu i narzędziach<br>
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
-
 <script src="app.js"></script>
 
 <script>
@@ -2683,11 +2673,12 @@ if(!finalData || !finalData.daily){
 }
 
     // 🔥 GPS START (bezpieczny)
- navigator.geolocation.getCurrentPosition(
-  pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-  () => fetchWeather(52.24, 23.09),
-  {enableHighAccuracy:true, timeout:5000, maximumAge:300000}
-);;
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+        () => fetchWeather(52.24, 23.09),
+        {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
+      );
     } else {
       fetchWeather(52.24, 23.09);
     }
@@ -3025,11 +3016,11 @@ function generateHoneyForecast(){
     });
   }
 
- setInterval(() => {
-  if(navigator.onLine && typeof loadWeatherAndAssist === "function"){
-    loadWeatherAndAssist();
-  }
-}, 120000);;
+  setInterval(() => {
+    if(typeof loadWeatherAndAssist === "function"){
+      loadWeatherAndAssist();
+    }
+  }, 120000);
 
   setTimeout(autoScaleCalendarText, 200);
 
