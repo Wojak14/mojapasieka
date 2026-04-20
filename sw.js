@@ -1,69 +1,62 @@
-const CACHE_NAME = "pasieka-2026-v6";
+const CACHE_NAME = "pasieka-v2";
 
-const urlsToCache = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-
-  // 🔥 DODAJ SWOJE PLIKI
-  "./app.js",
-  "./script.js",
-  "./style.css",
+// 📦 pliki do cache
+const FILES_TO_CACHE = [
+  "/",
+  "/index.html",
+  "/style.css",
+  "/app.js",
+  "/manifest.json",
 
   // 🔥 IKONY
-  "./icons/icon-128.png",
-  "./icons/icon-192.png",
-  "./icons/icon-256.png",
-  "./icons/icon-512.png"
+  "/icons/icon-128.png",
+  "/icons/icon-192.png",
+  "/icons/icon-256.png",
+  "/icons/icon-512.png"
 ];
 
-// INSTALL
-self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
+// =========================
+// 📦 INSTALL
+// =========================
+self.addEventListener("install", e => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
   );
   self.skipWaiting();
 });
 
-// ACTIVATE
-self.addEventListener("activate", event => {
-  event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      )
-    )
-  );
-  self.clients.claim();
+// =========================
+// 🚀 ACTIVATE
+// =========================
+self.addEventListener("activate", e => {
+  e.waitUntil(self.clients.claim());
 });
 
-// FETCH (OFFLINE)
-self.addEventListener("fetch", event => {
+// =========================
+// 🌐 FETCH (OFFLINE + API)
+// =========================
+self.addEventListener("fetch", e => {
 
-  // 🔥 API OPEN-METEO
-  if (event.request.url.includes("api.open-meteo.com")) {
-    event.respondWith(
-      fetch(event.request)
+  const req = e.request;
+
+  // 🔥 API (Open-Meteo) — network first + cache
+  if (req.url.includes("api.open-meteo.com")) {
+    e.respondWith(
+      fetch(req)
         .then(res => {
           const clone = res.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
           return res;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(req))
     );
     return;
   }
 
-  // 🔥 NORMALNE PLIKI
-  event.respondWith(
-    caches.match(event.request).then(res => {
-      return res || fetch(event.request).catch(() => caches.match("./index.html"));
+  // 🔥 NORMALNE PLIKI — cache first
+  e.respondWith(
+    caches.match(req).then(res => {
+      return res || fetch(req).catch(() => caches.match("/index.html"));
     })
   );
 });

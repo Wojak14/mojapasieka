@@ -7,8 +7,8 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#FBC02D">
 
-<link rel="icon" sizes="192x192" href="bee_icon_192x192.png">
-<link rel="icon" sizes="512x512" href="bee_icon_512x512.png">
+<link rel="icon" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" sizes="512x512" href="icons/icon-512.png">
 
 <link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
@@ -43,8 +43,9 @@ th {
 }
 
 /* 🔥 KWADRATOWE DNI */
+td {
   width: 14.28%;
-  height: 14.28vw;   /* 🔥 KLUCZ — zawsze kwadrat względem ekranu */
+  height: 14.28vw;
   border: 1px solid #444;
   position: relative;
   padding: 0;
@@ -65,6 +66,12 @@ th {
 .day-text {
   font-size: 1em;
   line-height: 1.2;
+
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+
+  display: block;
   overflow: hidden;
 }
 
@@ -245,6 +252,8 @@ cursor:pointer;
 font-weight:bold;
 ">
 
+<button id="today-btn" onclick="scrollToToday()">
+📍 Przejdź do dzisiaj
 </button>
 
 <!-- 🌦 POGODA -->
@@ -2280,14 +2289,27 @@ font-weight:bold;
 – Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
 – Zachować higienę w ulu i narzędziach<br>
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
+
 <script src="app.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
+// 🌐 SAFE FETCH (OFFLINE READY)
+async function safeFetch(url){
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error("API error");
+    return await res.json();
+  }catch(e){
+    console.log("OFFLINE → używam cache");
+    return null;
+  }
+}
+
   let textarea = null;
   let currentDay = null;
-  let currentMonth = null;;
+  let currentMonth = null;
 
 // =========================
   // 📏 AUTO SCALE TEKSTU
@@ -2310,7 +2332,6 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
   }
-
 
   // =========================
   // 🧠 AI WARSTWA KOLORY + ALERTY
@@ -2519,15 +2540,17 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // --- POGODA 6 DNI + DZIŚ (STABILNA WERSJA) ---
 async function getLocationData(lat, lon){
-  try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
-    if(!res.ok) throw new Error("API error");
-    const data = await res.json();
-    return data.address || {};
-  }catch(e){
-    console.log("Błąd lokalizacji:", e);
-    return {};
+  const cacheKey = "loc_cache";
+
+  const data = await safeFetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
+
+  if(data){
+    localStorage.setItem(cacheKey, JSON.stringify(data.address));
+    return data.address;
   }
+
+  const cached = localStorage.getItem(cacheKey);
+  return cached ? JSON.parse(cached) : {};
 }
 
 function loadWeather5Days() {
@@ -2570,85 +2593,101 @@ function loadWeather5Days() {
 
     async function fetchWeather(lat, lon){
 
-      lat = Number(lat);
-      lon = Number(lon);
+  const cacheKey = "weather_cache";
 
-      if(isNaN(lat) || isNaN(lon)){
-        lat = 52.24;
-        lon = 23.09;
-      }
+  lat = Number(lat);
+  lon = Number(lon);
 
-      // 🔥 lokalizacja (osobno – bez psucia DOM)
-      const loc = await getLocationData(lat, lon);
-      renderLocation(lat, lon, loc);
+  if(isNaN(lat) || isNaN(lon)){
+    lat = 52.24;
+    lon = 23.09;
+  }
 
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
+  const loc = await getLocationData(lat, lon);
+  renderLocation(lat, lon, loc);
 
-      fetch(url).then(r=>r.json()).then(data=>{
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
 
-        const cw = data.current_weather || {temperature:0,windspeed:0};
+  const data = await safeFetch(url);
 
-        const todayMax = data.daily.temperature_2m_max[0];
-        const todayMin = data.daily.temperature_2m_min[0];
-        const todayWind = data.daily.windspeed_10m_max[0];
-        const todayRain = data.daily.precipitation_probability_max[0];
+  if(data){
+    localStorage.setItem(cacheKey, JSON.stringify(data));
+  }
 
-        const beeStatus =
-          (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" :
-          (cw.temperature>=12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
 
-        const color =
-          beeStatus.includes("IDEALNE") ? "green" :
-          beeStatus.includes("ŚREDNIE") ? "orange" : "red";
+let finalData = null;
 
-        if(weatherBox){
-          weatherBox.innerHTML = `
-            <b>🌡 Dzisiaj:</b><br>
-            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
-            💨 Wiatr: ${todayWind} km/h<br>
-            🌧 Szansa opadów: ${todayRain}%<br>
-            <span style="color:${color};font-weight:bold">${beeStatus}</span>
-          `;
-        }
+try{
+  finalData = data || JSON.parse(localStorage.getItem(cacheKey) || "null");
+}catch(e){
+  console.log("Błąd cache → reset");
+  localStorage.removeItem(cacheKey);
+}
 
-        if(forecastBox){
-          const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-          let html=`<b>📅 Prognoza 6 dni:</b><br>`;
+if(!finalData || !finalData.daily){
+  console.log("Brak danych pogodowych (offline pierwszy start)");
+  resolve(null);
+  return;
+}
 
-          for(let i=1;i<=6;i++){
-            const date=new Date(); date.setDate(date.getDate()+i);
-            const d=date.getDate().toString().padStart(2,"0");
-            const m=(date.getMonth()+1).toString().padStart(2,"0");
+  const cw = finalData.current_weather || {temperature:0,windspeed:0};
 
-            const tMax=data.daily.temperature_2m_max[i] ?? 0;
-            const tMin=data.daily.temperature_2m_min[i] ?? 0;
-            const wind=data.daily.windspeed_10m_max[i] ?? 0;
-            const rain=data.daily.precipitation_probability_max[i] ?? 0;
+  const todayMax = finalData.daily.temperature_2m_max[0];
+  const todayMin = finalData.daily.temperature_2m_min[0];
+  const todayWind = finalData.daily.windspeed_10m_max[0];
+  const todayRain = finalData.daily.precipitation_probability_max[0];
 
-            html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}%</div>`;
-          }
+  const beeStatus =
+    (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" :
+    (cw.temperature>=12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
 
-          forecastBox.innerHTML=html;
-        }
+  const color =
+    beeStatus.includes("IDEALNE") ? "green" :
+    beeStatus.includes("ŚREDNIE") ? "orange" : "red";
 
-        if(beeBox){
-          beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
-        }
+  if(weatherBox){
+    weatherBox.innerHTML = `
+      <b>🌡 Dzisiaj:</b><br>
+      Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
+      💨 Wiatr: ${todayWind} km/h<br>
+      🌧 Szansa opadów: ${todayRain}%<br>
+      <span style="color:${color};font-weight:bold">${beeStatus}</span>
+    `;
+  }
 
-        resolve({beeStatus});
+  if(forecastBox){
+    const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
+    let html=`<b>📅 Prognoza 6 dni:</b><br>`;
 
-      }).catch(()=>{
-        resolve(null);
-      });
+    for(let i=1;i<=6;i++){
+      const date=new Date(); date.setDate(date.getDate()+i);
+      const d=date.getDate().toString().padStart(2,"0");
+      const m=(date.getMonth()+1).toString().padStart(2,"0");
+
+      const tMax=finalData.daily.temperature_2m_max[i] ?? 0;
+      const tMin=finalData.daily.temperature_2m_min[i] ?? 0;
+      const wind=finalData.daily.windspeed_10m_max[i] ?? 0;
+      const rain=finalData.daily.precipitation_probability_max[i] ?? 0;
+
+      html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}%</div>`;
     }
 
+    forecastBox.innerHTML=html;
+  }
+
+  if(beeBox){
+    beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
+  }
+
+  resolve({beeStatus});
+}
+
     // 🔥 GPS START (bezpieczny)
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(52.24, 23.09),
-        {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
-      );
+ navigator.geolocation.getCurrentPosition(
+  pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
+  () => fetchWeather(52.24, 23.09),
+  {enableHighAccuracy:true, timeout:5000, maximumAge:300000}
+);;
     } else {
       fetchWeather(52.24, 23.09);
     }
@@ -2986,11 +3025,11 @@ function generateHoneyForecast(){
     });
   }
 
-  setInterval(() => {
-    if(typeof loadWeatherAndAssist === "function"){
-      loadWeatherAndAssist();
-    }
-  }, 120000);
+ setInterval(() => {
+  if(navigator.onLine && typeof loadWeatherAndAssist === "function"){
+    loadWeatherAndAssist();
+  }
+}, 120000);;
 
   setTimeout(autoScaleCalendarText, 200);
 
@@ -3000,9 +3039,7 @@ function generateHoneyForecast(){
 // 🧩 SERVICE WORKER
 // =========================
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("SW OK"))
-    .catch(err => console.log("SW ERROR", err));
+  navigator.serviceWorker.register("/service-worker.js");
 }
 
 </script>
