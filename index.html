@@ -28,13 +28,10 @@ body {
 }
 
 table {
- width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
-
-  /* 🔥 KLUCZ: kontrola wielkości całego kalendarza */
-  max-width: 100%;
+  width: 100%;
 }
+
 th {
   border: 1px solid #444;
   padding: 6px;
@@ -45,12 +42,11 @@ th {
 /* 🔥 KWADRATOWE DNI */
 td {
   width: 14.28%;
-  height: 12vw; /* albo 14vh jeśli wolisz stabilniej */
+  height: 70px;          /* STAŁA wysokość zamiast vw */
+  border: 1px solid #444;
   position: relative;
   overflow: hidden;
-  aspect-ratio: 1 / 1;
   vertical-align: top;
-  padding: 2px;
 }
 
 /* 🔥 WNĘTRZE KOMÓRKI */
@@ -61,10 +57,8 @@ td {
   display: flex;
   flex-direction: column;
 
+  padding: 3px;
   overflow: hidden;
-
-  font-size: 11px;
-  line-height: 1.1;
 }
 
 /* 🔥 NUMER DNIA */
@@ -77,11 +71,15 @@ td {
 
 /* 🔥 TEKST W DNIU (ZAWIJANIE + EMOJI SAFE) */
 .day-text {
+  font-size: 11px;
+  line-height: 1.1;
+
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
 
-  font-size: 11px;
+  max-height: 100%;
+  overflow: hidden;
 }
 
 /* 🔥 IKONY */
