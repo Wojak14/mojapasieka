@@ -1,23 +1,14 @@
 const CACHE_NAME = "pasieka-v2";
 
-// 📦 pliki do cache
 const FILES_TO_CACHE = [
   "/",
   "/index.html",
   "/style.css",
   "/app.js",
-  "/manifest.json",
-
-  // 🔥 IKONY
-  "/icons/icon-128.png",
-  "/icons/icon-192.png",
-  "/icons/icon-256.png",
-  "/icons/icon-512.png"
+  "/manifest.json"
 ];
 
-// =========================
-// 📦 INSTALL
-// =========================
+// INSTALL
 self.addEventListener("install", e => {
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
@@ -25,22 +16,17 @@ self.addEventListener("install", e => {
   self.skipWaiting();
 });
 
-// =========================
-// 🚀 ACTIVATE
-// =========================
+// ACTIVATE
 self.addEventListener("activate", e => {
   e.waitUntil(self.clients.claim());
 });
 
-// =========================
-// 🌐 FETCH (OFFLINE + API)
-// =========================
+// FETCH
 self.addEventListener("fetch", e => {
-
   const req = e.request;
 
-  // 🔥 API (Open-Meteo) — network first + cache
-  if (req.url.includes("api.open-meteo.com")) {
+  // 🔥 API (pogoda + lokalizacja)
+  if (req.url.includes("api.open-meteo.com") || req.url.includes("nominatim")) {
     e.respondWith(
       fetch(req)
         .then(res => {
@@ -53,7 +39,7 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // 🔥 NORMALNE PLIKI — cache first
+  // 🔥 RESZTA
   e.respondWith(
     caches.match(req).then(res => {
       return res || fetch(req).catch(() => caches.match("/index.html"));

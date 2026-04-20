@@ -2615,7 +2615,12 @@ try{
 }
 
 if(!finalData || !finalData.daily){
-  console.log("Brak danych pogodowych (offline pierwszy start)");
+  console.log("Offline bez cache (pierwsze uruchomienie)");
+  
+  if(weatherBox){
+    weatherBox.innerHTML = "📴 Brak danych (offline)";
+  }
+
   resolve(null);
   return;
 }
