@@ -28,12 +28,14 @@ body {
 }
 
 table {
+ width: 100%;
   table-layout: fixed;
-  width: 100%;
-}
+  border-collapse: collapse;
 
+  /* 🔥 KLUCZ: kontrola wielkości całego kalendarza */
+  max-width: 100%;
+}
 th {
-  width: 14.28%;
   border: 1px solid #444;
   padding: 6px;
   font-size: 13px;
@@ -41,10 +43,11 @@ th {
 }
 
 /* 🔥 KWADRATOWE DNI */
-td {
   width: 14.28%;
-  aspect-ratio: 1 / 1;
+  height: 14.28vw;   /* 🔥 KLUCZ — zawsze kwadrat względem ekranu */
+  border: 1px solid #444;
   position: relative;
+  padding: 0;
   overflow: hidden;
 }
 
@@ -52,35 +55,34 @@ td {
 .day-content {
   position: absolute;
   inset: 0;
-  padding: 3px;
-
   display: flex;
   flex-direction: column;
-
+  padding: 4px;
   overflow: hidden;
 }
 
 /* 🔥 NUMER DNIA */
 .day-text {
-  line-height: 1.1;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  font-size: 1em;
+  line-height: 1.2;
+  overflow: hidden;
 }
 
 
 /* 🔥 TEKST W DNIU (ZAWIJANIE + EMOJI SAFE) */
 .day-text {
-  font-size: 11px;
-  line-height: 1.1;
+  font-size: 1em;
+  line-height: 1.2;
 
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
 
-  max-height: 100%;
+  /* 🔥 USUŃ CLAMP */
+  display: block;
+
   overflow: hidden;
-}
+}}
 
 /* 🔥 IKONY */
 .note-marker {
@@ -177,10 +179,9 @@ html, body {
   overflow-x: hidden;
 }
 
-table {
+table, div, section {
   width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
+  box-sizing: border-box;
 }
 
 /* ===== AUTO-KOLORY IKON ===== */
@@ -207,8 +208,6 @@ table {
   background: #e8f5e9 !important;
   border: 2px solid #4caf50;
 }
-
-
 
 
 </style>
@@ -420,10 +419,6 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
@@ -547,10 +542,6 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
@@ -672,7 +663,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+        <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -701,9 +692,6 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
@@ -826,7 +814,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+       <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -855,10 +843,6 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
@@ -1037,7 +1021,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+        <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -1066,10 +1050,6 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
-    <div>🪵 węza</div>
-    <div>🎉 nowy rok</div>
-    <div>🎄 święta</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
@@ -1180,7 +1160,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+       <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -1209,11 +1189,9 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-   <div>🏠 ule / pasieka</div>
   </div>
 </div>
 
@@ -1312,7 +1290,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+       <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -1341,11 +1319,9 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-   <div>🏠 ule / pasieka</div>
   </div>
 </div>
 
@@ -1448,7 +1424,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+        <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -1477,11 +1453,9 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-   <div>🏠 ule / pasieka</div>
   </div>
 </div>
 
@@ -1582,7 +1556,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+        <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -1611,11 +1585,9 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-   <div>🏠 ule / pasieka</div>
   </div>
 </div>
 
@@ -1716,7 +1688,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+        <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -1745,11 +1717,9 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-   <div>🏠 ule / pasieka</div>
   </div>
 </div>
 
@@ -1854,7 +1824,7 @@ font-weight:bold;
 <div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
+       <div>🫙 miód / miodobranie</div>
     <div>🍯 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
@@ -1883,11 +1853,9 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-   <div>🏠 ule / pasieka</div>
   </div>
 </div>
 
@@ -2021,11 +1989,9 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-   <div>🏠 ule / pasieka</div>
   </div>
 </div>
 
@@ -2182,11 +2148,9 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>💨🪵 dymiarka</div>
     <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-   <div>🏠 ule / pasieka</div>
   </div>
 </div>
 
