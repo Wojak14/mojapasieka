@@ -2389,52 +2389,100 @@ document.addEventListener("DOMContentLoaded", function() {
   // =========================
   // 📅 MARKERY I IKONY
   // =========================
-  function updateMarkers() {
+function updateMarkers() {
 
-    document.querySelectorAll("td .day-number").forEach(span => {
+  document.querySelectorAll("td .day-number").forEach(span => {
 
-      const td = span.closest("td");
+    const td = span.closest("td");
 
-      td.classList.remove(
-        "has-note","today","tomorrow",
-        "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
-        "alert-high","alert-medium","alert-low"
-      );
+    td.classList.remove(
+      "has-note","today","tomorrow",
+      "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
+      "alert-high","alert-medium","alert-low"
+    );
 
-      const day = span.dataset.day.padStart(2,"0");
-      const month = span.dataset.month.padStart(2,"0");
-      const key = `${day}.${month}.2026`;
+    const day = span.dataset.day.padStart(2,"0");
+    const month = span.dataset.month.padStart(2,"0");
+    const key = `${day}.${month}.2026`;
 
-      const oldMarker = td.querySelector(".note-marker");
-      if(oldMarker) oldMarker.remove();
+    const oldMarker = td.querySelector(".note-marker");
+    if(oldMarker) oldMarker.remove();
 
-      const noteData = localStorage.getItem(key);
+    const noteData = localStorage.getItem(key);
 
-      if(noteData && noteData.trim() !== "") {
+    if(!noteData || !noteData.trim()) return;
 
-        td.classList.add("has-note");
+    td.classList.add("has-note");
 
-        applySmartColorsAndAlerts(td, noteData);
+    applySmartColorsAndAlerts(td, noteData);
 
-        const marker = document.createElement("span");
-        marker.className = "note-marker";
+    const text = noteData.toLowerCase();
 
-        const text = noteData.toLowerCase();
-        let icons = [];
+    // =========================
+    // 🧠 AI SŁOWNIK (INTELIGENTNY)
+    // =========================
+    const dict = [
+      {keys:["miód","miodobranie","zbiór miodu","wirowanie"], icon:"🫙"},
+      {keys:["karmienie","dokarmianie","syrop","ciasto"], icon:"🍯"},
+      {keys:["leczenie","warroza","varroa","apiwarol"], icon:"💊"},
+      {keys:["przegląd","kontrola"], icon:"🔍"},
+      {keys:["rój","rójka","rojenie"], icon:"🐝"},
+      {keys:["matka","wymiana matki","królowa"], icon:"👑"},
+      {keys:["ramka","ramki","węza","węzę"], icon:"🧱"},
+      {keys:["pożytek","nektar","pyłek","kwitnienie"], icon:"🌸"},
+      {keys:["deszcz","opady","mokro"], icon:"🌧"},
+      {keys:["wiatr","wietrznie","podmuch"], icon:"💨"},
+      {keys:["burza","pioruny","grzmot"], icon:"🌩️"},
+      {keys:["śnieg","zimno","mróz"], icon:"❄️"},
+      {keys:["upał","gorąco","wysoka temperatura"], icon:"🥵"},
+      {keys:["chłodno","zimno"], icon:"🥶"},
+      {keys:["słońce","słonecznie","pogoda dobra"], icon:"☀️"},
+      {keys:["mgła"], icon:"🌁"},
+      {keys:["grad"], icon:"🧊"},
+      {keys:["ule","pasieka","pasieka praca"], icon:"🏠"},
+      {keys:["dezynfekcja","czyszczenie"], icon:"🧴"},
+      {keys:["dzikie pszczoły","dzikie","naturalne"], icon:"🐝🌿"},
+      {keys:["trutnie"], icon:"👨‍🌾"}
+      {keys:["zakończenie leczenia"], icon:"🛡️"}
+      {keys:["kwas"], icon:"🛡️"}
+    ];
 
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-        if(text.includes("karmienie") || text.includes("syrop")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
-        if(text.includes("przegląd")) icons.push("🔍");
-        if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
+    let icons = [];
 
-        if(icons.length === 0) icons.push("📒");
-
-        marker.innerHTML = icons.join(" ");
-        span.after(marker);
+    // =========================
+    // 🔥 AI MATCHING (INTELIGENTNE)
+    // =========================
+    for(const item of dict){
+      for(const k of item.keys){
+        if(text.includes(k)){
+          icons.push(item.icon);
+          break;
+        }
       }
-    });
-  }
+    }
+
+    // =========================
+    // 🚨 BONUS LOGIKA KONTEKSTOWA
+    // =========================
+    if(text.includes("przegląd") && text.includes("brak")){
+      icons.push("⚠️");
+    }
+
+    if(text.includes("roj") && text.includes("gorąco")){
+      icons.push("🚨");
+    }
+
+    if(icons.length === 0){
+      icons.push("📒");
+    }
+
+    const marker = document.createElement("span");
+    marker.className = "note-marker";
+    marker.innerHTML = [...new Set(icons)].join(" ");
+
+    span.after(marker);
+  });
+}
 
   // =========================
   // CLICK DAY
