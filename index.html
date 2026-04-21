@@ -2252,9 +2252,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   let textarea = null;
   let currentDay = null;
-  let currentMonth = null;;
+  let currentMonth = null;
 
-// =========================
+  // =========================
   // 📏 AUTO SCALE TEKSTU
   // =========================
   function autoScaleCalendarText(){
@@ -2276,9 +2276,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   }
 
-
   // =========================
-  // 🧠 AI WARSTWA KOLORY + ALERTY
+  // 🧠 AI KOLORY
   // =========================
   function applySmartColorsAndAlerts(td, text){
 
@@ -2295,52 +2294,51 @@ document.addEventListener("DOMContentLoaded", function() {
     if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
     if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
 
-    if(t.includes("roj") || t.includes("ryzyko")){
-      td.classList.add("alert-high");
-    }
-    else if(t.includes("inspekcja")){
-      td.classList.add("alert-medium");
-    }
-    else if(t.includes("wiatr")){
-      td.classList.add("alert-low");
+    if(t.includes("roj") || t.includes("ryzyko")) td.classList.add("alert-high");
+    else if(t.includes("inspekcja")) td.classList.add("alert-medium");
+    else if(t.includes("wiatr")) td.classList.add("alert-low");
+  }
+
+// =========================
+  // 📡 SAFE FETCH
+  // =========================
+  async function safeFetch(url){
+    try{
+      const r = await fetch(url);
+      return await r.json();
+    }catch(e){
+      return null;
     }
   }
 
-
   // =========================
-  // 📅 MARKERY I IKONY
+  // 📅 MARKERY + IKONY (NAPRAWIONE)
   // =========================
-  function updateMarkers() {
+  function updateMarkers(){
 
     document.querySelectorAll("td .day-number").forEach(span => {
 
       const td = span.closest("td");
 
-      td.classList.remove(
-        "has-note","today","tomorrow",
-        "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
-        "alert-high","alert-medium","alert-low"
-      );
-
       const day = span.dataset.day.padStart(2,"0");
       const month = span.dataset.month.padStart(2,"0");
       const key = `${day}.${month}.2026`;
 
-      const oldMarker = td.querySelector(".note-marker");
-      if(oldMarker) oldMarker.remove();
+      const old = td.querySelector(".note-marker");
+      if(old) old.remove();
 
-      const noteData = localStorage.getItem(key);
+      const note = localStorage.getItem(key);
 
-      if(noteData && noteData.trim() !== "") {
+      if(note && note.trim() !== ""){
 
         td.classList.add("has-note");
-
-        applySmartColorsAndAlerts(td, noteData);
+        applySmartColorsAndAlerts(td, note);
 
         const marker = document.createElement("span");
         marker.className = "note-marker";
 
-        const text = noteData.toLowerCase();
+        const t = note.toLowerCase();
+
         let icons = [];
 
         if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
@@ -2376,7 +2374,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if(text.includes("dezynfekcja")) icons.push("🧴");
         if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
 
-        if(icons.length === 0) icons.push("📒");
+         if(icons.length === 0) icons.push("📒");
 
         marker.innerHTML = icons.join(" ");
         span.after(marker);
@@ -2387,49 +2385,39 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // --- OTWIERANIE NOTATKI PO KLIKU ---
 
- document.querySelectorAll("td .day-number").forEach(span => {
-    span.addEventListener("click", () => {
-
+ document.querySelectorAll("td .day-number").forEach(span=>{
+    span.addEventListener("click", ()=>{
       currentDay = span.dataset.day.padStart(2,"0");
       currentMonth = span.dataset.month.padStart(2,"0");
 
       textarea = document.getElementById("notes-" + currentMonth);
 
       const key = `${currentDay}.${currentMonth}.2026`;
-
       if(textarea){
         textarea.value = localStorage.getItem(key) || "";
         textarea.focus();
       }
     });
-  })
+  });)
 
 
   // =========================
   // 💾 ZAPIS NOTATKI
   // =========================
-  window.saveNote = function() {
 
-    if(!currentDay){
-      alert("Najpierw kliknij dzień");
-      return;
-    }
+  window.saveNote = function(){
+    if(!currentDay) return alert("Kliknij dzień");
 
     const key = `${currentDay}.${currentMonth}.2026`;
-
-    if(textarea){
-      localStorage.setItem(key, textarea.value);
-    }
+    if(textarea) localStorage.setItem(key, textarea.value);
 
     updateMarkers();
-    setTimeout(autoScaleCalendarText, 50);
-
-    if(typeof loadWeatherAndAssist === "function"){
-      loadWeatherAndAssist();
-    }
+    setTimeout(autoScaleCalendarText, 100);
+    loadWeatherAndAssist();
   };
 
   // --- WYSZUKIWARKA NOTATEK ---
+
   const searchInput = document.getElementById('search-notes');
   const resultsContainer = document.getElementById('search-results');
 
