@@ -2299,18 +2299,6 @@ document.addEventListener("DOMContentLoaded", function() {
     else if(t.includes("wiatr")) td.classList.add("alert-low");
   }
 
-// =========================
-  // 📡 SAFE FETCH
-  // =========================
-  async function safeFetch(url){
-    try{
-      const r = await fetch(url);
-      return await r.json();
-    }catch(e){
-      return null;
-    }
-  }
-
   // =========================
   // 📅 MARKERY + IKONY (NAPRAWIONE)
   // =========================
