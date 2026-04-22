@@ -2302,29 +2302,6 @@ font-weight:bold;
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-// =========================
-// 🌦️ POGODA Z IKONAMI (LIVE)
-// =========================
-async function loadLiveWeather(){
-
-  const box = document.getElementById("weather-data");
-  if(!box) return;
-
-  function getWeatherIcon(code){
-
-    // kody Open-Meteo
-    if(code === 0) return "☀️";                // słonecznie
-    if(code <= 2) return "⛅";                 // lekko pochmurno
-    if(code === 3) return "☁️";               // zachmurzenie
-    if(code >= 45 && code <= 48) return "🌫️"; // mgła
-    if(code >= 51 && code <= 67) return "🌧️"; // deszcz
-    if(code >= 71 && code <= 77) return "❄️"; // śnieg
-    if(code >= 80 && code <= 82) return "🌦️"; // przelotne
-    if(code >= 95) return "⛈️";               // burza
-
-    return "🌡️";
-  }
-
   let textarea = null;
   let currentDay = null;
   let currentMonth = null;;
@@ -2687,7 +2664,7 @@ function loadWeather5Days() {
       navigator.geolocation.getCurrentPosition(
         pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
         () => fetchWeather(52.24, 23.09),
-        {enableHighAccuracy:true, timeout:8000, maximumAge:300000}
+        {enableHighAccuracy:true, timeout:7000, maximumAge:200000}
       );
     } else {
       fetchWeather(52.24, 23.09);
@@ -3030,7 +3007,7 @@ function generateHoneyForecast(){
     if(typeof loadWeatherAndAssist === "function"){
       loadWeatherAndAssist();
     }
-  }, 120000);
+  }, 110000);
 
   setTimeout(autoScaleCalendarText, 200);
 
