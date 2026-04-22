@@ -305,9 +305,6 @@ margin-bottom:15px;
 
 </div>
 
-<div id="weather-data">Ładowanie pogody...</div>
-
-</div>
 
 <!-- 🌼 SEZON -->
 <div id="season-info" style="
@@ -319,9 +316,6 @@ font-weight:bold;
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
 </div>
-
-
-
 
 </body>
 </html>
@@ -750,7 +744,7 @@ font-weight:bold;
 
 <tr>
 <td></td><td></td>
-<td class="green"><span class="day-number" data-day="01" data-month="04">1</span></td>
+<td class="green"><span class="day-number" data-day="01" data-month="04">1</span>Pożytek: wierzba</td>
 <td class="green"><span class="day-number" data-day="02" data-month="04">2</span>Rozszerzanie gniazd</td>
 <td class="green"><span class="day-number" data-day="03" data-month="04">3</span>Kontrola czerwienia</td>
 <td class="green"><span class="day-number" data-day="04" data-month="04">4</span>Wyrównywanie rodzin</td>
@@ -2308,104 +2302,31 @@ font-weight:bold;
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-// =========================
-// 🌦️ POGODA Z IKONAMI (LIVE)
-// =========================
-async function loadLiveWeather(){
-
-  const box = document.getElementById("weather-data");
-  if(!box) return;
-
-  function getWeatherIcon(code){
-
-    // kody Open-Meteo
-    if(code === 0) return "☀️";                // słonecznie
-    if(code <= 2) return "⛅";                 // lekko pochmurno
-    if(code === 3) return "☁️";               // zachmurzenie
-    if(code >= 45 && code <= 48) return "🌫️"; // mgła
-    if(code >= 51 && code <= 67) return "🌧️"; // deszcz
-    if(code >= 71 && code <= 77) return "❄️"; // śnieg
-    if(code >= 80 && code <= 82) return "🌦️"; // przelotne
-    if(code >= 95) return "⛈️";               // burza
-
-    return "🌡️";
-  }
-
-  function getBeeStatus(temp, wind){
-
-    if(temp >= 18 && wind < 15) return {text:"🐝 IDEALNE", color:"green"};
-    if(temp >= 14 && wind < 25) return {text:"🐝 DOBRE", color:"orange"};
-    if(temp >= 10) return {text:"🐝 SŁABE", color:"gray"};
-
-    return {text:"❄ BRAK LOTÓW", color:"red"};
-  }
-
-  function render(lat, lon){
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&windspeed_unit=kmh&timezone=auto`;
-
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-
-        const cw = data.current_weather;
-        if(!cw) return;
-
-        const icon = getWeatherIcon(cw.weathercode);
-        const bee = getBeeStatus(cw.temperature, cw.windspeed);
-
-        box.innerHTML = `
-          <div style="font-size:18px">
-            <div style="font-size:32px">${icon}</div>
-            🌡 ${cw.temperature}°C<br>
-            💨 ${cw.windspeed} km/h<br>
-            <span style="color:${bee.color};font-weight:bold">
-              ${bee.text}
-            </span>
-          </div>
-        `;
-      })
-      .catch(()=>{
-        box.innerHTML = "⚠️ brak danych pogodowych";
-      });
-  }
-
-  // GPS
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      pos => render(pos.coords.latitude, pos.coords.longitude),
-      () => render(52.24, 23.09)
-    );
-  } else {
-    render(52.24, 23.09);
-  }
-}
-
-
   let textarea = null;
   let currentDay = null;
-  let currentMonth = null;
+  let currentMonth = null;;
 
 // =========================
   // 📏 AUTO SCALE TEKSTU
   // =========================
-function autoScaleCalendarText(){
+  function autoScaleCalendarText(){
 
-  document.querySelectorAll(".day-content").forEach(content => {
+    document.querySelectorAll("td").forEach(td => {
 
-    let size = 14;
-    let minSize = 8;
+      const content = td.querySelector(".day-content");
+      if(!content) return;
 
-    content.style.fontSize = size + "px";
+      let size = 14;
+      let minSize = 8;
 
-    while(content.scrollHeight > content.clientHeight && size > minSize){
-      size -= 0.5;
       content.style.fontSize = size + "px";
-    }
 
-  });
-
-}
+      while(content.scrollHeight > content.clientHeight && size > minSize){
+        size--;
+        content.style.fontSize = size + "px";
+      }
+    });
+  }
 
 
   // =========================
@@ -2626,105 +2547,6 @@ async function getLocationData(lat, lon){
   }
 }
 
-// =========================
-// 🌤️ IKONY POGODY (OPEN-METEO)
-// =========================
-function getWeatherIcon(code){
-
-  if(code === 0) return "☀️"; // bezchmurnie
-  if(code === 1 || code === 2) return "🌤️";
-  if(code === 3) return "☁️";
-
-  if(code === 45 || code === 48) return "🌫️"; // mgła
-
-  if(code >= 51 && code <= 57) return "🌦️"; // mżawka
-  if(code >= 61 && code <= 67) return "🌧️"; // deszcz
-  if(code >= 71 && code <= 77) return "❄️"; // śnieg
-
-  if(code >= 80 && code <= 82) return "🌧️"; // ulewy
-  if(code >= 85 && code <= 86) return "❄️";
-
-  if(code >= 95) return "⛈️"; // burza
-
-  return "🌍";
-}
-
-// =========================
-// 🧠 AI POGODA DLA PSZCZÓŁ (PRO)
-// =========================
-function analyzeBeeConditions(temp, wind, rain){
-
-  let score = 0;
-  let reasons = [];
-
-  // 🌡️ TEMPERATURA
-  if(temp >= 18 && temp <= 30){
-    score += 40;
-    reasons.push("idealna temperatura");
-  } else if(temp >= 14){
-    score += 25;
-    reasons.push("akceptowalna temperatura");
-  } else if(temp >= 10){
-    score += 10;
-    reasons.push("chłodno");
-  } else {
-    reasons.push("za zimno");
-  }
-
-  // 💨 WIATR
-  if(wind < 10){
-    score += 30;
-    reasons.push("bardzo słaby wiatr");
-  } else if(wind < 20){
-    score += 15;
-    reasons.push("umiarkowany wiatr");
-  } else if(wind < 30){
-    score += 5;
-    reasons.push("silny wiatr");
-  } else {
-    reasons.push("bardzo silny wiatr");
-  }
-
-  // 🌧 OPADY
-  if(rain < 20){
-    score += 30;
-    reasons.push("brak opadów");
-  } else if(rain < 50){
-    score += 10;
-    reasons.push("możliwe opady");
-  } else {
-    reasons.push("duże opady");
-  }
-
-  // 🎯 FINALNA OCENA
-  let status, color, advice;
-
-  if(score >= 80){
-    status = "🐝 IDEALNE WARUNKI";
-    color = "green";
-    advice = "Pełny lot pszczół, dobry dzień na przegląd i miodobranie";
-  }
-  else if(score >= 50){
-    status = "🐝 UMIARKOWANE";
-    color = "orange";
-    advice = "Lot ograniczony, możliwa praca ale ostrożnie";
-  }
-  else{
-    status = "❄ SŁABE WARUNKI";
-    color = "red";
-    advice = "Pszczoły raczej nie latają, nie otwieraj uli";
-  }
-
-  return {
-    score,
-    status,
-    color,
-    advice,
-    reasons: reasons.join(", ")
-  };
-}
-
-
 function loadWeather5Days() {
   return new Promise((resolve)=>{
 
@@ -2777,85 +2599,60 @@ function loadWeather5Days() {
       const loc = await getLocationData(lat, lon);
       renderLocation(lat, lon, loc);
 
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&current_weather=true&timezone=auto`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
 
       fetch(url).then(r=>r.json()).then(data=>{
 
         const cw = data.current_weather || {temperature:0,windspeed:0};
 
-        const todayMax = data?.daily?.temperature_2m_max?.[0] ?? 0;
+        const todayMax = data.daily.temperature_2m_max[0];
         const todayMin = data.daily.temperature_2m_min[0];
-        const todayWind = data?.daily?.windspeed_10m_max?.[0] ?? 0;
-        const todayRain = data.daily.precipitation_probability_max[0] ?? 0;
+        const todayWind = data.daily.windspeed_10m_max[0];
+        const todayRain = data.daily.precipitation_probability_max[0];
 
-        const beeAI = analyzeBeeConditions(
-        cw.temperature,todayWind,todayRain
-);
+        const beeStatus =
+          (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" :
+          (cw.temperature>=12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
 
-        const color = beeAI.color;     
+        const color =
+          beeStatus.includes("IDEALNE") ? "green" :
+          beeStatus.includes("ŚREDNIE") ? "orange" : "red";
 
-if(weatherBox){
- weatherBox.innerHTML = `
-  <b>🌤️ Dzisiaj:</b><br>
-  🌡 ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
-  💨 Wiatr: ${todayWind} km/h<br>
-  🌧 Opady: ${todayRain}%<br><br>
-
-  <span style="color:${beeAI.color};font-weight:bold;font-size:16px">
-    ${beeAI.status}
-  </span><br>
-
-  <small>${beeAI.reasons}</small><br>
-  <b>${beeAI.advice}</b>
-`;
-}
+        if(weatherBox){
+          weatherBox.innerHTML = `
+            <b>🌡 Dzisiaj:</b><br>
+            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
+            💨 Wiatr: ${todayWind} km/h<br>
+            🌧 Szansa opadów: ${todayRain}%<br>
+            <span style="color:${color};font-weight:bold">${beeStatus}</span>
+          `;
+        }
 
         if(forecastBox){
           const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
           let html=`<b>📅 Prognoza 6 dni:</b><br>`;
 
-         for(let i=1;i<=6;i++){
+          for(let i=1;i<=6;i++){
+            const date=new Date(); date.setDate(date.getDate()+i);
+            const d=date.getDate().toString().padStart(2,"0");
+            const m=(date.getMonth()+1).toString().padStart(2,"0");
 
-  const date=new Date();
-  date.setDate(date.getDate()+i);
+            const tMax=data.daily.temperature_2m_max[i] ?? 0;
+            const tMin=data.daily.temperature_2m_min[i] ?? 0;
+            const wind=data.daily.windspeed_10m_max[i] ?? 0;
+            const rain=data.daily.precipitation_probability_max[i] ?? 0;
 
-  const d=date.getDate().toString().padStart(2,"0");
-  const m=(date.getMonth()+1).toString().padStart(2,"0");
-
-  const tMax=data.daily.temperature_2m_max[i] ?? 0;
-  const tMin=data.daily.temperature_2m_min[i] ?? 0;
-  const wind=data.daily.windspeed_10m_max[i] ?? 0;
-  const rain=data.daily.precipitation_probability_max[i] ?? 0;
-  const code=data.daily.weathercode[i];
-
-  const icon = getWeatherIcon(code);
-
-  html += `
-    <div style="display:flex;justify-content:space-between;
-                padding:6px;margin:4px 0;
-                background:#f3f3f3;border-radius:8px;">
-      <b>${icon} ${d}.${m}</b>
-      <span>${tMin}-${tMax}°C</span>
-      <span>💨 ${wind}</span>
-      <span>🌧 ${rain}%</span>
-    </div>
-  `;
-}
+            html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}%</div>`;
+          }
 
           forecastBox.innerHTML=html;
         }
 
         if(beeBox){
-          beeBox.innerHTML = `
-  <b>🐝 AI Pasieki:</b><br>
-  <span style="color:${beeAI.color};font-weight:bold">
-    ${beeAI.status} (${beeAI.score}%)
-  </span><br>
-  <small>${beeAI.advice}</small>
-`;
-}
+          beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
+        }
 
-        resolve({beeStatus: beeAI.status});
+        resolve({beeStatus});
 
       }).catch(()=>{
         resolve(null);
@@ -2938,7 +2735,7 @@ if(dayNumber % 2 !== 0){
     if(inspections==0) swarmRisk+=30;
     if(inspections==1) swarmRisk+=20;
     if(swarm) swarmRisk+=30;
-    if(weatherData?.beeStatus?.includes("IDEALNE")) swarmRisk+=10;
+    if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
     if(swarmRisk>100) swarmRisk=100;
 
     let swarmText="";
@@ -3177,9 +2974,8 @@ function generateHoneyForecast(){
    // =========================
   // 🚀 START SYSTEMU
   // =========================
-  fixCalendarStructure();
   updateMarkers();
-  loadLiveWeather();
+
   setTimeout(autoScaleCalendarText, 100);
   scrollToToday();
 
@@ -3214,51 +3010,6 @@ function generateHoneyForecast(){
   }, 120000);
 
   setTimeout(autoScaleCalendarText, 200);
-
-// =========================
-// 🔥 AUTO NAPRAWA KALENDARZA (STRUKTURA DNI)
-// =========================
-function fixCalendarStructure(){
-
-  document.querySelectorAll("td").forEach(td => {
-
-    // pomiń puste komórki
-    if(td.children.length === 0) return;
-
-    const dayNumber = td.querySelector(".day-number");
-
-    // jeśli nie ma dnia → pomiń
-    if(!dayNumber) return;
-
-    // jeśli już naprawione → pomiń
-    if(td.querySelector(".day-content")) return;
-
-    // 🔥 pobierz tekst (usuń numer dnia)
-    let text = td.textContent.replace(dayNumber.textContent, "").trim();
-
-
-    // 🔥 zbuduj poprawną strukturę
-    const wrapper = document.createElement("div");
-    wrapper.className = "day-content";
-
-    const number = document.createElement("span");
-    number.className = "day-number";
-    number.dataset.day = dayNumber.dataset.day;
-    number.dataset.month = dayNumber.dataset.month;
-    number.innerText = dayNumber.innerText;
-
-    const textDiv = document.createElement("div");
-    textDiv.className = "day-text";
-    textDiv.innerText = text;
-
-    wrapper.appendChild(number);
-    wrapper.appendChild(textDiv);
-
-    td.appendChild(wrapper);
-
-  });
-
-}
 
 });
 
