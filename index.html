@@ -2381,77 +2381,10 @@ async function loadLiveWeather(){
   }
 }
 
-// 🔁 odświeżanie co 60 sek
-loadLiveWeather();
-setInterval(loadLiveWeathe
-
-// =========================
-// 🌦️ LIVE POGODA (GPS + AUTO REFRESH)
-// =========================
-async function loadLiveWeather(){
-
-  const box = document.getElementById("weather-data");
-  if(!box) return;
-
-  function getBeeStatus(temp, wind){
-
-    if(temp >= 18 && wind < 15) return {text:"🐝 IDEALNE", color:"green"};
-    if(temp >= 14 && wind < 25) return {text:"🐝 DOBRE", color:"orange"};
-    if(temp >= 10) return {text:"🐝 SŁABE", color:"gray"};
-
-    return {text:"❄ BRAK LOTÓW", color:"red"};
-  }
-
-  function render(lat, lon){
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&windspeed_unit=kmh&timezone=auto`;
-
-    fetch(url)
-      .then(r => r.json())
-      .then(data => {
-
-        const cw = data.current_weather;
-
-        if(!cw) return;
-
-        const bee = getBeeStatus(cw.temperature, cw.windspeed);
-
-        box.innerHTML = `
-          <div style="font-size:18px">
-            🌡 ${cw.temperature}°C<br>
-            💨 ${cw.windspeed} km/h<br>
-            <span style="color:${bee.color};font-weight:bold">
-              ${bee.text}
-            </span>
-          </div>
-        `;
-      })
-      .catch(()=>{
-        box.innerHTML = "⚠️ brak danych pogodowych";
-      });
-  }
-
-  // 🔥 GPS
-  if(navigator.geolocation){
-    navigator.geolocation.getCurrentPosition(
-      pos => render(pos.coords.latitude, pos.coords.longitude),
-      () => render(52.24, 23.09), // fallback
-      {enableHighAccuracy:true, timeout:8000}
-    );
-  } else {
-    render(52.24, 23.09);
-  }
-}
-
-// =========================
-// 🔁 AUTO REFRESH CO 60 SEK
-// =========================
-loadLiveWeather();
-setInterval(loadLiveWeather, 60000);
 
   let textarea = null;
   let currentDay = null;
-  let currentMonth = null;;
+  let currentMonth = null;
 
 // =========================
   // 📏 AUTO SCALE TEKSTU
@@ -2716,7 +2649,7 @@ function getWeatherIcon(code){
   return "🌍";
 }
 
-/ =========================
+// =========================
 // 🧠 AI POGODA DLA PSZCZÓŁ (PRO)
 // =========================
 function analyzeBeeConditions(temp, wind, rain){
@@ -2850,20 +2783,16 @@ function loadWeather5Days() {
 
         const cw = data.current_weather || {temperature:0,windspeed:0};
 
-        const todayMax = data.daily.temperature_2m_max[0];
+        const todayMax = data?.daily?.temperature_2m_max?.[0] ?? 0;
         const todayMin = data.daily.temperature_2m_min[0];
-        const todayWind = data.daily.windspeed_10m_max[0];
-        const todayRain = data.daily.precipitation_probability_max[0];
+        const todayWind = data?.daily?.windspeed_10m_max?.[0] ?? 0;
+        const todayRain = data.daily.precipitation_probability_max[0] ?? 0;
 
         const beeAI = analyzeBeeConditions(
         cw.temperature,todayWind,todayRain
 );
 
-        const color =
-          beeStatus.includes("IDEALNE") ? "green" :
-          beeStatus.includes("ŚREDNIE") ? "orange" : "red";
-
-       const iconToday = getWeatherIcon(data.current_weather.weathercode);
+        const color = beeAI.color;     
 
 if(weatherBox){
  weatherBox.innerHTML = `
@@ -2926,7 +2855,7 @@ if(weatherBox){
 `;
 }
 
-        resolve({beeStatus});
+        resolve({beeStatus: beeAI.status});
 
       }).catch(()=>{
         resolve(null);
@@ -3009,7 +2938,7 @@ if(dayNumber % 2 !== 0){
     if(inspections==0) swarmRisk+=30;
     if(inspections==1) swarmRisk+=20;
     if(swarm) swarmRisk+=30;
-    if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
+    if(weatherData?.beeStatus?.includes("IDEALNE")) swarmRisk+=10;
     if(swarmRisk>100) swarmRisk=100;
 
     let swarmText="";
@@ -3250,7 +3179,7 @@ function generateHoneyForecast(){
   // =========================
   fixCalendarStructure();
   updateMarkers();
-
+  loadLiveWeather();
   setTimeout(autoScaleCalendarText, 100);
   scrollToToday();
 
@@ -3305,10 +3234,8 @@ function fixCalendarStructure(){
     if(td.querySelector(".day-content")) return;
 
     // 🔥 pobierz tekst (usuń numer dnia)
-    let text = td.innerText.replace(dayNumber.innerText, "").trim();
+    let text = td.textContent.replace(dayNumber.textContent, "").trim();
 
-    // 🔥 wyczyść komórkę
-    td.innerHTML = "";
 
     // 🔥 zbuduj poprawną strukturę
     const wrapper = document.createElement("div");
