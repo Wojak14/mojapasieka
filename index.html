@@ -36,7 +36,6 @@ body {
 ========================= */
 table {
   width: 100%;
-  max-width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
 }
@@ -52,12 +51,28 @@ th {
 🖥️ DESKTOP (KWADRATY)
 ========================= */
 td {
-  width: 14.28%;
+  width: calc(100% / 7);
   aspect-ratio: 1 / 1;
-  position: relative;
+
+  padding: 2px;
+  box-sizing: border-box;
+
   vertical-align: top;
+
+  position: relative; /* 🔥 KLUCZ DO UKŁADU */
+}
+
+/* =========================
+📦 DAY (NAPRAWA UKŁADU)
+========================= */
+.day {
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+
   overflow: hidden;
-  border: 1px solid #ccc;
 }
 
 /* zawartość dnia */
@@ -99,12 +114,14 @@ td {
 @media (max-width: 700px) {
 
   td {
-    aspect-ratio: auto;
-    height: auto;
-    position: static;
-    overflow: visible;
+    width: calc(100% / 7);
+    aspect-ratio: 1 / 1;
 
-    padding: 2px; /* 🔥 dodatkowa przestrzeń */
+    padding: 2px;
+    box-sizing: border-box;
+
+    vertical-align: top;
+    position: relative;
   }
 
   .day-content {
@@ -133,19 +150,17 @@ td {
 
     overflow: visible;
 
-    /* 🔥 KLUCZ ANDROID */
     word-break: break-word;
     overflow-wrap: anywhere;
     white-space: normal;
   }
 
-  /* 🔥 IKONY NIE ROZJEŻDŻAJĄ */
+  /* 🔥 IKONY */
   .note-marker {
     font-size: 14px;
     margin-top: 2px;
     display: block;
   }
-
 }
 
 /* =========================
@@ -278,7 +293,6 @@ table, div, section {
 }
 
 </style>
-
 </head>
 
 <body>
