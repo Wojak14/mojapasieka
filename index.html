@@ -68,8 +68,6 @@ td {
   word-break: break-word;
 }
 
-
-/* 🔥 NUMER DNIA */
 .day-text {
   font-size: 1em;
   line-height: 1.2;
@@ -172,23 +170,23 @@ td {
 @media (max-width: 600px) {
 
   .calendar-scroll {
-    overflow-x: auto;        /* 🔥 scroll w bok */
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  body {
+    body {
     padding: 4px;
-  }
+  
 
   table {
-    width: 115vw;            /* 🔥 1.15 szerokości */
+    width: 115vw;
+    min-width: 115vw; /* 🔥 FIX ANDROID */
     table-layout: fixed;
-  }
+  
 
-    td {
-    width: calc(115vw / 7);  /* 🔥 szersze komórki */
-    height: calc(115vw / 7); /* dalej kwadrat */
-
+  td {
+    width: calc(115vw / 7);
+    height: calc(115vw / 7);
     padding: 0 !important;
     box-sizing: border-box;
   }
@@ -196,33 +194,27 @@ td {
   .day {
     width: 100%;
     height: 100%;
-    padding: 3px;
+    padding: 2px; /* 🔥 więcej miejsca */
     box-sizing: border-box;
   }
 
   .day-text {
     font-size: clamp(10px, 2.8vw, 14px);
-
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 6;
-
     overflow: hidden;
     word-break: break-word;
   }
 
-  .day-number {
-    font-size: clamp(12px, 3.5vw, 16px);
-  }
-
-}
   /* =========================
 📅 NUMER DNIA
 ========================= */
+ .day-number {
+    font-size: clamp(16px, 5vw, 22px);
+    font-weight: bold;
+  }
 
-.day-number {
-  font-weight: bold;
-  font-size: 15px;
 }
 
 /* 🔥 FULLSCREEN FIX */
