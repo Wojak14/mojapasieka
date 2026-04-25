@@ -2567,6 +2567,30 @@ async function getLocationData(lat, lon){
   }
 }
 
+// =========================
+// 🌤️ IKONY POGODY (OPEN-METEO)
+// =========================
+function getWeatherIcon(code){
+
+  if(code === 0) return "☀️"; // bezchmurnie
+  if(code === 1 || code === 2) return "🌤️";
+  if(code === 3) return "☁️";
+
+  if(code === 45 || code === 48) return "🌫️"; // mgła
+
+  if(code >= 51 && code <= 57) return "🌦️"; // mżawka
+  if(code >= 61 && code <= 67) return "🌧️"; // deszcz
+  if(code >= 71 && code <= 77) return "❄️"; // śnieg
+
+  if(code >= 80 && code <= 82) return "🌧️"; // ulewy
+  if(code >= 85 && code <= 86) return "❄️";
+
+  if(code >= 95) return "⛈️"; // burza
+
+  return "🌍";
+}
+
+
 function loadWeather5Days() {
   return new Promise((resolve)=>{
 
@@ -2648,37 +2672,36 @@ function loadWeather5Days() {
           `;
         }
 
-               if(forecastBox){
+          if(forecastBox){
           const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
           let html=`<b>📅 Prognoza 6 dni:</b><br>`;
 
-         for(let i=1;i<=6;i++){
+          for(let i=1;i<=6;i++){
+            const date=new Date(); date.setDate(date.getDate()+i);
+            const d=date.getDate().toString().padStart(2,"0");
+            const m=(date.getMonth()+1).toString().padStart(2,"0");
 
-  const date=new Date();
-  date.setDate(date.getDate()+i);
+            const tMax=data.daily.temperature_2m_max[i] ?? 0;
+            const tMin=data.daily.temperature_2m_min[i] ?? 0;
+            const wind=data.daily.windspeed_10m_max[i] ?? 0;
+            const rain=data.daily.precipitation_probability_max[i] ?? 0;
 
-  const d=date.getDate().toString().padStart(2,"0");
-  const m=(date.getMonth()+1).toString().padStart(2,"0");
+            html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}%</div>`;
+          }
 
-  const tMax=data.daily.temperature_2m_max[i] ?? 0;
-  const tMin=data.daily.temperature_2m_min[i] ?? 0;
-  const wind=data.daily.windspeed_10m_max[i] ?? 0;
-  const rain=data.daily.precipitation_probability_max[i] ?? 0;
-  const code=data.daily.weathercode[i];
+          forecastBox.innerHTML=html;
+        }
 
-  const icon = getWeatherIcon(code);
+        if(beeBox){
+          beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
+        }
 
-  html += `
-    <div style="display:flex;justify-content:space-between;
-                padding:6px;margin:4px 0;
-                background:#f3f3f3;border-radius:8px;">
-      <b>${icon} ${d}.${m}</b>
-      <span>${tMin}-${tMax}°C</span>
-      <span>💨 ${wind}</span>
-      <span>🌧 ${rain}%</span>
-    </div>
-  `;
-}
+        resolve({beeStatus});
+
+      }).catch(()=>{
+        resolve(null);
+      });
+    }
 
           forecastBox.innerHTML=html;
         }
