@@ -171,7 +171,7 @@ td {
 /* 📱 MOBILE (ANDROID FIX) */
 @media (max-width: 600px) {
 
- body {
+  body {
     padding: 5px;
   }
 
@@ -179,12 +179,11 @@ td {
     width: 100vw;
   }
 
-    td {
+  td {
     width: calc(100vw / 7);
     height: calc(100vw / 7); /* 🔥 KWADRATY NA ANDROID */
     padding: 1px;
   }
-
 
   .day {
     padding: 3px;
@@ -197,7 +196,7 @@ td {
     overflow: hidden;
   }
 
-}
+}}
 
   /* =========================
 📅 NUMER DNIA
@@ -2648,7 +2647,7 @@ function loadWeather5Days() {
           `;
         }
 
-          if(forecastBox){
+        if(forecastBox){
           const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
           let html=`<b>📅 Prognoza 6 dni:</b><br>`;
 
@@ -2673,26 +2672,6 @@ function loadWeather5Days() {
         }
 
         resolve({beeStatus});
-
-      }).catch(()=>{
-        resolve(null);
-      });
-    }
-
-          forecastBox.innerHTML=html;
-        }
-
-        if(beeBox){
-          beeBox.innerHTML = `
-  <b>🐝 AI Pasieki:</b><br>
-  <span style="color:${beeAI.color};font-weight:bold">
-    ${beeAI.status} (${beeAI.score}%)
-  </span><br>
-  <small>${beeAI.advice}</small>
-`;
-}
-
-        resolve({beeStatus: beeAI.status});
 
       }).catch(()=>{
         resolve(null);
