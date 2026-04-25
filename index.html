@@ -171,20 +171,33 @@ td {
 /* 📱 MOBILE (ANDROID FIX) */
 @media (max-width: 600px) {
 
-  body {
+ body {
     padding: 5px;
   }
 
-  td {
+  table {
+    width: 100vw;
+  }
+
+    td {
+    width: calc(100vw / 7);
+    height: calc(100vw / 7); /* 🔥 KWADRATY NA ANDROID */
     padding: 1px;
   }
 
+
   .day {
-  padding: 3px;
-  cursor: pointer;
-  user-select: none;
-}
+    padding: 3px;
   }
+
+  .day-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical; /* 🔥 WAŻNE */
+    -webkit-line-clamp: 6;
+    overflow: hidden;
+  }
+
+}
 
   /* =========================
 📅 NUMER DNIA
