@@ -77,12 +77,14 @@ td {
 
 /* 🔥 TEKST W DNIU (ZAWIJANIE + EMOJI SAFE) */
 .day-text {
-  display: block;
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;   /* 🔥 max 5 linii */
+  -webkit-box-orient: vertical;
 
-  max-height: 100%; /* zamiast clamp */
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  font-size: 12px;
 }
 
 /* 🔥 IKONY */
@@ -172,45 +174,51 @@ td {
     -webkit-overflow-scrolling: touch;
   }
 
-    body {
+  body {
     padding: 4px;
-  
+  }
 
   table {
-    width: 160vw;
-    min-width: 160vw; /* 🔥 FIX ANDROID */
+    width: 125vw;
+    min-width: 125vw; /* 🔥 FIX ANDROID */
     table-layout: fixed;
-  
+  }
 
   td {
-    width: calc(115vw / 7);
+    width: calc(125vw / 7);
     height: calc(115vw / 7);
     padding: 0 !important;
     box-sizing: border-box;
   }
 
+  /* 🔥 LEGENDA = SZEROKOŚĆ KALENDARZA */
+  .legend-box {
+    width: 125vw;
+    margin-left: -7.5vw;
+  }
+
+}
   .day {
     width: 100%;
     height: 100%;
-    padding: 3px; /* 🔥 więcej miejsca */
+    padding: 2px; /* 🔥 więcej miejsca */
     box-sizing: border-box;
   }
 
   .day-text {
-  white-space: normal;        /* 🔥 pozwala łamać linie */
-  word-break: break-word;     /* 🔥 łamie długie słowa */
-  overflow-wrap: anywhere;    /* 🔥 Android fix */
-  line-height: 1.3;
-
-  display: block;             /* 🔥 usuwa tryb webkit-box */
-  overflow: visible;          /* 🔥 NIE UCINA */
-}
+    font-size: clamp(10px, 2.8vw, 14px);
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
+    overflow: hidden;
+    word-break: break-word;
+  }
 
   /* =========================
 📅 NUMER DNIA
 ========================= */
  .day-number {
-    font-size: clamp(16px, 6vw, 22px);
+    font-size: clamp(16px, 5vw, 22px);
     font-weight: bold;
   }
 
