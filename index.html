@@ -166,7 +166,7 @@ td {
 .red { background:#F44336; color:white; }
 .black { background:#000; color:white; }
 
-/* 📱 MOBILE (ANDROID FIX) */
+/* 📱 MOBILE (ANDROID FIX – SZEROKOŚĆ DYNAMICZNA) */
 @media (max-width: 600px) {
 
   .calendar-scroll {
@@ -178,41 +178,56 @@ td {
     padding: 4px;
   }
 
+  /* 🔥 KLUCZ — szerokość rośnie od tekstu */
   table {
-    width: 130vw;
-    min-width: 115vw; /* 🔥 FIX ANDROID */
-    table-layout: fixed;
+    width: max-content;
+    min-width: 100vw; /* nie mniejsze niż ekran */
+    table-layout: auto;
   }
 
+  /* 🔥 KOMÓRKI */
   td {
-    width: calc(115vw / 7);
-    height: calc(115vw / 7);
+    min-width: 120px;   /* 🔥 baza szerokości */
+    height: 120px;      /* 🔥 BLOKADA wysokości */
+
     padding: 0 !important;
     box-sizing: border-box;
+    vertical-align: top;
   }
 
-  /* 🔥 LEGENDA = SZEROKOŚĆ KALENDARZA */
-.legend-box {
-  width: 115vw;
-  margin-left: -10vw; /* (120 - 100) / 2 */
-}
-
-}
+  /* 🔥 KONTENER DNIA */
   .day {
     width: 100%;
     height: 100%;
-    padding: 2px; /* 🔥 więcej miejsca */
+    padding: 4px;
     box-sizing: border-box;
+    overflow: visible !important;
   }
 
+  /* 🔥 TEKST — ROZPYCHA SZEROKOŚĆ */
   .day-text {
-    font-size: clamp(10px, 2.8vw, 14px);
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 6;
-    overflow: hidden;
+    font-size: clamp(10px, 3vw, 15px);
+
+    white-space: normal;
     word-break: break-word;
+    overflow-wrap: anywhere;
+
+    overflow: visible !important;
   }
+
+  /* 🔢 NUMER */
+  .day-number {
+    font-size: clamp(16px, 5vw, 22px);
+    font-weight: bold;
+  }
+
+  /* 🔥 LEGENDA dopasowana */
+  .legend-box {
+    width: max-content;
+    min-width: 100vw;
+  }
+
+}
 
   /* =========================
 📅 NUMER DNIA
