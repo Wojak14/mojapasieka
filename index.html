@@ -3013,27 +3013,12 @@ if(dayNumber % 2 !== 0){
   if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
     dayTasks.push("Sprawdź węzę i ramki");
 }
-if(dayTasks.length > 0){
-
-  const temp = weatherData?.daily?.temperature_2m_max?.[d] ?? 20;
-  const wind = weatherData?.daily?.windspeed_10m_max?.[d] ?? 10;
-  const rain = weatherData?.daily?.precipitation_probability_max?.[d] ?? 0;
-
-  const isGoodDay = (temp >= 16 && wind < 18 && rain < 25);
-
-  let targetKey = key;
-
-  // jeśli zły dzień → szukaj najlepszego
-  if(!isGoodDay){
-    const goodKey = findNextGoodDay(date, weatherData);
-    if(goodKey) targetKey = goodKey;
+      if(badWeather){
+  tasksByDay[key] = "⛔ ZŁE WARUNKI – brak prac w ulu";
+} else {
+  if(dayTasks.length>0){
+    tasksByDay[key] = dayTasks.join(", ");
   }
-
-  if(!tasksByDay[targetKey]){
-    tasksByDay[targetKey] = "";
-  }
-
-  tasksByDay[targetKey] += (tasksByDay[targetKey] ? ", " : "") + dayTasks.join(", ");
 }
     }
 
