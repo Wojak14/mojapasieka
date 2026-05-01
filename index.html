@@ -2768,25 +2768,36 @@ function loadWeather5Days() {
           `;
         }
 
-        if(forecastBox){
-          const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-          let html=`<b>📅 Prognoza 6 dni:</b><br>`;
+   if(forecastBox){
 
-          for(let i=1;i<=6;i++){
-            const date=new Date(); date.setDate(date.getDate()+i);
-            const d=date.getDate().toString().padStart(2,"0");
-            const m=(date.getMonth()+1).toString().padStart(2,"0");
+  const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
+  let forecastData = [];
 
-            const tMax=data.daily.temperature_2m_max[i] ?? 0;
-            const tMin=data.daily.temperature_2m_min[i] ?? 0;
-            const wind=data.daily.windspeed_10m_max[i] ?? 0;
-            const rain=data.daily.precipitation_probability_max[i] ?? 0;
+  for(let i=1;i<=6;i++){
 
-            html+=`<div><b>${days[date.getDay()]} ${d}.${m}</b> 🌡 ${tMin}-${tMax}°C 💨 ${wind} km/h 🌧 ${rain}%</div>`;
-          }
+    const date=new Date(); 
+    date.setDate(date.getDate()+i);
 
-          forecastBox.innerHTML=html;
-        }
+    const d=date.getDate().toString().padStart(2,"0");
+    const m=(date.getMonth()+1).toString().padStart(2,"0");
+
+    const tMax=data.daily.temperature_2m_max[i] ?? 0;
+    const tMin=data.daily.temperature_2m_min[i] ?? 0;
+    const wind=data.daily.windspeed_10m_max[i] ?? 0;
+    const rain=data.daily.precipitation_probability_max[i] ?? 0;
+
+    forecastData.push({
+      name: `${days[date.getDay()]} ${d}.${m}`,
+      tempMin: tMin,
+      tempMax: tMax,
+      wind: wind,
+      rain: rain
+    });
+  }
+
+  // 🔥 TU WCHODZI AI (NOWE)
+  forecastBox.innerHTML = generateBeeForecast(forecastData);
+}
 
         if(beeBox){
           beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
@@ -2811,6 +2822,53 @@ function loadWeather5Days() {
     }
 
   });
+}
+
+// =========================
+// 🐝 AI ANALIZA POGODY
+// =========================
+function getBeeWorkAdvice(tempMin, tempMax, wind, rain){
+
+  if(tempMax < 12) return "❄️ Za zimno – nie otwieraj uli";
+
+  if(rain >= 40) return "🌧 Duże ryzyko deszczu – odpuść prace";
+
+  if(wind >= 18) return "💨 Silny wiatr – tylko szybkie działania";
+
+  if(tempMax >= 18 && rain < 20 && wind < 15)
+    return "🐝 Idealny dzień na przegląd";
+
+  if(rain >= 20)
+    return "🌦 Możliwy deszcz – ostrożnie";
+
+  return "⚠️ Warunki średnie";
+}
+
+function generateBeeForecast(days){
+
+  let html = "<b>🐝 Prognoza pasieczna:</b><br>";
+
+  days.forEach(day => {
+
+    const advice = getBeeWorkAdvice(
+      day.tempMin,
+      day.tempMax,
+      day.wind,
+      day.rain
+    );
+
+    html += `
+      <div style="margin:6px 0;padding:6px;border-radius:8px;background:#fff3cd;">
+        <b>${day.name}</b> 
+        🌡 ${day.tempMin}-${day.tempMax}°C 
+        💨 ${day.wind} km/h 
+        🌧 ${day.rain}%<br>
+        👉 ${advice}
+      </div>
+    `;
+  });
+
+  return html;
 }
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
