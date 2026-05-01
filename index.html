@@ -2847,11 +2847,14 @@ if(safeBox){
   }
 }
 
-        resolve({
+resolve({
   beeStatus,
-  wind: todayWind,
-  rain: todayRain,
-  temp: cw.temperature
+  today: {
+    wind: todayWind,
+    rain: todayRain,
+    temp: cw.temperature
+  },
+  forecast: data.daily
 });
 
       }).catch(()=>{
@@ -2937,15 +2940,20 @@ function generateBeeForecast(days){
     const feedingStart = new Date(2026,7,20);    // 20 sierpnia
     const treatmentStart = new Date(2026,8,21);  // 21 września
     function isBadWeather(wind, rain, temp){
-    return wind > 25 || rain > 30 || temp < 13;
-    }
+
+  if(temp < 12) return true;
+  if(rain >= 40) return true;
+  if(wind >= 18) return true;
+
+  return false;
+}
 
     for(let d=0; d<7; d++){
       const date = new Date();
       date.setDate(today.getDate()+d);
-      const wind = weatherData?.wind || 0;
-      const rain = weatherData?.rain || 0;
-      const temp = weatherData?.temp || 20;
+      const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
+      const rain = weatherData?.forecast?.precipitation_probability_max[d] || 0;
+      const temp = weatherData?.forecast?.temperature_2m_max[d] || 20;
 
       const badWeather = isBadWeather(wind, rain, temp);
       const key = String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
