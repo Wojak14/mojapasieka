@@ -290,6 +290,75 @@ table, div, section {
   opacity: 0.5;
 }
 
+/* =========================
+🔥 FULL WIDTH SYNC (ANDROID)
+Legenda + notatki = szerokość kalendarza
+========================= */
+
+/* kontener scroll */
+.calendar-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+
+/* 🔥 KLUCZ – wszystkie sekcje pod kalendarzem */
+.full-width-sync {
+  width: max-content;
+  min-width: 100vw;
+  box-sizing: border-box;
+}
+
+/* 🔥 LEGENDA */
+.legend-box {
+  width: max-content;
+  min-width: 100vw;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  padding: 10px;
+  margin-top: 10px;
+
+  background: #fff8e1;
+  border-radius: 10px;
+}
+
+/* element legendy */
+.legend-box div {
+  flex: 1 1 45%;
+  font-size: 13px;
+}
+
+/* 🔥 NOTATKI */
+#day-note-box {
+  width: max-content;
+  min-width: 100vw;
+
+  padding: 10px;
+  margin-top: 10px;
+}
+
+/* textarea */
+.notes {
+  width: 100%;
+  min-height: 100px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* przycisk */
+#day-note-box button {
+  margin-top: 6px;
+  padding: 6px 10px;
+}
+
+/* 🔥 WYŁĄCZENIE OGRANICZEŃ SZEROKOŚCI */
+body {
+  overflow-x: hidden;
+}
+
 </style>
 
 </head>
@@ -388,6 +457,7 @@ font-weight:bold;
 <div class="month" id="month-01">
 <h2>STYCZEŃ 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -442,6 +512,7 @@ font-weight:bold;
 <td></td>
 </tr>
 </table>
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca STYCZEŃ :</strong><br>
@@ -459,15 +530,16 @@ font-weight:bold;
 <div id="assistant-box-01"></div>
 
 
-<!-- Notatki dnia -->
-<div id="day-note-box-01">
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-01" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-01" rows="6" style="width:100%;"></textarea>
   <br><br>
   <button type="button" onclick="saveNote('01')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -515,6 +587,7 @@ font-weight:bold;
 <div class="month" id="month-02">
 <h2>LUTY 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -566,6 +639,7 @@ font-weight:bold;
 <td></td>
 </tr>
 </table>
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -573,7 +647,6 @@ font-weight:bold;
 – 🟧 dni pomarańczowe: wzrost ryzyka rojliwości przy silnych rodzinach,⬛- zimowla 
 </div>
 
-<!-- Alerty pasieczne -->
 <div id="alerts-box-02">
   <strong>Alerty pasieczne:</strong>
   <div id="alerts-list-02">Brak alertów na dziś</div>
@@ -582,15 +655,16 @@ font-weight:bold;
 <div id="swarm-box-02"></div>
 <div id="assistant-box-02"></div>
 
-<!-- Notatki dnia -->
-<div id="day-note-box-02">
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-02" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-02" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button onclick="saveNote('02')">Zapisz notatkę</button>
+  <button type="button" onclick="saveNote('02')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -639,6 +713,7 @@ font-weight:bold;
 <div class="month" id="month-03">
 <h2>MARZEC 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -713,8 +788,8 @@ font-weight:bold;
 </td>
 <td></td><td></td><td></td><td></td><td></td>
 </tr>
-
 </table>
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -723,7 +798,6 @@ font-weight:bold;
 – 🟧 Dni z podziałem koloru = prace + obserwacja rojowa
 </div>
 
-<!-- Alerty pasieczne -->
 <div id="alerts-box-03">
   <strong>Alerty pasieczne:</strong>
   <div id="alerts-list-03">Brak alertów na dziś</div>
@@ -732,15 +806,16 @@ font-weight:bold;
 <div id="swarm-box-03"></div>
 <div id="assistant-box-03"></div>
 
-<!-- Notatki dnia -->
-<div id="day-note-box-03">
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-03" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-03" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button onclick="saveNote('03')">Zapisz notatkę</button>
+  <button type="button" onclick="saveNote('03')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -788,6 +863,7 @@ font-weight:bold;
 <div class="month" id="month-04">
 <h2>KWIECIEŃ 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -873,10 +949,8 @@ font-weight:bold;
 </td>
 <td></td><td></td><td></td>
 </tr>
-
 </table>
-
-
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -891,7 +965,19 @@ font-weight:bold;
   <div id="alerts-list-04">Brak alertów na dziś</div>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<div id="swarm-box-04"></div>
+<div id="assistant-box-04"></div>
+
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-04" class="full-width-sync">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-04" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button type="button" onclick="saveNote('04')">Zapisz notatkę</button>
+</div>
+
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -955,6 +1041,7 @@ font-weight:bold;
 <div class="month" id="month-05">
 <h2>MAJ 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -1065,8 +1152,8 @@ font-weight:bold;
 <td class="green"><span class="day-number" data-day="30" data-month="05">30</span>Porządkowanie pasieki</td>
 <td class="green"><span class="day-number" data-day="31" data-month="05">31</span>Zamknięcie sezonu rojowego</td>
 </tr>
-
 </table>
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1091,14 +1178,15 @@ font-weight:bold;
 </div>
 
 <!-- Notatki dnia -->
-<div id="day-note-box-05">
+<div id="day-note-box-05" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-05" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button onclick="saveNote('05')">Zapisz notatkę</button>
+  <button type="button" onclick="saveNote('05')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -1143,6 +1231,7 @@ font-weight:bold;
 <div class="month" id="month-06">
 <h2>CZERWIEC 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -1203,8 +1292,8 @@ font-weight:bold;
 <td class="green"><span class="day-number" data-day="30" data-month="06">30</span>Zamykanie intensywnych prac</td>
 <td></td><td></td><td></td><td></td><td></td>
 </tr>
-
 </table>
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1230,14 +1319,15 @@ font-weight:bold;
 </div>
 
 <!-- Notatki dnia -->
-<div id="day-note-box-06">
+<div id="day-note-box-06" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-06" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button onclick="saveNote('06')">Zapisz notatkę</button>
+  <button type="button" onclick="saveNote('06')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -1284,6 +1374,7 @@ font-weight:bold;
 <div class="month" id="month-07">
   <h2>LIPIEC 2026</h2>
 
+  <div class="calendar-scroll">
   <table>
     <tr>
       <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th><th>PT</th><th>SOB</th><th>ND</th>
@@ -1337,6 +1428,7 @@ font-weight:bold;
       <td></td><td></td>
     </tr>
   </table>
+   </div>
 
   <div class="notes">
     <strong>Uwagi:</strong><br>
@@ -1346,13 +1438,13 @@ font-weight:bold;
  </div>
 
   <!-- Panel alertów, rojka, asystent -->
-  <div id="alerts-box-07">
-    <strong>Alerty pasieczne:</strong>
-    <div id="alerts-list-07">Brak alertów na dziś</div>
-  </div>
+ <div id="alerts-box-07">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-07">Brak alertów na dziś</div>
+</div>
 
-  <div id="swarm-box-07"></div>
-  <div id="assistant-box-07"></div>
+<div id="swarm-box-07"></div>
+<div id="assistant-box-07"></div>
 
   <!-- Licznik miodu -->
   <div id="inspection-honey-07">
@@ -1360,15 +1452,16 @@ font-weight:bold;
     <div id="honey-total-07">🫙 Zebrany miód w 2026: 0 kg</div>
   </div>
 
-  <!-- Notatki dnia -->
-  <div id="day-note-box-07">
-    <h3>Notatka dnia</h3>
-    <textarea id="notes-07" rows="6" style="width:100%;"></textarea>
-    <br><br>
-    <button onclick="saveNote('07')">Zapisz notatkę</button>
-  </div>
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-07" class="full-width-sync">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-07" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button type="button" onclick="saveNote('07')">Zapisz notatkę</button>
+</div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -1416,6 +1509,7 @@ font-weight:bold;
 <div class="month" id="month-08">
   <h2>SIERPIEŃ 2026</h2>
 
+<div class="calendar-scroll">
   <table>
     <tr>
       <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -1473,6 +1567,7 @@ font-weight:bold;
       <td></td><td></td><td></td><td></td><td></td><td></td>
     </tr>
   </table>
+  </div>
 
   <div class="notes">
     <strong>Uwagi:</strong><br>
@@ -1495,15 +1590,16 @@ font-weight:bold;
   <div id="inspection-count-08">✅ Kontrole wykonane w tym miesiącu: 0</div>
 </div>
 
-<!-- Notatki dnia -->
-<div id="day-note-box-08">
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-08" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-08" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button onclick="saveNote('08')">Zapisz notatkę</button>
+  <button type="button" onclick="saveNote('08')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -1551,6 +1647,7 @@ font-weight:bold;
 <div class="month" id="month-09">
 <h2>WRZESIEŃ 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -1603,8 +1700,8 @@ font-weight:bold;
 <td class="green"><span class="day-number" data-day="30" data-month="09">30</span>Leczenie warrozy</td>
 <td></td><td></td><td></td><td></td>
 </tr>
-
 </table>
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1619,7 +1716,6 @@ font-weight:bold;
   <div id="alerts-list-09">Brak alertów na dziś</div>
 </div>
 
-<!-- Panele dodatkowe -->
 <div id="swarm-box-09"></div>
 <div id="assistant-box-09"></div>
 
@@ -1628,15 +1724,16 @@ font-weight:bold;
   <div id="inspection-count-09">✅ Kontrole wykonane w tym miesiącu: 0</div>
   </div>
 
-<!-- Notatki dnia -->
-<div id="day-note-box-09">
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-09" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-09" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button onclick="saveNote('09')">Zapisz notatkę</button>
+  <button type="button" onclick="saveNote('09')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -1684,6 +1781,7 @@ font-weight:bold;
 <div class="month" id="month-10">
 <h2>PAŹDZIERNIK 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -1737,8 +1835,8 @@ font-weight:bold;
 <td class="black"><span class="day-number" data-day="31" data-month="10">31</span>Brak prac</td>
 <td></td>
 </tr>
-
 </table>
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1761,15 +1859,16 @@ font-weight:bold;
   <div id="inspection-count-10">✅ Kontrole wykonane w tym miesiącu: 0</div>
 </div>
 
-<!-- Notatki dnia -->
-<div id="day-note-box-10">
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-10" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-10" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button onclick="saveNote('10')">Zapisz notatkę</button>
+  <button type="button" onclick="saveNote('10')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -1817,6 +1916,7 @@ font-weight:bold;
 <div class="month" id="month-11">
 <h2>LISTOPAD 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -1872,8 +1972,9 @@ font-weight:bold;
 <td class="black"><span class="day-number" data-day="30" data-month="11">30</span>Brak prac</td>
 <td></td><td></td><td></td><td></td><td></td><td></td>
 </tr>
-
 </table>
+</div>
+
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
@@ -1888,7 +1989,6 @@ font-weight:bold;
   <div id="alerts-list-11">Brak alertów na dziś</div>
 </div>
 
-<!-- Panel rojka / asystent -->
 <div id="swarm-box-11"></div>
 <div id="assistant-box-11"></div>
 
@@ -1898,15 +1998,16 @@ font-weight:bold;
   <div id="inspection-count-11">✅ Kontrole wykonane w tym miesiącu: 0</div>
 </div>
 
-<!-- Notatki dnia -->
-<div id="day-note-box-11">
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-11" class="full-width-sync">
   <h3>Notatka dnia</h3>
   <textarea id="notes-11" rows="6" style="width:100%;"></textarea>
   <br><br>
-  <button onclick="saveNote('11')">Zapisz notatkę</button>
+  <button type="button" onclick="saveNote('11')">Zapisz notatkę</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -1958,6 +2059,7 @@ font-weight:bold;
 <div class="month" id="month-12">
 <h2>GRUDZIEŃ 2026</h2>
 
+<div class="calendar-scroll">
 <table>
 <tr>
 <th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th>
@@ -2010,24 +2112,23 @@ font-weight:bold;
 <td class="black"><span class="day-number" data-day="31" data-month="12">31</span>Zimowla</td>
 <td></td><td></td><td></td>
 </tr>
-
 </table>
-
+</div>
 
 <div class="notes">
 <strong>Uwagi miesiąca:</strong><br>
 – Pełna zimowla<br>
 – Kontrola osypu i obserwacja zewnętrzna uli
 </div>
-<!-- Panel alertów -->
-  <div id="alerts-box-12">
-    <strong>Alerty pasieczne:</strong>
-    <div id="alerts-list-12">Brak alertów na dziś</div>
-  </div>
 
-  <!-- Panel rojka / asystent -->
-  <div id="swarm-box-12"></div>
-  <div id="assistant-box-12"></div>
+<!-- Panel alertów -->
+<div id="alerts-box-12">
+  <strong>Alerty pasieczne:</strong>
+  <div id="alerts-list-12">Brak alertów na dziś</div>
+</div>
+
+<div id="swarm-box-12"></div>
+<div id="assistant-box-12"></div>
 
 
   <!-- Licznik miodu i kontroli -->
@@ -2035,15 +2136,16 @@ font-weight:bold;
     <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
   </div>
 
-  <!-- Notatki dnia -->
-  <div id="day-note-box-12">
-    <h3>Notatka dnia</h3>
-    <textarea id="notes-12" rows="6" style="width:100%;"></textarea>
-    <br><br>
-    <button onclick="saveNote('12')">Zapisz notatkę</button>
-  </div>
+<!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
+<div id="day-note-box-12" class="full-width-sync">
+  <h3>Notatka dnia</h3>
+  <textarea id="notes-12" rows="6" style="width:100%;"></textarea>
+  <br><br>
+  <button type="button" onclick="saveNote('12')">Zapisz notatkę</button>
+</div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
@@ -2061,7 +2163,7 @@ font-weight:bold;
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramki / węza</div>
+    <div>🧱 ramka / węza</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -2203,7 +2305,8 @@ font-weight:bold;
 <button onclick="saveHiveNotes()">💾 Zapisz notatki rodzin</button>
 </div>
 
-<div id="icon-legend" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
+<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
+<div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
