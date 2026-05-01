@@ -125,12 +125,6 @@ td {
   text-align:center;
 }
 
-/* 📝 NOTATKI */
-.notes {
-  width: 100%;
-  height: 80px;
-}
-
 #autosave-status {
   font-size: 13px;
   margin-top: 4px;
@@ -147,23 +141,13 @@ td {
 /* 📱 MOBILE (ANDROID FIX – SZEROKOŚĆ DYNAMICZNA) */
 @media (max-width: 600px) {
 
-  .calendar-scroll {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
+ 
 
   body {
     padding: 4px;
   }
 
-  /* 🔥 KLUCZ — tabela nie może się ściskać */
-  table {
-    width: max-content;
-    min-width: 120vw;
-    table-layout: auto;
-  }
-
-  /* 🔥 KOMÓRKI */
+   /* 🔥 KOMÓRKI */
   td {
     min-width: 120px;
     height: 120px;
@@ -196,22 +180,10 @@ td {
   word-break: break-word;
 }
 
-  /* 🔥 LEGENDA — ROZCIĄGNIĘCIE NA SZEROKOŚĆ KALENDARZA */
-  .legend,
-  .legend-box {
-    width: 100%;
-    min-width: 120vw;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 6px;
-    box-sizing: border-box;
-  }
-
   .legend-item {
-    flex: 1 1 auto;
-    min-width:120px;
-    text-align: center;
+  min-width: 120px;
+  text-align: center;
+}
   }
 
   /* 🔥 NOTATKI DNIA – PEŁNA SZEROKOŚĆ */
@@ -233,23 +205,15 @@ td {
     font-weight: bold;
   }
 
-}
-
 /* 🔥 FULLSCREEN FIX */
 html, body {
   width: 100%;
   margin: 0;
-  padding: 0;
   overflow-x: hidden;
-  box-sizing: border-box;
 }
 
+/* 🔥 GLOBAL BOX-SIZING (OK) */
 * {
-  box-sizing: border-box;
-}
-
-table, div, section {
-  width: 100%;
   box-sizing: border-box;
 }
 
@@ -280,6 +244,8 @@ table, div, section {
 
 .calendar-scroll {
   position: relative;
+ overflow-x: auto;
+ -webkit-overflow-scrolling: touch;
 }
 
 .calendar-scroll::after {
@@ -291,31 +257,22 @@ table, div, section {
 }
 
 /* =========================
-🔥 FULL WIDTH SYNC (ANDROID)
-Legenda + notatki = szerokość kalendarza
+🔥 FINAL FULL WIDTH (ANDROID)
 ========================= */
 
-/* kontener scroll */
-.calendar-scroll {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  position: relative;
-}
-
-/* 🔥 KLUCZ – wszystkie sekcje pod kalendarzem */
 .full-width-sync {
-  width: max-content;
-  min-width: 100vw;
+  width: 100% !important;
+  max-width: 100% !important;
   box-sizing: border-box;
 }
 
 /* 🔥 LEGENDA */
 .legend-box {
-  width: max-content;
-  min-width: 100vw;
+  width: 100% !important;
+  max-width: 100% !important;
 
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 6px;
 
   padding: 10px;
@@ -325,38 +282,30 @@ Legenda + notatki = szerokość kalendarza
   border-radius: 10px;
 }
 
-/* element legendy */
-.legend-box div {
-  flex: 1 1 45%;
-  font-size: 13px;
-}
-
 /* 🔥 NOTATKI */
 #day-note-box {
-  width: max-content;
-  min-width: 100vw;
-
-  padding: 10px;
-  margin-top: 10px;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* textarea */
 .notes {
   width: 100%;
-  min-height: 100px;
+  min-height: 110px;
   font-size: 16px;
-  box-sizing: border-box;
 }
 
-/* przycisk */
+/* button */
 #day-note-box button {
-  margin-top: 6px;
-  padding: 6px 10px;
+  width: 100%;
+  padding: 10px;
 }
 
-/* 🔥 WYŁĄCZENIE OGRANICZEŃ SZEROKOŚCI */
-body {
-  overflow-x: hidden;
+/* 🔥 USUŃ OGRANICZENIA SZEROKOŚCI */
+.legend-box,
+#day-note-box {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
 }
 
 </style>
@@ -2627,9 +2576,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const key = `${currentDay}.${currentMonth}.2026`;
 
-    if(textarea){
-      localStorage.setItem(key, textarea.value);
-    }
+   if(textarea){
+
+  const value = textarea.value;
+
+  // 🔹 lokalnie (offline backup)
+  localStorage.setItem(key, value);
+
+  // 🔥 chmura (sync telefon ⇄ komputer)
+  db.ref("notes/" + key).set(value);
+}
 
     updateMarkers();
     setTimeout(autoScaleCalendarText, 50);
