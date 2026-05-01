@@ -2973,13 +2973,8 @@ if(dayNumber % 2 !== 0){
   if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
     dayTasks.push("Sprawdź węzę i ramki");
 }
-      if(badWeather){
-  tasksByDay[key] = "⛔ ZŁE WARUNKI – brak prac w ulu";
-} else {
-  if(dayTasks.length>0){
-    tasksByDay[key]=dayTasks.join(", ");
-  }
-}
+      if(dayTasks.length>0) tasksByDay[key]=dayTasks.join(", ");
+    }
 
     // Swarm risk
     let swarmRisk=0;
