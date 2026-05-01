@@ -2929,6 +2929,33 @@ function generateBeeForecast(days){
     updateSmartAssistant(weatherData);
   }
 
+function isGoodBeeDay(tempMax, wind, rain){
+  return tempMax >= 16 && wind < 18 && rain < 25;
+}
+
+function findNextGoodDay(startDate, weatherData){
+
+  for(let i=0;i<7;i++){
+
+    const date = new Date(startDate);
+    date.setDate(date.getDate() + i);
+
+    const d = String(date.getDate()).padStart(2,"0");
+    const m = String(date.getMonth()+1).padStart(2,"0");
+    const key = `${d}.${m}.2026`;
+
+    const temp = weatherData?.daily?.temperature_2m_max?.[i] ?? 20;
+    const wind = weatherData?.daily?.windspeed_10m_max?.[i] ?? 10;
+    const rain = weatherData?.daily?.precipitation_probability_max?.[i] ?? 0;
+
+    if(isGoodBeeDay(temp, wind, rain)){
+      return key;
+    }
+  }
+
+  return null;
+}
+
  function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
@@ -2986,12 +3013,27 @@ if(dayNumber % 2 !== 0){
   if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
     dayTasks.push("Sprawdź węzę i ramki");
 }
-      if(badWeather){
-  tasksByDay[key] = "⛔ ZŁE WARUNKI – brak prac w ulu";
-} else {
-  if(dayTasks.length>0){
-    tasksByDay[key] = dayTasks.join(", ");
+if(dayTasks.length > 0){
+
+  const temp = weatherData?.daily?.temperature_2m_max?.[d] ?? 20;
+  const wind = weatherData?.daily?.windspeed_10m_max?.[d] ?? 10;
+  const rain = weatherData?.daily?.precipitation_probability_max?.[d] ?? 0;
+
+  const isGoodDay = (temp >= 16 && wind < 18 && rain < 25);
+
+  let targetKey = key;
+
+  // jeśli zły dzień → szukaj najlepszego
+  if(!isGoodDay){
+    const goodKey = findNextGoodDay(date, weatherData);
+    if(goodKey) targetKey = goodKey;
   }
+
+  if(!tasksByDay[targetKey]){
+    tasksByDay[targetKey] = "";
+  }
+
+  tasksByDay[targetKey] += (tasksByDay[targetKey] ? ", " : "") + dayTasks.join(", ");
 }
     }
 
