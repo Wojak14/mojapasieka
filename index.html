@@ -13,9 +13,6 @@
 
 <link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
-<!-- 🔥 FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
 <style>
 body {
@@ -2452,31 +2449,6 @@ document.addEventListener("DOMContentLoaded", function() {
   let currentDay = null;
   let currentMonth = null;;
 
-  // =========================
-  // 🔥 FIREBASE INIT
-  // =========================
-
-  const firebaseConfig = {
-    apiKey: "TWOJ_KEY",
-    authDomain: "xxx.firebaseapp.com",
-    databaseURL: "https://xxx-default-rtdb.firebaseio.com",
-    projectId: "xxx",
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-
-
-  function saveNoteToCloud(key, value){
-    db.ref("notes/" + key).set(value);
-  }
-
-  function loadNoteFromCloud(key, callback){
-    db.ref("notes/" + key).on("value", snap=>{
-      callback(snap.val() || "");
-    });
-  }
-
 // =========================
   // 📏 AUTO SCALE TEKSTU
   // =========================
@@ -2641,12 +2613,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const key = `${currentDay}.${currentMonth}.2026`;
 
-if(textarea){
-  const value = textarea.value;
-
-  localStorage.setItem(key, value); // offline backup
-  saveNoteToCloud(key, value);      // 🔥 sync
-}
+    if(textarea){
+      localStorage.setItem(key, textarea.value);
+    }
 
     updateMarkers();
     setTimeout(autoScaleCalendarText, 50);
