@@ -2931,10 +2931,18 @@ function generateBeeForecast(days){
 
     const feedingStart = new Date(2026,7,20);    // 20 sierpnia
     const treatmentStart = new Date(2026,8,21);  // 21 września
+    function isBadWeather(wind, rain, temp){
+    return wind > 25 || rain > 30 || temp < 13;
+    }
 
     for(let d=0; d<7; d++){
       const date = new Date();
       date.setDate(today.getDate()+d);
+      const wind = weatherData?.wind || 0;
+      const rain = weatherData?.rain || 0;
+      const temp = weatherData?.temp || 20;
+
+      const badWeather = isBadWeather(wind, rain, temp);
       const key = String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
       const note = (localStorage.getItem(key)||"").toLowerCase();
       let dayTasks=[];
@@ -2965,8 +2973,13 @@ if(dayNumber % 2 !== 0){
   if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
     dayTasks.push("Sprawdź węzę i ramki");
 }
-      if(dayTasks.length>0) tasksByDay[key]=dayTasks.join(", ");
-    }
+      if(badWeather){
+  tasksByDay[key] = "⛔ ZŁE WARUNKI – brak prac w ulu";
+} else {
+  if(dayTasks.length>0){
+    tasksByDay[key]=dayTasks.join(", ");
+  }
+}
 
     // Swarm risk
     let swarmRisk=0;
