@@ -141,7 +141,10 @@ td {
 /* 📱 MOBILE (ANDROID FIX – SZEROKOŚĆ DYNAMICZNA) */
 @media (max-width: 600px) {
 
- 
+  .calendar-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
   body {
     padding: 4px;
@@ -242,11 +245,7 @@ html, body {
   border: 2px solid #4caf50;
 }
 
-.calendar-scroll {
-  position: relative;
- overflow-x: auto;
- -webkit-overflow-scrolling: touch;
-}
+
 
 .calendar-scroll::after {
   content: "👉";
