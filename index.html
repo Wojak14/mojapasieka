@@ -2678,7 +2678,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
   }
 
-// --- POGODA 6 DNI + DZIŚ (STABILNA WERSJA) ---
+// --- POGODA 7 DNI + DZIŚ (STABILNA WERSJA) ---
 async function getLocationData(lat, lon){
   try{
     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
@@ -2777,7 +2777,7 @@ function loadWeather5Days() {
   const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
   let forecastData = [];
 
-  for(let i=1;i<=6;i++){
+  for(let i=1;i<=7;i++){
 
     const date=new Date(); 
     date.setDate(date.getDate()+i);
@@ -2923,8 +2923,8 @@ function generateBeeForecast(days){
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
 
-    const feedingStart = new Date(2026,7,20);    // 20 sierpnia
-    const treatmentStart = new Date(2026,8,21);  // 21 września
+    const feedingStart = new Date(2026,8,20);    // 20 sierpnia
+    const treatmentStart = new Date(2026,9,21);  // 21 września
     function isBadWeather(wind, rain, temp){
 
   if(temp < 12) return true;
@@ -2934,7 +2934,7 @@ function generateBeeForecast(days){
   return false;
 }
 
-    for(let d=0; d<7; d++){
+    for(let d=0; d<8; d++){
       const date = new Date();
       date.setDate(today.getDate()+d);
       const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
@@ -3015,7 +3015,7 @@ if(swarmRisk>100) swarmRisk=100;
       let tasksHtml = Object.entries(tasksByDay).map(([key,text])=>{
         return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${key}">${key}: ${text}</div>`;
       }).join("");
-      summary.push("🛠 Nadchodzące 7 dni:<br>"+tasksHtml);
+      summary.push("🛠 Nadchodzące 8 dni:<br>"+tasksHtml);
     }
 
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
