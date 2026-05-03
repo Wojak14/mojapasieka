@@ -13,8 +13,7 @@
 
 <link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script
+
 
 <style>
 body {
@@ -2437,25 +2436,6 @@ document.addEventListener("DOMContentLoaded", function() {
   let textarea = null;
   let currentDay = null;
   let currentMonth = null;;
-
-const firebaseConfig = {
-  apiKey: "TWOJ_KEY",
-  authDomain: "TWOJ_PROJEKT.firebaseapp.com",
-  databaseURL: "https://TWOJ_PROJEKT-default-rtdb.firebaseio.com",
-  projectId: "TWOJ_PROJEKT",
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-function saveNoteToCloud(key, value){
-  db.ref("notes/" + key).set(value);
-}
-
-function loadNoteFromCloud(key, callback){
-  db.ref("notes/" + key).on("value", snap=>{
-    callback(snap.val() || "");
-  });
-}
 
 // =========================
   // 📏 AUTO SCALE TEKSTU
