@@ -2484,17 +2484,11 @@ document.addEventListener("DOMContentLoaded", function() {
       "alert-high","alert-medium","alert-low"
     );
 
-if(t.includes("wiatr")) td.classList.add("icon-wind");
-
-if(
-  t.includes("inspekcja") ||
-  t.includes("kontrola") ||
-  t.includes("przegląd")
-) td.classList.add("icon-search");
-
-if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
-if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
-if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
+    if(t.includes("wiatr")) td.classList.add("icon-wind");
+    if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
+    if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
+    if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
+    if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
 
     if(t.includes("roj") || t.includes("ryzyko")){
       td.classList.add("alert-high");
@@ -2920,64 +2914,11 @@ function generateBeeForecast(days){
     const weatherData = await loadWeather5Days();
     updateSmartAssistant(weatherData);
   }
-// =========================
-// 🧠 ROZUMIENIE NOTATEK (AI)
-// =========================
-function isInspection(note){
-
-  const t = (note || "").toLowerCase();
-
-  if(t.includes("wykonaj") || t.includes("plan") || t.includes("zrób")){
-    return false;
-  }
-
-  const keywords = [
-    "przegląd",
-    "kontrola",
-    "inspekcja",
-    "sprawdziłem",
-    "sprawdzilem",
-    "sprawdzenie",
-    "oglądałem",
-    "ogladalem",
-    "oglądanie",
-    "byłem w pasiece",
-    "wizyta w pasiece"
-  ];
-
-  return keywords.some(word => t.includes(word));
-}
-
 
  function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
     if(!box) return;
     const today=new Date();
-
-// =========================
-// 📊 LICZENIE PRAC Z CAŁEGO MIESIĄCA
-// =========================
-let monthlyInspections = 0;
-
-const currentMonthStr = String(today.getMonth()+1).padStart(2,"0");
-
-for(let i=0;i<localStorage.length;i++){
-
-  const key = localStorage.key(i);
-
-  // tylko daty typu 01.05.2026
-  if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
-  const [,mm] = key.split('.');
-
-  // tylko aktualny miesiąc
-  if(mm !== currentMonthStr) continue;
-
-  const note = (localStorage.getItem(key)||"").toLowerCase();
-
-if(isInspection(note)){
-  monthlyInspections++;
-}
 
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
@@ -3005,7 +2946,7 @@ if(isInspection(note)){
       const note = (localStorage.getItem(key)||"").toLowerCase();
       let dayTasks=[];
 
-if(isInspection(note)) inspections++;
+      if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
       if(note.includes("karmienie")) feeding=true;
       if(note.includes("leczenie")) treatment=true;
       if(note.includes("rój")) swarm=true;
@@ -3048,9 +2989,9 @@ if(month==4) swarmRisk+=20;
 else if(month==5) swarmRisk+=40;
 else if(month==6) swarmRisk+=30;
 
-if(monthlyInspections === 0) swarmRisk += 40;
-else if(monthlyInspections === 1) swarmRisk += 25;
-else if(monthlyInspections >= 2) swarmRisk += 5;
+if(inspections === 0) swarmRisk += 30;
+else if(inspections === 1) swarmRisk += 20;
+else if(inspections >= 2) swarmRisk += 5;
 
 if(swarm) swarmRisk+=30;
 if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
@@ -3064,7 +3005,7 @@ if(swarmRisk>100) swarmRisk=100;
 
     // Asystent summary
     let summary=[];
-    summary.push("🔍 Kontrole (miesiąc): " + monthlyInspections);
+    summary.push("🔍 Przeglądy: "+inspections);
     summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
     if(!feeding) summary.push("🍯 Brak karmienia");
     if(!treatment) summary.push("💊 Brak leczenia");
