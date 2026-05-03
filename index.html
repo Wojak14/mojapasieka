@@ -2438,7 +2438,6 @@ document.addEventListener("DOMContentLoaded", function() {
   let currentDay = null;
   let currentMonth = null;;
 
-// 🔥 FIREBASE CONFIG
 const firebaseConfig = {
   apiKey: "TWOJ_KEY",
   authDomain: "TWOJ_PROJEKT.firebaseapp.com",
@@ -2446,143 +2445,106 @@ const firebaseConfig = {
   projectId: "TWOJ_PROJEKT",
 };
 
-// 🔥 POPRAWKA INIT (bez duplikacji)
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
 function saveNoteToCloud(key, value){
   db.ref("notes/" + key).set(value);
 }
 
-// 🔥 POPRAWIONE – BEZ BUGÓW + SYNC LOCAL
 function loadNoteFromCloud(key, callback){
-  db.ref("notes/" + key).once("value").then(snap=>{
-    const val = snap.val() || "";
-
-    localStorage.setItem(key, val); // 🔥 sync do local
-
-    callback(val);
-
-    updateMarkers();
-    setTimeout(autoScaleCalendarText, 50);
-
-  }).catch(err=>{
-    console.log("Błąd Firebase:", err);
-    callback("");
-  });
-}
-
-// 🔥 🔥 🔥 GLOBALNA SYNCHRONIZACJA (LIVE)
-function startCloudSync(){
-
-  db.ref("notes").on("value", snap => {
-
-    const data = snap.val();
-    if(!data) return;
-
-    Object.keys(data).forEach(key => {
-
-      const cloudVal = data[key] || "";
-      const localVal = localStorage.getItem(key) || "";
-
-      if(cloudVal !== localVal){
-        localStorage.setItem(key, cloudVal);
-      }
-
-    });
-
-    updateMarkers();
-    setTimeout(autoScaleCalendarText, 50);
-
+  db.ref("notes/" + key).on("value", snap=>{
+    callback(snap.val() || "");
   });
 }
 
 // =========================
-// 📏 AUTO SCALE TEKSTU
-// =========================
-function autoScaleCalendarText(){
-  document.querySelectorAll("td").forEach(td => {
-    const content = td.querySelector(".day-content");
-    if(!content) return;
+  // 📏 AUTO SCALE TEKSTU
+  // =========================
+  function autoScaleCalendarText(){
 
-    let size = 14;
-    let minSize = 8;
+    document.querySelectorAll("td").forEach(td => {
 
-    content.style.fontSize = size + "px";
+      const content = td.querySelector(".day-content");
+      if(!content) return;
 
-    while(content.scrollHeight > content.clientHeight && size > minSize){
-      size--;
+      let size = 14;
+      let minSize = 8;
+
       content.style.fontSize = size + "px";
-    }
-  });
-}
 
-// =========================
-// 🧠 AI WARSTWA KOLORY + ALERTY
-// =========================
-function applySmartColorsAndAlerts(td, text){
-  const t = (text || "").toLowerCase();
-
-  td.classList.remove(
-    "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
-    "alert-high","alert-medium","alert-low"
-  );
-
-  if(t.includes("wiatr")) td.classList.add("icon-wind");
-  if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
-  if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
-  if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
-  if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
-
-  if(t.includes("roj") || t.includes("ryzyko")){
-    td.classList.add("alert-high");
+      while(content.scrollHeight > content.clientHeight && size > minSize){
+        size--;
+        content.style.fontSize = size + "px";
+      }
+    });
   }
-  else if(t.includes("inspekcja")){
-    td.classList.add("alert-medium");
-  }
-  else if(t.includes("wiatr")){
-    td.classList.add("alert-low");
-  }
-}
 
-// =========================
-// 📅 MARKERY I IKONY
-// =========================
-function updateMarkers() {
 
-  document.querySelectorAll("td .day-number").forEach(span => {
+  // =========================
+  // 🧠 AI WARSTWA KOLORY + ALERTY
+  // =========================
+  function applySmartColorsAndAlerts(td, text){
 
-    const td = span.closest("td");
+    const t = (text || "").toLowerCase();
 
     td.classList.remove(
-      "has-note","today","tomorrow",
       "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
       "alert-high","alert-medium","alert-low"
     );
 
-    const day = span.dataset.day.padStart(2,"0");
-    const month = span.dataset.month.padStart(2,"0");
-    const key = `${day}.${month}.2026`;
+    if(t.includes("wiatr")) td.classList.add("icon-wind");
+    if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
+    if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
+    if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
+    if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
 
-    const oldMarker = td.querySelector(".note-marker");
-    if(oldMarker) oldMarker.remove();
+    if(t.includes("roj") || t.includes("ryzyko")){
+      td.classList.add("alert-high");
+    }
+    else if(t.includes("inspekcja")){
+      td.classList.add("alert-medium");
+    }
+    else if(t.includes("wiatr")){
+      td.classList.add("alert-low");
+    }
+  }
 
-    const noteData = localStorage.getItem(key);
 
-    if(noteData && noteData.trim() !== "") {
+  // =========================
+  // 📅 MARKERY I IKONY
+  // =========================
+  function updateMarkers() {
 
-      td.classList.add("has-note");
+    document.querySelectorAll("td .day-number").forEach(span => {
 
-      applySmartColorsAndAlerts(td, noteData);
+      const td = span.closest("td");
 
-      const marker = document.createElement("span");
-      marker.className = "note-marker";
+      td.classList.remove(
+        "has-note","today","tomorrow",
+        "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
+        "alert-high","alert-medium","alert-low"
+      );
 
-      const text = noteData.toLowerCase();
-      let icons = [];
+      const day = span.dataset.day.padStart(2,"0");
+      const month = span.dataset.month.padStart(2,"0");
+      const key = `${day}.${month}.2026`;
+
+      const oldMarker = td.querySelector(".note-marker");
+      if(oldMarker) oldMarker.remove();
+
+      const noteData = localStorage.getItem(key);
+
+      if(noteData && noteData.trim() !== "") {
+
+        td.classList.add("has-note");
+
+        applySmartColorsAndAlerts(td, noteData);
+
+        const marker = document.createElement("span");
+        marker.className = "note-marker";
+
+        const text = noteData.toLowerCase();
+        let icons = [];
 
         if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
@@ -3038,16 +3000,21 @@ if(dayNumber % 2 !== 0){
     }
 
     // Swarm risk
-    let swarmRisk=0;
-    const month=today.getMonth()+1;
-    if(month==4) swarmRisk+=20;
-    else if(month==5) swarmRisk+=40;
-    else if(month==6) swarmRisk+=30;
-    if(inspections==0) swarmRisk+=30;
-    if(inspections==1) swarmRisk+=20;
-    if(swarm) swarmRisk+=30;
-    if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
-    if(swarmRisk>100) swarmRisk=100;
+let swarmRisk=0;
+
+const month=today.getMonth()+1;
+if(month==4) swarmRisk+=20;
+else if(month==5) swarmRisk+=40;
+else if(month==6) swarmRisk+=30;
+
+if(inspections === 0) swarmRisk += 30;
+else if(inspections === 1) swarmRisk += 20;
+else if(inspections >= 2) swarmRisk += 5;
+
+if(swarm) swarmRisk+=30;
+if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
+
+if(swarmRisk>100) swarmRisk=100;
 
     let swarmText="";
     if(swarmRisk>=70) swarmText="🚨 WYSOKIE ryzyko rojki!";
@@ -3289,7 +3256,6 @@ function generateHoneyForecast(){
 
   setTimeout(autoScaleCalendarText, 100);
   scrollToToday();
-  startCloudSync();
 
   if(typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
   if(typeof analyzeHivesPro === "function") analyzeHivesPro();
