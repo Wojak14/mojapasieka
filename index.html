@@ -2934,7 +2934,7 @@ function generateBeeForecast(days){
   return false;
 }
 
-    for(let d=0; d<8; d++){
+    for(let d=0; d<7; d++){
       const date = new Date();
       date.setDate(today.getDate()+d);
       const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
