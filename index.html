@@ -2736,7 +2736,7 @@ function loadWeather5Days() {
 
       if(isNaN(lat) || isNaN(lon)){
         lat = 52.24;
-        lon = 23.09;
+        lon = 23.10;
       }
 
       // 🔥 lokalizacja (osobno – bez psucia DOM)
@@ -2852,11 +2852,11 @@ resolve({
     if(navigator.geolocation){
       navigator.geolocation.getCurrentPosition(
         pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(52.24, 23.09),
+        () => fetchWeather(52.24, 23.10),
         {enableHighAccuracy:true, timeout:7000, maximumAge:200000}
       );
     } else {
-      fetchWeather(52.24, 23.09);
+      fetchWeather(52.24, 23.10);
     }
 
   });
