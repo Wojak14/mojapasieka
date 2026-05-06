@@ -2777,7 +2777,7 @@ function loadWeather5Days() {
   const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
   let forecastData = [];
 
-  for(let i=1;i<=7;i++){
+  for(let i=1;i<=8;i++){
 
     const date=new Date(); 
     date.setDate(date.getDate()+i);
@@ -2934,7 +2934,7 @@ function generateBeeForecast(days){
   return false;
 }
 
-    for(let d=0; d<7; d++){
+    for(let d=0; d<8; d++){
       const date = new Date();
       date.setDate(today.getDate()+d);
       const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
@@ -3180,7 +3180,7 @@ function generateHiveAlerts(){
   box.innerHTML = alerts.length ? alerts.join("<br>") : "✅ Brak alertów";
 }
 
-// 🤖 PLAN 7 DNI
+// 🤖 PLAN 8 DNI
 function generateWeeklyPlanPro(){
 
   const box = document.getElementById("ai-plan");
@@ -3189,7 +3189,7 @@ function generateWeeklyPlanPro(){
   const today = new Date();
   let html="";
 
-  for(let i=0;i<7;i++){
+  for(let i=0;i<8;i++){
 
     const date = new Date();
     date.setDate(today.getDate()+i);
