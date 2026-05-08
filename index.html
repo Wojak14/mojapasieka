@@ -2524,7 +2524,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const oldMarker = td.querySelector(".note-marker");
       if(oldMarker) oldMarker.remove();
 
-      const noteData = localStorage.getItem(key);
+      const noteData = localStorage.getItem(getApiaryKey(key));
 
       if(noteData && noteData.trim() !== "") {
 
@@ -2594,7 +2594,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const key = `${currentDay}.${currentMonth}.2026`;
 
       if(textarea){
-        textarea.value = localStorage.getItem(key) || "";
+        textarea.value = localStorage.getItem(getApiaryKey(key)) || "";
         textarea.focus();
       }
     });
@@ -2614,7 +2614,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const key = `${currentDay}.${currentMonth}.2026`;
 
     if(textarea){
-      localStorage.setItem(key, textarea.value);
+      localStorage.setItem(getApiaryKey(key), textarea.value);
     }
 
     updateMarkers();
@@ -2677,6 +2677,144 @@ document.addEventListener("DOMContentLoaded", function() {
 
     if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
   }
+// =========================
+// 📍 INTELIGENTNY GPS PASIEKI PRO
+// =========================
+
+let currentApiary = null;
+
+function getDistance(lat1, lon1, lat2, lon2){
+
+  const R = 6371;
+
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
+
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1*Math.PI/180) *
+    Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLon/2) *
+    Math.sin(dLon/2);
+
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+// 📍 TWOJE PASIEKI
+const APIARIES = [
+
+  {
+    id: "pasieka_1",
+    name: "Pasieka Werpol",
+    lat: 52°24'41.8",
+    lon: 23°09'39.6"
+  },
+
+  {
+    id: "pasieka_2",
+    name: "Pasieka Borysowszczyzna",
+    lat: 52°25'27.8",
+    lon: 23°06'42.5"
+  }
+
+];
+
+// 📍 WYKRYWANIE PASIEKI
+function detectNearestApiary(lat, lon){
+
+  let nearest = null;
+  let minDistance = 999999;
+
+  APIARIES.forEach(apiary => {
+
+    const dist = getDistance(
+      lat,
+      lon,
+      apiary.lat,
+      apiary.lon
+    );
+
+    if(dist < minDistance){
+      minDistance = dist;
+      nearest = apiary;
+    }
+  });
+
+  // max 20 km
+  if(minDistance <= 2){
+    currentApiary = nearest;
+  } else {
+    currentApiary = null;
+  }
+
+  updateApiaryUI(minDistance);
+}
+
+// 📍 PANEL PASIEKI
+function updateApiaryUI(distance){
+
+  const box = document.getElementById("location-box");
+  if(!box) return;
+
+  if(currentApiary){
+
+    box.innerHTML += `
+      <hr>
+      🐝 <b>Aktywna pasieka:</b><br>
+      ${currentApiary.name}<br>
+      📏 ${distance.toFixed(2)} km
+    `;
+
+  } else {
+
+    box.innerHTML += `
+      <hr>
+      ⚠️ Poza zapisanymi pasiekami
+    `;
+  }
+}
+
+// 📍 GPS LIVE
+function startIntelligentGPS(){
+
+  if(!navigator.geolocation) return;
+
+  navigator.geolocation.watchPosition(
+
+    pos => {
+
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      detectNearestApiary(lat, lon);
+
+      localStorage.setItem("lastLat", lat);
+      localStorage.setItem("lastLon", lon);
+
+    },
+
+    err => {
+      console.log("GPS ERROR", err);
+    },
+
+    {
+      enableHighAccuracy:true,
+      maximumAge:10000,
+      timeout:15000
+    }
+  );
+}
+
+// =========================
+// 🐝 AUTOMATYCZNE NOTATKI PASIEKI
+// =========================
+
+function getApiaryKey(key){
+
+  if(!currentApiary) return key;
+
+  return currentApiary.id + "_" + key;
+}
 
 // --- POGODA 7 DNI + DZIŚ (STABILNA WERSJA) ---
 async function getLocationData(lat, lon){
@@ -2735,8 +2873,8 @@ function loadWeather5Days() {
       lon = Number(lon);
 
       if(isNaN(lat) || isNaN(lon)){
-        lat = 52.24;
-        lon = 23.10;
+        lat = 52°24'41.8";
+        lon = 23°09'39.6";
       }
 
       // 🔥 lokalizacja (osobno – bez psucia DOM)
@@ -2777,7 +2915,7 @@ function loadWeather5Days() {
   const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
   let forecastData = [];
 
-  for(let i=1;i<=8;i++){
+  for(let i=1;i<=6;i++){
 
     const date=new Date(); 
     date.setDate(date.getDate()+i);
@@ -2934,7 +3072,7 @@ function generateBeeForecast(days){
   return false;
 }
 
-    for(let d=0; d<8; d++){
+    for(let d=0; d<6; d++){
       const date = new Date();
       date.setDate(today.getDate()+d);
       const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
@@ -3015,7 +3153,7 @@ if(swarmRisk>100) swarmRisk=100;
       let tasksHtml = Object.entries(tasksByDay).map(([key,text])=>{
         return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${key}">${key}: ${text}</div>`;
       }).join("");
-      summary.push("🛠 Nadchodzące 8 dni:<br>"+tasksHtml);
+      summary.push("🛠 Nadchodzące 6 dni:<br>"+tasksHtml);
     }
 
     box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
@@ -3180,7 +3318,7 @@ function generateHiveAlerts(){
   box.innerHTML = alerts.length ? alerts.join("<br>") : "✅ Brak alertów";
 }
 
-// 🤖 PLAN 8 DNI
+// 🤖 PLAN 6 DNI
 function generateWeeklyPlanPro(){
 
   const box = document.getElementById("ai-plan");
@@ -3189,7 +3327,7 @@ function generateWeeklyPlanPro(){
   const today = new Date();
   let html="";
 
-  for(let i=0;i<8;i++){
+  for(let i=0;i<6;i++){
 
     const date = new Date();
     date.setDate(today.getDate()+i);
@@ -3269,7 +3407,9 @@ function generateHoneyForecast(){
     }
   }, 110000);
 
-  setTimeout(autoScaleCalendarText, 200);
+setTimeout(autoScaleCalendarText, 200);
+
+startIntelligentGPS();
 
 });
 
