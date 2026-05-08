@@ -2447,96 +2447,95 @@ document.addEventListener("DOMContentLoaded", function() {
 
   let textarea = null;
   let currentDay = null;
-  let currentMonth = null;;
+  let currentMonth = null;
 
 // =========================
-  // 📏 AUTO SCALE TEKSTU
-  // =========================
-  function autoScaleCalendarText(){
+// 📏 AUTO SCALE TEKSTU
+// =========================
+function autoScaleCalendarText(){
 
-    document.querySelectorAll("td").forEach(td => {
+  document.querySelectorAll("td").forEach(td => {
 
-      const content = td.querySelector(".day-content");
-      if(!content) return;
+    const content = td.querySelector(".day-content");
+    if(!content) return;
 
-      let size = 14;
-      let minSize = 8;
+    let size = 14;
+    let minSize = 8;
 
+    content.style.fontSize = size + "px";
+
+    while(content.scrollHeight > content.clientHeight && size > minSize){
+      size--;
       content.style.fontSize = size + "px";
+    }
+  });
+}
 
-      while(content.scrollHeight > content.clientHeight && size > minSize){
-        size--;
-        content.style.fontSize = size + "px";
-      }
-    });
+// =========================
+// 🧠 AI WARSTWA KOLORY + ALERTY
+// =========================
+function applySmartColorsAndAlerts(td, text){
+
+  const t = (text || "").toLowerCase();
+
+  td.classList.remove(
+    "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
+    "alert-high","alert-medium","alert-low"
+  );
+
+  if(t.includes("wiatr")) td.classList.add("icon-wind");
+  if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
+  if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
+  if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
+  if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
+
+  if(t.includes("roj") || t.includes("ryzyko")){
+    td.classList.add("alert-high");
   }
+  else if(t.includes("inspekcja")){
+    td.classList.add("alert-medium");
+  }
+  else if(t.includes("wiatr")){
+    td.classList.add("alert-low");
+  }
+}
 
+// =========================
+// 📅 MARKERY I IKONY
+// =========================
+function updateMarkers() {
 
-  // =========================
-  // 🧠 AI WARSTWA KOLORY + ALERTY
-  // =========================
-  function applySmartColorsAndAlerts(td, text){
+  document.querySelectorAll("td .day-number").forEach(span => {
 
-    const t = (text || "").toLowerCase();
+    const td = span.closest("td");
+    if(!td) return;
 
     td.classList.remove(
+      "has-note","today","tomorrow",
       "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
       "alert-high","alert-medium","alert-low"
     );
 
-    if(t.includes("wiatr")) td.classList.add("icon-wind");
-    if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
-    if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
-    if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
-    if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
+    const day = (span.dataset.day || "").padStart(2,"0");
+    const month = (span.dataset.month || "").padStart(2,"0");
+    const key = `${day}.${month}.2026`;
 
-    if(t.includes("roj") || t.includes("ryzyko")){
-      td.classList.add("alert-high");
-    }
-    else if(t.includes("inspekcja")){
-      td.classList.add("alert-medium");
-    }
-    else if(t.includes("wiatr")){
-      td.classList.add("alert-low");
-    }
-  }
+    const oldMarker = td.querySelector(".note-marker");
+    if(oldMarker) oldMarker.remove();
 
+    const noteData = localStorage.getItem(getApiaryKey(key));
 
-  // =========================
-  // 📅 MARKERY I IKONY
-  // =========================
-  function updateMarkers() {
+    if(noteData && noteData.trim() !== "") {
 
-    document.querySelectorAll("td .day-number").forEach(span => {
+      td.classList.add("has-note");
 
-      const td = span.closest("td");
+      applySmartColorsAndAlerts(td, noteData);
 
-      td.classList.remove(
-        "has-note","today","tomorrow",
-        "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
-        "alert-high","alert-medium","alert-low"
-      );
+      const marker = document.createElement("span");
+      marker.className = "note-marker";
 
-      const day = span.dataset.day.padStart(2,"0");
-      const month = span.dataset.month.padStart(2,"0");
-      const key = `${day}.${month}.2026`;
-
-      const oldMarker = td.querySelector(".note-marker");
-      if(oldMarker) oldMarker.remove();
-
-      const noteData = localStorage.getItem(getApiaryKey(key));
-
-      if(noteData && noteData.trim() !== "") {
-
-        td.classList.add("has-note");
-
-        applySmartColorsAndAlerts(td, noteData);
-
-        const marker = document.createElement("span");
-        marker.className = "note-marker";
-
-        const text = noteData.toLowerCase();
-        let icons = [];
+      const text = noteData.toLowerCase();
+      let icons = [];
 
         if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
@@ -2702,37 +2701,31 @@ function getDistance(lat1, lon1, lat2, lon2){
 
 // 📍 TWOJE PASIEKI
 const APIARIES = [
-
   {
     id: "pasieka_1",
     name: "Pasieka Werpol",
-    lat: 52°24'41.8",
-    lon: 23°09'39.6"
+    lat: 52.411611,
+    lon: 23.161000
   },
-
   {
     id: "pasieka_2",
     name: "Pasieka Borysowszczyzna",
-    lat: 52°25'27.8",
-    lon: 23°06'42.5"
+    lat: 52.424389,
+    lon: 23.111806
   }
-
 ];
 
 // 📍 WYKRYWANIE PASIEKI
 function detectNearestApiary(lat, lon){
 
+  if(typeof lat !== "number" || typeof lon !== "number") return;
+
   let nearest = null;
-  let minDistance = 999999;
+  let minDistance = Infinity;
 
   APIARIES.forEach(apiary => {
 
-    const dist = getDistance(
-      lat,
-      lon,
-      apiary.lat,
-      apiary.lon
-    );
+    const dist = getDistance(lat, lon, apiary.lat, apiary.lon);
 
     if(dist < minDistance){
       minDistance = dist;
@@ -2740,7 +2733,7 @@ function detectNearestApiary(lat, lon){
     }
   });
 
-  // max 20 km
+  // max 2 km
   if(minDistance <= 2){
     currentApiary = nearest;
   } else {
@@ -2756,9 +2749,11 @@ function updateApiaryUI(distance){
   const box = document.getElementById("location-box");
   if(!box) return;
 
+  let html = "";
+
   if(currentApiary){
 
-    box.innerHTML += `
+    html = `
       <hr>
       🐝 <b>Aktywna pasieka:</b><br>
       ${currentApiary.name}<br>
@@ -2767,11 +2762,13 @@ function updateApiaryUI(distance){
 
   } else {
 
-    box.innerHTML += `
+    html = `
       <hr>
       ⚠️ Poza zapisanymi pasiekami
     `;
   }
+
+  box.innerHTML = html;
 }
 
 // 📍 GPS LIVE
@@ -2783,10 +2780,12 @@ function startIntelligentGPS(){
 
     pos => {
 
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
+      const lat = Number(pos.coords.latitude);
+      const lon = Number(pos.coords.longitude);
 
-      detectNearestApiary(lat, lon);
+      if(!isNaN(lat) && !isNaN(lon)){
+        detectNearestApiary(lat, lon);
+      }
 
       localStorage.setItem("lastLat", lat);
       localStorage.setItem("lastLon", lon);
@@ -2794,7 +2793,7 @@ function startIntelligentGPS(){
     },
 
     err => {
-      console.log("GPS ERROR", err);
+      console.log("GPS ERROR:", err);
     },
 
     {
@@ -2810,9 +2809,7 @@ function startIntelligentGPS(){
 // =========================
 
 function getApiaryKey(key){
-
   if(!currentApiary) return key;
-
   return currentApiary.id + "_" + key;
 }
 
@@ -2873,8 +2870,8 @@ function loadWeather5Days() {
       lon = Number(lon);
 
       if(isNaN(lat) || isNaN(lon)){
-        lat = 52°24'41.8";
-        lon = 23°09'39.6";
+        lat = 52.411611;
+        lon = 23.161000;
       }
 
       // 🔥 lokalizacja (osobno – bez psucia DOM)
@@ -3401,6 +3398,10 @@ function generateHoneyForecast(){
     });
   }
 
+if(typeof startIntelligentGPS === "function"){
+  startIntelligentGPS();
+}
+
   setInterval(() => {
     if(typeof loadWeatherAndAssist === "function"){
       loadWeatherAndAssist();
@@ -3408,8 +3409,6 @@ function generateHoneyForecast(){
   }, 110000);
 
 setTimeout(autoScaleCalendarText, 200);
-
-startIntelligentGPS();
 
 });
 
