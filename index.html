@@ -2785,11 +2785,11 @@ function updateApiaryUI(distance){
 }
 
 // 📍 GPS LIVE
-function startIntelligentGPS(){
+function getGPSOnce(){
 
   if(!navigator.geolocation) return;
 
-  navigator.geolocation.watchPosition(
+  navigator.geolocation.getCurrentPosition(
 
     pos => {
 
@@ -2797,21 +2797,60 @@ function startIntelligentGPS(){
       const lon = Number(pos.coords.longitude);
 
       if(!isNaN(lat) && !isNaN(lon)){
+
         detectNearestApiary(lat, lon);
+
+        localStorage.setItem("lastLat", lat);
+        localStorage.setItem("lastLon", lon);
       }
-
-      localStorage.setItem("lastLat", lat);
-      localStorage.setItem("lastLon", lon);
-
     },
 
-    err => {
-      console.log("GPS ERROR:", err);
-    },
+    err => console.log("GPS ERROR:", err),
 
     {
       enableHighAccuracy:true,
-      maximumAge:10000,
+      timeout:10000,
+      maximumAge:300000
+    }
+  );
+}
+
+// 📍 GPS LIVE (CIĄGŁY)
+let gpsWatchId = null;
+
+function startLiveGPS(){
+
+function stopLiveGPS(){
+
+  if(gpsWatchId !== null){
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+}
+
+  if(!navigator.geolocation) return;
+
+  gpsWatchId = navigator.geolocation.watchPosition(
+
+    pos => {
+
+      const lat = Number(pos.coords.latitude);
+      const lon = Number(pos.coords.longitude);
+
+      if(!isNaN(lat) && !isNaN(lon)){
+
+        detectNearestApiary(lat, lon);
+
+        localStorage.setItem("lastLat", lat);
+        localStorage.setItem("lastLon", lon);
+      }
+    },
+
+    err => console.log("GPS WATCH ERROR:", err),
+
+    {
+      enableHighAccuracy:true,
+      maximumAge:15000,
       timeout:15000
     }
   );
@@ -3384,6 +3423,11 @@ function generateHoneyForecast(){
   // =========================
   updateMarkers();
 
+getGPSOnce();     // szybki start
+setTimeout(() => {
+  startLiveGPS();  // potem śledzenie
+}, 5000);
+
   setTimeout(autoScaleCalendarText, 100);
   scrollToToday();
 
@@ -3410,10 +3454,6 @@ function generateHoneyForecast(){
       if(typeof saveFamilyNotes === "function") saveFamilyNotes();
     });
   }
-
-if(typeof startIntelligentGPS === "function"){
-  startIntelligentGPS();
-}
 
   setInterval(() => {
     if(typeof loadWeatherAndAssist === "function"){
