@@ -562,7 +562,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -690,7 +689,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -844,7 +842,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -1009,7 +1006,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -1221,7 +1217,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -1365,7 +1360,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -1501,7 +1495,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -1641,7 +1634,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -1777,7 +1769,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-   <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -1914,7 +1905,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-    <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -2055,7 +2045,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-    <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -2195,7 +2184,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-    <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -2358,7 +2346,6 @@ font-weight:bold;
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
-    <div>⛔ Złe warunki / brak prac w ulu</div>
   </div>
 </div>
 
@@ -2583,7 +2570,6 @@ function updateMarkers() {
         if(text.includes("dezynfekcja")) icons.push("🧴");
         if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
         if(text.includes("węza")) icons.push("🧇");
-        if(text.includes("Złe warunki")) || text.includes("brak prac w ulu")) icons.push("⛔"); 
 
         if(icons.length === 0) icons.push("📒");
 
@@ -2747,8 +2733,8 @@ function detectNearestApiary(lat, lon){
     }
   });
 
-  // max 20 km
-  if(minDistance <= 20){
+  // max 30 km
+  if(minDistance <= 30){
     currentApiary = nearest;
   } else {
     currentApiary = null;
@@ -2763,34 +2749,26 @@ function updateApiaryUI(distance){
   const box = document.getElementById("location-box");
   if(!box) return;
 
-  // usuń stary blok pasieki
-  const old = document.getElementById("apiary-distance-box");
-  if(old) old.remove();
-
   let html = "";
 
   if(currentApiary){
 
     html = `
-      <div id="apiary-distance-box">
-        <hr>
-        🐝 <b>Aktywna pasieka:</b><br>
-        ${currentApiary.name}<br>
-        📏 Odległość: ${distance.toFixed(2)} km
-      </div>
+      <hr>
+      🐝 <b>Aktywna pasieka:</b><br>
+      ${currentApiary.name}<br>
+      📏 ${distance.toFixed(2)} km
     `;
 
   } else {
 
     html = `
-      <div id="apiary-distance-box">
-        <hr>
-        ⚠️ Poza zapisanymi pasiekami
-      </div>
+      <hr>
+      ⚠️ Poza zapisanymi pasiekami
     `;
   }
 
-  box.innerHTML += html;
+  box.innerHTML = html;
 }
 
 // 📍 GPS LIVE
