@@ -2593,7 +2593,20 @@ function updateMarkers() {
       const key = `${currentDay}.${currentMonth}.2026`;
 
       if(textarea){
-        textarea.value = localStorage.getItem(getApiaryKey(key)) || "";
+        let note =
+  localStorage.getItem(getApiaryKey(key));
+
+if(!note && currentApiary){
+  note = localStorage.getItem(
+    currentApiary.id + "_" + key
+  );
+}
+
+if(!note){
+  note = localStorage.getItem(key);
+}
+
+textarea.value = note || "";
         textarea.focus();
       }
     });
