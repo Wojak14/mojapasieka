@@ -2443,15 +2443,15 @@ font-weight:bold;
 <script src="app.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
 
   let textarea = null;
   let currentDay = null;
   let currentMonth = null;
 
-// =========================
-// 📏 AUTO SCALE TEKSTU
-// =========================
+  // =========================
+  // 📏 AUTO SCALE TEKSTU
+  // =========================
 function autoScaleCalendarText(){
 
   document.querySelectorAll("td").forEach(td => {
@@ -2460,52 +2460,200 @@ function autoScaleCalendarText(){
     if(!content) return;
 
     let size = 14;
-    let minSize = 8;
+    const minSize = 8;
 
     content.style.fontSize = size + "px";
 
-    while(content.scrollHeight > content.clientHeight && size > minSize){
+    let safe = 20;
+
+    while(
+      content.scrollHeight > content.clientHeight &&
+      size > minSize &&
+      safe > 0
+    ){
       size--;
+      safe--;
       content.style.fontSize = size + "px";
     }
+
   });
 }
+  // =========================
+  // 🧠 AI WARSTWA KOLORY + ALERTY
+  // =========================
+  function applySmartColorsAndAlerts(td, text){
 
-// =========================
-// 🧠 AI WARSTWA KOLORY + ALERTY
-// =========================
-function applySmartColorsAndAlerts(td, text){
+    const t = (text || "").toLowerCase();
 
-  const t = (text || "").toLowerCase();
+    td.classList.remove(
+      "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
+      "alert-high","alert-medium","alert-low"
+    );
 
-  td.classList.remove(
-    "icon-wind","icon-search","icon-bee","icon-fire","icon-weather",
-    "alert-high","alert-medium","alert-low"
-  );
+    if(t.includes("wiatr")) td.classList.add("icon-wind");
+    if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
+    if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
+    if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
+    if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
 
-  if(t.includes("wiatr")) td.classList.add("icon-wind");
-  if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
-  if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
-  if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
-  if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
-
-  if(t.includes("roj") || t.includes("ryzyko")){
-    td.classList.add("alert-high");
+    if(t.includes("roj") || t.includes("ryzyko")){
+      td.classList.add("alert-high");
+    }
+    else if(t.includes("inspekcja")){
+      td.classList.add("alert-medium");
+    }
+    else if(t.includes("wiatr")){
+      td.classList.add("alert-low");
+    }
   }
-  else if(t.includes("inspekcja")){
-    td.classList.add("alert-medium");
-  }
-  else if(t.includes("wiatr")){
-    td.classList.add("alert-low");
-  }
-}
 
-// =========================
-// 📅 MARKERY I IKONY
-// =========================
+  // =========================
+  // 📍 GPS PASIEKI
+  // =========================
+  let currentApiary = null;
+  let weatherLoading = false;
+
+  const APIARIES = [
+    {
+      id: "pasieka_1",
+      name: "Pasieka Werpol",
+      lat: 52.411611,
+      lon: 23.161000
+    },
+    {
+      id: "pasieka_2",
+      name: "Pasieka Borysowszczyzna",
+      lat: 52.424389,
+      lon: 23.111806
+    }
+  ];
+
+  function getDistance(lat1, lon1, lat2, lon2){
+
+    const R = 6371;
+
+    const dLat = (lat2-lat1) * Math.PI/180;
+    const dLon = (lon2-lon1) * Math.PI/180;
+
+    const a =
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1*Math.PI/180) *
+      Math.cos(lat2*Math.PI/180) *
+      Math.sin(dLon/2) *
+      Math.sin(dLon/2);
+
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  }
+
+  function updateApiaryUI(distance){
+
+    const box = document.getElementById("location-box");
+    if(!box) return;
+
+    let html = "";
+
+    if(currentApiary){
+
+      html = `
+        <hr>
+        🐝 <b>Aktywna pasieka:</b><br>
+        ${currentApiary.name}<br>
+        📏 ${distance.toFixed(2)} km
+      `;
+
+    } else {
+
+      html = `
+        <hr>
+        ⚠️ Poza zapisanymi pasiekami
+      `;
+    }
+
+    box.innerHTML = html;
+  }
+
+  function detectNearestApiary(lat, lon){
+
+    if(typeof lat !== "number" || typeof lon !== "number") return;
+
+    let nearest = null;
+    let minDistance = Infinity;
+
+    APIARIES.forEach(apiary => {
+
+      const dist = getDistance(
+        lat,
+        lon,
+        apiary.lat,
+        apiary.lon
+      );
+
+      if(dist < minDistance){
+        minDistance = dist;
+        nearest = apiary;
+      }
+    });
+
+    // max 20 km
+    if(minDistance <= 20){
+      currentApiary = nearest;
+    } else {
+      currentApiary = null;
+    }
+
+    updateApiaryUI(minDistance);
+  }
+
+  function startIntelligentGPS(){
+
+    if(!navigator.geolocation) return;
+
+    navigator.geolocation.watchPosition(
+
+      pos => {
+
+        const lat = Number(pos.coords.latitude);
+        const lon = Number(pos.coords.longitude);
+
+        if(!isNaN(lat) && !isNaN(lon)){
+
+          detectNearestApiary(lat, lon);
+
+          localStorage.setItem("lastLat", lat);
+          localStorage.setItem("lastLon", lon);
+        }
+      },
+
+      err => {
+        console.log("GPS ERROR:", err);
+      },
+
+      {
+        enableHighAccuracy:true,
+        maximumAge:15000,
+        timeout:15000
+      }
+    );
+  }
+
+  // =========================
+  // 🐝 AUTOMATYCZNE NOTATKI
+  // =========================
+  function getApiaryKey(key){
+
+    if(!currentApiary) return key;
+
+    return currentApiary.id + "_" + key;
+  }
+
+  // =========================
+  // 📅 MARKERY I IKONY
+  // =========================
 function updateMarkers() {
 
-  document.querySelectorAll("td .day-number").forEach(span => {
+  const allDays = document.querySelectorAll("td .day-number");
+
+  allDays.forEach(span => {
 
     const td = span.closest("td");
     if(!td) return;
@@ -2542,33 +2690,24 @@ function updateMarkers() {
         if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
         if(text.includes("paski")) icons.push("🏷️");
         if(text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("zakończenie leczenia")) icons.push("🛡️");
         if(text.includes("przegląd")) icons.push("🔍");
-        if(text.includes("sprawdzenie")) icons.push("📋");
         if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
-        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
-        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
+        if(text.includes("pożytek")) icons.push("🌸");
+        if(text.includes("matka")) icons.push("👑");
         if(text.includes("ramka")) icons.push("🧱");
         if(text.includes("nadstawka")) icons.push("📦");
         if(text.includes("deszcz")) icons.push("🌧");
         if(text.includes("wiatr")) icons.push("💨");
         if(text.includes("burza")) icons.push("🌩️");
         if(text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-        if(text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pochmurno")) icons.push("🌫️");
-        if(text.includes("niska temperatura")) icons.push("🌡");
-        if(text.includes("trutnie")) icons.push("👨‍🌾");
-        if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
+        if(text.includes("mróz")) icons.push("🥶");
+        if(text.includes("upał")) icons.push("🥵");
         if(text.includes("słonecznie")) icons.push("☀️");
         if(text.includes("mgła")) icons.push("🌁");
         if(text.includes("grad")) icons.push("🧊");
         if(text.includes("czerw")) icons.push("🐣");
-        if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
-        if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
-        if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
+        if(text.includes("pasieka")) icons.push("🏠");
         if(text.includes("dezynfekcja")) icons.push("🧴");
-        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
         if(text.includes("węza")) icons.push("🧇");
 
         if(icons.length === 0) icons.push("📒");
@@ -2579,10 +2718,11 @@ function updateMarkers() {
     });
   }
 
+  // =========================
+  // 📝 OTWIERANIE NOTATKI
+  // =========================
+  document.querySelectorAll("td .day-number").forEach(span => {
 
-  // --- OTWIERANIE NOTATKI PO KLIKU ---
-
- document.querySelectorAll("td .day-number").forEach(span => {
     span.addEventListener("click", () => {
 
       currentDay = span.dataset.day.padStart(2,"0");
@@ -2597,11 +2737,10 @@ function updateMarkers() {
         textarea.focus();
       }
     });
-  })
-
+  });
 
   // =========================
-  // 💾 ZAPIS NOTATKI
+  // 💾 SAVE NOTE
   // =========================
   window.saveNote = function() {
 
@@ -2617,6 +2756,7 @@ function updateMarkers() {
     }
 
     updateMarkers();
+
     setTimeout(autoScaleCalendarText, 50);
 
     if(typeof loadWeatherAndAssist === "function"){
@@ -2624,7 +2764,9 @@ function updateMarkers() {
     }
   };
 
-  // --- WYSZUKIWARKA NOTATEK ---
+  // =========================
+  // 🔎 SEARCH
+  // =========================
   const searchInput = document.getElementById('search-notes');
   const resultsContainer = document.getElementById('search-results');
 
@@ -2644,18 +2786,25 @@ function updateMarkers() {
       for(let i=0;i<localStorage.length;i++){
 
         const key = localStorage.key(i);
-        if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
 
-        const note = localStorage.getItem(key);
+        if(!/\d{2}\.\d{2}\.2026$/.test(key)) continue;
+
+        const note = localStorage.getItem(getApiaryKey(key));
 
         if(note && note.toLowerCase().includes(query)){
 
           const div = document.createElement('div');
+
           div.innerHTML = `<b>${key}</b> ➤ ${note}`;
+
           resultsContainer.appendChild(div);
 
           const [dd,mm] = key.split('.');
-          const el = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+
+          const el = document.querySelector(
+            `.day-number[data-day="${dd}"][data-month="${mm}"]`
+          );
+
           if(el) el.classList.add("highlight-day");
         }
       }
@@ -2663,7 +2812,7 @@ function updateMarkers() {
   }
 
   // =========================
-  // 📍 SCROLL DO DZIŚ
+  // 📍 SCROLL TODAY
   // =========================
   function scrollToToday(){
 
@@ -2672,743 +2821,496 @@ function updateMarkers() {
     const d = String(today.getDate()).padStart(2,"0");
     const m = String(today.getMonth()+1).padStart(2,"0");
 
-    const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
+    const el = document.querySelector(
+      `.day-number[data-day="${d}"][data-month="${m}"]`
+    );
 
-    if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
-  }
-// =========================
-// 📍 INTELIGENTNY GPS PASIEKI PRO
-// =========================
-
-let currentApiary = null;
-
-function getDistance(lat1, lon1, lat2, lon2){
-
-  const R = 6371;
-
-  const dLat = (lat2-lat1) * Math.PI/180;
-  const dLon = (lon2-lon1) * Math.PI/180;
-
-  const a =
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1*Math.PI/180) *
-    Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLon/2) *
-    Math.sin(dLon/2);
-
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-}
-
-// 📍 TWOJE PASIEKI
-const APIARIES = [
-  {
-    id: "pasieka_1",
-    name: "Pasieka Werpol",
-    lat: 52.411611,
-    lon: 23.161000
-  },
-  {
-    id: "pasieka_2",
-    name: "Pasieka Borysowszczyzna",
-    lat: 52.424389,
-    lon: 23.111806
-  }
-];
-
-// 📍 WYKRYWANIE PASIEKI
-function detectNearestApiary(lat, lon){
-
-  if(typeof lat !== "number" || typeof lon !== "number") return;
-
-  let nearest = null;
-  let minDistance = Infinity;
-
-  APIARIES.forEach(apiary => {
-
-    const dist = getDistance(lat, lon, apiary.lat, apiary.lon);
-
-    if(dist < minDistance){
-      minDistance = dist;
-      nearest = apiary;
+    if(el){
+      el.scrollIntoView({
+        behavior:"smooth",
+        block:"center"
+      });
     }
-  });
-
-  // max 2 km
-  if(minDistance <= 2){
-    currentApiary = nearest;
-  } else {
-    currentApiary = null;
   }
 
-  updateApiaryUI(minDistance);
-}
+  // =========================
+  // 🌦️ LOKALIZACJA
+  // =========================
+  async function getLocationData(lat, lon){
 
-// 📍 PANEL PASIEKI
-function updateApiaryUI(distance){
+    try{
 
-  const box = document.getElementById("location-box");
-  if(!box) return;
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`
+      );
 
-  let html = "";
+      if(!res.ok) throw new Error("API error");
 
-  if(currentApiary){
+      const data = await res.json();
 
-    html = `
-      <hr>
-      🐝 <b>Aktywna pasieka:</b><br>
-      ${currentApiary.name}<br>
-      📏 ${distance.toFixed(2)} km
-    `;
+      return data.address || {};
 
-  } else {
+    }catch(e){
 
-    html = `
-      <hr>
-      ⚠️ Poza zapisanymi pasiekami
-    `;
-  }
+      console.log("Błąd lokalizacji:", e);
 
-  box.innerHTML = html;
-}
-
-// 📍 GPS LIVE
-function startIntelligentGPS(){
-
-  if(!navigator.geolocation) return;
-
-  navigator.geolocation.watchPosition(
-
-    pos => {
-
-      const lat = Number(pos.coords.latitude);
-      const lon = Number(pos.coords.longitude);
-
-      if(!isNaN(lat) && !isNaN(lon)){
-        detectNearestApiary(lat, lon);
-      }
-
-      localStorage.setItem("lastLat", lat);
-      localStorage.setItem("lastLon", lon);
-
-    },
-
-    err => {
-      console.log("GPS ERROR:", err);
-    },
-
-    {
-      enableHighAccuracy:true,
-      maximumAge:10000,
-      timeout:15000
+      return {};
     }
-  );
-}
-
-// =========================
-// 🐝 AUTOMATYCZNE NOTATKI PASIEKI
-// =========================
-
-function getApiaryKey(key){
-  if(!currentApiary) return key;
-  return currentApiary.id + "_" + key;
-}
-
-// --- POGODA 7 DNI + DZIŚ (STABILNA WERSJA) ---
-async function getLocationData(lat, lon){
-  try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`);
-    if(!res.ok) throw new Error("API error");
-    const data = await res.json();
-    return data.address || {};
-  }catch(e){
-    console.log("Błąd lokalizacji:", e);
-    return {};
   }
-}
 
-function loadWeather5Days() {
-  return new Promise((resolve)=>{
+  // =========================
+  // 🌦️ POGODA
+  // =========================
+  function loadWeather5Days(){
 
-    const weatherBox = document.getElementById("weather-data");
-    const forecastBox = document.getElementById("weather-forecast");
-    const beeBox = document.getElementById("bee-flight-alert");
-    const locationBox = document.getElementById("location-box");
-
-    function renderLocation(lat, lon, loc){
-
-      const city =
-        loc?.city ||
-        loc?.town ||
-        loc?.village ||
-        loc?.municipality ||
-        loc?.county ||
-        "Nieznana lokalizacja";
-
-      const street =
-        loc?.road ||
-        loc?.pedestrian ||
-        loc?.footway ||
-        loc?.hamlet ||
-        "";
-
-      let html = `📍 <b>${city}</b><br>`;
-
-      if(street){
-        html += `🏠 ${street}<br>`;
-      }
-
-      html += `🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-
-      if(locationBox){
-        locationBox.innerHTML = html; // tylko lokalizacja (bez mieszania z pogodą!)
-      }
+    if(weatherLoading){
+      return Promise.resolve(null);
     }
 
-    async function fetchWeather(lat, lon){
+    weatherLoading = true;
 
-      lat = Number(lat);
-      lon = Number(lon);
+    return new Promise((resolve)=>{
 
-      if(isNaN(lat) || isNaN(lon)){
-        lat = 52.411611;
-        lon = 23.161000;
+      const weatherBox = document.getElementById("weather-data");
+      const forecastBox = document.getElementById("weather-forecast");
+      const beeBox = document.getElementById("bee-flight-alert");
+      const locationBox = document.getElementById("location-box");
+
+      function finish(data){
+        weatherLoading = false;
+        resolve(data);
       }
 
-      // 🔥 lokalizacja (osobno – bez psucia DOM)
-      const loc = await getLocationData(lat, lon);
-      renderLocation(lat, lon, loc);
+      function renderLocation(lat, lon, loc){
 
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
+        const city =
+          loc?.city ||
+          loc?.town ||
+          loc?.village ||
+          loc?.municipality ||
+          loc?.county ||
+          "Nieznana lokalizacja";
 
-      fetch(url).then(r=>r.json()).then(data=>{
+        const street =
+          loc?.road ||
+          loc?.pedestrian ||
+          loc?.footway ||
+          "";
 
-        const cw = data.current_weather || {temperature:0,windspeed:0};
+        let html = `📍 <b>${city}</b><br>`;
 
-        const todayMax = data.daily.temperature_2m_max[0];
-        const todayMin = data.daily.temperature_2m_min[0];
-        const todayWind = data.daily.windspeed_10m_max[0];
-        const todayRain = data.daily.precipitation_probability_max[0];
-
-        const beeStatus =
-          (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" :
-          (cw.temperature>=12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
-
-        const color =
-          beeStatus.includes("IDEALNE") ? "green" :
-          beeStatus.includes("ŚREDNIE") ? "orange" : "red";
-
-        if(weatherBox){
-          weatherBox.innerHTML = `
-            <b>🌡 Dzisiaj:</b><br>
-            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
-            💨 Wiatr: ${todayWind} km/h<br>
-            🌧 Szansa opadów: ${todayRain}%<br>
-            <span style="color:${color};font-weight:bold">${beeStatus}</span>
-          `;
+        if(street){
+          html += `🏠 ${street}<br>`;
         }
 
-   if(forecastBox){
+        html += `🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
 
-  const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
-  let forecastData = [];
+        if(locationBox){
+          locationbox.innerHTML += html;;
+        }
+      }
 
-  for(let i=1;i<=6;i++){
+      async function fetchWeather(lat, lon){
 
-    const date=new Date(); 
-    date.setDate(date.getDate()+i);
+        lat = Number(lat);
+        lon = Number(lon);
 
-    const d=date.getDate().toString().padStart(2,"0");
-    const m=(date.getMonth()+1).toString().padStart(2,"0");
+        if(isNaN(lat) || isNaN(lon)){
+          lat = 52.411611;
+          lon = 23.161000;
+        }
 
-    const tMax=data.daily.temperature_2m_max[i] ?? 0;
-    const tMin=data.daily.temperature_2m_min[i] ?? 0;
-    const wind=data.daily.windspeed_10m_max[i] ?? 0;
-    const rain=data.daily.precipitation_probability_max[i] ?? 0;
+        const loc = await getLocationData(lat, lon);
 
-    forecastData.push({
-      name: `${days[date.getDay()]} ${d}.${m}`,
-      tempMin: tMin,
-      tempMax: tMax,
-      wind: wind,
-      rain: rain
+        renderLocation(lat, lon, loc);
+
+        const url =
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&current_weather=true&timezone=auto`;
+
+       fetch(url)
+  .then(r => {
+    if(!r.ok) throw new Error("Weather API");
+    return r.json();
+  })
+          .then(data => {
+
+            const cw = data.current_weather || {
+              temperature:0,
+              windspeed:0
+            };
+
+            const todayMax = data.daily.temperature_2m_max[0];
+            const todayMin = data.daily.temperature_2m_min[0];
+            const todayWind = data.daily.windspeed_10m_max[0];
+            const todayRain = data.daily.precipitation_probability_max[0];
+
+            const beeStatus =
+              (cw.temperature>=15 && cw.windspeed<20)
+              ? "🐝 IDEALNE"
+              : (cw.temperature>=12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
+
+            const color =
+              beeStatus.includes("IDEALNE")
+              ? "green"
+              : (beeStatus.includes("ŚREDNIE") ? "orange" : "red");
+
+            if(weatherBox){
+
+              weatherBox.innerHTML = `
+                <b>🌡 Dzisiaj:</b><br>
+                Temp: ${cw.temperature}°C
+                (min: ${todayMin}°C, max: ${todayMax}°C)<br>
+                💨 Wiatr: ${todayWind} km/h<br>
+                🌧 Szansa opadów: ${todayRain}%<br>
+                <span style="color:${color};font-weight:bold">
+                  ${beeStatus}
+                </span>
+              `;
+            }
+
+            if(beeBox){
+              beeBox.innerHTML =
+                `<b>🐝 Stan pszczół:</b> ${beeStatus}`;
+            }
+
+            if(forecastBox){
+
+              const days=["Nd","Pn","Wt","Śr","Cz","Pt","Sb"];
+              let forecastData = [];
+
+              for(let i=1;i<=6;i++){
+
+                const date = new Date();
+                date.setDate(date.getDate()+i);
+
+                forecastData.push({
+                  name:
+                    `${days[date.getDay()]} ` +
+                    `${String(date.getDate()).padStart(2,"0")}.` +
+                    `${String(date.getMonth()+1).padStart(2,"0")}`,
+                  tempMin:data.daily.temperature_2m_min[i] ?? 0,
+                  tempMax:data.daily.temperature_2m_max[i] ?? 0,
+                  wind:data.daily.windspeed_10m_max[i] ?? 0,
+                  rain:data.daily.precipitation_probability_max[i] ?? 0
+                });
+              }
+
+              forecastBox.innerHTML =
+                generateBeeForecast(forecastData);
+            }
+
+            finish({
+              beeStatus,
+              forecast:data.daily
+            });
+
+          })
+          .catch(err => {
+
+            console.log(err);
+
+            finish(null);
+          });
+      }
+
+      if(navigator.geolocation){
+
+        navigator.geolocation.getCurrentPosition(
+
+          pos => {
+            fetchWeather(
+              pos.coords.latitude,
+              pos.coords.longitude
+            );
+          },
+
+          () => {
+            fetchWeather(52.24, 23.10);
+          },
+
+          {
+            enableHighAccuracy:true,
+            timeout:7000,
+            maximumAge:200000
+          }
+        );
+
+      } else {
+
+        fetchWeather(52.24, 23.10);
+      }
     });
   }
 
-  // 🔥 TU WCHODZI AI (NOWE)
-  forecastBox.innerHTML = generateBeeForecast(forecastData);
-}
+  // =========================
+  // 🐝 PROGNOZA PASIECZNA
+  // =========================
+  function getBeeWorkAdvice(tempMin, tempMax, wind, rain){
 
-        if(beeBox){
-          beeBox.innerHTML=`<b>🐝 Stan pszczół:</b> ${beeStatus}`;
-        }
+    if(tempMax < 12) return "❄️ Za zimno – nie otwieraj uli";
 
-// 🔴 ALERT BEZPIECZEŃSTWA ULA
-const safeBox = document.getElementById("assistant-text");
+    if(rain >= 40) return "🌧 Duże ryzyko deszczu";
 
-if(safeBox){
+    if(wind >= 18) return "💨 Silny wiatr";
 
-  const wind = todayWind || cw.windspeed || 0;
-  const temp = cw.temperature || 20;
-  const rain = todayRain || 0;
-  const code = data.current_weather?.weathercode || 0;
+    if(tempMax >= 18 && rain < 20 && wind < 15){
+      return "🐝 Idealny dzień";
+    }
 
-  const danger =
-    wind > 35 ||
-    temp < 12 ||
-    rain > 0 ||
-    code >= 95;
-
-  if(danger){
-    safeBox.innerHTML = "🔴 DZIŚ NIE OTWIERAJ ULA";
-    safeBox.style.background = "#ffdddd";
-    safeBox.style.color = "#b00000";
-    safeBox.style.fontWeight = "bold";
-    safeBox.style.padding = "8px";
-    safeBox.style.borderRadius = "8px";
+    return "⚠️ Warunki średnie";
   }
-}
 
-resolve({
-  beeStatus,
-  today: {
-    wind: todayWind,
-    rain: todayRain,
-    temp: cw.temperature
-  },
-  forecast: data.daily
-});
+  function generateBeeForecast(days){
 
-      }).catch(()=>{
-        resolve(null);
-      });
-    }
+    let html = "<b>🐝 Prognoza pasieczna:</b><br>";
 
-    // 🔥 GPS START (bezpieczny)
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(52.24, 23.10),
-        {enableHighAccuracy:true, timeout:7000, maximumAge:200000}
-      );
-    } else {
-      fetchWeather(52.24, 23.10);
-    }
+    days.forEach(day => {
 
-  });
-}
+      html += `
+        <div style="
+          margin:6px 0;
+          padding:6px;
+          border-radius:8px;
+          background:#fff3cd;
+        ">
+          <b>${day.name}</b>
+          🌡 ${day.tempMin}-${day.tempMax}°C
+          💨 ${day.wind} km/h
+          🌧 ${day.rain}%<br>
+          👉 ${getBeeWorkAdvice(
+            day.tempMin,
+            day.tempMax,
+            day.wind,
+            day.rain
+          )}
+        </div>
+      `;
+    });
 
-// =========================
-// 🐝 AI ANALIZA POGODY
-// =========================
-function getBeeWorkAdvice(tempMin, tempMax, wind, rain){
+    return html;
+  }
 
-  if(tempMax < 12) return "❄️ Za zimno – nie otwieraj uli";
-
-  if(rain >= 40) return "🌧 Duże ryzyko deszczu – odpuść prace";
-
-  if(wind >= 18) return "💨 Silny wiatr – tylko szybkie działania";
-
-  if(tempMax >= 18 && rain < 20 && wind < 15)
-    return "🐝 Idealny dzień na przegląd";
-
-  if(rain >= 20)
-    return "🌦 Możliwy deszcz – ostrożnie";
-
-  return "⚠️ Warunki średnie";
-}
-
-function generateBeeForecast(days){
-
-  let html = "<b>🐝 Prognoza pasieczna:</b><br>";
-
-  days.forEach(day => {
-
-    const advice = getBeeWorkAdvice(
-      day.tempMin,
-      day.tempMax,
-      day.wind,
-      day.rain
-    );
-
-    html += `
-      <div style="margin:6px 0;padding:6px;border-radius:8px;background:#fff3cd;">
-        <b>${day.name}</b> 
-        🌡 ${day.tempMin}-${day.tempMax}°C 
-        💨 ${day.wind} km/h 
-        🌧 ${day.rain}%<br>
-        👉 ${advice}
-      </div>
-    `;
-  });
-
-  return html;
-}
-
-  // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
+  // =========================
+  // 🧠 AI ASYSTENT
+  // =========================
   async function loadWeatherAndAssist(){
+
     const weatherData = await loadWeather5Days();
+
     updateSmartAssistant(weatherData);
   }
 
- function updateSmartAssistant(weatherData){
-    const box=document.getElementById("assistant-text");
+  function updateSmartAssistant(weatherData){
+
+    const box = document.getElementById("assistant-text");
     if(!box) return;
-    const today=new Date();
 
-    let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
-    let tasksByDay={};
+    const today = new Date();
 
-    const feedingStart = new Date(2026,8,20);    // 20 sierpnia
-    const treatmentStart = new Date(2026,9,21);  // 21 września
-    function isBadWeather(wind, rain, temp){
-
-  if(temp < 12) return true;
-  if(rain >= 40) return true;
-  if(wind >= 18) return true;
-
-  return false;
-}
+    let inspections = 0;
+    let swarmRisk = 0;
 
     for(let d=0; d<6; d++){
+
       const date = new Date();
       date.setDate(today.getDate()+d);
-      const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
-      const rain = weatherData?.forecast?.precipitation_probability_max[d] || 0;
-      const temp = weatherData?.forecast?.temperature_2m_max[d] || 20;
 
-      const badWeather = isBadWeather(wind, rain, temp);
-      const key = String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
-      const note = (localStorage.getItem(key)||"").toLowerCase();
-      let dayTasks=[];
+      const key =
+        String(date.getDate()).padStart(2,"0") + "." +
+        String(date.getMonth()+1).padStart(2,"0") +
+        ".2026";
 
-      if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
-      if(note.includes("karmienie")) feeding=true;
-      if(note.includes("leczenie")) treatment=true;
-      if(note.includes("rój")) swarm=true;
-      if(note.includes("miód")) honey=true;
+      const note = (localStorage.getItem(getApiaryKey(key)) || "").toLowerCase();
 
-const dayNumber = date.getDate(); // numer dnia
-
-// 🔹 PRZEGLĄDY tylko w dni parzyste
-if(dayNumber % 2 === 0){
-  if(!note.includes("przegląd")) dayTasks.push("Wykonaj przegląd uli");
-}
-
-// 🔹 KARMIENIE
-if(!note.includes("karmienie") && date >= feedingStart)
-  dayTasks.push("Sprawdź karmienie pszczół");
-
-// 🔹 LECZENIE
-if(!note.includes("leczenie") && date >= treatmentStart)
-  dayTasks.push("Rozważ leczenie warrozy");
-
-// 🔹 RAMKI tylko w dni nieparzyste
-if(dayNumber % 2 !== 0){
-  if(!note.includes("ramka") && !note.includes("ramki") && !note.includes("węza") && !note.includes("węzę"))
-    dayTasks.push("Sprawdź węzę i ramki");
-}
-      if(badWeather){
-  tasksByDay[key] = "⛔ ZŁE WARUNKI – brak prac w ulu";
-} else {
-  if(dayTasks.length>0){
-    tasksByDay[key] = dayTasks.join(", ");
-  }
-}
+      if(note.includes("przegląd")) inspections++;
+      if(note.includes("rój")) swarmRisk += 15;
     }
 
-    // Swarm risk
-let swarmRisk=0;
+    const month = today.getMonth()+1;
 
-const month=today.getMonth()+1;
-if(month==4) swarmRisk+=20;
-else if(month==5) swarmRisk+=40;
-else if(month==6) swarmRisk+=30;
+    if(month===5) swarmRisk += 40;
+    if(month===6) swarmRisk += 30;
 
-if(inspections === 0) swarmRisk += 30;
-else if(inspections === 1) swarmRisk += 20;
-else if(inspections >= 2) swarmRisk += 5;
+    if(inspections===0) swarmRisk += 30;
 
-if(swarm) swarmRisk+=30;
-if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
-
-if(swarmRisk>100) swarmRisk=100;
-
-    let swarmText="";
-    if(swarmRisk>=70) swarmText="🚨 WYSOKIE ryzyko rojki!";
-    else if(swarmRisk>=40) swarmText="⚠️ ŚREDNIE ryzyko rojki";
-    else swarmText="✅ NISKIE ryzyko rojki";
-
-    // Asystent summary
-    let summary=[];
-    summary.push("🔍 Przeglądy: "+inspections);
-    summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
-    if(!feeding) summary.push("🍯 Brak karmienia");
-    if(!treatment) summary.push("💊 Brak leczenia");
-    if(honey) summary.push("🍯 Było miodobranie");
-
-    if(Object.keys(tasksByDay).length>0){
-      let tasksHtml = Object.entries(tasksByDay).map(([key,text])=>{
-        return `<div style="cursor:pointer;color:blue;text-decoration:underline;margin:2px 0;" data-key="${key}">${key}: ${text}</div>`;
-      }).join("");
-      summary.push("🛠 Nadchodzące 6 dni:<br>"+tasksHtml);
+    if(weatherData?.beeStatus?.includes("IDEALNE")){
+      swarmRisk += 10;
     }
 
-    box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
+    if(swarmRisk > 100){
+      swarmRisk = 100;
+    }
 
-    // Kliknięcie w zadanie - oznacza jako wykonane
-    box.querySelectorAll('div[data-key]').forEach(div=>{
-      div.addEventListener('click', ()=>{
-        const key = div.dataset.key;
-        const note = localStorage.getItem(key) || "";
-        localStorage.setItem(key, note + "\n" + div.textContent + " [WYKONANE]");
-        updateMarkers();
-setTimeout(autoScaleCalendarText, 50);  // 🔥 DODAJ TU
-loadWeatherAndAssist();
-      });
-    });
+    let riskText = "✅ NISKIE";
+
+    if(swarmRisk >= 70){
+      riskText = "🚨 WYSOKIE";
+    }
+    else if(swarmRisk >= 40){
+      riskText = "⚠️ ŚREDNIE";
+    }
+
+    box.innerHTML = `
+      <b>📒 Asystent:</b><br>
+      🔍 Przeglądy: ${inspections}<br>
+      🐝 Ryzyko rojki: ${swarmRisk}% ${riskText}
+    `;
   }
 
-  // --- HISTORIA ULA PO KLIKU ---
-  window.showHiveHistory = function(hiveNumber){
-    const resultsContainer = document.getElementById('search-results');
-    if(!resultsContainer) return;
-    resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
-    let found = false;
+  // =========================
+  // 🐝 ANALIZA ULI
+  // =========================
+  function getHiveData(){
+
+    let hiveStats = {};
 
     for(let i=0;i<localStorage.length;i++){
+
       const key = localStorage.key(i);
-      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-      const note = (localStorage.getItem(key) || "").toLowerCase();
-      if(note.includes("ul "+hiveNumber)){
-        found = true;
-        const div = document.createElement('div');
-        div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g, (m,n)=>
-          `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
-        )}`;
-        div.style.marginBottom = "5px";
-        resultsContainer.appendChild(div);
+
+      if(!/(\d{2}\.\d{2}\.2026)$/.test(key)) continue;
+
+      const note = (localStorage.getItem(key)||"").toLowerCase();
+
+      const matches = note.match(/ul\s*(\d+)/g);
+
+      if(matches){
+
+        matches.forEach(m => {
+
+          const nr = m.match(/\d+/)[0];
+
+          if(!hiveStats[nr]){
+
+            hiveStats[nr] = {
+              inspections:0,
+              feeding:0,
+              treatment:0,
+              swarm:0,
+              honey:0,
+              score:0
+            };
+          }
+
+          if(note.includes("przegląd")) hiveStats[nr].inspections++;
+          if(note.includes("karmienie")) hiveStats[nr].feeding++;
+          if(note.includes("leczenie")) hiveStats[nr].treatment++;
+          if(note.includes("rój")) hiveStats[nr].swarm++;
+          if(note.includes("miód")) hiveStats[nr].honey++;
+        });
       }
     }
 
-    if(!found){
-      resultsContainer.innerHTML += "Brak wpisów dla tego ula";
+    return hiveStats;
+  }
+
+  function analyzeHivesPro(){
+
+    const box = document.getElementById("hive-analysis");
+    if(!box) return;
+
+    const data = getHiveData();
+
+    if(Object.keys(data).length===0){
+
+      box.innerHTML = "Brak danych";
+
+      return;
     }
-  };
 
-// =============================
-// 🧠 AI PASIEKA PRO MAX
-// =============================
+    let html = "";
 
-// 📊 ZBIERANIE DANYCH
-function getHiveData(){
+    Object.entries(data).forEach(([nr,d]) => {
 
-  let hiveStats = {};
+      let score = 0;
 
-  for(let i=0;i<localStorage.length;i++){
-    const key = localStorage.key(i);
-    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+      if(d.inspections>0) score+=30;
+      if(d.feeding>0) score+=20;
+      if(d.treatment>0) score+=20;
+      if(d.honey>0) score+=20;
+      if(d.swarm>0) score-=20;
 
-    const note = (localStorage.getItem(key)||"").toLowerCase();
-    const matches = note.match(/ul\s*(\d+)/g);
+      let status = "";
+      let color = "";
 
-    if(matches){
-      matches.forEach(m=>{
-        const nr = m.match(/\d+/)[0];
+      if(score>=70){
+        status="🟢 SILNY";
+        color="green";
+      }
+      else if(score>=40){
+        status="🟡 ŚREDNI";
+        color="orange";
+      }
+      else{
+        status="🔴 SŁABY";
+        color="red";
+      }
 
-        if(!hiveStats[nr]){
-          hiveStats[nr] = {
-            inspections:0,
-            feeding:0,
-            treatment:0,
-            swarm:0,
-            honey:0,
-            score:0
-          };
-        }
+      html += `
+        <div>
+          <b>Ul ${nr}</b> →
+          <span style="color:${color};font-weight:bold">
+            ${status}
+          </span>
+          (${score} pkt)
+        </div>
+      `;
+    });
 
-        if(note.includes("przegląd")) hiveStats[nr].inspections++;
-        if(note.includes("karmienie")) hiveStats[nr].feeding++;
-        if(note.includes("leczenie")) hiveStats[nr].treatment++;
-        if(note.includes("rój")) hiveStats[nr].swarm++;
-        if(note.includes("miód")) hiveStats[nr].honey++;
-      });
-    }
+    box.innerHTML = html;
   }
 
-  return hiveStats;
-}
-
-// 🐝 ANALIZA ULI
-function analyzeHivesPro(){
-
-  const box = document.getElementById("hive-analysis");
-  if(!box) return;
-
-  const data = getHiveData();
-  if(Object.keys(data).length===0){
-    box.innerHTML = "Brak danych";
-    return;
-  }
-
-  let html="";
-
-  Object.entries(data).forEach(([nr,d])=>{
-
-    let score = 0;
-    if(d.inspections>0) score+=30;
-    if(d.feeding>0) score+=20;
-    if(d.treatment>0) score+=20;
-    if(d.honey>0) score+=20;
-    if(d.swarm>0) score-=20;
-
-    d.score = score;
-
-    let status="", color="";
-    if(score>=70){status="🟢 SILNY";color="green";}
-    else if(score>=40){status="🟡 ŚREDNI";color="orange";}
-    else{status="🔴 SŁABY";color="red";}
-
-    html+=`<div><b>Ul ${nr}</b> → <span style="color:${color};font-weight:bold">${status}</span> (score: ${score})</div>`;
-  });
-
-  box.innerHTML = html;
-}
-
-// 🏆 RANKING
-function generateHiveRanking(){
-
-  const box = document.getElementById("hive-ranking");
-  if(!box) return;
-
-  const data = Object.entries(getHiveData());
-
-  data.forEach(([nr,d])=>{
-    d.score = (d.inspections*30)+(d.feeding*20)+(d.treatment*20)+(d.honey*20)-(d.swarm*20);
-  });
-
-  data.sort((a,b)=>b[1].score - a[1].score);
-
-  let html="";
-  data.forEach(([nr,d],i)=>{
-    html+=`<div>${i+1}. 🐝 Ul ${nr} → ${d.score} pkt</div>`;
-  });
-
-  box.innerHTML = html;
-}
-
-// 🚨 ALERTY
-function generateHiveAlerts(){
-
-  const box = document.getElementById("hive-alerts");
-  if(!box) return;
-
-  const data = getHiveData();
-
-  let alerts=[];
-
-  Object.entries(data).forEach(([nr,d])=>{
-    if(d.inspections===0) alerts.push(`🔍 Ul ${nr} bez przeglądu`);
-    if(d.treatment===0) alerts.push(`💊 Ul ${nr} brak leczenia`);
-    if(d.swarm>0) alerts.push(`🐝 Ul ${nr} ryzyko rojki`);
-  });
-
-  box.innerHTML = alerts.length ? alerts.join("<br>") : "✅ Brak alertów";
-}
-
-// 🤖 PLAN 6 DNI
-function generateWeeklyPlanPro(){
-
-  const box = document.getElementById("ai-plan");
-  if(!box) return;
-
-  const today = new Date();
-  let html="";
-
-  for(let i=0;i<6;i++){
-
-    const date = new Date();
-    date.setDate(today.getDate()+i);
-
-    const d = String(date.getDate()).padStart(2,"0");
-    const m = String(date.getMonth()+1).padStart(2,"0");
-    const key = d+"."+m+".2026";
-
-    const note = (localStorage.getItem(key)||"").toLowerCase();
-
-    let tasks=[];
-
-    if(!note.includes("przegląd")) tasks.push("🔍 przegląd");
-    if(!note.includes("karmienie")) tasks.push("🍯 karmienie");
-    if(!note.includes("leczenie")) tasks.push("💊 leczenie");
-
-    if(tasks.length===0) tasks.push("✅ OK");
-
-    html+=`<div><b>${key}</b> → ${tasks.join(", ")}</div>`;
-  }
-
-  box.innerHTML = html;
-}
-
-// 🍯 PROGNOZA MIODU
-function generateHoneyForecast(){
-
-  const box = document.getElementById("honey-forecast");
-  if(!box) return;
-
-  const data = getHiveData();
-
-  let total=0;
-
-  Object.values(data).forEach(d=>{
-    total += d.honey * 5; // 1 wpis ≈ 5kg
-  });
-
-  box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
-}
-
-   // =========================
+  // =========================
   // 🚀 START SYSTEMU
   // =========================
   updateMarkers();
 
   setTimeout(autoScaleCalendarText, 100);
+
   scrollToToday();
 
-  if(typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
-  if(typeof analyzeHivesPro === "function") analyzeHivesPro();
-  if(typeof generateHiveRanking === "function") generateHiveRanking();
-  if(typeof generateHiveAlerts === "function") generateHiveAlerts();
-  if(typeof generateWeeklyPlanPro === "function") generateWeeklyPlanPro();
-  if(typeof generateHoneyForecast === "function") generateHoneyForecast();
-  if(typeof runAIModule === "function") runAIModule();
-  if(typeof loadApiaryData === "function") loadApiaryData();
+  if(typeof startIntelligentGPS === "function"){
+    startIntelligentGPS();
+  }
+
+  if(typeof loadWeatherAndAssist === "function"){
+    loadWeatherAndAssist();
+  }
+
+  if(typeof analyzeHivesPro === "function"){
+    analyzeHivesPro();
+  }
 
   const hivesCountInput = document.getElementById("hivesCount");
   const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
 
   if(hivesCountInput){
-    hivesCountInput.addEventListener('change', function(){
-      if(typeof generateFamilyNotes === "function") generateFamilyNotes();
+
+    hivesCountInput.addEventListener("change", function(){
+
+      if(typeof generateFamilyNotes === "function"){
+        generateFamilyNotes();
+      }
     });
   }
 
   if(saveFamilyNotesBtn){
-    saveFamilyNotesBtn.addEventListener('click', function(){
-      if(typeof saveFamilyNotes === "function") saveFamilyNotes();
+
+    saveFamilyNotesBtn.addEventListener("click", function(){
+
+      if(typeof saveFamilyNotes === "function"){
+        saveFamilyNotes();
+      }
     });
   }
 
-if(typeof startIntelligentGPS === "function"){
-  startIntelligentGPS();
-}
-
   setInterval(() => {
+
     if(typeof loadWeatherAndAssist === "function"){
       loadWeatherAndAssist();
     }
-  }, 110000);
 
-setTimeout(autoScaleCalendarText, 200);
+  }, 120000);
 
 });
 
@@ -3416,11 +3318,11 @@ setTimeout(autoScaleCalendarText, 200);
 // 🧩 SERVICE WORKER
 // =========================
 if ("serviceWorker" in navigator) {
+
   navigator.serviceWorker.register("service-worker.js")
     .then(() => console.log("SW OK"))
     .catch(err => console.log("SW ERROR", err));
 }
-
 </script>
 
 </body>
