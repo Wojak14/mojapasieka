@@ -345,6 +345,23 @@ Legenda + notatki = szerokość kalendarza
   margin-right: 0 !important;
 }
 
+#gps-toggle{
+  width:100%;
+  padding:10px;
+  margin-bottom:10px;
+
+  border:none;
+  border-radius:10px;
+
+  background:#2c7be5;
+  color:white;
+
+  font-size:16px;
+  font-weight:bold;
+
+  cursor:pointer;
+}
+
 </style>
 
 </head>
@@ -410,6 +427,10 @@ margin-bottom:15px;
   margin-top:8px;
   font-size:14px;
   "></div>
+
+<button id="gps-toggle">
+📍 GPS: OFF
+</button>
 
   <div id="bee-flight-alert" style="
   margin-top:10px;
@@ -2445,9 +2466,14 @@ font-weight:bold;
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-  let textarea = null;
-  let currentDay = null;
-  let currentMonth = null;
+let textarea = null;
+let currentDay = null;
+let currentMonth = null;
+
+// 📍 GPS SYSTEM
+let gpsEnabled = false;
+let gpsWatchId = null;
+let gpsAutoSaveInterval = null;
 
 // =========================
 // 📏 AUTO SCALE TEKSTU
@@ -2816,17 +2842,7 @@ function getGPSOnce(){
 }
 
 // 📍 GPS LIVE (CIĄGŁY)
-let gpsWatchId = null;
-
 function startLiveGPS(){
-
-function stopLiveGPS(){
-
-  if(gpsWatchId !== null){
-    navigator.geolocation.clearWatch(gpsWatchId);
-    gpsWatchId = null;
-  }
-}
 
   if(!navigator.geolocation) return;
 
@@ -2843,17 +2859,67 @@ function stopLiveGPS(){
 
         localStorage.setItem("lastLat", lat);
         localStorage.setItem("lastLon", lon);
+
       }
     },
 
     err => console.log("GPS WATCH ERROR:", err),
 
     {
-      enableHighAccuracy:true,
-      maximumAge:15000,
-      timeout:15000
+      enableHighAccuracy: true,
+      maximumAge: 15000,
+      timeout: 15000
     }
   );
+}
+
+// ⛔ STOP GPS
+function stopLiveGPS(){
+
+  if(gpsWatchId !== null){
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+
+  if(gpsAutoSaveInterval !== null){
+    clearInterval(gpsAutoSaveInterval);
+    gpsAutoSaveInterval = null;
+  }
+}
+
+// 💾 AUTO SAVE GPS
+function startGPSSaveLoop(){
+
+  if(gpsAutoSaveInterval !== null) return;
+
+  gpsAutoSaveInterval = setInterval(() => {
+
+    navigator.geolocation.getCurrentPosition(
+
+      pos => {
+
+        const lat = Number(pos.coords.latitude);
+        const lon = Number(pos.coords.longitude);
+
+        if(!isNaN(lat) && !isNaN(lon)){
+
+          localStorage.setItem("lastLat", lat);
+          localStorage.setItem("lastLon", lon);
+
+          console.log("📍 GPS auto-save:", lat, lon);
+        }
+      },
+
+      err => console.log("AUTO GPS ERROR:", err),
+
+      {
+        enableHighAccuracy: true,
+        maximumAge: 60000,
+        timeout: 10000
+      }
+    );
+
+  }, 600000); // 10 min
 }
 
 // =========================
@@ -3425,7 +3491,12 @@ function generateHoneyForecast(){
 
 getGPSOnce();     // szybki start
 setTimeout(() => {
-  startLiveGPS();  // potem śledzenie
+
+  gpsEnabled = true;
+
+  startLiveGPS();
+  startGPSSaveLoop();
+
 }, 5000);
 
   setTimeout(autoScaleCalendarText, 100);
@@ -3462,6 +3533,32 @@ setTimeout(() => {
   }, 110000);
 
 setTimeout(autoScaleCalendarText, 200);
+
+// 🔘 GPS TOGGLE
+const gpsBtn = document.getElementById("gps-toggle");
+
+if(gpsBtn){
+
+  gpsBtn.addEventListener("click", () => {
+
+    gpsEnabled = !gpsEnabled;
+
+    if(gpsEnabled){
+
+      gpsBtn.innerHTML = "📍 GPS: ON";
+
+      getGPSOnce();
+      startLiveGPS();
+      startGPSSaveLoop();
+
+    } else {
+
+      gpsBtn.innerHTML = "📍 GPS: OFF";
+
+      stopLiveGPS();
+    }
+  });
+}
 
 });
 
