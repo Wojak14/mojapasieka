@@ -2842,6 +2842,8 @@ function getGPSOnce(){
 }
 
 // 📍 GPS LIVE (CIĄGŁY)
+let gpsWatchId = null;
+
 function startLiveGPS(){
 
   if(!navigator.geolocation) return;
@@ -2859,19 +2861,18 @@ function startLiveGPS(){
 
         localStorage.setItem("lastLat", lat);
         localStorage.setItem("lastLon", lon);
-
       }
     },
 
     err => console.log("GPS WATCH ERROR:", err),
 
     {
-      enableHighAccuracy: true,
-      maximumAge: 15000,
-      timeout: 15000
+      enableHighAccuracy:true,
+      maximumAge:15000,
+      timeout:15000
     }
   );
-}
+
 
 // ⛔ STOP GPS
 function stopLiveGPS(){
@@ -2879,11 +2880,6 @@ function stopLiveGPS(){
   if(gpsWatchId !== null){
     navigator.geolocation.clearWatch(gpsWatchId);
     gpsWatchId = null;
-  }
-
-  if(gpsAutoSaveInterval !== null){
-    clearInterval(gpsAutoSaveInterval);
-    gpsAutoSaveInterval = null;
   }
 }
 
@@ -3490,14 +3486,22 @@ function generateHoneyForecast(){
   updateMarkers();
 
 getGPSOnce();     // szybki start
-setTimeout(() => {
+const savedGPS = localStorage.getItem("gpsEnabled");
+
+if(savedGPS === "true"){
 
   gpsEnabled = true;
 
+  const gpsBtn = document.getElementById("gps-toggle");
+
+  if(gpsBtn){
+    gpsBtn.innerHTML = "📍 GPS: ON";
+  }
+
+  getGPSOnce();
   startLiveGPS();
   startGPSSaveLoop();
-
-}, 5000);
+}
 
   setTimeout(autoScaleCalendarText, 100);
   scrollToToday();
@@ -3543,20 +3547,24 @@ if(gpsBtn){
 
     gpsEnabled = !gpsEnabled;
 
-    if(gpsEnabled){
+if(gpsEnabled){
 
-      gpsBtn.innerHTML = "📍 GPS: ON";
+  localStorage.setItem("gpsEnabled", "true");
 
-      getGPSOnce();
-      startLiveGPS();
-      startGPSSaveLoop();
+  gpsBtn.innerHTML = "📍 GPS: ON";
 
-    } else {
+  getGPSOnce();
+  startLiveGPS();
+  startGPSSaveLoop();
 
-      gpsBtn.innerHTML = "📍 GPS: OFF";
+} else {
 
-      stopLiveGPS();
-    }
+  localStorage.setItem("gpsEnabled", "false");
+
+  gpsBtn.innerHTML = "📍 GPS: OFF";
+
+  stopLiveGPS();
+}
   });
 }
 
