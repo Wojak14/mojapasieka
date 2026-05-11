@@ -2842,8 +2842,6 @@ function getGPSOnce(){
 }
 
 // 📍 GPS LIVE (CIĄGŁY)
-let gpsWatchId = null;
-
 function startLiveGPS(){
 
   if(!navigator.geolocation) return;
@@ -2861,18 +2859,19 @@ function startLiveGPS(){
 
         localStorage.setItem("lastLat", lat);
         localStorage.setItem("lastLon", lon);
+
       }
     },
 
     err => console.log("GPS WATCH ERROR:", err),
 
     {
-      enableHighAccuracy:true,
-      maximumAge:15000,
-      timeout:15000
+      enableHighAccuracy: true,
+      maximumAge: 15000,
+      timeout: 15000
     }
   );
-
+}
 
 // ⛔ STOP GPS
 function stopLiveGPS(){
@@ -2880,6 +2879,11 @@ function stopLiveGPS(){
   if(gpsWatchId !== null){
     navigator.geolocation.clearWatch(gpsWatchId);
     gpsWatchId = null;
+  }
+
+  if(gpsAutoSaveInterval !== null){
+    clearInterval(gpsAutoSaveInterval);
+    gpsAutoSaveInterval = null;
   }
 }
 
@@ -3486,6 +3490,7 @@ function generateHoneyForecast(){
   updateMarkers();
 
 getGPSOnce();     // szybki start
+
 const savedGPS = localStorage.getItem("gpsEnabled");
 
 if(savedGPS === "true"){
