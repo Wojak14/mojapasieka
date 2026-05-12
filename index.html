@@ -2762,49 +2762,85 @@ function detectNearestApiary(lat, lon){
   let nearest = null;
   let minDistance = Infinity;
 
+  let nearbyApiaries = [];
+
   APIARIES.forEach(apiary => {
 
-    const dist = getDistance(lat, lon, apiary.lat, apiary.lon);
+    const dist = getDistance(
+      lat,
+      lon,
+      apiary.lat,
+      apiary.lon
+    );
 
+    // lista pobliskich
+    if(dist <= 5){
+
+      nearbyApiaries.push({
+        ...apiary,
+        distance: dist
+      });
+
+    }
+
+  // najbliższa = aktywna
     if(dist < minDistance){
       minDistance = dist;
       nearest = apiary;
     }
+
   });
 
-  // max 30 km
-  if(minDistance <= 30){
+  if(minDistance <= 5){
     currentApiary = nearest;
   } else {
     currentApiary = null;
   }
 
-  updateApiaryUI(minDistance);
+  updateApiaryUI(minDistance, nearbyApiaries);
 }
 
 // 📍 PANEL PASIEKI
-function updateApiaryUI(distance){
+function updateApiaryUI(distance, nearbyApiaries){
 
   const box = document.getElementById("location-box");
   if(!box) return;
 
   let html = "";
 
+  // 🔥 aktywna
   if(currentApiary){
 
-    html = `
+    html += `
       <hr>
       🐝 <b>Aktywna pasieka:</b><br>
-      ${currentApiary.name}<br>
+      🏠 ${currentApiary.name}<br>
       📏 ${distance.toFixed(2)} km
+      <br><br>
     `;
 
   } else {
 
-    html = `
+    html += `
       <hr>
       ⚠️ Poza zapisanymi pasiekami
     `;
+  }
+
+  // 🔥 pobliskie
+  if(nearbyApiaries && nearbyApiaries.length > 1){
+
+    html += `<b>📍 Pasieki w pobliżu:</b><br>`;
+
+    nearbyApiaries.forEach(apiary => {
+
+      if(currentApiary && apiary.id === currentApiary.id) return;
+
+      html += `
+        🏠 ${apiary.name}<br>
+        📏 ${apiary.distance.toFixed(2)} km<br>
+      `;
+    });
   }
 
   box.innerHTML = html;
