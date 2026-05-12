@@ -2773,13 +2773,14 @@ function detectNearestApiary(lat, lon){
       apiary.lon
     );
 
-    // lista pobliskich
-    if(dist <= 5){
+console.log(apiary.name, dist);
 
-      nearbyApiaries.push({
-        ...apiary,
-        distance: dist
-      });
+    // lista pobliskich
+
+  nearbyApiaries.push({
+  ...apiary,
+  distance: dist
+});
 
     }
 
