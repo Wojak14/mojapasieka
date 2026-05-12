@@ -3187,15 +3187,21 @@ function generateBeeForecast(days){
   return false;
 }
 
-    for(let d=0; d<6; d++){
-      const date = new Date();
-      date.setDate(today.getDate()+d);
-      const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
-      const rain = weatherData?.forecast?.precipitation_probability_max[d] || 0;
-      const temp = weatherData?.forecast?.temperature_2m_max[d] || 20;
+   for(let d=1; d<=6; d++){
 
-      const badWeather = isBadWeather(wind, rain, temp);
-      const key = String(date.getDate()).padStart(2,"0")+"."+String(date.getMonth()+1).padStart(2,"0")+".2026";
+  const date = new Date();
+  date.setDate(today.getDate()+d);
+
+  const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
+  const rain = weatherData?.forecast?.precipitation_probability_max[d] || 0;
+  const temp = weatherData?.forecast?.temperature_2m_max[d] || 20;
+
+  const badWeather = isBadWeather(wind, rain, temp);
+
+  const key =
+    String(date.getDate()).padStart(2,"0")+"."+
+    String(date.getMonth()+1).padStart(2,"0")+
+    ".2026";
       const note = (localStorage.getItem(key)||"").toLowerCase();
       let dayTasks=[];
 
