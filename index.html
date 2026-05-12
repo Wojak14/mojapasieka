@@ -2683,7 +2683,7 @@ textarea.value = note || "";
       for(let i=0;i<localStorage.length;i++){
 
         const key = localStorage.key(i);
-        if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+        if(!/(\d{2}\.\d{2}\.2026)$/.test(key)) continue;
 
         const note = localStorage.getItem(key);
 
@@ -2825,6 +2825,7 @@ function getGPSOnce(){
       if(!isNaN(lat) && !isNaN(lon)){
 
         detectNearestApiary(lat, lon);
+        updateMarkers();
 
         localStorage.setItem("lastLat", lat);
         localStorage.setItem("lastLon", lon);
@@ -2844,7 +2845,7 @@ function getGPSOnce(){
 // 📍 GPS LIVE (CIĄGŁY)
 function startLiveGPS(){
 
-  if(!navigator.geolocation) return;
+  if(gpsWatchId !== null) return;
 
   gpsWatchId = navigator.geolocation.watchPosition(
 
@@ -2856,6 +2857,7 @@ function startLiveGPS(){
       if(!isNaN(lat) && !isNaN(lon)){
 
         detectNearestApiary(lat, lon);
+        updateMarkers();
 
         localStorage.setItem("lastLat", lat);
         localStorage.setItem("lastLon", lon);
@@ -3102,7 +3104,7 @@ resolve({
     }
 
     // 🔥 GPS START (bezpieczny)
-    if(navigator.geolocation){
+    if(navigator.geolocation && gpsEnabled){
       navigator.geolocation.getCurrentPosition(
         pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
         () => fetchWeather(52.24, 23.10),
@@ -3202,7 +3204,11 @@ function generateBeeForecast(days){
     String(date.getDate()).padStart(2,"0")+"."+
     String(date.getMonth()+1).padStart(2,"0")+
     ".2026";
-      const note = (localStorage.getItem(key)||"").toLowerCase();
+      const note = (
+  localStorage.getItem(getApiaryKey(key)) ||
+  localStorage.getItem(key) ||
+  ""
+).toLowerCase();
       let dayTasks=[];
 
       if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
@@ -3253,7 +3259,7 @@ else if(inspections === 1) swarmRisk += 20;
 else if(inspections >= 2) swarmRisk += 5;
 
 if(swarm) swarmRisk+=30;
-if(weatherData && weatherData.beeStatus.includes("IDEALNE")) swarmRisk+=10;
+if(weatherData?.beeStatus?.includes("IDEALNE")) swarmRisk+=10;
 
 if(swarmRisk>100) swarmRisk=100;
 
@@ -3301,7 +3307,7 @@ loadWeatherAndAssist();
 
     for(let i=0;i<localStorage.length;i++){
       const key = localStorage.key(i);
-      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+      if(!/(\d{2}\.\d{2}\.2026)$/.test(key)) continue;
       const note = (localStorage.getItem(key) || "").toLowerCase();
       if(note.includes("ul "+hiveNumber)){
         found = true;
@@ -3330,9 +3336,13 @@ function getHiveData(){
 
   for(let i=0;i<localStorage.length;i++){
     const key = localStorage.key(i);
-    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+    if(!/(\d{2}\.\d{2}\.2026)$/.test(key)) continue;
 
-    const note = (localStorage.getItem(key)||"").toLowerCase();
+    const note = (
+  localStorage.getItem(getApiaryKey(key)) ||
+  localStorage.getItem(key) ||
+  ""
+).toLowerCase();
     const matches = note.match(/ul\s*(\d+)/g);
 
     if(matches){
@@ -3457,7 +3467,11 @@ function generateWeeklyPlanPro(){
     const m = String(date.getMonth()+1).padStart(2,"0");
     const key = d+"."+m+".2026";
 
-    const note = (localStorage.getItem(key)||"").toLowerCase();
+    const note = (
+  localStorage.getItem(getApiaryKey(key)) ||
+  localStorage.getItem(key) ||
+  ""
+).toLowerCase();
 
     let tasks=[];
 
@@ -3493,9 +3507,13 @@ function generateHoneyForecast(){
    // =========================
   // 🚀 START SYSTEMU
   // =========================
-  updateMarkers();
 
-getGPSOnce();     // szybki start
+setTimeout(() => {
+
+  updateMarkers();
+  autoScaleCalendarText();
+
+}, 1500);
 
 const savedGPS = localStorage.getItem("gpsEnabled");
 
