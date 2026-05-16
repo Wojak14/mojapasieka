@@ -13,6 +13,10 @@
 
 <link rel="apple-touch-icon" sizes="192x192" href="bee_icon_192x192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="bee_icon_512x512.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"
+/>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <style>
 body {
@@ -20,6 +24,32 @@ body {
   margin: 0;
   padding: 10px;
 }
+
+.backup-box{
+  margin-top:15px;
+  padding:12px;
+  background:#fff8dc;
+  border-radius:12px;
+  border:2px solid #e0c97f;
+}
+
+.backup-box button{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border:none;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:bold;
+  background:#f4b400;
+  color:#222;
+}
+
+#backup-status{
+  margin-top:10px;
+  font-size:14px;
+}
+
 
 /* 🔍 PODŚWIETLENIE */
 .highlight-day {
@@ -31,7 +61,7 @@ body {
 table {
   width: 100%;
   table-layout: fixed;
-  max-width: 110%;    /* 🔥 KLUCZ: kontrola wielkości całego kalendarza */
+  max-width: 120%;    /* 🔥 KLUCZ: kontrola wielkości całego kalendarza */
 }
 th {
   border: 1px solid #444;
@@ -234,8 +264,6 @@ td {
     font-weight: bold;
   }
 
-}
-
 /* 🔥 FULLSCREEN FIX */
 html, body {
   margin: 0;
@@ -362,6 +390,122 @@ Legenda + notatki = szerokość kalendarza
   cursor:pointer;
 }
 
+/* ========================= */
+/* 🧠 AI SUPER PANEL */
+/* ========================= */
+
+#super-ai-panel{
+
+  margin:15px 0;
+  padding:14px;
+
+  border-radius:16px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #fff8dc,
+      #fff3cd
+    );
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.12);
+
+  border:
+    1px solid rgba(0,0,0,0.08);
+
+  font-size:14px;
+  line-height:1.5;
+}
+
+.super-grid{
+
+  display:grid;
+
+  grid-template-columns:
+    repeat(auto-fit,minmax(140px,1fr));
+
+  gap:10px;
+}
+
+.super-card{
+
+  background:white;
+
+  padding:10px;
+
+  border-radius:12px;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,0.08);
+}
+
+.super-title{
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+.super-alert{
+  background:#ffdddd;
+}
+
+.super-good{
+  background:#d4edda;
+}
+
+.super-warning{
+  background:#fff3cd;
+}
+
+/* ========================= */
+/* 🗺️ MAPA PASIEKI */
+/* ========================= */
+
+#map{
+
+  width:100%;
+  height:350px;
+
+  margin-top:15px;
+
+  border-radius:16px;
+
+  overflow:hidden;
+
+  box-shadow:
+    0 4px 14px rgba(0,0,0,0.15);
+}
+
+#apiary-stats{
+  margin-top:10px;
+  padding:10px;
+  border-radius:12px;
+  background:#fff8dc;
+  font-size:14px;
+  line-height:1.5;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+
+#swarm-ai-box{
+  margin-top:12px;
+  padding:12px;
+  border-radius:12px;
+  background:#fff3cd;
+  font-size:14px;
+  line-height:1.5;
+  box-shadow:0 2px 6px rgba(0,0,0,0.15);
+}
+
+#storm-alert-box{
+  margin-top:15px;
+  padding:12px;
+  border-radius:12px;
+  background:#ffe5e5;
+  border:2px solid #ffb3b3;
+  line-height:1.5;
+  font-size:14px;
+}
+
 </style>
 
 </head>
@@ -379,7 +523,21 @@ Legenda + notatki = szerokość kalendarza
 
   <h3>🐝 Asystent pszczelarza</h3>
 
+  <!-- ========================= -->
+<!-- 🧠 AI SUPER PANEL PRO -->
+<!-- ========================= -->
+
+<div id="super-ai-panel"></div>
+
+<!-- ========================= -->
+<!-- 🗺️ MAPA PASIEKI -->
+<!-- ========================= -->
+
+<div id="map"></div>
+
   <div id="assistant-text">Sprawdzanie zaleceń...</div>
+  <div id="apiary-stats"></div>
+  <div id="swarm-ai-box"></div>
 </div>
 
 <div id="today"></div>
@@ -455,6 +613,108 @@ font-weight:bold;
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
 </div>
+
+<script type="module">
+
+// 🔥 FIREBASE
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  onSnapshot
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// 🔥 CONFIG
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBvqmukhvGkzNf85J9a_uzJUko2N3bQ36Y",
+  authDomain: "final-boss-pasieka.firebaseapp.com",
+  projectId: "final-boss-pasieka",
+  storageBucket: "final-boss-pasieka.firebasestorage.app",
+  messagingSenderId: "657231215028",
+  appId: "1:657231215028:web:1da165bd0457cc9a9c9ae1",
+  measurementId: "G-GR2547TPT3"
+};
+
+// 🔥 INIT
+const app =
+  initializeApp(firebaseConfig);
+
+const db =
+  getFirestore(app);
+
+// =========================
+// 🔥 FINAL BOSS CLOUD ENGINE
+// =========================
+
+window.cloudSaveNote =
+async function(key, value){
+
+  try{
+
+    await setDoc(
+      doc(db, "notes", key),
+      {
+        text: value,
+        updated: Date.now()
+      }
+    );
+
+    console.log("☁️ CLOUD SAVE OK");
+
+  }catch(e){
+
+    console.log("CLOUD SAVE ERROR", e);
+  }
+};
+
+window.cloudLoadNote =
+async function(key){
+
+  try{
+
+    const snap =
+      await getDoc(
+        doc(db, "notes", key)
+      );
+
+    if(snap.exists()){
+
+      return snap.data().text || "";
+    }
+
+  }catch(e){
+
+    console.log("CLOUD LOAD ERROR", e);
+  }
+
+  return "";
+};
+
+// 🔥 LIVE SYNC
+window.startCloudSync =
+function(key, callback){
+
+  onSnapshot(
+    doc(db, "notes", key),
+    snap => {
+
+      if(snap.exists()){
+
+        callback(
+          snap.data().text || ""
+        );
+      }
+    }
+  );
+};
+
+</script>
 
 </body>
 </html>
@@ -2466,6 +2726,118 @@ font-weight:bold;
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
+function generateCriticalAlerts(){
+
+  const box =
+    document.getElementById(
+      "critical-alerts"
+    );
+
+  if(!box) return;
+
+  let alerts = [];
+
+  const swarm =
+    predictSwarmRisk();
+
+  const honey =
+    predictHoney();
+
+  const health =
+    analyzeHiveHealth();
+
+  if(swarm >= 80){
+
+    alerts.push(
+      "🚨 KRYTYCZNE RYZYKO ROJKI"
+    );
+  }
+
+  if(health.weak >= 5){
+
+    alerts.push(
+      "⚠️ Wiele słabych rodzin"
+    );
+  }
+
+  if(honey < 20){
+
+    alerts.push(
+      "🍯 Bardzo niski potencjał miodowy"
+    );
+  }
+
+  const season =
+    analyzeSeason();
+
+  if(
+    season.season === "LATO" &&
+    honey < 40
+  ){
+
+    alerts.push(
+      "⚠️ Sezon słabszy niż oczekiwano"
+    );
+  }
+
+  box.innerHTML =
+    alerts.length
+      ? alerts.join("<br>")
+      : "✅ Brak krytycznych alertów";
+}
+
+  // =========================
+  // 🧠 ANALIZA WZORCÓW PASIEKI
+  // =========================
+  function analyzePatterns(){
+
+    let patterns = {
+
+      swarmDays: 0,
+      honeyDays: 0,
+      treatmentDays: 0,
+      feedingDays: 0
+
+    };
+
+    for(let i=0;i<localStorage.length;i++){
+
+      const key =
+        localStorage.key(i);
+
+      if(!/\d{2}\.\d{2}\.2026$/.test(key))
+        continue;
+
+      const note =
+        (
+          localStorage.getItem(key) || ""
+        ).toLowerCase();
+
+      if(note.includes("rój"))
+        patterns.swarmDays++;
+
+      if(note.includes("miód"))
+        patterns.honeyDays++;
+
+      if(note.includes("leczenie"))
+        patterns.treatmentDays++;
+
+      if(note.includes("karmienie"))
+        patterns.feedingDays++;
+    }
+
+    return patterns;
+  }
+
+  // =========================
+  // 🤖 SMART ASSISTANT
+  // =========================
+  function updateSmartAssistant(weatherData){
+
+    const patterns = analyzePatterns();
+
+    console.log(patterns);
+
 let textarea = null;
 let currentDay = null;
 let currentMonth = null;
@@ -2527,6 +2899,55 @@ function applySmartColorsAndAlerts(td, text){
 }
 
 // =========================
+// 🧠 FINAL BOSS STORAGE ENGINE
+// =========================
+
+function buildApiaryKey(dateKey){
+
+  if(currentApiary && currentApiary.id){
+    return currentApiary.id + "_" + dateKey;
+  }
+
+  return "global_" + dateKey;
+}
+
+function getNote(dateKey){
+
+  // aktywna pasieka
+  if(currentApiary){
+
+    const apiaryKey =
+      currentApiary.id + "_" + dateKey;
+
+    const apiaryNote =
+      localStorage.getItem(apiaryKey);
+
+    if(apiaryNote) return apiaryNote;
+  }
+
+  // fallback global
+  const globalNote =
+    localStorage.getItem("global_" + dateKey);
+
+  if(globalNote) return globalNote;
+
+  // stary format
+  const oldNote =
+    localStorage.getItem(dateKey);
+
+  if(oldNote) return oldNote;
+
+  return "";
+}
+
+function saveNoteData(dateKey, value){
+
+  const saveKey = buildApiaryKey(dateKey);
+
+  localStorage.setItem(saveKey, value);
+}
+
+// =========================
 // 📅 MARKERY I IKONY
 // =========================
 function updateMarkers() {
@@ -2549,7 +2970,7 @@ function updateMarkers() {
     const oldMarker = td.querySelector(".note-marker");
     if(oldMarker) oldMarker.remove();
 
-    const noteData = localStorage.getItem(getApiaryKey(key));
+    const noteData = getNote(key);
 
     if(noteData && noteData.trim() !== "") {
 
@@ -2619,20 +3040,49 @@ function updateMarkers() {
       const key = `${currentDay}.${currentMonth}.2026`;
 
       if(textarea){
-        let note =
-  localStorage.getItem(getApiaryKey(key));
-
-if(!note && currentApiary){
-  note = localStorage.getItem(
-    currentApiary.id + "_" + key
-  );
-}
-
-if(!note){
-  note = localStorage.getItem(key);
-}
+const note = getNote(key);
 
 textarea.value = note || "";
+
+cloudLoadNote(
+  getApiaryKey(key)
+).then(cloudNote => {
+
+  if(
+    cloudNote &&
+    cloudNote !== textarea.value
+  ){
+
+    textarea.value = cloudNote;
+
+    saveNoteData(
+      key,
+      cloudNote
+    );
+
+    updateMarkers();
+  }
+});
+
+startCloudSync(
+  getApiaryKey(key),
+  (liveText) => {
+
+    if(textarea){
+
+      textarea.value = liveText;
+
+      saveNoteData(
+        key,
+        liveText
+      );
+
+      updateMarkers();
+
+      setTimeout(autoScaleCalendarText, 50);
+    }
+  }
+);
         textarea.focus();
       }
     });
@@ -2652,10 +3102,20 @@ textarea.value = note || "";
     const key = `${currentDay}.${currentMonth}.2026`;
 
     if(textarea){
-      localStorage.setItem(getApiaryKey(key), textarea.value);
-    }
+      saveNoteData(key, textarea.value);
+      );
+
+  cloudSaveNote(
+    getApiaryKey(key),
+    textarea.value
+  );
+}
 
     updateMarkers();
+generateApiaryStats();
+if(typeof renderSuperAI === "function"){
+  renderSuperAI();
+}
     setTimeout(autoScaleCalendarText, 50);
 
     if(typeof loadWeatherAndAssist === "function"){
@@ -2683,7 +3143,7 @@ textarea.value = note || "";
       for(let i=0;i<localStorage.length;i++){
 
         const key = localStorage.key(i);
-        if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+        if(!/\d{2}\.\d{2}\.2026$/.test(key)) continue;
 
         const note = localStorage.getItem(key);
 
@@ -2720,6 +3180,9 @@ textarea.value = note || "";
 // =========================
 
 let currentApiary = null;
+let map = null;
+let userMarker = null;
+let apiaryMarkers = [];
 
 function getDistance(lat1, lon1, lat2, lon2){
 
@@ -2772,43 +3235,151 @@ function detectNearestApiary(lat, lon){
     }
   });
 
-  // max 15 km
-  if(minDistance <= 15){
-    currentApiary = nearest;
-  } else {
-    currentApiary = null;
-  }
+  // max 10 km
+if(minDistance <= 10){
+
+  currentApiary = nearest;
+
+  localStorage.setItem(
+    "lastApiary",
+    JSON.stringify(nearest)
+  );
+
+} else {
+
+  currentApiary = null;
+
+  localStorage.removeItem("lastApiary");
+}
 
   updateApiaryUI(minDistance);
+
+// 📍 USER MARKER LIVE
+if(map){
+
+  if(userMarker){
+    userMarker.setLatLng([lat, lon]);
+  }
+  else{
+
+    userMarker = L.marker(
+      [lat, lon]
+    )
+    .addTo(map)
+    .bindPopup("📍 TWOJA POZYCJA");
+
+  }
+
+  map.setView([lat, lon], 12);
+}
+
+// 🟢 AKTYWNA PASIEKA
+apiaryMarkers.forEach((m,i)=>{
+
+  const apiary = APIARIES[i];
+
+  if(
+    currentApiary &&
+    apiary.id === currentApiary.id
+  ){
+
+    m.setOpacity(1);
+
+  } else {
+
+    m.setOpacity(0.5);
+
+  }
+});
+
+if(typeof renderSuperAI === "function"){
+  renderSuperAI();
 }
 
 // 📍 PANEL PASIEKI
 function updateApiaryUI(distance){
 
-  const box = document.getElementById("location-box");
+  const box =
+    document.getElementById("location-box");
+
   if(!box) return;
 
   let html = "";
 
+  // 🔥 aktywna
   if(currentApiary){
 
-    html = `
+    html += `
       <hr>
       🐝 <b>Aktywna pasieka:</b><br>
-      ${currentApiary.name}<br>
+      🏠 ${currentApiary.name}<br>
       📏 ${distance.toFixed(2)} km
-    `;
-
-  } else {
-
-    html = `
-      <hr>
-      ⚠️ Poza zapisanymi pasiekami
+      <br><br>
     `;
   }
 
+  // 🔥 pobliskie
+  html += `📍 <b>Pasieki w pobliżu:</b><br>`;
+
+  APIARIES.forEach(apiary => {
+
+    if(
+      currentApiary &&
+      apiary.id === currentApiary.id
+    ) return;
+
+    const dist = getDistance(
+      Number(localStorage.getItem("lastLat")),
+      Number(localStorage.getItem("lastLon")),
+      apiary.lat,
+      apiary.lon
+    );
+
+    html += `
+      🏠 ${apiary.name}<br>
+      📏 ${dist.toFixed(2)} km<br><br>
+    `;
+  });
+
   box.innerHTML = html;
 }
+
+// =========================
+// 🗺️ INIT MAP
+// =========================
+
+function initMap(){
+
+  if(map) return;
+
+  map = L.map('map').setView(
+    [52.411611, 23.161000],
+    11
+  );
+
+  L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution:'© OpenStreetMap'
+    }
+  ).addTo(map);
+
+  // 📍 PASIEKI
+  APIARIES.forEach(apiary => {
+
+    const marker = L.marker([
+      apiary.lat,
+      apiary.lon
+    ])
+    .addTo(map)
+    .bindPopup(`
+      🐝 <b>${apiary.name}</b>
+    `);
+
+    apiaryMarkers.push(marker);
+  });
+}
+
 
 // 📍 GPS LIVE
 function getGPSOnce(){
@@ -2844,6 +3415,8 @@ function getGPSOnce(){
 // 📍 GPS LIVE (CIĄGŁY)
 function startLiveGPS(){
 
+  if(gpsWatchId !== null) return;
+
   if(!navigator.geolocation) return;
 
   gpsWatchId = navigator.geolocation.watchPosition(
@@ -2866,7 +3439,7 @@ function startLiveGPS(){
     err => console.log("GPS WATCH ERROR:", err),
 
     {
-      enableHighAccuracy: true,
+      enableHighAccuracy: false,
       maximumAge: 15000,
       timeout: 15000
     }
@@ -2875,6 +3448,8 @@ function startLiveGPS(){
 
 // ⛔ STOP GPS
 function stopLiveGPS(){
+
+currentApiary = null;
 
   if(gpsWatchId !== null){
     navigator.geolocation.clearWatch(gpsWatchId);
@@ -3007,23 +3582,20 @@ function loadWeather5Days() {
         const todayWind = data.daily.windspeed_10m_max[0];
         const todayRain = data.daily.precipitation_probability_max[0];
 
-        const beeStatus =
-          (cw.temperature>=15 && cw.windspeed<20) ? "🐝 IDEALNE" :
-          (cw.temperature>=12 ? "🐝 ŚREDNIE" : "❄ SŁABE");
+   let beeStatus = "❓ BRAK DANYCH";
 
-        const color =
-          beeStatus.includes("IDEALNE") ? "green" :
-          beeStatus.includes("ŚREDNIE") ? "orange" : "red";
-
-        if(weatherBox){
-          weatherBox.innerHTML = `
-            <b>🌡 Dzisiaj:</b><br>
-            Temp: ${cw.temperature}°C (min: ${todayMin}°C, max: ${todayMax}°C)<br>
-            💨 Wiatr: ${todayWind} km/h<br>
-            🌧 Szansa opadów: ${todayRain}%<br>
-            <span style="color:${color};font-weight:bold">${beeStatus}</span>
-          `;
-        }
+if(cw.temperature >= 18 && cw.windspeed < 15){
+  beeStatus = "🐝 IDEALNE";
+}
+else if(cw.temperature >= 14 && cw.windspeed < 25){
+  beeStatus = "🟡 ŚREDNIE";
+}
+else if(cw.temperature >= 10){
+  beeStatus = "🟠 SŁABE";
+}
+else{
+  beeStatus = "🔴 BARDZO SŁABE";
+}
 
    if(forecastBox){
 
@@ -3062,6 +3634,11 @@ function loadWeather5Days() {
 
 // 🔴 ALERT BEZPIECZEŃSTWA ULA
 const safeBox = document.getElementById("assistant-text");
+const aiToday = analyzeWeatherDanger({
+  tempMax: cw.temperature,
+  wind: todayWind,
+  rain: todayRain
+});
 
 if(safeBox){
 
@@ -3073,17 +3650,63 @@ if(safeBox){
   const danger =
     wind > 35 ||
     temp < 12 ||
-    rain > 0 ||
+    rain > 60 ||
     code >= 95;
 
-  if(danger){
-    safeBox.innerHTML = "🔴 DZIŚ NIE OTWIERAJ ULA";
+  const medium =
+    wind > 20 ||
+    rain > 30 ||
+    temp < 15;
+
+  safeBox.innerHTML = `
+
+<div style="
+  background:${
+    aiToday.level === "danger" ? "#ffdddd" :
+    aiToday.level === "warning" ? "#fff3cd" :
+    "#d4edda"
+  };
+  padding:12px;
+  border-radius:12px;
+  font-weight:bold;
+">
+
+${aiToday.text}
+
+</div>
+
+`;
+
     safeBox.style.background = "#ffdddd";
     safeBox.style.color = "#b00000";
-    safeBox.style.fontWeight = "bold";
-    safeBox.style.padding = "8px";
-    safeBox.style.borderRadius = "8px";
+
   }
+  else if(medium){
+
+    safeBox.innerHTML = `
+      🟠 <b>OSTROŻNIE Z PRACAMI</b><br>
+      💨 Warunki średnie
+    `;
+
+    safeBox.style.background = "#fff4cc";
+    safeBox.style.color = "#a16207";
+
+  }
+  else{
+
+    safeBox.innerHTML = `
+      🟢 <b>WARUNKI DOBRE</b><br>
+      🐝 Można pracować przy ulach
+    `;
+
+    safeBox.style.background = "#dcfce7";
+    safeBox.style.color = "#166534";
+  }
+
+  safeBox.style.fontWeight = "bold";
+  safeBox.style.padding = "10px";
+  safeBox.style.borderRadius = "10px";
+}
 }
 
 resolve({
@@ -3120,24 +3743,53 @@ resolve({
 // =========================
 function getBeeWorkAdvice(tempMin, tempMax, wind, rain){
 
-  if(tempMax < 12) return "❄️ Za zimno – nie otwieraj uli";
+  // 🔴 EKSTREMALNE WARUNKI
+  if(tempMax < 10){
+    return "❄️ Za zimno — nie otwieraj uli";
+  }
 
-  if(rain >= 40) return "🌧 Duże ryzyko deszczu – odpuść prace";
+  if(wind >= 35){
+    return "🌪️ Bardzo silny wiatr — zakaz prac";
+  }
 
-  if(wind >= 18) return "💨 Silny wiatr – tylko szybkie działania";
+  if(rain >= 80){
+    return "⛈️ Ulewny deszcz — prace niemożliwe";
+  }
 
-  if(tempMax >= 18 && rain < 20 && wind < 15)
+  // 🟠 ZŁE WARUNKI
+  if(tempMax < 12){
+    return "🥶 Zimno — tylko szybka kontrola";
+  }
+
+  if(rain >= 50){
+    return "🌧️ Wysokie ryzyko opadów";
+  }
+
+  if(wind >= 20){
+    return "💨 Silny wiatr — ostrożnie";
+  }
+
+  // 🟡 ŚREDNIE
+  if(tempMax >= 12 && tempMax < 18){
+    return "⚠️ Warunki średnie";
+  }
+
+  // 🟢 IDEALNE
+  if(tempMax >= 18 && rain < 20 && wind < 15){
     return "🐝 Idealny dzień na przegląd";
+  }
 
-  if(rain >= 20)
-    return "🌦 Możliwy deszcz – ostrożnie";
+  // 🔵 DOBRE
+  if(tempMax >= 15 && rain < 40){
+    return "✅ Dobre warunki";
+  }
 
-  return "⚠️ Warunki średnie";
+  return "⚠️ Warunki zmienne";
 }
 
 function generateBeeForecast(days){
 
-  let html = "<b>🐝 Prognoza pasieczna:</b><br>";
+  let html = "<b>🐝 AI Prognoza Pasieczna:</b><br>";
 
   days.forEach(day => {
 
@@ -3148,13 +3800,40 @@ function generateBeeForecast(days){
       day.rain
     );
 
+    const ai = analyzeWeatherDanger(day);
+
+    let bg = "#e8f5e9";
+
+    if(ai.level === "danger"){
+      bg = "#ffdddd";
+    }
+
+    if(ai.level === "warning"){
+      bg = "#fff3cd";
+    }
+
+    if(ai.level === "perfect"){
+      bg = "#d4edda";
+    }
+
     html += `
-      <div style="margin:6px 0;padding:6px;border-radius:8px;background:#fff3cd;">
-        <b>${day.name}</b> 
-        🌡 ${day.tempMin}-${day.tempMax}°C 
-        💨 ${day.wind} km/h 
-        🌧 ${day.rain}%<br>
-        👉 ${advice}
+      <div style="
+        margin:8px 0;
+        padding:10px;
+        border-radius:12px;
+        background:${bg};
+        border:1px solid rgba(0,0,0,0.08);
+      ">
+
+        <b>${day.name}</b><br>
+
+        🌡 ${day.tempMin}-${day.tempMax}°C<br>
+        💨 Wiatr: ${day.wind} km/h<br>
+        🌧 Opady: ${day.rain}%<br><br>
+
+        👉 ${advice}<br>
+        <b>${ai.text}</b>
+
       </div>
     `;
   });
@@ -3163,10 +3842,402 @@ function generateBeeForecast(days){
 }
 
   // --- ASYSTENT PSZCZELARZA + NADCHODZĄCE PRACE ---
+
+// =========================
+// 🧠 AI WEATHER ENGINE PRO
+// =========================
+
+function analyzeWeatherDanger(day){
+
+  const temp = day.tempMax || 0;
+  const wind = day.wind || 0;
+  const rain = day.rain || 0;
+
+  let level = "good";
+  let text = "✅ Idealne warunki";
+
+  // 🔴 BLOKADA
+  if(temp < 12 || wind >= 30 || rain >= 70){
+
+    level = "danger";
+    text = "⛔ NIE OTWIERAJ ULI";
+
+  }
+
+  // 🟠 ŚREDNIE
+  else if(temp < 16 || wind >= 18 || rain >= 40){
+
+    level = "warning";
+    text = "⚠️ Ostrożnie z pracami";
+
+  }
+
+  // 🟢 IDEALNE
+  else if(temp >= 18 && temp <= 28 && wind < 15 && rain < 20){
+
+    level = "perfect";
+    text = "🐝 IDEALNY DZIEŃ NA PRZEGLĄD";
+
+  }
+
+  return {
+    level,
+    text
+  };
+}
+
   async function loadWeatherAndAssist(){
     const weatherData = await loadWeather5Days();
     updateSmartAssistant(weatherData);
+if(typeof analyzeStormAlerts === "function"){
+  analyzeStormAlerts(weatherData);
+}
+
   }
+
+// =========================
+// 🧠 FINAL AI ENGINE
+// =========================
+
+function analyzeSeason(){
+
+  const month =
+    new Date().getMonth()+1;
+
+  // 🔥 sezon
+  if(month <= 2){
+
+    return {
+      season: "ZIMA",
+      risk: 10,
+      nectar: 0
+    };
+  }
+
+  if(month <= 4){
+
+    return {
+      season: "WIOSNA",
+      risk: 40,
+      nectar: 50
+    };
+  }
+
+  if(month <= 7){
+
+    return {
+      season: "LATO",
+      risk: 70,
+      nectar: 100
+    };
+  }
+
+  if(month <= 9){
+
+    return {
+      season: "POŻYTEK PÓŹNY",
+      risk: 30,
+      nectar: 40
+    };
+  }
+
+  return {
+    season: "JESIEŃ/ZIMA",
+    risk: 15,
+    nectar: 5
+  };
+}
+
+// 🔥 AI miodu
+function predictHoney(){
+
+  const data = getHiveData();
+
+  let total = 0;
+
+  Object.values(data).forEach(h => {
+
+    total += h.honey || 0;
+  });
+
+  const season =
+    analyzeSeason();
+
+  return Math.round(
+    total +
+    (season.nectar * 0.4)
+  );
+}
+
+// 🔥 AI rojki
+function predictSwarmRisk(){
+
+  const data =
+    getHiveData();
+
+  let risk = 0;
+
+  Object.values(data).forEach(h => {
+
+    risk += h.swarm || 0;
+
+    if(h.inspections === 0)
+      risk += 15;
+
+    if(h.honey > 20)
+      risk += 10;
+  });
+
+  risk += analyzeSeason().risk;
+
+  if(risk > 100) risk = 100;
+
+  return Math.round(risk);
+}
+
+// 🔥 AI zdrowia
+function analyzeHiveHealth(){
+
+  const data =
+    getHiveData();
+
+  let strong = 0;
+  let weak = 0;
+
+  Object.values(data).forEach(h => {
+
+    const score =
+      (h.inspections*20) +
+      (h.feeding*15) +
+      (h.treatment*20) +
+      (h.honey*10) -
+      (h.swarm*20);
+
+    if(score >= 50)
+      strong++;
+    else
+      weak++;
+  });
+
+  return {
+    strong,
+    weak
+  };
+}
+
+// 🔥 AI decyzji
+function generateAIDecisions(weatherData){
+
+  let decisions = [];
+
+  const season =
+    analyzeSeason();
+
+  const swarm =
+    predictSwarmRisk();
+
+  const honey =
+    predictHoney();
+
+  const health =
+    analyzeHiveHealth();
+
+  // 🔥 sezon
+  decisions.push(
+    `🗓 Sezon: ${season.season}`
+  );
+
+  // 🔥 rojka
+  if(swarm >= 70){
+
+    decisions.push(
+      "🚨 Bardzo wysokie ryzyko rojki"
+    );
+
+  } else if(swarm >= 40){
+
+    decisions.push(
+      "⚠️ Średnie ryzyko rojki"
+    );
+
+  } else {
+
+    decisions.push(
+      "✅ Niskie ryzyko rojki"
+    );
+  }
+
+  // 🔥 zdrowie
+  decisions.push(
+    `💪 Silne rodziny: ${health.strong}`
+  );
+
+  decisions.push(
+    `⚠️ Słabe rodziny: ${health.weak}`
+  );
+
+  // 🔥 miód
+  decisions.push(
+    `🍯 Prognoza miodu: ${honey} kg`
+  );
+
+  // 🔥 pogoda
+  if(weatherData){
+
+    const wind =
+      weatherData.today.wind || 0;
+
+    const rain =
+      weatherData.today.rain || 0;
+
+    const temp =
+      weatherData.today.temp || 20;
+
+    if(temp >= 18 &&
+       wind < 15 &&
+       rain < 20){
+
+      decisions.push(
+        "🐝 Idealny dzień na przegląd"
+      );
+    }
+
+    if(wind >= 20){
+
+      decisions.push(
+        "💨 Zbyt silny wiatr"
+      );
+    }
+
+    if(rain >= 40){
+
+      decisions.push(
+        "🌧 Ryzyko opadów"
+      );
+    }
+
+    if(temp < 12){
+
+      decisions.push(
+        "❄️ Za zimno na otwieranie uli"
+      );
+    }
+  }
+
+const patterns =
+  analyzePatterns();
+
+decisions.push(
+  `📊 Dni rojowe: ${patterns.swarmDays}`
+);
+
+decisions.push(
+  `🍯 Dni miodowe: ${patterns.honeyDays}`
+);
+
+decisions.push(
+  `💊 Leczenia: ${patterns.treatmentDays}`
+);
+
+decisions.push(
+  `🍯 Karmienia: ${patterns.feedingDays}`
+);
+
+
+  return decisions;
+}
+
+// =========================
+// 🚨 AI ROJKA PREDICTOR PRO
+// =========================
+
+function calculateSwarmRiskAdvanced(note, weatherData){
+
+  note = (note || "").toLowerCase();
+
+  let risk = 0;
+
+  const month = new Date().getMonth() + 1;
+
+  // 🌸 SEZON ROJOWY
+  if(month === 5) risk += 35;
+  if(month === 6) risk += 40;
+  if(month === 7) risk += 20;
+
+  // 🌡 POGODA
+  const temp =
+    weatherData?.today?.temp || 20;
+
+  const wind =
+    weatherData?.today?.wind || 0;
+
+  const rain =
+    weatherData?.today?.rain || 0;
+
+  if(temp >= 22) risk += 15;
+  if(temp >= 26) risk += 15;
+
+  if(wind < 12) risk += 10;
+
+  if(rain < 20) risk += 10;
+
+  // 🐝 ANALIZA NOTATEK
+  if(note.includes("matka")) risk += 10;
+
+  if(note.includes("czerw")) risk += 20;
+
+  if(note.includes("dużo pszczół")) risk += 25;
+
+  if(note.includes("ciasno")) risk += 30;
+
+  if(note.includes("matecznik")) risk += 50;
+
+  if(note.includes("rój")) risk += 60;
+
+  // 🔍 BRAK PRZEGLĄDÓW
+  if(!note.includes("przegląd")){
+    risk += 20;
+  }
+
+  // 📦 BRAK MIEJSCA
+  if(
+    !note.includes("nadstawka") &&
+    !note.includes("ramka")
+  ){
+    risk += 20;
+  }
+
+  // 🍯 DUŻY POŻYTEK
+  if(
+    note.includes("rzepak") ||
+    note.includes("akacja") ||
+    note.includes("lipa")
+  ){
+    risk += 15;
+  }
+
+  // LIMIT
+  if(risk > 100) risk = 100;
+
+  let level = "LOW";
+  let text = "🟢 NISKIE";
+
+  if(risk >= 70){
+    level = "HIGH";
+    text = "🔴 WYSOKIE";
+  }
+  else if(risk >= 40){
+    level = "MEDIUM";
+    text = "🟠 ŚREDNIE";
+  }
+
+  return {
+    risk,
+    level,
+    text
+  };
+}
+
 
  function updateSmartAssistant(weatherData){
     const box=document.getElementById("assistant-text");
@@ -3266,6 +4337,32 @@ if(swarmRisk>100) swarmRisk=100;
     let summary=[];
     summary.push("🔍 Przeglądy: "+inspections);
     summary.push("🐝 Ryzyko rojki: "+swarmRisk+"% "+swarmText);
+    const todayKey =
+  String(today.getDate()).padStart(2,"0")+"."+
+  String(today.getMonth()+1).padStart(2,"0")+
+  ".2026";
+
+const todayNote =
+  localStorage.getItem(todayKey) || "";
+
+const aiSwarm =
+  calculateSwarmRiskAdvanced(
+    todayNote,
+    weatherData
+  );
+
+summary.push(
+  "🚨 AI Rojka PRO: " +
+if(aiSwarm.risk >= 85){
+
+  summary.push(
+    "🚨 KRYTYCZNE RYZYKO ROJKI!"
+  );
+
+}
+  aiSwarm.risk + "% " +
+  aiSwarm.text
+);
     if(!feeding) summary.push("🍯 Brak karmienia");
     if(!treatment) summary.push("💊 Brak leczenia");
     if(honey) summary.push("🍯 Było miodobranie");
@@ -3277,7 +4374,57 @@ if(swarmRisk>100) swarmRisk=100;
       summary.push("🛠 Nadchodzące 6 dni:<br>"+tasksHtml);
     }
 
-    box.innerHTML="<b>📒 Asystent:</b><br>"+summary.join("<br>");
+const aiDecisions =
+  generateAIDecisions(weatherData);
+
+summary.push(
+  "<hr><b>🧠 AI DECYZJE:</b><br>" +
+  aiDecisions.join("<br>")
+);
+
+
+    let aiBg = "#d4edda";
+
+if(aiSwarm.level === "HIGH"){
+  aiBg = "#ffdddd";
+}
+else if(aiSwarm.level === "MEDIUM"){
+  aiBg = "#fff3cd";
+}
+
+box.innerHTML = `
+
+<div style="
+  background:${aiBg};
+  padding:12px;
+  border-radius:12px;
+">
+
+<b>📒 Asystent AI PRO</b><br><br>
+
+<div class="backup-box">
+
+  <h3>💾 Backup Pasieki</h3>
+
+  <button id="exportDataBtn">
+    📤 Eksport danych
+  </button>
+
+  <button id="importDataBtn">
+    📥 Import danych
+  </button>
+
+  <input type="file" id="importFile" hidden>
+
+  <div id="backup-status"></div>
+
+</div>
+
+${summary.join("<br>")}
+
+</div>
+
+`;
 
     // Kliknięcie w zadanie - oznacza jako wykonane
     box.querySelectorAll('div[data-key]').forEach(div=>{
@@ -3293,35 +4440,227 @@ loadWeatherAndAssist();
   }
 
   // --- HISTORIA ULA PO KLIKU ---
-  window.showHiveHistory = function(hiveNumber){
-    const resultsContainer = document.getElementById('search-results');
-    if(!resultsContainer) return;
-    resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
-    let found = false;
+window.showHiveCard =
+function(hiveId){
 
-    for(let i=0;i<localStorage.length;i++){
-      const key = localStorage.key(i);
-      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-      const note = (localStorage.getItem(key) || "").toLowerCase();
-      if(note.includes("ul "+hiveNumber)){
-        found = true;
-        const div = document.createElement('div');
-        div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g, (m,n)=>
-          `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
-        )}`;
-        div.style.marginBottom = "5px";
-        resultsContainer.appendChild(div);
+  const box =
+    document.getElementById(
+      "search-results"
+    );
+
+  if(!box) return;
+
+  const hive =
+    getHiveProfile(hiveId);
+
+  // 🔥 AI SCORE
+// =========================
+// 🧠 AI ANALIZA NOTATEK ULA
+// =========================
+
+let hiveNotes = "";
+
+for(let i=0;i<localStorage.length;i++){
+
+  const key = localStorage.key(i);
+
+  if(!/^\d{2}\.\d{2}\.2026$/.test(key))
+    continue;
+
+  const note =
+    (
+      localStorage.getItem(key) || ""
+    ).toLowerCase();
+
+  if(note.includes("ul " + hive.id)){
+    hiveNotes += " " + note;
+  }
+}
+
+// 🧠 AI HEALTH
+const aiHealth =
+  calculateHiveHealth(hiveNotes);
+
+// 🎯 START SCORE
+let score =
+  aiHealth.score;
+
+// 💪 siła ula
+score += hive.strength;
+
+// 🍯 ilość miodu
+score += hive.honey;
+
+// 🔍 przeglądy
+if(hive.inspections > 0)
+  score += 30;
+
+// 💊 leczenie
+if(hive.treatment)
+  score += 20;
+
+// 🍯 karmienie
+if(hive.feeding)
+  score += 10;
+
+// 🐝 kara za rojkę
+score -= hive.swarmRisk;
+
+// 🔒 LIMIT
+if(score < 0) score = 0;
+if(score > 100) score = 100;
+
+  // 🔥 STATUS
+let status = aiHealth.text;
+let color = "green";
+
+if(aiHealth.level === "medium"){
+  color = "orange";
+}
+
+if(aiHealth.level === "danger"){
+  color = "red";
+}
+
+  box.innerHTML = `
+
+    <div style="
+      padding:12px;
+      border-radius:12px;
+      background:#fff8dc;
+      margin:10px 0;
+    ">
+
+      <h2>
+        🐝 Ul ${hive.id}
+      </h2>
+
+    <b>Status:</b>
+${status}<br>
+
+<br>
+👑 Matka:
+${queenAI.status}
+(${queenAI.score}%)
+
+      <b>AI Score:</b>
+      ${score}/100<br><br>
+
+      👑 Matka:
+      ${hive.queenYear}<br>
+
+      🧬 Rasa:
+      ${hive.race}<br>
+
+      💪 Siła:
+      ${hive.strength}<br>
+
+      😡 Agresja:
+      ${hive.aggression}<br>
+
+      🍯 Miód:
+      ${hive.honey} kg<br>
+
+      🐝 Ryzyko rojki:
+      ${hive.swarmRisk}%<br>
+
+      💊 Leczenie:
+      ${hive.treatment ? "TAK":"NIE"}<br>
+
+      🍯 Karmienie:
+      ${hive.feeding ? "TAK":"NIE"}<br>
+
+      🔍 Przeglądy:
+      ${hive.inspections}<br>
+
+      📅 Ostatni przegląd:
+      ${hive.lastInspection || "-"}
+
+      <hr>
+
+      <b>📒 Historia:</b><br>
+
+      ${
+        hive.notes
+          .slice(-10)
+          .reverse()
+          .map(n => `
+            <div style="
+              margin:6px 0;
+              padding:6px;
+              background:white;
+              border-radius:8px;
+            ">
+              <b>${n.date}</b><br>
+              ${n.text}
+            </div>
+          `)
+          .join("")
       }
-    }
 
-    if(!found){
-      resultsContainer.innerHTML += "Brak wpisów dla tego ula";
-    }
-  };
+    </div>
+  `;
+};
 
 // =============================
 // 🧠 AI PASIEKA PRO MAX
 // =============================
+
+// =========================
+// 🐝 FINAL HIVE ENGINE
+// =========================
+
+function getHiveProfile(hiveId){
+
+  const key =
+    "hive_profile_" + hiveId;
+
+  const saved =
+    localStorage.getItem(key);
+
+  if(saved){
+
+    try{
+      return JSON.parse(saved);
+    }catch(e){}
+  }
+
+  // 🔥 default
+  return {
+
+    id: hiveId,
+
+    queenYear: 2026,
+
+    race: "Buckfast",
+
+    strength: 50,
+
+    aggression: 10,
+
+    honey: 0,
+
+    swarmRisk: 0,
+
+    treatment: false,
+
+    feeding: false,
+
+    inspections: 0,
+
+    notes: [],
+
+    lastInspection: null
+  };
+}
+
+function saveHiveProfile(profile){
+
+  localStorage.setItem(
+    "hive_profile_" + profile.id,
+    JSON.stringify(profile)
+  );
+}
 
 // 📊 ZBIERANIE DANYCH
 function getHiveData(){
@@ -3330,14 +4669,25 @@ function getHiveData(){
 
   for(let i=0;i<localStorage.length;i++){
     const key = localStorage.key(i);
-    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+    if(!/\d{2}\.\d{2}\.2026$/.test(key)) continue;
 
     const note = (localStorage.getItem(key)||"").toLowerCase();
     const matches = note.match(/ul\s*(\d+)/g);
 
     if(matches){
+    const dateKey = key;
       matches.forEach(m=>{
         const nr = m.match(/\d+/)[0];
+const hive =
+  getHiveProfile(nr);
+
+hive.notes.push({
+  date: dateKey,
+  text: note
+saveHiveProfile(hive);
+});
+
+hive.lastInspection = dateKey;
 
         if(!hiveStats[nr]){
           hiveStats[nr] = {
@@ -3351,16 +4701,144 @@ function getHiveData(){
         }
 
         if(note.includes("przegląd")) hiveStats[nr].inspections++;
+        hive.inspections++;
+        hive.strength += 2;
         if(note.includes("karmienie")) hiveStats[nr].feeding++;
+        hive.feeding = true;
+        hive.strength += 3;
         if(note.includes("leczenie")) hiveStats[nr].treatment++;
+        hive.treatment = true;
         if(note.includes("rój")) hiveStats[nr].swarm++;
+        hive.swarmRisk += 25;
+        hive.aggression += 5;
         if(note.includes("miód")) hiveStats[nr].honey++;
+        hive.honey += 5;
       });
     }
   }
 
   return hiveStats;
 }
+
+// =========================
+// 👑 AI QUEEN SYSTEM PRO
+// =========================
+
+function analyzeQueen(note){
+
+  note = (note || "").toLowerCase();
+
+  let score = 50;
+
+  // 🟢 DOBRE OBJAWY
+  if(note.includes("matka")) score += 10;
+  if(note.includes("czerw")) score += 20;
+  if(note.includes("dużo czerwia")) score += 25;
+  if(note.includes("spokojne")) score += 10;
+  if(note.includes("silna rodzina")) score += 20;
+  if(note.includes("młoda matka")) score += 30;
+
+  // 🔴 ZŁE OBJAWY
+  if(note.includes("brak matki")) score -= 60;
+  if(note.includes("stara matka")) score -= 35;
+  if(note.includes("trutówki")) score -= 50;
+  if(note.includes("mało czerwia")) score -= 25;
+  if(note.includes("agresywne")) score -= 20;
+  if(note.includes("cicha wymiana")) score -= 15;
+  if(note.includes("matecznik")) score -= 20;
+
+  // LIMIT
+  if(score > 100) score = 100;
+  if(score < 0) score = 0;
+
+  let status = "🟢 BARDZO DOBRA";
+  let level = "good";
+
+  if(score < 75){
+    status = "🟠 ŚREDNIA";
+    level = "medium";
+  }
+
+  if(score < 45){
+    status = "🔴 SŁABA";
+    level = "danger";
+  }
+
+  if(score < 20){
+    status = "⛔ BRAK MATKI";
+    level = "critical";
+  }
+
+let level = "good";
+
+if(score < 50)
+  level = "danger";
+
+if(score < 25)
+  level = "critical";
+
+return {
+  score,
+  status,
+  level
+};
+
+
+// =========================
+// 🧠 AI HIVE HEALTH SYSTEM
+// =========================
+
+function calculateHiveHealth(note){
+
+  note = (note || "").toLowerCase();
+
+  let score = 50;
+
+  // 🟢 PLUSY
+  if(note.includes("matka")) score += 10;
+  if(note.includes("czerw")) score += 15;
+  if(note.includes("miód")) score += 10;
+  if(note.includes("karmienie")) score += 10;
+  if(note.includes("leczenie")) score += 15;
+  if(note.includes("silna rodzina")) score += 20;
+  if(note.includes("dużo pszczół")) score += 20;
+  if(note.includes("spokojne")) score += 10;
+
+  // 🔴 MINUSY
+  if(note.includes("rój")) score -= 20;
+  if(note.includes("agresywne")) score -= 15;
+  if(note.includes("brak matki")) score -= 40;
+  if(note.includes("słaba rodzina")) score -= 30;
+  if(note.includes("warroza")) score -= 35;
+  if(note.includes("nosemoza")) score -= 40;
+  if(note.includes("mało pszczół")) score -= 25;
+  if(note.includes("głód")) score -= 30;
+  if(note.includes("wilgoć")) score -= 15;
+
+  // LIMIT
+  if(score > 100) score = 100;
+  if(score < 0) score = 0;
+
+  let level = "good";
+  let text = "🟢 SILNA";
+
+  if(score < 70){
+    level = "medium";
+    text = "🟠 ŚREDNIA";
+  }
+
+  if(score < 40){
+    level = "danger";
+    text = "🔴 SŁABA";
+  }
+
+  return {
+    score,
+    level,
+    text
+  };
+}
+
 
 // 🐝 ANALIZA ULI
 function analyzeHivesPro(){
@@ -3378,22 +4856,99 @@ function analyzeHivesPro(){
 
   Object.entries(data).forEach(([nr,d])=>{
 
-    let score = 0;
-    if(d.inspections>0) score+=30;
-    if(d.feeding>0) score+=20;
-    if(d.treatment>0) score+=20;
-    if(d.honey>0) score+=20;
-    if(d.swarm>0) score-=20;
+  let hiveNotes = "";
+
+for(let i=0;i<localStorage.length;i++){
+
+  const key = localStorage.key(i);
+
+  if(!/^\d{2}\.\d{2}\.2026$/.test(key))
+    continue;
+
+  const note =
+    (localStorage.getItem(key)||"")
+    .toLowerCase();
+
+  if(note.includes("ul "+nr)){
+    hiveNotes += " " + note;
+  }
+}
+
+const aiHealth =
+  calculateHiveHealth(hiveNotes);
+
+const queenAI =
+  analyzeQueen(hiveNotes);
+
+let queenWarning = "";
+
+if(
+  hiveNotes.includes("cicha wymiana") ||
+  hiveNotes.includes("matecznik")
+){
+  queenWarning =
+    "⚠️ Możliwa cicha wymiana matki";
+}
+
+let score = aiHealth.score;
 
     d.score = score;
 
-    let status="", color="";
-    if(score>=70){status="🟢 SILNY";color="green";}
-    else if(score>=40){status="🟡 ŚREDNI";color="orange";}
-    else{status="🔴 SŁABY";color="red";}
+let status = aiHealth.text;
+let color = "green";
 
-    html+=`<div><b>Ul ${nr}</b> → <span style="color:${color};font-weight:bold">${status}</span> (score: ${score})</div>`;
-  });
+if(aiHealth.level === "medium"){
+  color = "orange";
+}
+
+if(aiHealth.level === "danger"){
+  color = "red";
+}
+
+    let extra = "";
+
+if(aiHealth.score < 35){
+  extra = " 🚨 KRYTYCZNY";
+}
+else if(aiHealth.score > 90){
+  extra = " 🏆 ELITA";
+}
+
+html += `
+<div style="
+  margin:6px 0;
+  padding:8px;
+  border-radius:10px;
+  background:${color==="red"?"#ffdddd":color==="orange"?"#fff3cd":"#d4edda"};
+">
+  <b>Ul ${nr}</b><br>
+  <span style="
+    color:${color};
+    font-weight:bold;
+  ">
+    ${status}
+  </span>
+  (${score} pkt)
+  ${extra}
+<br>
+
+${
+  queenAI.level === "critical"
+    ? "🚨 Rodzina bez matki — pilna interwencja"
+  : queenAI.level === "danger"
+    ? "👑 Zalecana wymiana matki"
+  : score < 40
+    ? "👉 Połącz rodzinę lub wzmocnij ul"
+  : score < 70
+    ? "👉 Kontroluj rozwój rodziny"
+  : "🏆 Rodzina i matka w świetnej kondycji"
+}
+
+<br>
+${queenWarning}
+
+</div>
+`;
 
   box.innerHTML = html;
 }
@@ -3414,14 +4969,105 @@ function generateHiveRanking(){
 
   let html="";
   data.forEach(([nr,d],i)=>{
-    html+=`<div>${i+1}. 🐝 Ul ${nr} → ${d.score} pkt</div>`;
+   let extra = "";
+
+if(queenAI.level === "danger"){
+  extra += " ⚠️ WYMIANA MATKI";
+}
+
+if(queenAI.level === "critical"){
+  extra += " 🚨 PILNIE DODAJ MATKĘ";
+}
+
+if(aiHealth.score < 35){
+  extra = " 🚨 KRYTYCZNY";
+}
+else if(aiHealth.score > 90){
+  extra = " 🏆 ELITA";
+}
+
+html += `
+<div style="
+  margin:6px 0;
+  padding:8px;
+  border-radius:10px;
+  background:${color==="red"?"#ffdddd":color==="orange"?"#fff3cd":"#d4edda"};
+">
+  <b>Ul ${nr}</b><br>
+  <span style="
+    color:${color};
+    font-weight:bold;
+  ">
+    ${status}
+  </span>
+  (${score} pkt)
+  ${extra}
+</div>
+`;
   });
 
   box.innerHTML = html;
 }
 
 // 🚨 ALERTY
-function generateHiveAlerts(){
+
+function generateAdvancedHiveAlerts(){
+
+  const box =
+    document.getElementById(
+      "hive-alerts"
+    );
+
+  if(!box) return;
+
+  let html = "";
+
+  for(let i=1;i<=50;i++){
+
+    const hive =
+      getHiveProfile(i);
+
+    let alerts = [];
+
+    if(hive.swarmRisk >= 60)
+      alerts.push(
+        "🐝 wysokie ryzyko rojki"
+      );
+
+    if(hive.strength < 30)
+      alerts.push(
+        "⚠️ słaba rodzina"
+      );
+
+    if(!hive.treatment)
+      alerts.push(
+        "💊 brak leczenia"
+      );
+
+    if(hive.aggression > 50)
+      alerts.push(
+        "😡 agresywna rodzina"
+      );
+
+    if(alerts.length){
+
+      html += `
+        <div style="
+          margin:6px 0;
+          padding:8px;
+          background:#ffe5e5;
+          border-radius:8px;
+        ">
+          <b>Ul ${i}</b><br>
+          ${alerts.join("<br>")}
+        </div>
+      `;
+    }
+  }
+
+  box.innerHTML =
+    html || "✅ Brak alertów";
+}
 
   const box = document.getElementById("hive-alerts");
   if(!box) return;
@@ -3473,6 +5119,118 @@ function generateWeeklyPlanPro(){
   box.innerHTML = html;
 }
 
+// =========================
+// 🧠 SUPER AI PANEL PRO
+// =========================
+
+function renderSuperAI(){
+
+  const panel =
+    document.getElementById(
+      "super-ai-panel"
+    );
+
+  if(!panel) return;
+
+  const hiveData = getHiveData();
+
+  let hiveCount =
+    Object.keys(hiveData).length;
+
+  let strong = 0;
+  let weak = 0;
+
+  let totalHoney = 0;
+
+  Object.values(hiveData).forEach(d=>{
+
+    const score =
+      (d.inspections*30)+
+      (d.feeding*20)+
+      (d.treatment*20)+
+      (d.honey*20)-
+      (d.swarm*20);
+
+    if(score >= 70) strong++;
+
+    if(score < 40) weak++;
+
+    totalHoney += d.honey * 5;
+  });
+
+  // 🔥 ALERTY
+  let alerts = [];
+
+  if(weak > 0){
+    alerts.push(
+      `🚨 Słabe ule: ${weak}`
+    );
+  }
+
+  if(strong > 0){
+    alerts.push(
+      `🏆 Silne ule: ${strong}`
+    );
+  }
+
+  // 📍 PASIEKA
+  const apiaryName =
+    currentApiary
+      ? currentApiary.name
+      : "Brak";
+
+  panel.innerHTML = `
+
+<div class="super-grid">
+
+  <div class="super-card super-good">
+    <div class="super-title">
+      🐝 Ule
+    </div>
+
+    ${hiveCount}
+  </div>
+
+  <div class="super-card super-warning">
+    <div class="super-title">
+      🍯 Miód
+    </div>
+
+    ${totalHoney} kg
+  </div>
+
+  <div class="super-card">
+    <div class="super-title">
+      📍 Pasieka
+    </div>
+
+    ${apiaryName}
+  </div>
+
+  <div class="super-card ${
+    weak>0
+      ? "super-alert"
+      : "super-good"
+  }">
+
+    <div class="super-title">
+      🚨 Alerty
+    </div>
+
+    ${
+      alerts.length
+        ? alerts.join("<br>")
+        : "✅ Brak"
+    }
+
+  </div>
+
+</div>
+
+`;
+}
+
+
 // 🍯 PROGNOZA MIODU
 function generateHoneyForecast(){
 
@@ -3490,28 +5248,178 @@ function generateHoneyForecast(){
   box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
 }
 
+// =========================
+// 🧠 AI RYZYKO RÓJKI PRO
+// =========================
+
+function analyzeSwarmRiskPro(){
+
+  const box = document.getElementById("swarm-ai-box");
+  if(!box) return;
+
+  const hiveData = getHiveData();
+
+  let html = "<b>🧠 AI Analiza Pasieki:</b><br><br>";
+
+  Object.entries(hiveData).forEach(([nr,data]) => {
+
+    let risk = 0;
+    let alerts = [];
+
+    // 🔥 brak przeglądów
+    if(data.inspections === 0){
+      risk += 35;
+      alerts.push("🔍 brak przeglądów");
+    }
+
+    // 👑 możliwy problem z matką
+    if(data.swarm > 0){
+      risk += 25;
+      alerts.push("👑 możliwy problem z matką");
+    }
+
+    // 🍯 brak karmienia
+    if(data.feeding === 0){
+      risk += 10;
+      alerts.push("🍯 brak karmienia");
+    }
+
+    // 💊 brak leczenia
+    if(data.treatment === 0){
+      risk += 15;
+      alerts.push("💊 brak leczenia");
+    }
+
+    // 🌡 sezon rojowy
+    const month = new Date().getMonth()+1;
+
+    if(month >= 5 && month <= 7){
+      risk += 20;
+      alerts.push("🌸 sezon rojowy");
+    }
+
+    // 🐝 mocna rodzina
+    if(data.honey >= 2){
+      risk += 15;
+      alerts.push("🍯 bardzo silna rodzina");
+    }
+
+    // LIMIT
+    if(risk > 100) risk = 100;
+
+    // STATUS
+    let status = "";
+    let color = "";
+
+    if(risk >= 75){
+      status = "🚨 WYSOKIE";
+      color = "#ff0000";
+    }
+    else if(risk >= 45){
+      status = "⚠️ ŚREDNIE";
+      color = "#ff9900";
+    }
+    else{
+      status = "✅ NISKIE";
+      color = "#008000";
+    }
+
+    // AI rekomendacje
+    let recommendation = "";
+
+    if(risk >= 75){
+      recommendation =
+        "👉 Pilny przegląd ula, sprawdzenie mateczników i poszerzenie gniazda";
+    }
+    else if(risk >= 45){
+      recommendation =
+        "👉 Kontrola ramek czerwia i obserwacja nastroju rojowego";
+    }
+    else{
+      recommendation =
+        "👉 Rodzina stabilna";
+    }
+
+    html += `
+      <div style="
+        margin-bottom:12px;
+        padding:10px;
+        border-radius:10px;
+        background:white;
+        border-left:6px solid ${color};
+      ">
+
+      <b>🐝 Ul ${nr}</b><br>
+
+      📊 Ryzyko rojki:
+      <b style="color:${color}">
+        ${risk}% ${status}
+      </b>
+
+      <br><br>
+
+      ⚠️ Wykryto:<br>
+      ${alerts.join("<br>")}
+
+      <br><br>
+
+      🧠 AI rekomendacja:<br>
+      ${recommendation}
+
+      </div>
+    `;
+  });
+
+  box.innerHTML = html;
+}
+
+
    // =========================
   // 🚀 START SYSTEMU
   // =========================
   updateMarkers();
+// 🔥 szybkie przywrócenie pasieki po refresh
+const savedApiary =
+  localStorage.getItem("lastApiary");
 
-getGPSOnce();     // szybki start
+if(savedApiary){
 
-const savedGPS = localStorage.getItem("gpsEnabled");
+  try{
+
+    currentApiary =
+      JSON.parse(savedApiary);
+
+  }catch(e){
+    console.log("Błąd lastApiary");
+  }
+}
+
+getGPSOnce(); // szybki start
+
+const savedGPS =
+  localStorage.getItem("gpsEnabled");
 
 if(savedGPS === "true"){
 
   gpsEnabled = true;
 
-  const gpsBtn = document.getElementById("gps-toggle");
+  const gpsBtn =
+    document.getElementById("gps-toggle");
 
   if(gpsBtn){
     gpsBtn.innerHTML = "📍 GPS: ON";
   }
 
+  initMap();
+ restoreBackup();
   getGPSOnce();
   startLiveGPS();
   startGPSSaveLoop();
+}
+
+// 🧠 AI ALERTY ULI
+if(typeof generateAdvancedHiveAlerts === "function"){
+  generateAdvancedHiveAlerts();
 }
 
   setTimeout(autoScaleCalendarText, 100);
@@ -3523,8 +5431,15 @@ if(savedGPS === "true"){
   if(typeof generateHiveAlerts === "function") generateHiveAlerts();
   if(typeof generateWeeklyPlanPro === "function") generateWeeklyPlanPro();
   if(typeof generateHoneyForecast === "function") generateHoneyForecast();
+  if(typeof analyzeSwarmRiskPro === "function")
+  analyzeSwarmRiskPro();
+  if(typeof generateApiaryStats === "function") generateApiaryStats();
+  if(typeof renderSuperAI === "function")
+  renderSuperAI();
   if(typeof runAIModule === "function") runAIModule();
   if(typeof loadApiaryData === "function") loadApiaryData();
+  if(typeof generateCriticalAlerts==="function")
+  generateCriticalAlerts();
 
   const hivesCountInput = document.getElementById("hivesCount");
   const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
@@ -3580,6 +5495,380 @@ if(gpsEnabled){
 }
 
 });
+
+// =========================
+// 💾 AUTO BACKUP SYSTEM
+// =========================
+
+function createFullBackup(){
+
+  const backup = {};
+
+  for(let i=0;i<localStorage.length;i++){
+
+    const key = localStorage.key(i);
+
+    backup[key] = localStorage.getItem(key);
+  }
+
+  localStorage.setItem(
+    "PASIEKA_BACKUP",
+    JSON.stringify(backup)
+  );
+
+  console.log("💾 Backup zapisany");
+}
+
+// AUTO BACKUP co 5 minut
+setInterval(createFullBackup, 300000);
+
+function restoreBackup(){
+
+  const raw = localStorage.getItem("PASIEKA_BACKUP");
+
+  if(!raw) return;
+
+  try{
+
+    const backup = JSON.parse(raw);
+
+    Object.keys(backup).forEach(key => {
+
+      if(localStorage.getItem(key) === null){
+
+        localStorage.setItem(
+          key,
+          backup[key]
+        );
+      }
+    });
+
+    console.log("♻️ Backup przywrócony");
+
+  }catch(e){
+
+    console.log("Błąd backupu", e);
+  }
+}
+
+// =========================
+// 📊 AI STATYSTYKI PASIEKI
+// =========================
+
+function generateApiaryStats(){
+
+  const box = document.getElementById("apiary-stats");
+  if(!box) return;
+
+  let inspections = 0;
+  let treatments = 0;
+  let feeding = 0;
+  let honey = 0;
+  let swarms = 0;
+  let allNotes = 0;
+
+  for(let i=0;i<localStorage.length;i++){
+
+    const key = localStorage.key(i);
+
+    if(!key.includes(".2026")) continue;
+
+    const note =
+      (localStorage.getItem(key) || "")
+      .toLowerCase();
+
+    if(note.trim() !== ""){
+      allNotes++;
+    }
+
+    if(note.includes("przegląd")) inspections++;
+    if(note.includes("leczenie")) treatments++;
+    if(note.includes("karmienie")) feeding++;
+    if(note.includes("miód")) honey++;
+    if(note.includes("rój")) swarms++;
+  }
+
+  // 📈 aktywność
+  let activity = Math.min(
+    100,
+    inspections*3 +
+    feeding*2 +
+    treatments*3 +
+    honey*2
+  );
+
+  let level = "🔴 NISKA";
+
+  if(activity >= 70){
+    level = "🟢 WYSOKA";
+  }
+  else if(activity >= 40){
+    level = "🟡 ŚREDNIA";
+  }
+
+  // 🚨 AI alert
+  let aiAlert = "✅ Pasieka stabilna";
+
+  if(swarms >= 3){
+    aiAlert = "🚨 WYSOKIE RYZYKO ROJKI";
+  }
+  else if(inspections === 0){
+    aiAlert = "⚠️ Brak przeglądów";
+  }
+  else if(treatments === 0){
+    aiAlert = "⚠️ Brak leczenia";
+  }
+
+  box.innerHTML = `
+    <b>📊 Statystyki pasieki</b><br><br>
+
+    🔍 Przeglądy: <b>${inspections}</b><br>
+    🍯 Karmienia: <b>${feeding}</b><br>
+    💊 Leczenia: <b>${treatments}</b><br>
+    🫙 Miodobrania: <b>${honey}</b><br>
+    🐝 Rójki: <b>${swarms}</b><br>
+    📒 Wszystkie notatki: <b>${allNotes}</b><br><br>
+
+    📈 Aktywność pasieki:
+    <b>${activity}%</b><br>
+
+    ${level}<br><br>
+
+    🤖 AI:
+    <b>${aiAlert}</b>
+  `;
+}
+
+// =========================
+// 💾 BACKUP SYSTEM PRO
+// =========================
+
+// 📤 EKSPORT
+function exportApiaryData(){
+
+  const data = {};
+
+  for(let i=0;i<localStorage.length;i++){
+
+    const key = localStorage.key(i);
+
+    data[key] = localStorage.getItem(key);
+  }
+
+  const json = JSON.stringify(data, null, 2);
+
+  const blob = new Blob(
+    [json],
+    {type:"application/json"}
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+
+  const date = new Date();
+
+  const filename =
+    "pasieka-backup-" +
+    date.getFullYear() + "-" +
+    String(date.getMonth()+1).padStart(2,"0") + "-" +
+    String(date.getDate()).padStart(2,"0") +
+    ".json";
+
+  a.href = url;
+  a.download = filename;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+  const box = document.getElementById("backup-status");
+
+  if(box){
+    box.innerHTML = "✅ Backup zapisany";
+  }
+}
+
+// 📥 IMPORT
+function importApiaryData(file){
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+
+    try{
+
+      const data = JSON.parse(e.target.result);
+
+      Object.keys(data).forEach(key => {
+        localStorage.setItem(
+          key,
+          data[key]
+        );
+      });
+
+      updateMarkers();
+
+      if(typeof loadWeatherAndAssist === "function"){
+        loadWeatherAndAssist();
+      }
+
+      const box = document.getElementById("backup-status");
+
+      if(box){
+        box.innerHTML = "✅ Backup przywrócony";
+      }
+
+      alert("Backup przywrócony");
+
+    }catch(err){
+
+      alert("Błąd importu backupu");
+
+      console.log(err);
+    }
+  };
+
+  reader.readAsText(file);
+}
+
+// 🔘 BUTTONY
+const exportBtn = document.getElementById("exportDataBtn");
+const importBtn = document.getElementById("importDataBtn");
+const importFile = document.getElementById("importFile");
+
+if(exportBtn){
+
+  exportBtn.addEventListener(
+    "click",
+    exportApiaryData
+  );
+}
+
+if(importBtn && importFile){
+
+  importBtn.addEventListener("click", () => {
+    importFile.click();
+  });
+
+  importFile.addEventListener("change", e => {
+
+    const file = e.target.files[0];
+
+    if(file){
+      importApiaryData(file);
+    }
+  });
+}
+
+function analyzeStormAlerts(weatherData){
+
+  const box = document.getElementById("storm-alert-box");
+  if(!box) return;
+
+  if(!weatherData || !weatherData.today){
+    box.innerHTML = "Brak danych pogodowych";
+    return;
+  }
+
+  const wind = weatherData.today.wind || 0;
+  const rain = weatherData.today.rain || 0;
+  const temp = weatherData.today.temp || 0;
+
+  let alerts = [];
+
+  if(rain >= 80){
+    alerts.push("🌩️ Bardzo wysokie ryzyko ulewy");
+  }
+  else if(rain >= 50){
+    alerts.push("🌧️ Możliwe silne opady");
+  }
+
+  if(wind >= 45){
+    alerts.push("💨 Bardzo silny wiatr");
+  }
+  else if(wind >= 25){
+    alerts.push("🌬️ Uwaga na silny wiatr");
+  }
+
+  if(temp <= 5){
+    alerts.push("❄️ Bardzo niska temperatura");
+  }
+
+  if(temp >= 32){
+    alerts.push("🥵 Upał — ryzyko przegrzania uli");
+  }
+
+  let level = "";
+  let color = "";
+
+  const danger =
+    rain >= 70 ||
+    wind >= 40 ||
+    temp <= 8;
+
+  if(danger){
+    level = "🚨 WYSOKIE ZAGROŻENIE";
+    color = "#ff0000";
+  }
+  else if(alerts.length >= 1){
+    level = "⚠️ UMIARKOWANE ZAGROŻENIE";
+    color = "#ff9900";
+  }
+  else{
+    level = "✅ WARUNKI DOBRE";
+    color = "#008000";
+  }
+
+  let recommendation = "";
+
+  if(danger){
+    recommendation =
+      "⛔ NIE OTWIERAJ ULI i ogranicz wyjazdy do pasieki";
+  }
+  else if(alerts.length >= 1){
+    recommendation =
+      "👉 Zachowaj ostrożność podczas pracy";
+  }
+  else{
+    recommendation =
+      "🐝 Warunki dobre do pracy z pszczołami";
+  }
+
+  box.innerHTML = `
+    <b>🌩️ Radar AI Pogody</b><br><br>
+
+    <span style="
+      color:${color};
+      font-weight:bold;
+      font-size:16px;
+    ">
+      ${level}
+    </span>
+
+    <br><br>
+
+    ${alerts.length ? alerts.join("<br>") : "Brak alertów pogodowych"}
+
+    <br><br>
+
+    <b>🧠 AI rekomendacja:</b><br>
+    ${recommendation}
+
+    <br><br>
+
+    🌡️ Temperatura:
+    <b>${temp}°C</b><br>
+
+    💨 Wiatr:
+    <b>${wind} km/h</b><br>
+
+    🌧️ Opady:
+    <b>${rain}%</b>
+  `;
+}
+
+
 
 // =========================
 // 🧩 SERVICE WORKER
