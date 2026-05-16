@@ -2798,6 +2798,8 @@ document.querySelectorAll("td .day-number").forEach(span => {
     // =========================
    activeCloudUnsubscribe = startCloudSync(key, (text) => {
 
+console.log("SYNC START:", key);
+
   if(textarea){
     textarea.value = text;
   }
