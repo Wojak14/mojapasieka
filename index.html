@@ -485,6 +485,13 @@ const firebaseConfig = {
   measurementId: "G-GR2547TPT3"
 };
 
+// =========================
+// 🧠 SYNC STATE (ANTI LOOP)
+// =========================
+let isRemoteUpdate = false;
+// kolejka offline
+let syncQueue = JSON.parse(localStorage.getItem("syncQueue") || "{}");
+
 
 // =========================
 // 🔥 INIT
@@ -492,12 +499,26 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-
 // =========================
-// 🧠 SYNC STATE (ANTI LOOP)
+// ☁️ PUSH DO FIREBASE (TU WKLEJ)
 // =========================
-let isRemoteUpdate = false;
+async function pushToCloud(key, value){
 
+  try{
+
+    await setDoc(doc(db, "notes", key), {
+      text: value,
+      updated: Date.now()
+    });
+
+    // usuwamy z kolejki
+    delete syncQueue[key];
+    localStorage.setItem("syncQueue", JSON.stringify(syncQueue));
+
+  }catch(e){
+    console.log("Cloud save failed → zostaje offline queue", e);
+  }
+}
 
 // =========================
 // ☁️ SAVE NOTE (SAFE)
@@ -567,9 +588,8 @@ window.startCloudSync = function(key, callback){
     }, 150);
   });
 
-  return unsub; // 🔥 KLUCZOWE
+  return unsub;
 };
-
 
 // =========================
 // 🔧 HELPER (SAFE SAVE WRAPPER)
@@ -581,7 +601,24 @@ window.smartSaveNote = function(key, value){
   // =========================
   // 💾 LOCAL SAVE
   // =========================
-  localStorage.setItem(getApiaryKey(key), value);
+ localStorage.setItem(getApiaryKey(key), value);
+
+  // =========================
+  // 📦 OFFLINE QUEUE
+  // =========================
+  syncQueue[key] = {
+    text: value,
+    updated: Date.now()
+  };
+
+  localStorage.setItem("syncQueue", JSON.stringify(syncQueue));
+
+  // =========================
+  // ☁️ CLOUD SYNC (jeśli online)
+  // =========================
+  if(navigator.onLine){
+    pushToCloud(key, value);
+  }
 
   // =========================
   // ☁️ CLOUD SAVE (Firebase)
@@ -2784,6 +2821,37 @@ document.querySelectorAll("td .day-number").forEach(span => {
 
     textarea.value = note || "";
     textarea.focus();
+textarea.oninput = () => {
+
+  if(isRemoteUpdate) return; // 🔥 blokada pętli sync
+
+  const text = textarea.value;
+
+  localStorage.setItem(getApiaryKey(key), text);
+
+  setDoc(doc(db, "notes", key), {
+    text,
+    updated: Date.now()
+  });
+};
+
+// =========================
+// 💾 LIVE SAVE (LOCAL + FIREBASE)
+// =========================
+textarea.oninput = () => {
+
+  const text = textarea.value;
+
+  // local
+  localStorage.setItem(getApiaryKey(key), text);
+
+  // cloud
+  setDoc(doc(db, "notes", key), {
+    text: text,
+    updated: Date.now()
+  });
+};
+
 
     // =========================
     // 🧠 STOP OLD CLOUD SYNC
@@ -2797,8 +2865,6 @@ document.querySelectorAll("td .day-number").forEach(span => {
     // ☁️ FIREBASE LIVE SYNC
     // =========================
    activeCloudUnsubscribe = startCloudSync(key, (text) => {
-
-console.log("SYNC START:", key);
 
   if(textarea){
     textarea.value = text;
