@@ -1,90 +1,109 @@
-const CACHE_NAME = "pasieka-finalboss-v7";
+const CACHE_NAME = "pasieka-2026-v7";
 
-// 🔥 pliki do cache (DODAJ SWOJE jeśli masz więcej)
 const urlsToCache = [
-  "/",
-  "index.html",
-  "manifest.json",
-  "bee_icon_192x192.png",
-  "bee_icon_512x512.png"
+  "./",
+  "./index.html",
+  "./manifest.json",
+
+  // 🔥 CORE APP
+  "./app.js",
+  "./script.js",
+  "./style.css",
+
+  // 🔥 IKONY (minimum + stabilność Android)
+  "./icons/icon-192.png",
+  "./icons/icon-512.png"
 ];
 
 // =========================
-// 📦 INSTALL
+// INSTALL
 // =========================
-self.addEventListener("install", event => {
-  self.skipWaiting(); // 🔥 natychmiastowa aktywacja
-
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(urlsToCache);
+    })
   );
+
+  // 🔥 natychmiastowa aktywacja (ważne dla Android)
+  self.skipWaiting();
 });
 
 // =========================
-// 🔄 ACTIVATE
+// ACTIVATE (clean old cache)
 // =========================
-self.addEventListener("activate", event => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.map(key => {
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })
-      )
-    )
+      );
+    })
   );
 
-  self.clients.claim(); // 🔥 przejmij kontrolę od razu
+  // 🔥 przejęcie kontroli bez restartu
+  self.clients.claim();
 });
 
 // =========================
-// 🌐 FETCH (OFFLINE FIRST)
+// FETCH STRATEGY
 // =========================
-self.addEventListener("fetch", event => {
+self.addEventListener("fetch", (event) => {
+  const url = event.request.url;
 
-  // 🔥 ignoruj API pogody (żeby nie blokowało offline)
-  if (event.request.url.includes("open-meteo.com")) {
-    event.respondWith(
-      fetch(event.request).catch(() => {
-        return new Response(JSON.stringify({
-          current_weather: {
-            temperature: 0,
-            windspeed: 0,
-            weathercode: 0
-          }
-        }), {
-          headers: { "Content-Type": "application/json" }
-        });
-      })
-    );
+  // =========================
+  // 🌦 OPEN-METEO (network first)
+  // =========================
+  if (url.includes("open-meteo.com")) {
+    event.respondWith(networkFirst(event.request));
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then(cached => {
-
-      // 🔥 jeśli jest w cache → bierz
-      if (cached) return cached;
-
-      // 🔥 jeśli nie → pobierz i zapisz
-      return fetch(event.request)
-        .then(response => {
-
-          // klon do cache
-          const clone = response.clone();
-
-          caches.open(CACHE_NAME)
-            .then(cache => cache.put(event.request, clone));
-
-          return response;
-        })
-        .catch(() => {
-          // 🔥 offline fallback
-          return caches.match("index.html");
-        });
-    })
-  );
+  // =========================
+  // 📦 APP FILES (cache first)
+  // =========================
+  event.respondWith(cacheFirst(event.request));
 });
+
+// =========================
+// CACHE FIRST (UI offline)
+// =========================
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+
+    // 🔥 tylko poprawne response cache’ujemy
+    if (response && response.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (e) {
+    return caches.match("./index.html");
+  }
+}
+
+// =========================
+// NETWORK FIRST (API)
+// =========================
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+
+    return response;
+  } catch (e) {
+    return caches.match(request);
+  }
+}
