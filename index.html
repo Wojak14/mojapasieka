@@ -2643,7 +2643,7 @@ window.smartSaveNote = function(key, value){
 <script src="app.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
 
 let textarea = null;
 let currentDay = null;
@@ -2661,12 +2661,25 @@ let activeCloudUnsubscribe = null;
 let isRemoteUpdate = false;
 let saveTimer = null;
 
-// OFFLINE SYNC QUEUE
-let pendingSync = JSON.parse(localStorage.getItem("pendingSync") || "[]");
+/* =========================
+   💾 OFFLINE SYNC QUEUE
+========================= */
+let pendingSync = JSON.parse(
+  localStorage.getItem("pendingSync") || "[]"
+);
 
 function queueSync(key, text){
-  pendingSync.push({key,text,t:Date.now()});
-  localStorage.setItem("pendingSync", JSON.stringify(pendingSync));
+
+  pendingSync.push({
+    key: key,
+    text: text,
+    t: Date.now()
+  });
+
+  localStorage.setItem(
+    "pendingSync",
+    JSON.stringify(pendingSync)
+  );
 }
 
 function flushSync(){
@@ -2674,18 +2687,29 @@ function flushSync(){
   if(typeof setDoc !== "function" || typeof doc === "undefined" || typeof db === "undefined") return;
 
   pendingSync.forEach(item=>{
-    try{
-      setDoc(doc(db,"notes",item.key),{
-        text:item.text,
-        updated:item.t
-      });
-    }catch(e){}
+try{
+
+  setDoc(doc(db,"notes",item.key),{
+    text:item.text,
+    updated:item.t
   });
 
+}catch(e){
+
+  console.log("SYNC ERROR:", e);
+
+}
+  });
+
+  // czyszczenie kolejki
   pendingSync = [];
+
   localStorage.removeItem("pendingSync");
 }
 
+/* =========================
+   🌐 ONLINE EVENT
+========================= */
 window.addEventListener("online", flushSync);
 
 /* =========================
@@ -2787,7 +2811,7 @@ function updateMarkers() {
         if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
         if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
         if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-        if(text.includes("ramka")) || text.includes("ramki")) || text.includes("ramek")) icons.push("🧱");
+        if(text.includes("ramka") || text.includes("ramki") || text.includes("ramek")) icons.push("🧱");
         if(text.includes("nadstawka")) icons.push("📦");
         if(text.includes("deszcz")) icons.push("🌧");
         if(text.includes("wiatr")) icons.push("💨");
@@ -2802,10 +2826,10 @@ function updateMarkers() {
         if(text.includes("słonecznie")) icons.push("☀️");
         if(text.includes("mgła")) icons.push("🌁");
         if(text.includes("grad")) icons.push("🧊");
-        if(text.includes("czerw")) || text.includes("czerwiem")) || text.includes("czerwiu")) icons.push("🐣");
+        if(text.includes("czerw") || text.includes("czerwiem") || text.includes("czerwiu")) icons.push("🐣");
         if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
         if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
-        if(text.includes("ule") || text.includes("ul")) || text.includes("pasieka")) icons.push("🏠");
+        if(text.includes("ule") || text.includes("ul") || text.includes("pasieka")) icons.push("🏠");
         if(text.includes("dezynfekcja")) icons.push("🧴");
         if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
         if(text.includes("węza")) icons.push("🧇");
@@ -2822,10 +2846,6 @@ function updateMarkers() {
 // =========================
 // 🔥 GLOBAL SYNC CONTROL
 // =========================
-let activeCloudUnsubscribe = null;
-let saveTimer = null;
-let isRemoteUpdate = false;
-
 document.querySelectorAll("td .day-number").forEach(span => {
 
   span.addEventListener("click", () => {
@@ -2860,74 +2880,42 @@ document.querySelectorAll("td .day-number").forEach(span => {
       });
     }
 
- // =========================
-    // 💾 SINGLE SAFE INPUT HANDLER
-    // =========================
-    textarea.oninput = () => {
-
-      if(isRemoteUpdate) return;
-
-      const text = textarea.value;
-
-      localStorage.setItem(getApiaryKey(key), text);
-
-    // OFFLINE QUEUE
-      queueSync(key,text);
-
-   // ONLINE FIREBASE
-      if(navigator.onLine && typeof setDoc === "function"){
-        try{
-          setDoc(doc(db,"notes",key),{
-            text,
-            updated:Date.now()
-          });
-        }catch(e){}
-      }
-    updateMarkers();
-      setTimeout(autoScaleCalendarText,50);
-    };
-
-
-      clearTimeout(saveTimer);
-
-      saveTimer = setTimeout(() => {
-
-        if (typeof db !== "undefined") {
-          setDoc(doc(db, "notes", key), {
-            text: text,
-            updated: Date.now()
-          });
-        }
-
-        if (typeof updateMarkers === "function") updateMarkers();
-
-        if (typeof autoScaleCalendarText === "function") {
-          setTimeout(autoScaleCalendarText, 50);
-        }
-
-      }, 300);
-    };
-
-  });
-});;
-
 // =========================
-// 💾 LIVE SAVE (LOCAL + FIREBASE)
+// 💾 SINGLE SAFE INPUT HANDLER
 // =========================
 textarea.oninput = () => {
 
+  if(isRemoteUpdate) return;
+
   const text = textarea.value;
 
-  // local
   localStorage.setItem(getApiaryKey(key), text);
 
-  // cloud
-  setDoc(doc(db, "notes", key), {
-    text: text,
-    updated: Date.now()
-  });
+  // OFFLINE QUEUE
+  queueSync(key,text);
+
+  // ONLINE FIREBASE
+  if(navigator.onLine && typeof setDoc === "function"){
+
+    try{
+
+      setDoc(doc(db,"notes",key),{
+        text,
+        updated:Date.now()
+      });
+
+    }catch(e){
+      console.log(e);
+    }
+  }
+
+  updateMarkers();
+  setTimeout(autoScaleCalendarText,50);
 };
 
+  });
+
+});
 
     // =========================
     // 🧠 STOP OLD CLOUD SYNC
@@ -2956,7 +2944,7 @@ textarea.oninput = () => {
   // =========================
   // 💾 ZAPIS NOTATKI
   // =========================
- window.saveNote = function() {
+window.saveNote = function(){
 
   if(!currentDay){
     alert("Najpierw kliknij dzień");
@@ -2971,9 +2959,9 @@ textarea.oninput = () => {
     queueSync(key,text);
   }
 
-     updateMarkers();
-  setTimeout(autoScaleCalendarText, 50);
-};;
+   updateMarkers();
+  setTimeout(autoScaleCalendarText,50);
+}
 
     if(typeof loadWeatherAndAssist === "function"){
       loadWeatherAndAssist();
@@ -3021,17 +3009,14 @@ textarea.oninput = () => {
   // =========================
   // 📍 SCROLL DO DZIŚ
   // =========================
-  function scrollToToday(){
+function scrollToToday(){
+  const today = new Date();
+  const d = String(today.getDate()).padStart(2,"0");
+  const m = String(today.getMonth()+1).padStart(2,"0");
 
-    const today = new Date();
-
-    const d = String(today.getDate()).padStart(2,"0");
-    const m = String(today.getMonth()+1).padStart(2,"0");
-
-    const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
-
-    if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
-  }
+  const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
+  if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+}
 // =========================
 // 📍 INTELIGENTNY GPS PASIEKI PRO
 // =========================
@@ -3121,18 +3106,10 @@ function updateApiaryUI(distance){
 function getGPSOnce(){
   if(!navigator.geolocation) return;
 
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      localStorage.setItem("lastLat", pos.coords.latitude);
-      localStorage.setItem("lastLon", pos.coords.longitude);
-    },
-    err => console.log("GPS ERROR:", err),
-    {
-      enableHighAccuracy:true,
-      timeout:10000,
-      maximumAge:300000
-    }
-  );
+  navigator.geolocation.getCurrentPosition(pos=>{
+    localStorage.setItem("lastLat", pos.coords.latitude);
+    localStorage.setItem("lastLon", pos.coords.longitude);
+  });
 }
 
 // 📍 GPS LIVE (CIĄGŁY)
@@ -3788,83 +3765,37 @@ function generateHoneyForecast(){
 // 🚀 START SYSTEMU (CLEAN)
 // =========================
 
-document.addEventListener("DOMContentLoaded", function () {
+updateMarkers();
+getGPSOnce();
 
-  updateMarkers();
+setTimeout(()=>{
+  autoScaleCalendarText();
+  scrollToToday();
+},200);
 
-  // 📍 GPS start (safe)
-  getGPSOnce();
+if(typeof loadWeatherAndAssist === "function"){
+  loadWeatherAndAssist();
+}
 
-  const savedGPS = localStorage.getItem("gpsEnabled");
+if(typeof analyzeHivesPro === "function"){
+  analyzeHivesPro();
+}
 
-  gpsEnabled = (savedGPS === "true");
+if(typeof generateHiveRanking === "function"){
+  generateHiveRanking();
+}
 
-  const gpsBtn = document.getElementById("gps-toggle");
+if(typeof generateHiveAlerts === "function"){
+  generateHiveAlerts();
+}
 
-  if (gpsBtn) {
-    gpsBtn.innerHTML = gpsEnabled ? "📍 GPS: ON" : "📍 GPS: OFF";
-  }
+if(typeof generateWeeklyPlanPro === "function"){
+  generateWeeklyPlanPro();
+}
 
-  if (gpsEnabled) {
-    startLiveGPS();
-    startGPSSaveLoop();
-  }
-
-  // UI init
-  setTimeout(() => {
-    autoScaleCalendarText();
-    scrollToToday();
-  }, 200);
-
-  // AI + systemy
-  if (typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
-  if (typeof analyzeHivesPro === "function") analyzeHivesPro();
-  if (typeof generateHiveRanking === "function") generateHiveRanking();
-  if (typeof generateHiveAlerts === "function") generateHiveAlerts();
-  if (typeof generateWeeklyPlanPro === "function") generateWeeklyPlanPro();
-  if (typeof generateHoneyForecast === "function") generateHoneyForecast();
-
-  // eventy UI
-  const hivesCountInput = document.getElementById("hivesCount");
-  if (hivesCountInput) {
-    hivesCountInput.addEventListener("change", () => {
-      if (typeof generateFamilyNotes === "function") generateFamilyNotes();
-    });
-  }
-
-  const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
-  if (saveFamilyNotesBtn) {
-    saveFamilyNotesBtn.addEventListener("click", () => {
-      if (typeof saveFamilyNotes === "function") saveFamilyNotes();
-    });
-  }
-
-  // refresh systemu
-  setInterval(() => {
-    if (typeof loadWeatherAndAssist === "function") {
-      loadWeatherAndAssist();
-    }
-  }, 110000);
-
-  // GPS toggle
-  if (gpsBtn) {
-    gpsBtn.addEventListener("click", () => {
-
-      gpsEnabled = !gpsEnabled;
-      localStorage.setItem("gpsEnabled", gpsEnabled ? "true" : "false");
-
-      gpsBtn.innerHTML = gpsEnabled ? "📍 GPS: ON" : "📍 GPS: OFF";
-
-      if (gpsEnabled) {
-        getGPSOnce();
-        startLiveGPS();
-        startGPSSaveLoop();
-      } else {
-        stopLiveGPS();
-      }
-
-    });
-  }
+if(typeof generateHoneyForecast === "function"){
+  generateHoneyForecast();
+}
 
 });
 
@@ -3873,8 +3804,8 @@ document.addEventListener("DOMContentLoaded", function () {
 // =========================
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("SW OK"))
-    .catch(err => console.log("SW ERROR", err));
+    .then(()=>console.log("SW OK"))
+    .catch(err=>console.log("SW ERROR", err));
 }
 
 </script>
