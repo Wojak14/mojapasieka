@@ -31,7 +31,7 @@ body {
 table {
   width: 100%;
   table-layout: fixed;
-  max-width: 110%;    /* 🔥 KLUCZ: kontrola wielkości całego kalendarza */
+  max-width: 120%;    /* 🔥 KLUCZ: kontrola wielkości całego kalendarza */
 }
 th {
   border: 1px solid #444;
@@ -456,185 +456,6 @@ font-weight:bold;
   <div id="search-results"></div>
 </div>
 
-<script type="module">
-
-// =========================
-// 🔥 FIREBASE IMPORTS
-// =========================
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc,
-  onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
-// =========================
-// 🔥 CONFIG
-// =========================
-const firebaseConfig = {
-  apiKey: "AIzaSyBvqmukhGkzNf85J9a_uzJUko2N3bQ36Y",
-  authDomain: "final-boss-pasieka.firebaseapp.com",
-  projectId: "final-boss-pasieka",
-  storageBucket: "final-boss-pasieka.firebasestorage.app",
-  messagingSenderId: "657231215028",
-  appId: "1:657231215028:web:1da165bd0457cc9a9c9ae1",
-  measurementId: "G-GR2547TPT3"
-};
-
-// =========================
-// 🧠 SYNC STATE (ANTI LOOP)
-// =========================
-let isRemoteUpdate = false;
-// kolejka offline
-let syncQueue = JSON.parse(localStorage.getItem("syncQueue") || "{}");
-
-
-// =========================
-// 🔥 INIT
-// =========================
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// =========================
-// ☁️ PUSH DO FIREBASE (TU WKLEJ)
-// =========================
-async function pushToCloud(key, value){
-
-  try{
-
-    await setDoc(doc(db, "notes", key), {
-      text: value,
-      updated: Date.now()
-    });
-
-    // usuwamy z kolejki
-    delete syncQueue[key];
-    localStorage.setItem("syncQueue", JSON.stringify(syncQueue));
-
-  }catch(e){
-    console.log("Cloud save failed → zostaje offline queue", e);
-  }
-}
-
-// =========================
-// ☁️ SAVE NOTE (SAFE)
-// =========================
-window.cloudSaveNote = async function(key, value){
-
-  try{
-
-    await setDoc(doc(db, "notes", key), {
-      text: value,
-      updated: Date.now()
-    });
-
-    console.log("☁️ CLOUD SAVE OK");
-
-    // backup offline queue cleanup
-    localStorage.removeItem("pending_" + key);
-
-  }catch(e){
-
-    console.log("⚠️ CLOUD SAVE FAIL → offline mode");
-
-    // offline fallback queue
-    localStorage.setItem("pending_" + key, value);
-  }
-};
-
-
-// =========================
-// 📥 LOAD NOTE
-// =========================
-window.cloudLoadNote = async function(key){
-
-  try{
-
-    const snap = await getDoc(doc(db, "notes", key));
-
-    if(snap.exists()){
-      return snap.data().text || "";
-    }
-
-  }catch(e){
-    console.log("CLOUD LOAD ERROR", e);
-  }
-
-  return "";
-};
-
-
-// =========================
-// 🔄 LIVE SYNC (ANTI LOOP)
-// =========================
-window.startCloudSync = function(key, callback){
-
-  const unsub = onSnapshot(doc(db, "notes", key), snap => {
-
-    if(!snap.exists()) return;
-
-    const text = snap.data().text || "";
-
-    isRemoteUpdate = true;
-
-    callback(text);
-
-    setTimeout(() => {
-      isRemoteUpdate = false;
-    }, 150);
-  });
-
-  return unsub;
-};
-
-// =========================
-// 🔧 HELPER (SAFE SAVE WRAPPER)
-// =========================
-window.isRemoteUpdate = false;
-
-window.smartSaveNote = function(key, value){
-
-  // =========================
-  // 💾 LOCAL SAVE
-  // =========================
- localStorage.setItem(getApiaryKey(key), value);
-
-  // =========================
-  // 📦 OFFLINE QUEUE
-  // =========================
-  syncQueue[key] = {
-    text: value,
-    updated: Date.now()
-  };
-
-  localStorage.setItem("syncQueue", JSON.stringify(syncQueue));
-
-  // =========================
-  // ☁️ CLOUD SYNC (jeśli online)
-  // =========================
-  if(navigator.onLine){
-    pushToCloud(key, value);
-  }
-
-  // =========================
-  // ☁️ CLOUD SAVE (Firebase)
-  // =========================
-  if(!window.isRemoteUpdate){
-
-    setDoc(doc(db, "notes", key), {
-      text: value,
-      updated: Date.now()
-    });
-
-  }
-};
-
-</script>
-
 </body>
 </html>
 
@@ -743,7 +564,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -757,7 +578,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -870,7 +691,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -884,7 +705,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1023,7 +844,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1037,7 +858,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1187,7 +1008,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1201,7 +1022,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1398,7 +1219,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1412,7 +1233,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1541,7 +1362,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1555,7 +1376,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1676,7 +1497,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1690,7 +1511,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1815,7 +1636,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1829,7 +1650,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1950,7 +1771,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1964,7 +1785,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2086,7 +1907,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -2100,7 +1921,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2226,7 +2047,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -2240,7 +2061,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2365,7 +2186,7 @@ window.smartSaveNote = function(key, value){
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
+    <div>🧱 ramka / ramki / ramek</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -2379,7 +2200,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2491,7 +2312,7 @@ window.smartSaveNote = function(key, value){
 <h3>🛠 Panel pasieki</h3>
 
 <label>Liczba uli:</label>
-<input type="number" id="hivesCount" value="25" min="1" max="100"><br><br>
+<input type="number" id="hivesCount" value="23" min="1" max="100"><br><br>
 <label>Zebrany miód (kg):</label>
 <input type="number" id="honeyTotal" value="0"><br><br>
 
@@ -2541,7 +2362,7 @@ window.smartSaveNote = function(key, value){
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
+    <div>⛔ złe warunki / brak prac w ulu</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2643,7 +2464,7 @@ window.smartSaveNote = function(key, value){
 <script src="app.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
 
 let textarea = null;
 let currentDay = null;
@@ -2654,93 +2475,9 @@ let gpsEnabled = false;
 let gpsWatchId = null;
 let gpsAutoSaveInterval = null;
 
-/* =========================
-   🔧 FIX GLOBAL SYNC SAFETY
-========================= */
-let activeCloudUnsubscribe = null;
-let isRemoteUpdate = false;
-let saveTimer = null;
-
-/* =========================
-   💾 OFFLINE SYNC QUEUE
-========================= */
-let pendingSync = JSON.parse(localStorage.getItem("pendingSync") || "[]");
-let syncInProgress = new Set();
-
-/* =========================
-   HASH (ANTI DUPLICATE)
-========================= */
-function hashText(str){
-  let hash = 0;
-  for(let i=0;i<str.length;i++){
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
-  }
-  return hash;
-}
-
-/* =========================
-   QUEUE SAFE
-========================= */
-function queueSync(key, text){
-
-  const id = key + "_" + hashText(text);
-
-  // 🔥 blokada duplikatów
-  if(syncInProgress.has(id)) return;
-
-  pendingSync.push({
-    id,
-    key,
-    text,
-    t: Date.now(),
-    sent: false
-  });
-
-  localStorage.setItem("pendingSync", JSON.stringify(pendingSync));
-}
-
-/* =========================
-   FLUSH SAFE SYNC
-========================= */
-async function flushSync(){
-
-  if(!navigator.onLine) return;
-  if(typeof db === "undefined") return;
-
-  for(let item of pendingSync){
-
-    if(item.sent) continue;
-    if(syncInProgress.has(item.id)) continue;
-
-    syncInProgress.add(item.id);
-
-    try{
-      await setDoc(doc(db,"notes",item.key),{
-        text: item.text,
-        updated: item.t
-      });
-
-      item.sent = true;
-
-    }catch(e){
-      console.log("SYNC FAIL:", e);
-    }
-
-    syncInProgress.delete(item.id);
-  }
-
-  // 🧹 cleanup
-  pendingSync = pendingSync.filter(i => !i.sent);
-  localStorage.setItem("pendingSync", JSON.stringify(pendingSync));
-}
-
-window.addEventListener("online", flushSync);
-
-
-/* =========================
-   📏 AUTO SCALE TEKSTU
-========================= */
+// =========================
+// 📏 AUTO SCALE TEKSTU
+// =========================
 function autoScaleCalendarText(){
 
   document.querySelectorAll("td").forEach(td => {
@@ -2760,9 +2497,9 @@ function autoScaleCalendarText(){
   });
 }
 
-/* =========================
-   🧠 AI WARSTWA KOLORY + ALERTY
-========================= */
+// =========================
+// 🧠 AI WARSTWA KOLORY + ALERTY
+// =========================
 function applySmartColorsAndAlerts(td, text){
 
   const t = (text || "").toLowerCase();
@@ -2789,9 +2526,9 @@ function applySmartColorsAndAlerts(td, text){
   }
 }
 
-/* =========================
-   📅 MARKERY I IKONY
-========================= */
+// =========================
+// 📅 MARKERY I IKONY
+// =========================
 function updateMarkers() {
 
   document.querySelectorAll("td .day-number").forEach(span => {
@@ -2826,7 +2563,7 @@ function updateMarkers() {
       const text = noteData.toLowerCase();
       let icons = [];
 
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
+if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
         if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
         if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
         if(text.includes("paski")) icons.push("🏷️");
@@ -2856,138 +2593,72 @@ function updateMarkers() {
         if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
         if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
         if(text.includes("ule") || text.includes("ul") || text.includes("pasieka")) icons.push("🏠");
+        if(text.includes("złe warunki") || text.includes("brak prac w ulu")) icons.push("⛔");
         if(text.includes("dezynfekcja")) icons.push("🧴");
         if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
         if(text.includes("węza")) icons.push("🧇");
+
 
         if(icons.length === 0) icons.push("📒");
 
         marker.innerHTML = icons.join(" ");
         span.after(marker);
       }
-  });
+    });
+  }
 
+
+  // --- OTWIERANIE NOTATKI PO KLIKU ---
+
+ document.querySelectorAll("td .day-number").forEach(span => {
+    span.addEventListener("click", () => {
+
+      currentDay = span.dataset.day.padStart(2,"0");
+      currentMonth = span.dataset.month.padStart(2,"0");
+
+      textarea = document.getElementById("notes-" + currentMonth);
+
+      const key = `${currentDay}.${currentMonth}.2026`;
+
+      if(textarea){
+        let note =
+  localStorage.getItem(getApiaryKey(key));
+
+if(!note && currentApiary){
+  note = localStorage.getItem(
+    currentApiary.id + "_" + key
+  );
 }
 
-// =========================
-// 🔥 GLOBAL SYNC CONTROL
-// =========================
-document.querySelectorAll("td .day-number").forEach(span => {
+if(!note){
+  note = localStorage.getItem(key);
+}
 
-  span.addEventListener("click", () => {
-
-    currentDay = span.dataset.day.padStart(2, "0");
-    currentMonth = span.dataset.month.padStart(2, "0");
-
-    const key = `${currentDay}.${currentMonth}.2026`;
-
-    textarea = document.getElementById("notes-" + currentMonth);
-    if (!textarea) return;
-
-    let note =
-      localStorage.getItem(getApiaryKey(key)) ||
-      (currentApiary ? localStorage.getItem(currentApiary.id + "_" + key) : null) ||
-      localStorage.getItem(key);
-
-    textarea.value = note || "";
-    textarea.focus();
-
-    if (activeCloudUnsubscribe) {
-      activeCloudUnsubscribe();
-      activeCloudUnsubscribe = null;
-    }
-
-     if(typeof startCloudSync === "function"){
-      activeCloudUnsubscribe = startCloudSync(key,(text)=>{
-        isRemoteUpdate = true;
-        textarea.value = text;
-        localStorage.setItem(getApiaryKey(key),text);
-        setTimeout(()=>isRemoteUpdate=false,200);
-      });
-    }
-
-// =========================
-// 💾 SINGLE SAFE INPUT HANDLER
-// =========================
-textarea.oninput = () => {
-
-  if(isRemoteUpdate) return;
-
-  const text = textarea.value;
-
-  localStorage.setItem(getApiaryKey(key), text);
-
-  // OFFLINE QUEUE
-  queueSync(key,text);
-
-  // ONLINE FIREBASE
-  if(navigator.onLine && typeof setDoc === "function"){
-
-    try{
-
-      setDoc(doc(db,"notes",key),{
-        text,
-        updated:Date.now()
-      });
-
-    }catch(e){
-      console.log(e);
-    }
-  }
-
-  updateMarkers();
-  setTimeout(autoScaleCalendarText,50);
-};
-
-  });
-
-});
-
-    // =========================
-    // 🧠 STOP OLD CLOUD SYNC
-    // =========================
-   if(activeCloudUnsubscribe){
-      try{activeCloudUnsubscribe();}catch(e){}
-      activeCloudUnsubscribe=null;
-    }}
-
-    // =========================
-    // ☁️ FIREBASE LIVE SYNC
-    // =========================
-   activeCloudUnsubscribe = startCloudSync(key, (text) => {
-
-  if(textarea){
-    textarea.value = text;
-  }
-
-  localStorage.setItem(getApiaryKey(key), text);
-});
-
-  });
-});
+textarea.value = note || "";
+        textarea.focus();
+      }
+    });
+  })
 
 
   // =========================
   // 💾 ZAPIS NOTATKI
   // =========================
-window.saveNote = function(){
+  window.saveNote = function() {
 
-  if(!currentDay){
-    alert("Najpierw kliknij dzień");
-    return;
-  }
+    if(!currentDay){
+      alert("Najpierw kliknij dzień");
+      return;
+    }
 
-     const key = `${currentDay}.${currentMonth}.2026`;
+    const key = `${currentDay}.${currentMonth}.2026`;
 
-  if(textarea){
-    const text = textarea.value;
-    localStorage.setItem(getApiaryKey(key), text);
-    queueSync(key,text);
-  }
+    if(textarea){
+      localStorage.setItem(getApiaryKey(key), textarea.value);
+    }
 
-   updateMarkers();
-  setTimeout(autoScaleCalendarText,50);
-}
+    updateMarkers();
+    setTimeout(autoScaleCalendarText, 50);
 
     if(typeof loadWeatherAndAssist === "function"){
       loadWeatherAndAssist();
@@ -3035,14 +2706,17 @@ window.saveNote = function(){
   // =========================
   // 📍 SCROLL DO DZIŚ
   // =========================
-function scrollToToday(){
-  const today = new Date();
-  const d = String(today.getDate()).padStart(2,"0");
-  const m = String(today.getMonth()+1).padStart(2,"0");
+  function scrollToToday(){
 
-  const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
-  if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
-}
+    const today = new Date();
+
+    const d = String(today.getDate()).padStart(2,"0");
+    const m = String(today.getMonth()+1).padStart(2,"0");
+
+    const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
+
+    if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+  }
 // =========================
 // 📍 INTELIGENTNY GPS PASIEKI PRO
 // =========================
@@ -3068,8 +2742,18 @@ function getDistance(lat1, lon1, lat2, lon2){
 
 // 📍 TWOJE PASIEKI
 const APIARIES = [
-  {id:"pasieka_1",name:"Werpol",lat:52.407231,lon:23.152673},
-  {id:"pasieka_2",name:"Borysowka",lat:52.419870,lon:23.091900}
+  {
+    id: "pasieka_1",
+    name: "Pasieka Werpol",
+    lat: 52.407231,
+    lon: 23.152673
+  },
+  {
+    id: "pasieka_2",
+    name: "Pasieka Borysowszczyzna",
+    lat: 52.419870,
+    lon: 23.091900
+  }
 ];
 
 // 📍 WYKRYWANIE PASIEKI
@@ -3090,8 +2774,8 @@ function detectNearestApiary(lat, lon){
     }
   });
 
-  // max 15 km
-  if(minDistance <= 15){
+  // max 10 km
+  if(minDistance <= 10){
     currentApiary = nearest;
   } else {
     currentApiary = null;
@@ -3130,12 +2814,33 @@ function updateApiaryUI(distance){
 
 // 📍 GPS LIVE
 function getGPSOnce(){
+
   if(!navigator.geolocation) return;
 
-  navigator.geolocation.getCurrentPosition(pos=>{
-    localStorage.setItem("lastLat", pos.coords.latitude);
-    localStorage.setItem("lastLon", pos.coords.longitude);
-  });
+  navigator.geolocation.getCurrentPosition(
+
+    pos => {
+
+      const lat = Number(pos.coords.latitude);
+      const lon = Number(pos.coords.longitude);
+
+      if(!isNaN(lat) && !isNaN(lon)){
+
+        detectNearestApiary(lat, lon);
+
+        localStorage.setItem("lastLat", lat);
+        localStorage.setItem("lastLon", lon);
+      }
+    },
+
+    err => console.log("GPS ERROR:", err),
+
+    {
+      enableHighAccuracy:true,
+      timeout:10000,
+      maximumAge:300000
+    }
+  );
 }
 
 // 📍 GPS LIVE (CIĄGŁY)
@@ -3402,11 +3107,11 @@ resolve({
     if(navigator.geolocation){
       navigator.geolocation.getCurrentPosition(
         pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(52.24, 23.10),
+        () => fetchWeather(52.40, 23.09),
         {enableHighAccuracy:true, timeout:7000, maximumAge:200000}
       );
     } else {
-      fetchWeather(52.24, 23.10);
+      fetchWeather(52.40, 23.09);
     }
 
   });
@@ -3787,40 +3492,93 @@ function generateHoneyForecast(){
   box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
 }
 
-// =========================
-// 🚀 START SYSTEMU (CLEAN)
-// =========================
+   // =========================
+  // 🚀 START SYSTEMU
+  // =========================
+  updateMarkers();
 
-updateMarkers();
-getGPSOnce();
+getGPSOnce();     // szybki start
 
-setTimeout(()=>{
-  autoScaleCalendarText();
+const savedGPS = localStorage.getItem("gpsEnabled");
+
+if(savedGPS === "true"){
+
+  gpsEnabled = true;
+
+  const gpsBtn = document.getElementById("gps-toggle");
+
+  if(gpsBtn){
+    gpsBtn.innerHTML = "📍 GPS: ON";
+  }
+
+  getGPSOnce();
+  startLiveGPS();
+  startGPSSaveLoop();
+}
+
+  setTimeout(autoScaleCalendarText, 100);
   scrollToToday();
-},200);
 
-if(typeof loadWeatherAndAssist === "function"){
-  loadWeatherAndAssist();
+  if(typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
+  if(typeof analyzeHivesPro === "function") analyzeHivesPro();
+  if(typeof generateHiveRanking === "function") generateHiveRanking();
+  if(typeof generateHiveAlerts === "function") generateHiveAlerts();
+  if(typeof generateWeeklyPlanPro === "function") generateWeeklyPlanPro();
+  if(typeof generateHoneyForecast === "function") generateHoneyForecast();
+  if(typeof runAIModule === "function") runAIModule();
+  if(typeof loadApiaryData === "function") loadApiaryData();
+
+  const hivesCountInput = document.getElementById("hivesCount");
+  const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
+
+  if(hivesCountInput){
+    hivesCountInput.addEventListener('change', function(){
+      if(typeof generateFamilyNotes === "function") generateFamilyNotes();
+    });
+  }
+
+  if(saveFamilyNotesBtn){
+    saveFamilyNotesBtn.addEventListener('click', function(){
+      if(typeof saveFamilyNotes === "function") saveFamilyNotes();
+    });
+  }
+
+  setInterval(() => {
+    if(typeof loadWeatherAndAssist === "function"){
+      loadWeatherAndAssist();
+    }
+  }, 110000);
+
+setTimeout(autoScaleCalendarText, 200);
+
+// 🔘 GPS TOGGLE
+const gpsBtn = document.getElementById("gps-toggle");
+
+if(gpsBtn){
+
+  gpsBtn.addEventListener("click", () => {
+
+    gpsEnabled = !gpsEnabled;
+
+if(gpsEnabled){
+
+  localStorage.setItem("gpsEnabled", "true");
+
+  gpsBtn.innerHTML = "📍 GPS: ON";
+
+  getGPSOnce();
+  startLiveGPS();
+  startGPSSaveLoop();
+
+} else {
+
+  localStorage.setItem("gpsEnabled", "false");
+
+  gpsBtn.innerHTML = "📍 GPS: OFF";
+
+  stopLiveGPS();
 }
-
-if(typeof analyzeHivesPro === "function"){
-  analyzeHivesPro();
-}
-
-if(typeof generateHiveRanking === "function"){
-  generateHiveRanking();
-}
-
-if(typeof generateHiveAlerts === "function"){
-  generateHiveAlerts();
-}
-
-if(typeof generateWeeklyPlanPro === "function"){
-  generateWeeklyPlanPro();
-}
-
-if(typeof generateHoneyForecast === "function"){
-  generateHoneyForecast();
+  });
 }
 
 });
@@ -3830,8 +3588,8 @@ if(typeof generateHoneyForecast === "function"){
 // =========================
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("service-worker.js")
-    .then(()=>console.log("SW OK"))
-    .catch(err=>console.log("SW ERROR", err));
+    .then(() => console.log("SW OK"))
+    .catch(err => console.log("SW ERROR", err));
 }
 
 </script>
