@@ -2664,53 +2664,79 @@ let saveTimer = null;
 /* =========================
    💾 OFFLINE SYNC QUEUE
 ========================= */
-let pendingSync = JSON.parse(
-  localStorage.getItem("pendingSync") || "[]"
-);
+let pendingSync = JSON.parse(localStorage.getItem("pendingSync") || "[]");
+let syncInProgress = new Set();
 
-function queueSync(key, text){
-
-  pendingSync.push({
-    key: key,
-    text: text,
-    t: Date.now()
-  });
-
-  localStorage.setItem(
-    "pendingSync",
-    JSON.stringify(pendingSync)
-  );
-}
-
-function flushSync(){
-  if(!navigator.onLine) return;
-  if(typeof setDoc !== "function" || typeof doc === "undefined" || typeof db === "undefined") return;
-
-  pendingSync.forEach(item=>{
-try{
-
-  setDoc(doc(db,"notes",item.key),{
-    text:item.text,
-    updated:item.t
-  });
-
-}catch(e){
-
-  console.log("SYNC ERROR:", e);
-
-}
-  });
-
-  // czyszczenie kolejki
-  pendingSync = [];
-
-  localStorage.removeItem("pendingSync");
+/* =========================
+   HASH (ANTI DUPLICATE)
+========================= */
+function hashText(str){
+  let hash = 0;
+  for(let i=0;i<str.length;i++){
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return hash;
 }
 
 /* =========================
-   🌐 ONLINE EVENT
+   QUEUE SAFE
 ========================= */
+function queueSync(key, text){
+
+  const id = key + "_" + hashText(text);
+
+  // 🔥 blokada duplikatów
+  if(syncInProgress.has(id)) return;
+
+  pendingSync.push({
+    id,
+    key,
+    text,
+    t: Date.now(),
+    sent: false
+  });
+
+  localStorage.setItem("pendingSync", JSON.stringify(pendingSync));
+}
+
+/* =========================
+   FLUSH SAFE SYNC
+========================= */
+async function flushSync(){
+
+  if(!navigator.onLine) return;
+  if(typeof db === "undefined") return;
+
+  for(let item of pendingSync){
+
+    if(item.sent) continue;
+    if(syncInProgress.has(item.id)) continue;
+
+    syncInProgress.add(item.id);
+
+    try{
+      await setDoc(doc(db,"notes",item.key),{
+        text: item.text,
+        updated: item.t
+      });
+
+      item.sent = true;
+
+    }catch(e){
+      console.log("SYNC FAIL:", e);
+    }
+
+    syncInProgress.delete(item.id);
+  }
+
+  // 🧹 cleanup
+  pendingSync = pendingSync.filter(i => !i.sent);
+  localStorage.setItem("pendingSync", JSON.stringify(pendingSync));
+}
+
 window.addEventListener("online", flushSync);
+
 
 /* =========================
    📏 AUTO SCALE TEKSTU
