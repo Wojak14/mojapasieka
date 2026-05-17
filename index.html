@@ -3107,11 +3107,11 @@ resolve({
     if(navigator.geolocation){
       navigator.geolocation.getCurrentPosition(
         pos => fetchWeather(pos.coords.latitude, pos.coords.longitude),
-        () => fetchWeather(52.40, 23.09),
+        () => fetchWeather(52.24, 23.10),
         {enableHighAccuracy:true, timeout:7000, maximumAge:200000}
       );
     } else {
-      fetchWeather(52.40, 23.09);
+      fetchWeather(52.24, 23.10);
     }
 
   });
