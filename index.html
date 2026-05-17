@@ -500,6 +500,110 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // =========================
+// ☁️ MOBILE SAFE CLOUD
+// =========================
+
+let activeCloudUnsubscribe = null;
+
+let isRemoteUpdate = false;
+
+let saveTimer = null;
+
+let syncQueue =
+  JSON.parse(
+    localStorage.getItem("syncQueue") || "{}"
+  );
+
+// =========================
+// ☁️ CLOUD SAVE SAFE
+// =========================
+
+async function pushToCloud(key, value){
+
+  // 🔥 LOCAL FIRST
+  localStorage.setItem(key, value);
+
+  syncQueue[key] = value;
+
+  localStorage.setItem(
+    "syncQueue",
+    JSON.stringify(syncQueue)
+  );
+
+  // 🔥 OFFLINE
+  if(!navigator.onLine){
+    console.log("📴 OFFLINE SAVE");
+    return;
+  }
+
+  try{
+
+    await setDoc(
+      doc(db, "notes", key),
+      {
+        text: value,
+        updated: Date.now()
+      }
+    );
+
+    delete syncQueue[key];
+
+    localStorage.setItem(
+      "syncQueue",
+      JSON.stringify(syncQueue)
+    );
+
+    console.log("☁️ CLOUD OK");
+
+  }catch(e){
+
+    console.log("☁️ CLOUD ERROR", e);
+  }
+}
+
+// =========================
+// 🔄 OFFLINE QUEUE SYNC
+// =========================
+
+async function syncOfflineQueue(){
+
+  if(!navigator.onLine) return;
+
+  const entries =
+    Object.entries(syncQueue);
+
+  for(const [key,value] of entries){
+
+    try{
+
+      await setDoc(
+        doc(db, "notes", key),
+        {
+          text:value,
+          updated:Date.now()
+        }
+      );
+
+      delete syncQueue[key];
+
+    }catch(e){
+
+      console.log("SYNC FAIL", e);
+    }
+  }
+
+  localStorage.setItem(
+    "syncQueue",
+    JSON.stringify(syncQueue)
+  );
+}
+
+window.addEventListener(
+  "online",
+  syncOfflineQueue
+);
+
+// =========================
 // ☁️ PUSH DO FIREBASE (TU WKLEJ)
 // =========================
 async function pushToCloud(key, value){
@@ -571,24 +675,49 @@ window.cloudLoadNote = async function(key){
 // =========================
 // 🔄 LIVE SYNC (ANTI LOOP)
 // =========================
-window.startCloudSync = function(key, callback){
+// =========================
+// ☁️ LIVE CLOUD SYNC SAFE
+// =========================
 
-  const unsub = onSnapshot(doc(db, "notes", key), snap => {
+window.startCloudSync =
+function(key, textarea){
 
-    if(!snap.exists()) return;
+  // usuń poprzedni listener
+  if(activeCloudUnsubscribe){
+    activeCloudUnsubscribe();
+  }
 
-    const text = snap.data().text || "";
+  activeCloudUnsubscribe =
+    onSnapshot(
+      doc(db, "notes", key),
 
-    isRemoteUpdate = true;
+      snap => {
 
-    callback(text);
+        if(!snap.exists()) return;
 
-    setTimeout(() => {
-      isRemoteUpdate = false;
-    }, 150);
-  });
+        const text =
+          snap.data().text || "";
 
-  return unsub;
+        // 🔥 brak zapętlenia
+        if(textarea.value === text)
+          return;
+
+        isRemoteUpdate = true;
+
+        textarea.value = text;
+
+        localStorage.setItem(
+          key,
+          text
+        );
+
+        updateMarkers();
+
+        setTimeout(() => {
+          isRemoteUpdate = false;
+        }, 200);
+      }
+    );
 };
 
 // =========================
@@ -2790,50 +2919,78 @@ function updateMarkers() {
 // =========================
 let activeCloudUnsubscribe = null;
 
-// --- OTWIERANIE NOTATKI PO KLIKU ---
-document.querySelectorAll("td .day-number").forEach(span => {
+// =========================
+// 📒 MOBILE SAFE NOTES
+// =========================
+
+document.querySelectorAll(
+  "td .day-number"
+).forEach(span => {
+
   span.addEventListener("click", () => {
 
-    currentDay = span.dataset.day.padStart(2,"0");
-    currentMonth = span.dataset.month.padStart(2,"0");
+    currentDay =
+      span.dataset.day.padStart(2,"0");
 
-    const key = `${currentDay}.${currentMonth}.2026`;
+    currentMonth =
+      span.dataset.month.padStart(2,"0");
 
-    textarea = document.getElementById("notes-" + currentMonth);
+    const key =
+      `${currentDay}.${currentMonth}.2026`;
+
+    textarea =
+      document.getElementById(
+        "notes-" + currentMonth
+      );
 
     if(!textarea) return;
 
-    // =========================
-    // 📌 LOCAL LOAD
-    // =========================
-    let note =
-      localStorage.getItem(getApiaryKey(key));
+    // 🔥 LOCAL LOAD
+    const local =
+      localStorage.getItem(key);
 
-    if(!note && currentApiary){
-      note = localStorage.getItem(
-        currentApiary.id + "_" + key
-      );
-    }
+    textarea.value = local || "";
 
-    if(!note){
-      note = localStorage.getItem(key);
-    }
-
-    textarea.value = note || "";
     textarea.focus();
-textarea.oninput = () => {
 
-  if(isRemoteUpdate) return; // 🔥 blokada pętli sync
+    // 🔥 CLOUD SYNC
+    startCloudSync(key, textarea);
 
-  const text = textarea.value;
+    // 🔥 usuń stare eventy
+    textarea.oninput = null;
 
-  localStorage.setItem(getApiaryKey(key), text);
+    // 🔥 debounce save
+    textarea.oninput = () => {
 
-  setDoc(doc(db, "notes", key), {
-    text,
-    updated: Date.now()
+      if(isRemoteUpdate) return;
+
+      clearTimeout(saveTimer);
+
+      saveTimer = setTimeout(() => {
+
+        const text =
+          textarea.value;
+
+        // 🔥 LOCAL SAVE
+        localStorage.setItem(
+          key,
+          text
+        );
+
+        updateMarkers();
+
+        setTimeout(
+          autoScaleCalendarText,
+          50
+        );
+
+        // 🔥 CLOUD SAVE
+        pushToCloud(key, text);
+
+      }, 300);
+    };
   });
-};
+});
 
 // =========================
 // 💾 LIVE SAVE (LOCAL + FIREBASE)
@@ -3827,6 +3984,9 @@ if ("serviceWorker" in navigator) {
     .then(() => console.log("SW OK"))
     .catch(err => console.log("SW ERROR", err));
 }
+
+// 🔥 START OFFLINE SYNC
+syncOfflineQueue();
 
 </script>
 
