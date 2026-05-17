@@ -3121,14 +3121,12 @@ function updateApiaryUI(distance){
 function getGPSOnce(){
   if(!navigator.geolocation) return;
 
-  navigator.geolocation.getCurrentPosition(pos=>{
-    localStorage.setItem("lastLat",pos.coords.latitude);
-    localStorage.setItem("lastLon",pos.coords.longitude);
-  });
-}
-
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      localStorage.setItem("lastLat", pos.coords.latitude);
+      localStorage.setItem("lastLon", pos.coords.longitude);
+    },
     err => console.log("GPS ERROR:", err),
-
     {
       enableHighAccuracy:true,
       timeout:10000,
@@ -3787,121 +3785,88 @@ function generateHoneyForecast(){
 }
 
 // =========================
-// 🚀 START SYSTEMU
+// 🚀 START SYSTEMU (CLEAN)
 // =========================
 
-// 📌 1. PODSTAWOWA INICJALIZACJA KALENDARZA
-updateMarkers();
-setTimeout(autoScaleCalendarText, 200);
+document.addEventListener("DOMContentLoaded", function () {
 
-// 📌 2. GPS START (SZYBKI ODCZYT)
-getGPSOnce();
+  updateMarkers();
 
-// 📌 3. GPS RESTORE Z LOCALSTORAGE
-const savedGPS = localStorage.getItem("gpsEnabled");
+  // 📍 GPS start (safe)
+  getGPSOnce();
 
-if (savedGPS === "true") {
+  const savedGPS = localStorage.getItem("gpsEnabled");
 
-  gpsEnabled = true;
+  gpsEnabled = (savedGPS === "true");
 
   const gpsBtn = document.getElementById("gps-toggle");
 
   if (gpsBtn) {
-    gpsBtn.innerHTML = "📍 GPS: ON";
+    gpsBtn.innerHTML = gpsEnabled ? "📍 GPS: ON" : "📍 GPS: OFF";
   }
 
-  // 🔥 start pełnego trackingu
-  getGPSOnce();
-  startLiveGPS();
-  startGPSSaveLoop();
-}
-
-// 📌 4. UI / ANIMACJE START
-setTimeout(autoScaleCalendarText, 100);
-scrollToToday();
-
-// 📌 5. MODUŁY AI + SYSTEM PASIEKI
-if (typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
-if (typeof analyzeHivesPro === "function") analyzeHivesPro();
-if (typeof generateHiveRanking === "function") generateHiveRanking();
-if (typeof generateHiveAlerts === "function") generateHiveAlerts();
-if (typeof generateWeeklyPlanPro === "function") generateWeeklyPlanPro();
-if (typeof generateHoneyForecast === "function") generateHoneyForecast();
-if (typeof runAIModule === "function") runAIModule();
-if (typeof loadApiaryData === "function") loadApiaryData();
-
-// 📌 6. EVENTY UI (INPUTS)
-const hivesCountInput = document.getElementById("hivesCount");
-const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
-
-if (hivesCountInput) {
-  hivesCountInput.addEventListener("change", function () {
-    if (typeof generateFamilyNotes === "function") {
-      generateFamilyNotes();
-    }
-  });
-}
-
-if (saveFamilyNotesBtn) {
-  saveFamilyNotesBtn.addEventListener("click", function () {
-    if (typeof saveFamilyNotes === "function") {
-      saveFamilyNotes();
-    }
-  });
-}
-
-// 📌 7. AUTO REFRESH SYSTEMU (AI + POGODA + ASYSTENT)
-setInterval(() => {
-  if (typeof loadWeatherAndAssist === "function") {
-    loadWeatherAndAssist();
+  if (gpsEnabled) {
+    startLiveGPS();
+    startGPSSaveLoop();
   }
-}, 110000);
 
-// =========================
-// 🔘 GPS TOGGLE SYSTEM
-// =========================
+  // UI init
+  setTimeout(() => {
+    autoScaleCalendarText();
+    scrollToToday();
+  }, 200);
 
-const gpsBtn = document.getElementById("gps-toggle");
+  // AI + systemy
+  if (typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
+  if (typeof analyzeHivesPro === "function") analyzeHivesPro();
+  if (typeof generateHiveRanking === "function") generateHiveRanking();
+  if (typeof generateHiveAlerts === "function") generateHiveAlerts();
+  if (typeof generateWeeklyPlanPro === "function") generateWeeklyPlanPro();
+  if (typeof generateHoneyForecast === "function") generateHoneyForecast();
 
-function enableGPS() {
+  // eventy UI
+  const hivesCountInput = document.getElementById("hivesCount");
+  if (hivesCountInput) {
+    hivesCountInput.addEventListener("change", () => {
+      if (typeof generateFamilyNotes === "function") generateFamilyNotes();
+    });
+  }
 
-  gpsEnabled = true;
-  localStorage.setItem("gpsEnabled", "true");
+  const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
+  if (saveFamilyNotesBtn) {
+    saveFamilyNotesBtn.addEventListener("click", () => {
+      if (typeof saveFamilyNotes === "function") saveFamilyNotes();
+    });
+  }
 
+  // refresh systemu
+  setInterval(() => {
+    if (typeof loadWeatherAndAssist === "function") {
+      loadWeatherAndAssist();
+    }
+  }, 110000);
+
+  // GPS toggle
   if (gpsBtn) {
-    gpsBtn.innerHTML = "📍 GPS: ON";
+    gpsBtn.addEventListener("click", () => {
+
+      gpsEnabled = !gpsEnabled;
+      localStorage.setItem("gpsEnabled", gpsEnabled ? "true" : "false");
+
+      gpsBtn.innerHTML = gpsEnabled ? "📍 GPS: ON" : "📍 GPS: OFF";
+
+      if (gpsEnabled) {
+        getGPSOnce();
+        startLiveGPS();
+        startGPSSaveLoop();
+      } else {
+        stopLiveGPS();
+      }
+
+    });
   }
 
-  getGPSOnce();
-  startLiveGPS();
-  startGPSSaveLoop();
-}
-
-function disableGPS() {
-
-  gpsEnabled = false;
-  localStorage.setItem("gpsEnabled", "false");
-
-  if (gpsBtn) {
-    gpsBtn.innerHTML = "📍 GPS: OFF";
-  }
-
-  stopLiveGPS();
-}
-
-if (gpsBtn) {
-
-  gpsBtn.addEventListener("click", () => {
-
-    if (gpsEnabled) {
-      disableGPS();
-    } else {
-      enableGPS();
-    }
-
-  });
-
-}
+});
 
 // =========================
 // 🧩 SERVICE WORKER
