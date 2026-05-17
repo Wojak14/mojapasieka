@@ -561,6 +561,7 @@ async function pushToCloud(key, value){
   }
 }
 
+
 // =========================
 // 🔄 OFFLINE QUEUE SYNC
 // =========================
@@ -602,6 +603,7 @@ window.addEventListener(
   "online",
   syncOfflineQueue
 );
+
 
 // =========================
 // ☁️ PUSH DO FIREBASE (TU WKLEJ)
@@ -675,6 +677,26 @@ window.cloudLoadNote = async function(key){
 // =========================
 // 🔄 LIVE SYNC (ANTI LOOP)
 // =========================
+window.startCloudSync = function(key, callback){
+
+  const unsub = onSnapshot(doc(db, "notes", key), snap => {
+
+    if(!snap.exists()) return;
+
+    const text = snap.data().text || "";
+
+    isRemoteUpdate = true;
+
+    callback(text);
+
+    setTimeout(() => {
+      isRemoteUpdate = false;
+    }, 150);
+  });
+
+  return unsub;
+};
+
 // =========================
 // ☁️ LIVE CLOUD SYNC SAFE
 // =========================
@@ -719,6 +741,7 @@ function(key, textarea){
       }
     );
 };
+
 
 // =========================
 // 🔧 HELPER (SAFE SAVE WRAPPER)
@@ -2919,6 +2942,51 @@ function updateMarkers() {
 // =========================
 let activeCloudUnsubscribe = null;
 
+// --- OTWIERANIE NOTATKI PO KLIKU ---
+document.querySelectorAll("td .day-number").forEach(span => {
+  span.addEventListener("click", () => {
+
+    currentDay = span.dataset.day.padStart(2,"0");
+    currentMonth = span.dataset.month.padStart(2,"0");
+
+    const key = `${currentDay}.${currentMonth}.2026`;
+
+    textarea = document.getElementById("notes-" + currentMonth);
+
+    if(!textarea) return;
+
+    // =========================
+    // 📌 LOCAL LOAD
+    // =========================
+    let note =
+      localStorage.getItem(getApiaryKey(key));
+
+    if(!note && currentApiary){
+      note = localStorage.getItem(
+        currentApiary.id + "_" + key
+      );
+    }
+
+    if(!note){
+      note = localStorage.getItem(key);
+    }
+
+    textarea.value = note || "";
+    textarea.focus();
+textarea.oninput = () => {
+
+  if(isRemoteUpdate) return; // 🔥 blokada pętli sync
+
+  const text = textarea.value;
+
+  localStorage.setItem(getApiaryKey(key), text);
+
+  setDoc(doc(db, "notes", key), {
+    text,
+    updated: Date.now()
+  });
+};
+
 // =========================
 // 📒 MOBILE SAFE NOTES
 // =========================
@@ -2991,6 +3059,7 @@ document.querySelectorAll(
     };
   });
 });
+
 
 // =========================
 // 💾 LIVE SAVE (LOCAL + FIREBASE)
@@ -3907,6 +3976,7 @@ if(savedGPS === "true"){
   getGPSOnce();
   startLiveGPS();
   startGPSSaveLoop();
+  syncOfflineQueue();
 }
 
   setTimeout(autoScaleCalendarText, 100);
@@ -3985,8 +4055,6 @@ if ("serviceWorker" in navigator) {
     .catch(err => console.log("SW ERROR", err));
 }
 
-// 🔥 START OFFLINE SYNC
-syncOfflineQueue();
 
 </script>
 
