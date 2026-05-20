@@ -1,109 +1,164 @@
-const CACHE_NAME = "pasieka-2026-v7";
+const CACHE_NAME = "pasieka-finalboss-v10";
 
-const urlsToCache = [
+// ========================================
+// STATIC FILES
+// ========================================
+const STATIC_ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
 
-  // 🔥 CORE APP
+  "./style.css",
   "./app.js",
   "./script.js",
-  "./style.css",
 
-  // 🔥 IKONY (minimum + stabilność Android)
   "./icons/icon-192.png",
   "./icons/icon-512.png"
 ];
 
-// =========================
+// ========================================
 // INSTALL
-// =========================
+// ========================================
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(STATIC_ASSETS))
   );
 
-  // 🔥 natychmiastowa aktywacja (ważne dla Android)
   self.skipWaiting();
 });
 
-// =========================
-// ACTIVATE (clean old cache)
-// =========================
+// ========================================
+// ACTIVATE
+// ========================================
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
+    caches.keys().then((keys) =>
+      Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })
-      );
-    })
+      )
+    )
   );
 
-  // 🔥 przejęcie kontroli bez restartu
   self.clients.claim();
 });
 
-// =========================
-// FETCH STRATEGY
-// =========================
+// ========================================
+// FETCH
+// ========================================
 self.addEventListener("fetch", (event) => {
-  const url = event.request.url;
 
-  // =========================
-  // 🌦 OPEN-METEO (network first)
-  // =========================
-  if (url.includes("open-meteo.com")) {
+  // tylko GET
+  if (event.request.method !== "GET") return;
+
+  const requestURL = new URL(event.request.url);
+
+  // ========================================
+  // OPEN-METEO API
+  // ========================================
+  if (requestURL.hostname.includes("open-meteo.com")) {
     event.respondWith(networkFirst(event.request));
     return;
   }
 
-  // =========================
-  // 📦 APP FILES (cache first)
-  // =========================
+  // ========================================
+  // HTML
+  // ========================================
+  if (event.request.headers.get("accept")?.includes("text/html")) {
+    event.respondWith(staleWhileRevalidate(event.request));
+    return;
+  }
+
+  // ========================================
+  // CSS / JS / IMG
+  // ========================================
   event.respondWith(cacheFirst(event.request));
 });
 
-// =========================
-// CACHE FIRST (UI offline)
-// =========================
+// ========================================
+// CACHE FIRST
+// ========================================
 async function cacheFirst(request) {
+
   const cached = await caches.match(request);
 
-  if (cached) return cached;
+  if (cached) {
+    return cached;
+  }
 
   try {
+
     const response = await fetch(request);
 
-    // 🔥 tylko poprawne response cache’ujemy
-    if (response && response.status === 200) {
+    if (
+      response &&
+      response.status === 200 &&
+      response.type === "basic"
+    ) {
+
       const cache = await caches.open(CACHE_NAME);
+
       cache.put(request, response.clone());
     }
 
     return response;
-  } catch (e) {
+
+  } catch (error) {
+
+    // fallback offline
     return caches.match("./index.html");
   }
 }
 
-// =========================
-// NETWORK FIRST (API)
-// =========================
+// ========================================
+// NETWORK FIRST
+// ========================================
 async function networkFirst(request) {
+
   try {
+
     const response = await fetch(request);
 
     const cache = await caches.open(CACHE_NAME);
+
     cache.put(request, response.clone());
 
     return response;
-  } catch (e) {
-    return caches.match(request);
+
+  } catch (error) {
+
+    const cached = await caches.match(request);
+
+    return cached;
   }
+}
+
+// ========================================
+// STALE WHILE REVALIDATE
+// ========================================
+async function staleWhileRevalidate(request) {
+
+  const cache = await caches.open(CACHE_NAME);
+
+  const cached = await cache.match(request);
+
+  const networkFetch = fetch(request)
+    .then((response) => {
+
+      if (
+        response &&
+        response.status === 200
+      ) {
+        cache.put(request, response.clone());
+      }
+
+      return response;
+    })
+    .catch(() => {});
+
+  return cached || networkFetch;
 }
