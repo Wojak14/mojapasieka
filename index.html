@@ -362,6 +362,37 @@ Legenda + notatki = szerokość kalendarza
   cursor:pointer;
 }
 
+#monthlyHoney div{
+  background:#fff8dc;
+  padding:8px;
+  margin:5px 0;
+  border-radius:8px;
+  font-size:18px;
+}
+
+#yearHoney{
+  margin-top:10px;
+  font-size:22px;
+  font-weight:bold;
+  color:#b8860b;
+}
+
+#honeyAmount{
+  width:120px;
+  padding:8px;
+  font-size:18px;
+}
+
+button{
+  padding:10px 15px;
+  font-size:18px;
+  border:none;
+  border-radius:8px;
+  background:#fbc02d;
+  cursor:pointer;
+}
+
+
 </style>
 
 </head>
@@ -536,9 +567,11 @@ font-weight:bold;
 <div id="swarm-box-01"></div>
 <div id="assistant-box-01"></div>
 
-
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-01" class="full-width-sync">
+
+
+
   <h3>Notatka dnia</h3>
   <textarea id="notes-01" rows="6" style="width:100%;"></textarea>
   <br><br>
@@ -1034,11 +1067,27 @@ font-weight:bold;
 <div id="assistant-box-04"></div>
 
 
-<!-- Licznik miodu -->
-<div id="inspection-honey-04">
-  <div id="inspection-count-04">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  <div id="honey-total-04">🫙 Zebrany miód w 2026: 0 kg</div>
+<!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
 </div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- Notatki dnia -->
 <div id="day-note-box-04">
@@ -1186,11 +1235,27 @@ font-weight:bold;
 <div id="swarm-box-05"></div>
 <div id="assistant-box-05"></div>
 
-<!-- Licznik miodu -->
-<div id="inspection-honey-05">
-  <div id="inspection-count-05">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  <div id="honey-total-05">🫙 Zebrany miód w 2026: 0 kg</div>
+<!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
 </div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- Notatki dnia -->
 <div id="day-note-box-05" class="full-width-sync">
@@ -1329,11 +1394,27 @@ font-weight:bold;
 <div id="assistant-box-06"></div>
 
 
-<!-- Licznik miodu -->
-<div id="inspection-honey-06">
-  <div id="inspection-count-06">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  <div id="honey-total-06">🫙 Zebrany miód w 2026: 0 kg</div>
+<!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
 </div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- Notatki dnia -->
 <div id="day-note-box-06" class="full-width-sync">
@@ -1464,11 +1545,27 @@ font-weight:bold;
 <div id="swarm-box-07"></div>
 <div id="assistant-box-07"></div>
 
-  <!-- Licznik miodu -->
-  <div id="inspection-honey-07">
-    <div id="inspection-count-07">✅ Kontrole wykonane w tym miesiącu: 0</div>
-    <div id="honey-total-07">🫙 Zebrany miód w 2026: 0 kg</div>
-  </div>
+  <!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
+</div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-07" class="full-width-sync">
@@ -1604,10 +1701,27 @@ font-weight:bold;
 <div id="swarm-box-08"></div>
 <div id="assistant-box-08"></div>
 
-<!-- Licznik miodu -->
-<div id="inspection-honey-08">
-  <div id="inspection-count-08">✅ Kontrole wykonane w tym miesiącu: 0</div>
+<!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
 </div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-08" class="full-width-sync">
@@ -1739,10 +1853,27 @@ font-weight:bold;
 <div id="swarm-box-09"></div>
 <div id="assistant-box-09"></div>
 
-<!-- Licznik miodu -->
-<div id="inspection-honey-09">
-  <div id="inspection-count-09">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  </div>
+<!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
+</div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-09" class="full-width-sync">
@@ -1875,10 +2006,27 @@ font-weight:bold;
 <div id="swarm-box-10"></div>
 <div id="assistant-box-10"></div>
 
-<!-- Licznik miodu -->
-<div id="inspection-honey-10">
-  <div id="inspection-count-10">✅ Kontrole wykonane w tym miesiącu: 0</div>
+<!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
 </div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-10" class="full-width-sync">
@@ -2015,10 +2163,27 @@ font-weight:bold;
 <div id="assistant-box-11"></div>
 
 
-<!-- Licznik miodu i kontroli -->
-<div id="inspection-honey-11">
-  <div id="inspection-count-11">✅ Kontrole wykonane w tym miesiącu: 0</div>
+<!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
 </div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-11" class="full-width-sync">
@@ -2154,10 +2319,27 @@ font-weight:bold;
 <div id="assistant-box-12"></div>
 
 
-  <!-- Licznik miodu i kontroli -->
-  <div id="inspection-honey-12">
-    <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
-  </div>
+ <!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
+</div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-12" class="full-width-sync">
@@ -2224,11 +2406,27 @@ font-weight:bold;
   <div id="assistant-box-12"></div>
 
 
-  <!-- Licznik miodu i kontroli -->
-  <div id="inspection-honey-12">
-    <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
-    <div id="honey-total-12">🫙 Zebrany miód w 2026: 0 kg</div>
-  </div>
+ <!-- 🍯 STATYSTYKI MIODU -->
+
+<h2>🍯 Statystyki miodu</h2>
+
+<div id="monthlyHoney"></div>
+
+<div id="yearHoney">
+🍯 Zebrany miód w 2026: 0 kg
+</div>
+
+<br>
+
+<input
+  type="number"
+  id="honeyAmount"
+  placeholder="Ilość miodu (kg)"
+>
+
+<button onclick="saveHoney()">
+Dodaj miód
+</button>
 
   <!-- Notatki dnia -->
   <div id="day-note-box-12">
@@ -3587,9 +3785,20 @@ if(gpsEnabled){
 // 🧩 SERVICE WORKER
 // =========================
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("SW OK"))
-    .catch(err => console.log("SW ERROR", err));
+
+  window.addEventListener("load", () => {
+
+    navigator.serviceWorker
+      .register("./service-worker.js")
+      .then((reg) => {
+        console.log("SW OK:", reg.scope);
+      })
+      .catch((err) => {
+        console.error("SW ERROR:", err);
+      });
+
+  });
+
 }
 
 </script>
