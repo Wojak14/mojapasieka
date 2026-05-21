@@ -1,16 +1,15 @@
-const CACHE_NAME = "pasieka-finalboss-v10";
+const CACHE_NAME = "pasieka-finalboss-v11";
 
 // ========================================
-// STATIC FILES
+// CACHE FILES
 // ========================================
 const STATIC_ASSETS = [
+
   "./",
   "./index.html",
   "./manifest.json",
 
-  "./style.css",
   "./app.js",
-  "./script.js",
 
   "./icons/icon-192.png",
   "./icons/icon-512.png"
@@ -19,10 +18,41 @@ const STATIC_ASSETS = [
 // ========================================
 // INSTALL
 // ========================================
-self.addEventListener("install", (event) => {
+self.addEventListener("install", event => {
+
   event.waitUntil(
+
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
+
+      .then(cache => {
+
+        return Promise.all(
+
+          STATIC_ASSETS.map(asset => {
+
+            return fetch(asset)
+
+              .then(response => {
+
+                if(!response.ok){
+                  throw new Error(asset);
+                }
+
+                return cache.put(asset, response);
+              })
+
+              .catch(err => {
+
+                console.log(
+                  "CACHE FAIL:",
+                  asset,
+                  err
+                );
+              });
+
+          })
+        );
+      })
   );
 
   self.skipWaiting();
@@ -31,17 +61,24 @@ self.addEventListener("install", (event) => {
 // ========================================
 // ACTIVATE
 // ========================================
-self.addEventListener("activate", (event) => {
+self.addEventListener("activate", event => {
+
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
+
+    caches.keys().then(keys => {
+
+      return Promise.all(
+
+        keys.map(key => {
+
+          if(key !== CACHE_NAME){
+
             return caches.delete(key);
           }
+
         })
-      )
-    )
+      );
+    })
   );
 
   self.clients.claim();
@@ -50,66 +87,80 @@ self.addEventListener("activate", (event) => {
 // ========================================
 // FETCH
 // ========================================
-self.addEventListener("fetch", (event) => {
+self.addEventListener("fetch", event => {
 
-  // tylko GET
-  if (event.request.method !== "GET") return;
-
-  const requestURL = new URL(event.request.url);
-
-  // ========================================
-  // OPEN-METEO API
-  // ========================================
-  if (requestURL.hostname.includes("open-meteo.com")) {
-    event.respondWith(networkFirst(event.request));
+  if(event.request.method !== "GET"){
     return;
   }
 
-  // ========================================
+  // OPEN METEO
+  if(
+    event.request.url.includes(
+      "open-meteo.com"
+    )
+  ){
+
+    event.respondWith(
+
+      networkFirst(event.request)
+    );
+
+    return;
+  }
+
   // HTML
-  // ========================================
-  if (event.request.headers.get("accept")?.includes("text/html")) {
-    event.respondWith(staleWhileRevalidate(event.request));
+  if(
+    event.request.headers
+      .get("accept")
+      ?.includes("text/html")
+  ){
+
+    event.respondWith(
+
+      staleWhileRevalidate(
+        event.request
+      )
+    );
+
     return;
   }
 
-  // ========================================
-  // CSS / JS / IMG
-  // ========================================
-  event.respondWith(cacheFirst(event.request));
+  // STATIC
+  event.respondWith(
+
+    cacheFirst(event.request)
+  );
 });
 
 // ========================================
 // CACHE FIRST
 // ========================================
-async function cacheFirst(request) {
+async function cacheFirst(request){
 
-  const cached = await caches.match(request);
+  const cached =
+    await caches.match(request);
 
-  if (cached) {
+  if(cached){
     return cached;
   }
 
-  try {
+  try{
 
-    const response = await fetch(request);
+    const response =
+      await fetch(request);
 
-    if (
-      response &&
-      response.status === 200 &&
-      response.type === "basic"
-    ) {
+    const cache =
+      await caches.open(CACHE_NAME);
 
-      const cache = await caches.open(CACHE_NAME);
-
-      cache.put(request, response.clone());
-    }
+    cache.put(
+      request,
+      response.clone()
+    );
 
     return response;
 
-  } catch (error) {
+  }catch(e){
 
-    // fallback offline
     return caches.match("./index.html");
   }
 }
@@ -117,48 +168,59 @@ async function cacheFirst(request) {
 // ========================================
 // NETWORK FIRST
 // ========================================
-async function networkFirst(request) {
+async function networkFirst(request){
 
-  try {
+  try{
 
-    const response = await fetch(request);
+    const response =
+      await fetch(request);
 
-    const cache = await caches.open(CACHE_NAME);
+    const cache =
+      await caches.open(CACHE_NAME);
 
-    cache.put(request, response.clone());
+    cache.put(
+      request,
+      response.clone()
+    );
 
     return response;
 
-  } catch (error) {
+  }catch(e){
 
-    const cached = await caches.match(request);
+    const cached =
+      await caches.match(request);
 
-    return cached;
+    return cached ||
+      caches.match("./index.html");
   }
 }
 
 // ========================================
-// STALE WHILE REVALIDATE
+// STALE
 // ========================================
-async function staleWhileRevalidate(request) {
+async function staleWhileRevalidate(request){
 
-  const cache = await caches.open(CACHE_NAME);
+  const cache =
+    await caches.open(CACHE_NAME);
 
-  const cached = await cache.match(request);
+  const cached =
+    await cache.match(request);
 
   const networkFetch = fetch(request)
-    .then((response) => {
 
-      if (
-        response &&
-        response.status === 200
-      ) {
-        cache.put(request, response.clone());
-      }
+    .then(response => {
+
+      cache.put(
+        request,
+        response.clone()
+      );
 
       return response;
     })
-    .catch(() => {});
 
-  return cached || networkFetch;
+    .catch(() => null);
+
+  return cached ||
+         networkFetch ||
+         caches.match("./index.html");
 }

@@ -2883,7 +2883,7 @@ textarea.value = note || "";
       for(let i=0;i<localStorage.length;i++){
 
         const key = localStorage.key(i);
-        if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+        if(!isValidNoteKey(key)) continue;
 
         const note = localStorage.getItem(key);
 
@@ -3501,7 +3501,7 @@ loadWeatherAndAssist();
 
     for(let i=0;i<localStorage.length;i++){
       const key = localStorage.key(i);
-      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+      if(!isValidNoteKey(key)) continue;
       const note = (localStorage.getItem(key) || "").toLowerCase();
       if(note.includes("ul "+hiveNumber)){
         found = true;
@@ -3519,6 +3519,27 @@ loadWeatherAndAssist();
     }
   };
 
+// =========================
+// 🔥 FINAL BOSS KEY SYSTEM
+// =========================
+
+function isValidNoteKey(key){
+
+  return (
+    /^\d{2}\.\d{2}\.2026$/.test(key) ||
+    /^pasieka_\d+_\d{2}\.\d{2}\.2026$/.test(key)
+  );
+}
+
+function getPureDateKey(key){
+
+  const match =
+    key.match(/\d{2}\.\d{2}\.2026$/);
+
+  return match ? match[0] : key;
+}
+
+
 // =============================
 // 🧠 AI PASIEKA PRO MAX
 // =============================
@@ -3530,7 +3551,7 @@ function getHiveData(){
 
   for(let i=0;i<localStorage.length;i++){
     const key = localStorage.key(i);
-    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
+    if(!isValidNoteKey(key)) continue;
 
     const note = (localStorage.getItem(key)||"").toLowerCase();
     const matches = note.match(/ul\s*(\d+)/g);
@@ -3690,6 +3711,107 @@ function generateHoneyForecast(){
   box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
 }
 
+// =========================
+// 🚨 FINAL BOSS ALERTY AI
+// =========================
+
+function generateFinalBossAlerts(){
+
+  const box =
+    document.getElementById("apiaryAlerts");
+
+  if(!box) return;
+
+  let alerts = [];
+
+  let honey = 0;
+  let treatments = 0;
+  let swarms = 0;
+
+  for(let i=0;i<localStorage.length;i++){
+
+    const key = localStorage.key(i);
+
+    if(!isValidNoteKey(key)) continue;
+
+    const note =
+      (localStorage.getItem(key)||"")
+      .toLowerCase();
+
+    // 🍯 MIÓD
+    const honeyMatch =
+      note.match(/(\d+)\s*kg/);
+
+    if(honeyMatch){
+
+      honey += parseInt(honeyMatch[1]);
+    }
+
+    // 💊 LECZENIE
+    if(
+      note.includes("warroza") ||
+      note.includes("leczenie")
+    ){
+      treatments++;
+    }
+
+    // 🐝 RÓJ
+    if(
+      note.includes("rój") ||
+      note.includes("rojka")
+    ){
+      swarms++;
+    }
+  }
+
+  // ALERTY
+  if(honey > 50){
+    alerts.push(
+      `🍯 Duży zbiór miodu: ${honey} kg`
+    );
+  }
+
+  if(swarms >= 3){
+    alerts.push(
+      "🐝 Wysoka aktywność rojowa"
+    );
+  }
+
+  if(treatments === 0){
+    alerts.push(
+      "💊 Brak wpisów leczenia"
+    );
+  }
+
+  // POGODA
+  if(window.weatherData){
+
+    const temp =
+      weatherData.current_weather?.temperature;
+
+    if(temp < 12){
+
+      alerts.push(
+        "❄️ Za zimno na przegląd"
+      );
+    }
+  }
+
+  if(alerts.length===0){
+
+    box.innerHTML =
+      "✅ Brak alertów";
+
+  } else {
+
+    box.innerHTML =
+      alerts.map(a =>
+        `<div>${a}</div>`
+      ).join("");
+  }
+}
+
+
    // =========================
   // 🚀 START SYSTEMU
   // =========================
@@ -3712,6 +3834,7 @@ if(savedGPS === "true"){
   getGPSOnce();
   startLiveGPS();
   startGPSSaveLoop();
+  generateFinalBossAlerts()
 }
 
   setTimeout(autoScaleCalendarText, 100);
