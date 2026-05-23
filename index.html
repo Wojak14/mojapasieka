@@ -2504,28 +2504,64 @@ Dodaj miód
     <button onclick="saveNote()">Zapisz notatkę</button>
   </div>
 
-<!-- PANEL PASIEKI -->
+<!-- 🛠 PANEL PASIEKI -->
 <div id="apiary-panel">
 
-<h3>🛠 Panel pasieki</h3>
+  <h3>🛠 Panel pasieki</h3>
 
-<label>Liczba uli:</label>
-<input type="number" id="hivesCount" value="23" min="1" max="100"><br><br>
-<label>Zebrany miód (kg):</label>
-<input type="number" id="honeyTotal" value="0"><br><br>
+  <!-- LICZBA ULI -->
+  <label>Liczba uli:</label><br>
+  <input
+    type="number"
+    id="hivesCount"
+    value="24"
+    min="1"
+    max="100"
+  >
 
-<h4>📝 Notatki pasieki</h4>
-<textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
-<button onclick="saveApiary()">💾 Zapisz pasiekę</button><hr>
+  <br><br>
 
-<h4>🐝 Notatki rodzin pszczelich (23 uli)</h4>
-<textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
-<input id="hivesCount" type="number" value="23" min="1" max="100">
-<div id="hiveTable"></div>
-<button id="saveFamilyNotesBtn">💾 Zapisz notatki uli</button
-<div id="hiveTable"></div>
-<button onclick="saveHiveNotes()">💾 Zapisz notatki rodzin</button>
-</div>
+  <!-- MIÓD -->
+  <label>Zebrany miód (kg):</label><br>
+
+  <input
+    type="number"
+    id="honeyCollected"
+    value="0"
+  >
+
+  <br><br>
+
+  <!-- NOTATKI PASIEKI -->
+  <h4>📝 Notatki pasieki</h4>
+
+  <textarea
+    id="apiaryNotes"
+    rows="4"
+    style="width:100%"
+  ></textarea>
+
+  <br><br>
+
+  <!-- ZAPIS -->
+  <button onclick="saveApiaryData()">
+    💾 Zapisz pasiekę
+  </button>
+
+  <hr>
+
+  <!-- RODZINY -->
+  <h4>🐝 Notatki rodzin pszczelich</h4>
+
+  <div id="hiveTable"></div>
+
+  <br>
+
+  <button id="saveFamilyNotesBtn">
+    💾 Zapisz notatki uli
+  </button>
+
+</div
 
 <!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
 <div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
@@ -2814,7 +2850,7 @@ if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
       currentDay = span.dataset.day.padStart(2,"0");
       currentMonth = span.dataset.month.padStart(2,"0");
 
-      textarea = document.getElementById("notes-" + currentMonth);
+      textarea = document.getElementById("notes");
 
       const key = `${currentDay}.${currentMonth}.2026`;
 
@@ -2838,30 +2874,62 @@ textarea.value = note || "";
     });
   })
 
+// =========================
+// ⚡ QUICK NOTES FINAL BOSS
+// =========================
+
+window.addQuick = function(text){
+
+  const textarea =
+    document.getElementById("notes");
+
+  if(!textarea) return;
+
+  if(textarea.value.length > 0){
+    textarea.value += "\n";
+  }
+
+  textarea.value += "• " + text;
+
+  textarea.focus();
+};
 
   // =========================
   // 💾 ZAPIS NOTATKI
   // =========================
-  window.saveNote = function() {
+window.saveNote = function() {
 
-    if(!currentDay){
-      alert("Najpierw kliknij dzień");
-      return;
-    }
+  textarea = document.getElementById("notes");
 
-    const key = `${currentDay}.${currentMonth}.2026`;
+  // auto dzisiejsza data
+  if(!currentDay){
 
-    if(textarea){
-      localStorage.setItem(getApiaryKey(key), textarea.value);
-    }
+    const today = new Date();
 
-    updateMarkers();
-    setTimeout(autoScaleCalendarText, 50);
+    currentDay =
+      String(today.getDate()).padStart(2,"0");
 
-    if(typeof loadWeatherAndAssist === "function"){
-      loadWeatherAndAssist();
-    }
-  };
+    currentMonth =
+      String(today.getMonth()+1).padStart(2,"0");
+  }
+
+  const key =
+    `${currentDay}.${currentMonth}.2026`;
+
+  if(textarea){
+
+    localStorage.setItem(
+      getApiaryKey(key),
+      textarea.value
+    );
+  }
+
+  updateMarkers();
+
+  setTimeout(autoScaleCalendarText, 50);
+
+  loadWeatherAndAssist();
+};
 
   // --- WYSZUKIWARKA NOTATEK ---
   const searchInput = document.getElementById('search-notes');
@@ -3193,10 +3261,17 @@ function loadWeather5Days() {
       }
 
       // 🔥 lokalizacja (osobno – bez psucia DOM)
-      const loc = await getLocationData(lat, lon);
-      renderLocation(lat, lon, loc);
+      let loc = {};
 
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
+try{
+  loc = await getLocationData(lat, lon);
+}catch(e){
+  console.log(e);
+}
+
+renderLocation(lat, lon, loc || {});
+
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&current_weather=true&timezone=auto`;
 
       fetch(url).then(r=>r.json()).then(data=>{
 
@@ -3204,7 +3279,7 @@ function loadWeather5Days() {
 
         const todayMax = data.daily.temperature_2m_max[0];
         const todayMin = data.daily.temperature_2m_min[0];
-        const todayWind = data.daily.windspeed_10m_max[0];
+        const todayWind = data.daily.wind_speed_10m_max[0];
         const todayRain = data.daily.precipitation_probability_max[0];
 
         const beeStatus =
@@ -3240,7 +3315,7 @@ function loadWeather5Days() {
 
     const tMax=data.daily.temperature_2m_max[i] ?? 0;
     const tMin=data.daily.temperature_2m_min[i] ?? 0;
-    const wind=data.daily.windspeed_10m_max[i] ?? 0;
+    const wind=data.daily.wind_speed_10m_max[i] ?? 0;
     const rain=data.daily.precipitation_probability_max[i] ?? 0;
 
     forecastData.push({
@@ -3296,9 +3371,19 @@ resolve({
   forecast: data.daily
 });
 
-      }).catch(()=>{
-        resolve(null);
-      });
+      }).catch((err)=>{
+
+  console.log(err);
+
+  if(weatherBox){
+    weatherBox.innerHTML = `
+      📡 Offline<br>
+      Brak internetu
+    `;
+  }
+
+  resolve(null);
+});
     }
 
     // 🔥 GPS START (bezpieczny)
@@ -3392,7 +3477,7 @@ function generateBeeForecast(days){
   const date = new Date();
   date.setDate(today.getDate()+d);
 
-  const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
+  const wind = weatherData?.forecast?.wind_speed_10m_max[d] || 0;
   const rain = weatherData?.forecast?.precipitation_probability_max[d] || 0;
   const temp = weatherData?.forecast?.temperature_2m_max[d] || 20;
 
@@ -3784,7 +3869,7 @@ function generateFinalBossAlerts(){
   }
 
   // POGODA
-  if(window.weatherData){
+  if(typeof weatherData !== "undefined" && weatherData){
 
     const temp =
       weatherData.current_weather?.temperature;
@@ -3903,6 +3988,194 @@ if(gpsEnabled){
 }
 
 });
+
+// =====================================
+// 🔥 FINAL BOSS FIX SYSTEM
+// =====================================
+
+// 🫙 MIÓD
+const honeyInput = document.getElementById("honeyCollected");
+
+if(honeyInput){
+
+  // odczyt
+  const savedHoney = localStorage.getItem("honeyCollected2026");
+
+  if(savedHoney){
+    honeyInput.value = savedHoney;
+  }
+
+  // autosave
+  honeyInput.addEventListener("input", () => {
+
+    localStorage.setItem(
+      "honeyCollected2026",
+      honeyInput.value
+    );
+
+    updateHoneyUI();
+  });
+}
+
+// 🔥 UPDATE MIODU
+function updateHoneyUI(){
+
+  const box = document.getElementById("honey-forecast");
+
+  if(!box) return;
+
+  const honey =
+    Number(localStorage.getItem("honeyCollected2026")) || 0;
+
+  box.innerHTML =
+    `🍯 Zebrany miód 2026: <b>${honey} kg</b>`;
+}
+
+// =====================================
+// 📒 NOTATKA DNIA FIX
+// =====================================
+
+document.querySelectorAll(".quick-note-btn").forEach(btn => {
+
+  btn.addEventListener("click", () => {
+
+    const text = btn.dataset.text || "";
+
+    const activeTextarea =
+      document.querySelector("textarea");
+
+    if(!activeTextarea) return;
+
+    activeTextarea.value += text + " ";
+  });
+
+});
+
+// =====================================
+// 💾 ZAPIS PASIEKI FIX
+// =====================================
+
+window.saveApiaryData = function(){
+
+  const hiveCount =
+    document.getElementById("hivesCount");
+
+  const apiaryNotes =
+    document.getElementById("apiaryNotes");
+
+  const honeyCollected =
+    document.getElementById("honeyCollected");
+
+  if(hiveCount){
+    localStorage.setItem(
+      "hivesCount",
+      hiveCount.value
+    );
+  }
+
+  if(apiaryNotes){
+    localStorage.setItem(
+      "apiaryNotes",
+      apiaryNotes.value
+    );
+  }
+
+  if(honeyCollected){
+    localStorage.setItem(
+      "honeyCollected2026",
+      honeyCollected.value
+    );
+  }
+
+  updateHoneyUI();
+
+  alert("✅ Pasieka zapisana");
+};
+
+// =====================================
+// 📥 LOAD PASIEKI
+// =====================================
+
+window.loadApiaryData = function(){
+
+  const hiveCount =
+    document.getElementById("hivesCount");
+
+  const apiaryNotes =
+    document.getElementById("apiaryNotes");
+
+  const honeyCollected =
+    document.getElementById("honeyCollected");
+
+  if(hiveCount){
+
+    hiveCount.value =
+      localStorage.getItem("hivesCount") || 23;
+  }
+
+  if(apiaryNotes){
+
+    apiaryNotes.value =
+      localStorage.getItem("apiaryNotes") || "";
+  }
+
+  if(honeyCollected){
+
+    honeyCollected.value =
+      localStorage.getItem("honeyCollected2026") || 0;
+  }
+
+  updateHoneyUI();
+};
+
+// =====================================
+// 🌤️ POGODA OFFLINE FIX
+// =====================================
+
+function showOfflineWeather(){
+
+  const weatherBox =
+    document.getElementById("weather-data");
+
+  if(weatherBox){
+
+    weatherBox.innerHTML = `
+      📡 Offline<br>
+      Ostatnia prognoza niedostępna
+    `;
+  }
+}
+
+// =====================================
+// 🚨 GLOBAL ERROR FIX
+// =====================================
+
+window.addEventListener("error", (e) => {
+
+  console.log("JS ERROR:", e.message);
+
+});
+
+// =====================================
+// 🚀 AUTO START FIX
+// =====================================
+
+setTimeout(() => {
+
+  try{
+    loadApiaryData();
+  }catch(e){
+    console.log(e);
+  }
+
+  try{
+    updateHoneyUI();
+  }catch(e){
+    console.log(e);
+  }
+
+}, 500);
+
 
 // =========================
 // 🧩 SERVICE WORKER
