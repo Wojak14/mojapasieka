@@ -2696,25 +2696,9 @@ Dodaj miód
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-/* =========================
-   🧠 FINAL BOSS CORE CONFIG
-========================= */
-
-let currentKey = null;
-let currentApiary = null;
-
-/* =========================
-   📅 KEY SYSTEM (JEDEN STANDARD)
-========================= */
-
-function makeKey(day, month, year = 2026){
-  return `${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.${year}`;
-}
-
-function getApiaryKey(key){
-  if(!currentApiary) return key;
-  return `${currentApiary.id}_${key}`;
-}
+let textarea = null;
+let currentDay = null;
+let currentMonth = null;
 
 // 📍 GPS SYSTEM
 let gpsEnabled = false;
@@ -2732,7 +2716,7 @@ function autoScaleCalendarText(){
     if(!content) return;
 
     let size = 14;
-    const minSize = 8;
+    let minSize = 8;
 
     content.style.fontSize = size + "px";
 
@@ -2758,18 +2742,24 @@ function applySmartColorsAndAlerts(td, text){
   if(t.includes("wiatr")) td.classList.add("icon-wind");
   if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
   if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
-  if(t.includes("roj")) td.classList.add("icon-fire");
+  if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
   if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
 
-  if(t.includes("roj") || t.includes("ryzyko")) td.classList.add("alert-high");
-  else if(t.includes("inspekcja")) td.classList.add("alert-medium");
-  else if(t.includes("wiatr")) td.classList.add("alert-low");
+  if(t.includes("roj") || t.includes("ryzyko")){
+    td.classList.add("alert-high");
+  }
+  else if(t.includes("inspekcja")){
+    td.classList.add("alert-medium");
+  }
+  else if(t.includes("wiatr")){
+    td.classList.add("alert-low");
+  }
 }
 
 // =========================
 // 📅 MARKERY I IKONY
 // =========================
-function updateMarkers(){
+function updateMarkers() {
 
   document.querySelectorAll("td .day-number").forEach(span => {
 
@@ -2782,25 +2772,25 @@ function updateMarkers(){
       "alert-high","alert-medium","alert-low"
     );
 
-    const day = span.dataset.day?.padStart(2,"0");
-    const month = span.dataset.month?.padStart(2,"0");
-
+    const day = (span.dataset.day || "").padStart(2,"0");
+    const month = (span.dataset.month || "").padStart(2,"0");
     const key = `${day}.${month}.2026`;
 
-    const note = localStorage.getItem(getApiaryKey(key));
+    const oldMarker = td.querySelector(".note-marker");
+    if(oldMarker) oldMarker.remove();
 
-    const old = td.querySelector(".note-marker");
-    if(old) old.remove();
+    const noteData = localStorage.getItem(getApiaryKey(key));
 
-    if(note && note.trim() !== ""){
+    if(noteData && noteData.trim() !== "") {
 
       td.classList.add("has-note");
-      applySmartColorsAndAlerts(td, note);
+
+      applySmartColorsAndAlerts(td, noteData);
 
       const marker = document.createElement("span");
       marker.className = "note-marker";
 
-      const text = note.toLowerCase();
+      const text = noteData.toLowerCase();
       let icons = [];
 
 if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
@@ -3024,36 +3014,46 @@ if(text.includes("węza")){
 }
 
 
-      if(icons.length === 0) icons.push("📒");
+        if(icons.length === 0) icons.push("📒");
 
-      marker.innerHTML = icons.join(" ");
-      span.after(marker);
-    }
-  });
+        marker.innerHTML = icons.join(" ");
+        span.after(marker);
+      }
+    });
+  }
 
 
   // --- OTWIERANIE NOTATKI PO KLIKU ---
 
-  document.querySelectorAll("td .day-number").forEach(span => {
-    span.onclick = () => {
+ document.querySelectorAll("td .day-number").forEach(span => {
+    span.addEventListener("click", () => {
 
-      const day = span.dataset.day;
-      const month = span.dataset.month;
+      currentDay = span.dataset.day.padStart(2,"0");
+      currentMonth = span.dataset.month.padStart(2,"0");
 
-      currentKey = makeKey(day, month);
+      textarea = document.getElementById("notes");
 
-      const textarea = document.getElementById("notes");
+      const key = `${currentDay}.${currentMonth}.2026`;
+
       if(textarea){
+        let note =
+  localStorage.getItem(getApiaryKey(key));
 
-        const note =
-          localStorage.getItem(getApiaryKey(currentKey)) || "";
+if(!note && currentApiary){
+  note = localStorage.getItem(
+    currentApiary.id + "_" + key
+  );
+}
 
-        textarea.value = note;
+if(!note){
+  note = localStorage.getItem(key);
+}
+
+textarea.value = note || "";
         textarea.focus();
       }
-    };
-  });
-}
+    });
+  })
 
 // =========================
 // ⚡ QUICK NOTES FINAL BOSS
@@ -3061,77 +3061,109 @@ if(text.includes("węza")){
 
 window.addQuick = function(text){
 
-  const textarea = document.getElementById("notes");
+  const textarea =
+    document.getElementById("notes");
+
   if(!textarea) return;
 
-  textarea.value += (textarea.value ? "\n" : "") + "• " + text;
+  if(textarea.value.length > 0){
+    textarea.value += "\n";
+  }
+
+  textarea.value += "• " + text;
+
   textarea.focus();
 };
 
   // =========================
   // 💾 ZAPIS NOTATKI
   // =========================
-window.saveNote = function(){
+window.saveNote = function() {
 
-  const textarea = document.getElementById("notes");
-  if(!textarea || !currentKey) return;
+  textarea = document.getElementById("notes");
 
-  localStorage.setItem(
-    getApiaryKey(currentKey),
-    textarea.value
-  );
+  // auto dzisiejsza data
+  if(!currentDay){
+
+    const today = new Date();
+
+    currentDay =
+      String(today.getDate()).padStart(2,"0");
+
+    currentMonth =
+      String(today.getMonth()+1).padStart(2,"0");
+  }
+
+  const key =
+    `${currentDay}.${currentMonth}.2026`;
+
+  if(textarea){
+
+    localStorage.setItem(
+      getApiaryKey(key),
+      textarea.value
+    );
+  }
 
   updateMarkers();
-  autoScaleCalendarText();
 
-  if(typeof loadWeatherAndAssist === "function"){
-    loadWeatherAndAssist();
-  }
+  setTimeout(autoScaleCalendarText, 50);
+
+  loadWeatherAndAssist();
 };
 
   // --- WYSZUKIWARKA NOTATEK ---
-const searchInput = document.getElementById("search-notes");
-const resultsContainer = document.getElementById("search-results");
+  const searchInput = document.getElementById('search-notes');
+  const resultsContainer = document.getElementById('search-results');
 
-if(searchInput && resultsContainer){
+  if(searchInput && resultsContainer){
 
-  searchInput.addEventListener("input", () => {
+    searchInput.addEventListener('input', () => {
 
-    const query = searchInput.value.toLowerCase().trim();
-    resultsContainer.innerHTML = "";
+      const query = searchInput.value.toLowerCase().trim();
 
-    document.querySelectorAll(".day-number")
-      .forEach(d => d.classList.remove("highlight-day"));
+      resultsContainer.innerHTML = '';
 
-    if(!query) return;
+      document.querySelectorAll('.day-number')
+        .forEach(d => d.classList.remove('highlight-day'));
 
-    for(let i=0;i<localStorage.length;i++){
+      if(!query) return;
 
-      const key = localStorage.key(i);
-      const note = localStorage.getItem(key);
+      for(let i=0;i<localStorage.length;i++){
 
-      if(note && note.toLowerCase().includes(query)){
+        const key = localStorage.key(i);
+        if(!isValidNoteKey(key)) continue;
 
-        const div = document.createElement("div");
-        div.innerHTML = `<b>${key}</b> ➤ ${note}`;
-        resultsContainer.appendChild(div);
+        const note = localStorage.getItem(key);
+
+        if(note && note.toLowerCase().includes(query)){
+
+          const div = document.createElement('div');
+          div.innerHTML = `<b>${key}</b> ➤ ${note}`;
+          resultsContainer.appendChild(div);
+
+          const [dd,mm] = key.split('.');
+          const el = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
+          if(el) el.classList.add("highlight-day");
+        }
       }
-    }
-  });
-}
+    });
+  }
 
   // =========================
   // 📍 SCROLL DO DZIŚ
   // =========================
-function scrollToToday(){
+  function scrollToToday(){
 
-  const d = String(new Date().getDate()).padStart(2,"0");
-  const m = String(new Date().getMonth()+1).padStart(2,"0");
+    const today = new Date();
 
-  const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
-  if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
-}
+    const d = String(today.getDate()).padStart(2,"0");
+    const m = String(today.getMonth()+1).padStart(2,"0");
 
+    const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
+
+    if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+  }
 // =========================
 // 📍 INTELIGENTNY GPS PASIEKI PRO
 // =========================
@@ -3423,7 +3455,7 @@ renderLocation(lat, lon, loc || {});
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&current_weather=true&timezone=auto`;
 
       fetch(url).then(r=>r.json()).then(data=>{
-      window.weatherData = data;
+      
 
         const cw = data.current_weather || {temperature:0,windspeed:0};
 
@@ -3603,18 +3635,9 @@ function generateBeeForecast(days){
     updateSmartAssistant(weatherData);
   }
 
-function updateSmartAssistant(weatherData){
-
-  const box=document.getElementById("assistant-text");
-
-  if(!box) return;
-
-  if(!weatherData){
-
-    box.innerHTML = "📡 Brak danych pogodowych";
-
-    return;
-  }
+ function updateSmartAssistant(weatherData){
+    const box=document.getElementById("assistant-text");
+    if(!box) return;
     const today=new Date();
 
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
@@ -4059,10 +4082,9 @@ function generateFinalBossAlerts(){
    // =========================
   // 🚀 START SYSTEMU
   // =========================
-updateMarkers();
+  updateMarkers();
 
-// 📍 GPS START
-getGPSOnce();
+getGPSOnce();     // szybki start
 
 const savedGPS = localStorage.getItem("gpsEnabled");
 
@@ -4079,49 +4101,41 @@ if(savedGPS === "true"){
   getGPSOnce();
   startLiveGPS();
   startGPSSaveLoop();
-
-  if(typeof generateFinalBossAlerts === "function"){
-    generateFinalBossAlerts();
-  }
+  generateFinalBossAlerts()
 }
 
-  setTimeout(() => {
-  autoScaleCalendarText();
+  setTimeout(autoScaleCalendarText, 100);
   scrollToToday();
-}, 100);
 
-if(typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
-if(typeof analyzeHivesPro === "function") analyzeHivesPro();
-if(typeof generateHiveRanking === "function") generateHiveRanking();
-if(typeof generateHiveAlerts === "function") generateHiveAlerts();
-if(typeof generateWeeklyPlanPro === "function") generateWeeklyPlanPro();
-if(typeof generateHoneyForecast === "function") generateHoneyForecast();
-if(typeof runAIModule === "function") runAIModule();
-if(typeof loadApiaryData === "function") loadApiaryData();
+  if(typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
+  if(typeof analyzeHivesPro === "function") analyzeHivesPro();
+  if(typeof generateHiveRanking === "function") generateHiveRanking();
+  if(typeof generateHiveAlerts === "function") generateHiveAlerts();
+  if(typeof generateWeeklyPlanPro === "function") generateWeeklyPlanPro();
+  if(typeof generateHoneyForecast === "function") generateHoneyForecast();
+  if(typeof runAIModule === "function") runAIModule();
+  if(typeof loadApiaryData === "function") loadApiaryData();
 
   const hivesCountInput = document.getElementById("hivesCount");
-if(hivesCountInput){
-  hivesCountInput.addEventListener("change", () => {
-    if(typeof generateFamilyNotes === "function"){
-      generateFamilyNotes();
-    }
-  });
-}
+  const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
 
-const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
-if(saveFamilyNotesBtn){
-  saveFamilyNotesBtn.addEventListener("click", () => {
-    if(typeof saveFamilyNotes === "function"){
-      saveFamilyNotes();
-    }
-  });
-}
-
-setInterval(() => {
-  if(typeof loadWeatherAndAssist === "function"){
-    loadWeatherAndAssist();
+  if(hivesCountInput){
+    hivesCountInput.addEventListener('change', function(){
+      if(typeof generateFamilyNotes === "function") generateFamilyNotes();
+    });
   }
-}, 300000);
+
+  if(saveFamilyNotesBtn){
+    saveFamilyNotesBtn.addEventListener('click', function(){
+      if(typeof saveFamilyNotes === "function") saveFamilyNotes();
+    });
+  }
+
+  setInterval(() => {
+    if(typeof loadWeatherAndAssist === "function"){
+      loadWeatherAndAssist();
+    }
+  }, 110000);
 
 setTimeout(autoScaleCalendarText, 200);
 
