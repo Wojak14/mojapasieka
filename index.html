@@ -67,8 +67,11 @@ td {
 }
 
 /* 🔥 IKONY */
-.note-marker {
-  font-size: 1em;
+.note-marker{
+  display:block;
+  font-size:16px;
+  margin-top:2px;
+  line-height:1.2;
 }
 
 
@@ -129,7 +132,8 @@ td {
 /* 📝 NOTATKI */
 .notes {
   width: 100%;
-  height: 80px;
+  min-height: 110px;
+  font-size: 16px;
 }
 
 #autosave-status {
@@ -234,8 +238,6 @@ td {
     font-weight: bold;
   }
 
-}
-
 /* 🔥 FULLSCREEN FIX */
 html, body {
   margin: 0;
@@ -325,12 +327,6 @@ Legenda + notatki = szerokość kalendarza
   max-width: 100% !important;
 }
 
-/* textarea */
-.notes {
-  width: 100%;
-  min-height: 110px;
-  font-size: 16px;
-}
 
 /* button */
 #day-note-box button {
@@ -2798,39 +2794,224 @@ function updateMarkers() {
       let icons = [];
 
 if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
-        if(text.includes("paski")) icons.push("🏷️");
-        if(text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("zakończenie leczenia")) icons.push("🛡️");
-        if(text.includes("przegląd")) icons.push("🔍");
-        if(text.includes("sprawdzenie")) icons.push("📋");
-        if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
-        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
-        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-        if(text.includes("ramka") || text.includes("ramki") || text.includes("ramek")) icons.push("🧱");
-        if(text.includes("nadstawka")) icons.push("📦");
-        if(text.includes("deszcz")) icons.push("🌧");
-        if(text.includes("wiatr")) icons.push("💨");
-        if(text.includes("burza")) icons.push("🌩️");
-        if(text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-        if(text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pochmurno")) icons.push("🌫️");
-        if(text.includes("niska temperatura")) icons.push("🌡");
-        if(text.includes("trutnie")) icons.push("👨‍🌾");
-        if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
-        if(text.includes("słonecznie")) icons.push("☀️");
-        if(text.includes("mgła")) icons.push("🌁");
-        if(text.includes("grad")) icons.push("🧊");
-        if(text.includes("czerw") || text.includes("czerwiem") || text.includes("czerwiu")) icons.push("🐣");
-        if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
-        if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
-        if(text.includes("ule") || text.includes("ul") || text.includes("pasieka")) icons.push("🏠");
-        if(text.includes("złe warunki") || text.includes("brak prac w ulu")) icons.push("⛔");
-        if(text.includes("dezynfekcja")) icons.push("🧴");
-        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
-        if(text.includes("węza")) icons.push("🧇");
+// 🍯 MIÓD
+if(
+  text.includes("miód") ||
+  text.includes("miodobranie")
+){
+  icons.push("🫙");
+}
+
+// 🍯 KARMIENIE
+if(
+  text.includes("karmienie") ||
+  text.includes("syrop") ||
+  text.includes("ciasto")
+){
+  icons.push("🍯");
+}
+
+// 💊 LECZENIE
+if(
+  text.includes("leczenie") ||
+  text.includes("warroza") ||
+  text.includes("apiwarol")
+){
+  icons.push("💊");
+}
+
+// 🏷️ PASKI
+if(text.includes("paski")){
+  icons.push("🏷️");
+}
+
+// 🌬️ KWAS
+if(text.includes("kwas")){
+  icons.push("🌬️");
+}
+
+// 🛡️ KONIEC LECZENIA
+if(text.includes("zakończenie leczenia")){
+  icons.push("🛡️");
+}
+
+// 🔍 PRZEGLĄD
+if(
+  text.includes("przegląd") ||
+  text.includes("kontrola")
+){
+  icons.push("🔍");
+}
+
+// 🕵️ INSPEKCJA
+if(text.includes("inspekcja")){
+  icons.push("🕵️");
+}
+
+// 📋 SPRAWDZENIE
+if(text.includes("sprawdzenie")){
+  icons.push("📋");
+}
+
+// 🐝 RÓJ
+if(
+  text.includes("rój") ||
+  text.includes("rojka")
+){
+  icons.push("🐝");
+}
+
+// 🌸 POŻYTEK
+if(
+  text.includes("pożytek") ||
+  text.includes("pyłek") ||
+  text.includes("nektar")
+){
+  icons.push("🌸");
+}
+
+// 👑 MATKA
+if(
+  text.includes("matka") ||
+  text.includes("wymiana matki")
+){
+  icons.push("👑");
+}
+
+// 🧱 RAMKI
+if(
+  text.includes("ramka") ||
+  text.includes("ramki")
+){
+  icons.push("🧱");
+}
+
+// 📦 NADSTAWKA
+if(text.includes("nadstawka")){
+  icons.push("📦");
+}
+
+// 🌧️ DESZCZ
+if(text.includes("deszcz")){
+  icons.push("🌧️");
+}
+
+// 💨 WIATR
+if(text.includes("wiatr")){
+  icons.push("💨");
+}
+
+// 🌩️ BURZA
+if(text.includes("burza")){
+  icons.push("🌩️");
+}
+
+// ❄️ ŚNIEG
+if(
+  text.includes("śnieg") ||
+  text.includes("zima")
+){
+  icons.push("❄️");
+}
+
+// 🥶 MRÓZ
+if(
+  text.includes("mróz") ||
+  text.includes("zimno")
+){
+  icons.push("🥶");
+}
+
+// 🥵 UPAŁ
+if(
+  text.includes("upał") ||
+  text.includes("gorąco")
+){
+  icons.push("🥵");
+}
+
+// 🌫️ POCHMURNO
+if(text.includes("pochmurno")){
+  icons.push("🌫️");
+}
+
+// 🌡️ TEMPERATURA
+if(text.includes("temperatura")){
+  icons.push("🌡️");
+}
+
+// 🌁 MGŁA
+if(text.includes("mgła")){
+  icons.push("🌁");
+}
+
+// ☀️ SŁOŃCE
+if(text.includes("słonecznie")){
+  icons.push("☀️");
+}
+
+// 🧊 GRAD
+if(text.includes("grad")){
+  icons.push("🧊");
+}
+
+// 🐣 CZERW
+if(
+  text.includes("czerw") ||
+  text.includes("czerwiu")
+){
+  icons.push("🐣");
+}
+
+// 🧹 ODSKLEPIANIE
+if(
+  text.includes("odsklepianie") ||
+  text.includes("miotła")
+){
+  icons.push("🧹");
+}
+
+// 👨‍🌾 TRUTNIE
+if(text.includes("trutnie")){
+  icons.push("👨‍🌾");
+}
+
+// 🏠 ULE
+if(
+  text.includes("ul") ||
+  text.includes("ule") ||
+  text.includes("pasieka")
+){
+  icons.push("🏠");
+}
+
+// ⛔ ZŁE WARUNKI
+if(
+  text.includes("złe warunki") ||
+  text.includes("brak prac")
+){
+  icons.push("⛔");
+}
+
+// 🧴 DEZYNFEKCJA
+if(text.includes("dezynfekcja")){
+  icons.push("🧴");
+}
+
+// 🏃‍♂️🐝 UCIECZKA
+if(text.includes("ucieczka pszczół")){
+  icons.push("🏃‍♂️🐝");
+}
+
+// 🐝🌿 DZIKIE
+if(text.includes("dzikie pszczoły")){
+  icons.push("🐝🌿");
+}
+
+// 🧇 WĘZA
+if(text.includes("węza")){
+  icons.push("🧇");
+}
 
 
         if(icons.length === 0) icons.push("📒");
@@ -3274,6 +3455,7 @@ renderLocation(lat, lon, loc || {});
       const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&current_weather=true&timezone=auto`;
 
       fetch(url).then(r=>r.json()).then(data=>{
+      window.weatherData = data;
 
         const cw = data.current_weather || {temperature:0,windspeed:0};
 
@@ -3453,9 +3635,18 @@ function generateBeeForecast(days){
     updateSmartAssistant(weatherData);
   }
 
- function updateSmartAssistant(weatherData){
-    const box=document.getElementById("assistant-text");
-    if(!box) return;
+function updateSmartAssistant(weatherData){
+
+  const box=document.getElementById("assistant-text");
+
+  if(!box) return;
+
+  if(!weatherData){
+
+    box.innerHTML = "📡 Brak danych pogodowych";
+
+    return;
+  }
     const today=new Date();
 
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
@@ -3953,7 +4144,7 @@ if(savedGPS === "true"){
     if(typeof loadWeatherAndAssist === "function"){
       loadWeatherAndAssist();
     }
-  }, 110000);
+  }, 300000);
 
 setTimeout(autoScaleCalendarText, 200);
 
