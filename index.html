@@ -2743,14 +2743,14 @@ const APIARIES = [
   {
     id: "pasieka_1",
     name: "Pasieka Werpol",
-    lat: 52.411611,
-    lon: 23.161000
+    lat: 52.407231,
+    lon: 23.152673
   },
   {
     id: "pasieka_2",
     name: "Pasieka Borysowszczyzna",
-    lat: 52.424389,
-    lon: 23.111806
+    lat: 52.419870,
+    lon: 23.091900
   }
 ];
 
@@ -2772,8 +2772,8 @@ function detectNearestApiary(lat, lon){
     }
   });
 
-  // max 5 km
-  if(minDistance <= 5){
+  // max 10 km
+  if(minDistance <= 10){
     currentApiary = nearest;
   } else {
     currentApiary = null;
