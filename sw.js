@@ -1,15 +1,13 @@
-const CACHE_NAME = "pasieka-finalboss-v11";
+const CACHE_NAME = "pasieka-finalboss-v13";
 
 // ========================================
-// CACHE FILES
+// PLIKI OFFLINE
 // ========================================
+
 const STATIC_ASSETS = [
-
   "./",
   "./index.html",
   "./manifest.json",
-
-  "./app.js",
 
   "./icons/icon-192.png",
   "./icons/icon-512.png"
@@ -18,12 +16,12 @@ const STATIC_ASSETS = [
 // ========================================
 // INSTALL
 // ========================================
+
 self.addEventListener("install", event => {
 
   event.waitUntil(
 
     caches.open(CACHE_NAME)
-
       .then(cache => {
 
         return Promise.all(
@@ -31,25 +29,16 @@ self.addEventListener("install", event => {
           STATIC_ASSETS.map(asset => {
 
             return fetch(asset)
-
               .then(response => {
 
-                if(!response.ok){
-                  throw new Error(asset);
-                }
+   if(response.ok){
 
-                return cache.put(asset, response);
-              })
-
-              .catch(err => {
-
-                console.log(
-                  "CACHE FAIL:",
-                  asset,
-                  err
-                );
-              });
-
+  return cache.put(
+    asset,
+    response.clone()
+  );
+})
+              .catch(() => {});
           })
         );
       })
@@ -61,6 +50,7 @@ self.addEventListener("install", event => {
 // ========================================
 // ACTIVATE
 // ========================================
+
 self.addEventListener("activate", event => {
 
   event.waitUntil(
@@ -72,7 +62,6 @@ self.addEventListener("activate", event => {
         keys.map(key => {
 
           if(key !== CACHE_NAME){
-
             return caches.delete(key);
           }
 
@@ -87,140 +76,66 @@ self.addEventListener("activate", event => {
 // ========================================
 // FETCH
 // ========================================
+
 self.addEventListener("fetch", event => {
 
-  if(event.request.method !== "GET"){
-    return;
-  }
+  if(event.request.method !== "GET") return;
 
-  // OPEN METEO
-  if(
-    event.request.url.includes(
-      "open-meteo.com"
-    )
-  ){
-
-    event.respondWith(
-
-      networkFirst(event.request)
-    );
-
-    return;
-  }
-
-  // HTML
-  if(
-    event.request.headers
-      .get("accept")
-      ?.includes("text/html")
-  ){
-
-    event.respondWith(
-
-      staleWhileRevalidate(
-        event.request
-      )
-    );
-
-    return;
-  }
-
-  // STATIC
   event.respondWith(
 
-    cacheFirst(event.request)
+    caches.match(event.request)
+
+      .then(cached => {
+
+        if(cached){
+          return cached;
+        }
+
+        return fetch(event.request)
+
+          .then(response => {
+
+            if(
+              !response ||
+              response.status !== 200
+            ){
+              return response;
+            }
+
+            const responseClone =
+              response.clone();
+
+            caches.open(CACHE_NAME)
+              .then(cache => {
+
+                cache.put(
+                  event.request,
+                  responseClone
+                );
+
+              });
+
+            return response;
+
+          })
+
+          .catch(() => {
+
+            // OFFLINE FALLBACK
+            if(
+              event.request.headers
+              .get("accept")
+              ?.includes("text/html")
+            ){
+
+            return caches.match("/index.html")
+  || caches.match("./index.html")
+  || caches.match("/");
+            }
+
+          });
+
+      })
   );
+
 });
-
-// ========================================
-// CACHE FIRST
-// ========================================
-async function cacheFirst(request){
-
-  const cached =
-    await caches.match(request);
-
-  if(cached){
-    return cached;
-  }
-
-  try{
-
-    const response =
-      await fetch(request);
-
-    const cache =
-      await caches.open(CACHE_NAME);
-
-    cache.put(
-      request,
-      response.clone()
-    );
-
-    return response;
-
-  }catch(e){
-
-    return caches.match("./index.html");
-  }
-}
-
-// ========================================
-// NETWORK FIRST
-// ========================================
-async function networkFirst(request){
-
-  try{
-
-    const response =
-      await fetch(request);
-
-    const cache =
-      await caches.open(CACHE_NAME);
-
-    cache.put(
-      request,
-      response.clone()
-    );
-
-    return response;
-
-  }catch(e){
-
-    const cached =
-      await caches.match(request);
-
-    return cached ||
-      caches.match("./index.html");
-  }
-}
-
-// ========================================
-// STALE
-// ========================================
-async function staleWhileRevalidate(request){
-
-  const cache =
-    await caches.open(CACHE_NAME);
-
-  const cached =
-    await cache.match(request);
-
-  const networkFetch = fetch(request)
-
-    .then(response => {
-
-      cache.put(
-        request,
-        response.clone()
-      );
-
-      return response;
-    })
-
-    .catch(() => null);
-
-  return cached ||
-         networkFetch ||
-         caches.match("./index.html");
-}

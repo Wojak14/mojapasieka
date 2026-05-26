@@ -388,6 +388,128 @@ button{
   cursor:pointer;
 }
 
+/* =====================================
+📒 FLOATING NOTE FINAL BOSS
+===================================== */
+
+#floating-note{
+
+  position:fixed;
+  inset:0;
+
+  background:rgba(0,0,0,0.5);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  z-index:9999;
+}
+
+.hidden{
+  display:none !important;
+}
+
+.floating-box{
+
+  width:90%;
+  max-width:500px;
+
+  background:white;
+
+  padding:15px;
+
+  border-radius:14px;
+
+  box-shadow:0 0 20px rgba(0,0,0,0.3);
+}
+
+.floating-header{
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  margin-bottom:10px;
+
+  font-weight:bold;
+}
+
+#floating-textarea{
+
+  width:100%;
+  min-height:180px;
+
+  font-size:16px;
+
+  margin-bottom:10px;
+
+  padding:10px;
+
+  border-radius:10px;
+
+  border:1px solid #ccc;
+
+  box-sizing:border-box;
+}
+
+.floating-buttons{
+
+  display:flex;
+  gap:5px;
+
+  flex-wrap:wrap;
+
+  margin-bottom:10px;
+}
+
+.floating-buttons button{
+
+  border:none;
+
+  padding:8px 10px;
+
+  border-radius:10px;
+
+  cursor:pointer;
+
+  font-size:15px;
+}
+
+#close-floating{
+
+  border:none;
+
+  background:red;
+
+  color:white;
+
+  border-radius:8px;
+
+  padding:6px 10px;
+
+  cursor:pointer;
+}
+
+#save-floating{
+
+  width:100%;
+
+  border:none;
+
+  background:#2e7d32;
+
+  color:white;
+
+  padding:12px;
+
+  border-radius:12px;
+
+  font-size:16px;
+
+  cursor:pointer;
+}
+
 
 </style>
 
@@ -481,6 +603,109 @@ font-weight:bold;
 <div id="search-panel">
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
+</div>
+
+<div id="floating-note" class="hidden">
+
+  <div class="floating-box">
+
+    <div class="floating-header">
+      📝 Notatka dnia
+      <button onclick="closeFloatingNote()">✖</button>
+    </div>
+
+    <textarea
+      id="floating-textarea"
+      rows="8"
+    ></textarea>
+
+    <div class="floating-buttons">
+
+      <!-- 🍯 MIÓD -->
+<button onclick="addFloatingQuick('miód')">🫙</button>
+<button onclick="addFloatingQuick('miodobranie')">🫙</button>
+
+<!-- 🍯 KARMIENIE -->
+<button onclick="addFloatingQuick('karmienie')">🍯</button>
+<button onclick="addFloatingQuick('syrop')">🍯</button>
+<button onclick="addFloatingQuick('ciasto')">🍯</button>
+
+<!-- 💊 LECZENIE -->
+<button onclick="addFloatingQuick('leczenie')">💊</button>
+<button onclick="addFloatingQuick('warroza')">💊</button>
+<button onclick="addFloatingQuick('apiwarol')">💊</button>
+
+<!-- 🏷️ PASKI / KWAS / KONIEC -->
+<button onclick="addFloatingQuick('paski')">🏷️</button>
+<button onclick="addFloatingQuick('kwas')">🌬️</button>
+<button onclick="addFloatingQuick('zakończenie leczenia')">🛡️</button>
+
+<!-- 🔍 INSPEKCJE -->
+<button onclick="addFloatingQuick('przegląd')">🔍</button>
+<button onclick="addFloatingQuick('kontrola')">🔍</button>
+<button onclick="addFloatingQuick('inspekcja')">🕵️</button>
+<button onclick="addFloatingQuick('sprawdzenie')">📋</button>
+
+<!-- 🐝 RÓJKA -->
+<button onclick="addFloatingQuick('rój')">🐝</button>
+<button onclick="addFloatingQuick('rojka')">🐝</button>
+
+<!-- 🌸 POŻYTEK -->
+<button onclick="addFloatingQuick('pożytek')">🌸</button>
+<button onclick="addFloatingQuick('pyłek')">🌸</button>
+<button onclick="addFloatingQuick('nektar')">🌸</button>
+
+<!-- 👑 MATKA -->
+<button onclick="addFloatingQuick('matka')">👑</button>
+<button onclick="addFloatingQuick('wymiana matki')">👑</button>
+
+<!-- 🧱 RAMKI / ULE -->
+<button onclick="addFloatingQuick('ramki')">🧱</button>
+<button onclick="addFloatingQuick('ramka')">🧱</button>
+<button onclick="addFloatingQuick('ul')">🏠</button>
+<button onclick="addFloatingQuick('ule')">🏠</button>
+<button onclick="addFloatingQuick('pasieka')">🏠</button>
+
+<!-- 📦 NADSTAWKA -->
+<button onclick="addFloatingQuick('nadstawka')">📦</button>
+
+<!-- 🌦️ POGODA -->
+<button onclick="addFloatingQuick('deszcz')">🌧️</button>
+<button onclick="addFloatingQuick('wiatr')">💨</button>
+<button onclick="addFloatingQuick('burza')">🌩️</button>
+<button onclick="addFloatingQuick('śnieg')">❄️</button>
+<button onclick="addFloatingQuick('zima')">❄️</button>
+<button onclick="addFloatingQuick('mróz')">🥶</button>
+<button onclick="addFloatingQuick('upał')">🥵</button>
+<button onclick="addFloatingQuick('pochmurno')">🌫️</button>
+<button onclick="addFloatingQuick('temperatura')">🌡️</button>
+<button onclick="addFloatingQuick('mgła')">🌁</button>
+<button onclick="addFloatingQuick('słonecznie')">☀️</button>
+<button onclick="addFloatingQuick('grad')">🧊</button>
+
+<!-- 🐣 ROZWÓJ -->
+<button onclick="addFloatingQuick('czerw')">🐣</button>
+<button onclick="addFloatingQuick('czerwiu')">🐣</button>
+
+<!-- 🧹 TECHNICZNE -->
+<button onclick="addFloatingQuick('odsklepianie')">🧹</button>
+<button onclick="addFloatingQuick('miotła')">🧹</button>
+<button onclick="addFloatingQuick('trutnie')">👨‍🌾</button>
+<button onclick="addFloatingQuick('dezynfekcja')">🧴</button>
+
+<!-- ⚠️ PROBLEMY -->
+<button onclick="addFloatingQuick('złe warunki')">⛔</button>
+<button onclick="addFloatingQuick('brak prac')">⛔</button>
+<button onclick="addFloatingQuick('ucieczka pszczół')">🏃‍♂️🐝</button>
+<button onclick="addFloatingQuick('dzikie pszczoły')">🐝🌿</button>
+
+<!-- 🧇 WĘZA -->
+<button onclick="addFloatingQuick('węza')">🧇</button>
+
+<button class="save-btn" onclick="saveFloatingNote()">💾 Zapisz</button>
+
+  </div>
+
 </div>
 
 </body>
@@ -2779,7 +3004,38 @@ function updateMarkers() {
     const oldMarker = td.querySelector(".note-marker");
     if(oldMarker) oldMarker.remove();
 
-    const noteData = localStorage.getItem(getApiaryKey(key));
+    let noteData = null;
+
+// 1. aktywna pasieka
+if(currentApiary){
+  noteData = localStorage.getItem(
+    currentApiary.id + "_" + key
+  );
+}
+
+// 2. fallback zwykły
+if(!noteData){
+  noteData = localStorage.getItem(key);
+}
+
+// 3. fallback wszystkie pasieki
+if(!noteData){
+
+  for(let i=0;i<localStorage.length;i++){
+
+    const storageKey = localStorage.key(i);
+
+    if(
+      storageKey &&
+      storageKey.endsWith(key)
+    ){
+      noteData =
+        localStorage.getItem(storageKey);
+
+      break;
+    }
+  }
+}
 
     if(noteData && noteData.trim() !== "") {
 
@@ -3029,9 +3285,9 @@ if(text.includes("węza")){
     span.addEventListener("click", () => {
 
       currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = span.dataset.month.padStart(2,"0");
+      currentMonth = (span.dataset.month || "").padStart(2,"0");
 
-      textarea = document.getElementById("notes");
+      const textarea = document.getElementById("notes");
 
       const key = `${currentDay}.${currentMonth}.2026`;
 
@@ -3075,30 +3331,60 @@ window.addQuick = function(text){
   textarea.focus();
 };
 
+
+// =====================================
+// 📒 FLOATING NOTE SYSTEM
+// =====================================
+
+window.closeFloatingNote = function(){
+
+  document
+    .getElementById("floating-note")
+    .classList.add("hidden");
+};
+
+window.addFloatingQuick = function(text){
+
+  const ta =
+    document.getElementById("floating-textarea");
+
+  ta.value += text + " ";
+};
+
+window.saveFloatingNote = function(){
+
+  if(!currentDay) return;
+
+  const key =
+    `${currentDay}.${currentMonth}.2026`;
+
+  const ta =
+    document.getElementById("floating-textarea");
+
+  localStorage.setItem(
+    getApiaryKey(key),
+    ta.value
+  );
+
+  updateMarkers();
+
+  closeFloatingNote();
+};
+
+
   // =========================
   // 💾 ZAPIS NOTATKI
   // =========================
 window.saveNote = function() {
 
-  textarea = document.getElementById("notes");
-
-  // auto dzisiejsza data
   if(!currentDay){
-
-    const today = new Date();
-
-    currentDay =
-      String(today.getDate()).padStart(2,"0");
-
-    currentMonth =
-      String(today.getMonth()+1).padStart(2,"0");
+    alert("Najpierw kliknij dzień");
+    return;
   }
 
-  const key =
-    `${currentDay}.${currentMonth}.2026`;
+  const key = `${currentDay}.${currentMonth}.2026`;
 
   if(textarea){
-
     localStorage.setItem(
       getApiaryKey(key),
       textarea.value
@@ -3109,7 +3395,29 @@ window.saveNote = function() {
 
   setTimeout(autoScaleCalendarText, 50);
 
-  loadWeatherAndAssist();
+  if(typeof loadWeatherAndAssist === "function"){
+    loadWeatherAndAssist();
+  }
+
+  // 🔥 POWRÓT DO DNIA W KALENDARZU
+  const activeDay = document.querySelector(
+    `.day-number[data-day="${currentDay}"][data-month="${currentMonth}"]`
+  );
+
+  if(activeDay){
+
+    activeDay.scrollIntoView({
+      behavior: "smooth",
+      block: "center"
+    });
+
+    // podświetlenie
+    activeDay.classList.add("highlight-day");
+
+    setTimeout(() => {
+      activeDay.classList.remove("highlight-day");
+    }, 2000);
+  }
 };
 
   // --- WYSZUKIWARKA NOTATEK ---
@@ -3274,6 +3582,7 @@ function getGPSOnce(){
       if(!isNaN(lat) && !isNaN(lon)){
 
         detectNearestApiary(lat, lon);
+        updateMarkers();
 
         localStorage.setItem("lastLat", lat);
         localStorage.setItem("lastLon", lon);
@@ -3305,6 +3614,7 @@ function startLiveGPS(){
       if(!isNaN(lat) && !isNaN(lon)){
 
         detectNearestApiary(lat, lon);
+        updateMarkers();
 
         localStorage.setItem("lastLat", lat);
         localStorage.setItem("lastLon", lon);
@@ -4360,19 +4670,32 @@ setTimeout(() => {
 
 
 // =========================
-// 🧩 SERVICE WORKER
+// 🔥 SERVICE WORKER START
 // =========================
+
 if ("serviceWorker" in navigator) {
 
   window.addEventListener("load", () => {
 
     navigator.serviceWorker
       .register("./service-worker.js")
+
       .then((reg) => {
-        console.log("SW OK:", reg.scope);
+
+        console.log(
+          "✅ Service Worker OK:",
+          reg.scope
+        );
+
       })
+
       .catch((err) => {
-        console.error("SW ERROR:", err);
+
+        console.log(
+          "❌ Service Worker ERROR:",
+          err
+        );
+
       });
 
   });
