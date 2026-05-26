@@ -2921,6 +2921,8 @@ Dodaj miód
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
+let textarea = document.getElementById("notes");
+
 let textarea = null;
 let currentDay = null;
 let currentMonth = null;
@@ -3281,35 +3283,36 @@ if(text.includes("węza")){
 
   // --- OTWIERANIE NOTATKI PO KLIKU ---
 
- document.querySelectorAll("td .day-number").forEach(span => {
-    span.addEventListener("click", () => {
+document.querySelectorAll("td .day-number").forEach(span => {
 
-      currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = (span.dataset.month || "").padStart(2,"0");
+  span.addEventListener("click", () => {
 
-      const textarea = document.getElementById("notes");
+    currentDay = span.dataset.day.padStart(2,"0");
+    currentMonth = (span.dataset.month || "").padStart(2,"0");
 
-      const key = `${currentDay}.${currentMonth}.2026`;
+    const textareaEl = document.getElementById("notes");
 
-      if(textarea){
-        let note =
-  localStorage.getItem(getApiaryKey(key));
+    const key = `${currentDay}.${currentMonth}.2026`;
 
-if(!note && currentApiary){
-  note = localStorage.getItem(
-    currentApiary.id + "_" + key
-  );
-}
+    let note =
+      localStorage.getItem(getApiaryKey(key));
 
-if(!note){
-  note = localStorage.getItem(key);
-}
+    if(!note && currentApiary){
+      note = localStorage.getItem(currentApiary.id + "_" + key);
+    }
 
-textarea.value = note || "";
-        textarea.focus();
-      }
-    });
-  })
+    if(!note){
+      note = localStorage.getItem(key);
+    }
+
+    if(textareaEl){
+      textareaEl.value = note || "";
+      textareaEl.focus();
+    }
+
+  });
+
+});
 
 // =========================
 // ⚡ QUICK NOTES FINAL BOSS
