@@ -67,11 +67,8 @@ td {
 }
 
 /* 🔥 IKONY */
-.note-marker{
-  display:block;
-  font-size:16px;
-  margin-top:2px;
-  line-height:1.2;
+.note-marker {
+  font-size: 1em;
 }
 
 
@@ -132,8 +129,7 @@ td {
 /* 📝 NOTATKI */
 .notes {
   width: 100%;
-  min-height: 110px;
-  font-size: 16px;
+  height: 80px;
 }
 
 #autosave-status {
@@ -238,6 +234,8 @@ td {
     font-weight: bold;
   }
 
+}
+
 /* 🔥 FULLSCREEN FIX */
 html, body {
   margin: 0;
@@ -327,6 +325,12 @@ Legenda + notatki = szerokość kalendarza
   max-width: 100% !important;
 }
 
+/* textarea */
+.notes {
+  width: 100%;
+  min-height: 110px;
+  font-size: 16px;
+}
 
 /* button */
 #day-note-box button {
@@ -357,37 +361,6 @@ Legenda + notatki = szerokość kalendarza
 
   cursor:pointer;
 }
-
-#monthlyHoney div{
-  background:#fff8dc;
-  padding:8px;
-  margin:5px 0;
-  border-radius:8px;
-  font-size:18px;
-}
-
-#yearHoney{
-  margin-top:10px;
-  font-size:22px;
-  font-weight:bold;
-  color:#b8860b;
-}
-
-#honeyAmount{
-  width:120px;
-  padding:8px;
-  font-size:18px;
-}
-
-button{
-  padding:10px 15px;
-  font-size:18px;
-  border:none;
-  border-radius:8px;
-  background:#fbc02d;
-  cursor:pointer;
-}
-
 
 </style>
 
@@ -563,11 +536,9 @@ font-weight:bold;
 <div id="swarm-box-01"></div>
 <div id="assistant-box-01"></div>
 
+
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-01" class="full-width-sync">
-
-
-
   <h3>Notatka dnia</h3>
   <textarea id="notes-01" rows="6" style="width:100%;"></textarea>
   <br><br>
@@ -593,7 +564,7 @@ font-weight:bold;
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -607,7 +578,7 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -720,7 +691,7 @@ font-weight:bold;
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -734,7 +705,7 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -873,7 +844,7 @@ font-weight:bold;
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -887,7 +858,7 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1037,7 +1008,7 @@ font-weight:bold;
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1051,7 +1022,7 @@ font-weight:bold;
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1063,27 +1034,11 @@ font-weight:bold;
 <div id="assistant-box-04"></div>
 
 
-<!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
+<!-- Licznik miodu -->
+<div id="inspection-honey-04">
+  <div id="inspection-count-04">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  <div id="honey-total-04">🫙 Zebrany miód w 2026: 0 kg</div>
 </div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
 
 <!-- Notatki dnia -->
 <div id="day-note-box-04">
@@ -1231,27 +1186,11 @@ Dodaj miód
 <div id="swarm-box-05"></div>
 <div id="assistant-box-05"></div>
 
-<!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
+<!-- Licznik miodu -->
+<div id="inspection-honey-05">
+  <div id="inspection-count-05">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  <div id="honey-total-05">🫙 Zebrany miód w 2026: 0 kg</div>
 </div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
 
 <!-- Notatki dnia -->
 <div id="day-note-box-05" class="full-width-sync">
@@ -1280,7 +1219,7 @@ Dodaj miód
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1294,7 +1233,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1390,27 +1329,11 @@ Dodaj miód
 <div id="assistant-box-06"></div>
 
 
-<!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
+<!-- Licznik miodu -->
+<div id="inspection-honey-06">
+  <div id="inspection-count-06">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  <div id="honey-total-06">🫙 Zebrany miód w 2026: 0 kg</div>
 </div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
 
 <!-- Notatki dnia -->
 <div id="day-note-box-06" class="full-width-sync">
@@ -1439,7 +1362,7 @@ Dodaj miód
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1453,7 +1376,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1541,27 +1464,11 @@ Dodaj miód
 <div id="swarm-box-07"></div>
 <div id="assistant-box-07"></div>
 
-  <!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
-</div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
+  <!-- Licznik miodu -->
+  <div id="inspection-honey-07">
+    <div id="inspection-count-07">✅ Kontrole wykonane w tym miesiącu: 0</div>
+    <div id="honey-total-07">🫙 Zebrany miód w 2026: 0 kg</div>
+  </div>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-07" class="full-width-sync">
@@ -1590,7 +1497,7 @@ Dodaj miód
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1604,7 +1511,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1697,27 +1604,10 @@ Dodaj miód
 <div id="swarm-box-08"></div>
 <div id="assistant-box-08"></div>
 
-<!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
+<!-- Licznik miodu -->
+<div id="inspection-honey-08">
+  <div id="inspection-count-08">✅ Kontrole wykonane w tym miesiącu: 0</div>
 </div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-08" class="full-width-sync">
@@ -1746,7 +1636,7 @@ Dodaj miód
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1760,7 +1650,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -1849,27 +1739,10 @@ Dodaj miód
 <div id="swarm-box-09"></div>
 <div id="assistant-box-09"></div>
 
-<!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
-</div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
+<!-- Licznik miodu -->
+<div id="inspection-honey-09">
+  <div id="inspection-count-09">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  </div>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-09" class="full-width-sync">
@@ -1898,7 +1771,7 @@ Dodaj miód
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -1912,7 +1785,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2002,27 +1875,10 @@ Dodaj miód
 <div id="swarm-box-10"></div>
 <div id="assistant-box-10"></div>
 
-<!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
+<!-- Licznik miodu -->
+<div id="inspection-honey-10">
+  <div id="inspection-count-10">✅ Kontrole wykonane w tym miesiącu: 0</div>
 </div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-10" class="full-width-sync">
@@ -2051,7 +1907,7 @@ Dodaj miód
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -2065,7 +1921,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2159,27 +2015,10 @@ Dodaj miód
 <div id="assistant-box-11"></div>
 
 
-<!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
+<!-- Licznik miodu i kontroli -->
+<div id="inspection-honey-11">
+  <div id="inspection-count-11">✅ Kontrole wykonane w tym miesiącu: 0</div>
 </div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-11" class="full-width-sync">
@@ -2208,7 +2047,7 @@ Dodaj miód
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -2222,7 +2061,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2315,27 +2154,10 @@ Dodaj miód
 <div id="assistant-box-12"></div>
 
 
- <!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
-</div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
+  <!-- Licznik miodu i kontroli -->
+  <div id="inspection-honey-12">
+    <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
+  </div>
 
 <!-- 🔥 NOTATKA DNIA (ROZCIĄGNIĘTA) -->
 <div id="day-note-box-12" class="full-width-sync">
@@ -2364,7 +2186,7 @@ Dodaj miód
     <div>🌸 pożytek</div>
     <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
     <div>🐣 czerw</div>
-    <div>🧱 ramka / ramki / ramek</div>
+    <div>🧱 ramka</div>
     <div>📦 nadstawka</div>
     <div>🌧 deszcz</div>
     <div>💨 wiatr</div>
@@ -2378,7 +2200,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2402,27 +2224,11 @@ Dodaj miód
   <div id="assistant-box-12"></div>
 
 
- <!-- 🍯 STATYSTYKI MIODU -->
-
-<h2>🍯 Statystyki miodu</h2>
-
-<div id="monthlyHoney"></div>
-
-<div id="yearHoney">
-🍯 Zebrany miód w 2026: 0 kg
-</div>
-
-<br>
-
-<input
-  type="number"
-  id="honeyAmount"
-  placeholder="Ilość miodu (kg)"
->
-
-<button onclick="saveHoney()">
-Dodaj miód
-</button>
+  <!-- Licznik miodu i kontroli -->
+  <div id="inspection-honey-12">
+    <div id="inspection-count-12">✅ Kontrole wykonane w tym miesiącu: 0</div>
+    <div id="honey-total-12">🫙 Zebrany miód w 2026: 0 kg</div>
+  </div>
 
   <!-- Notatki dnia -->
   <div id="day-note-box-12">
@@ -2490,74 +2296,113 @@ Dodaj miód
     <h3>Notatka dnia</h3>
     <textarea id="notes" rows="6" style="width:100%;"></textarea>
     <div id="quick-buttons" style="margin-top:8px;">
-      <button onclick="addQuick('przegląd')">🔍 Przegląd</button>
-      <button onclick="addQuick('miodobranie')">🫙 Miodobranie</button>
-      <button onclick="addQuick('karmienie')">🍯 Karmienie</button>
-      <button onclick="addQuick('leczenie')">💊 Leczenie</button>
-      <button onclick="addQuick('rój')">🐝 Rój</button>
+        <!-- 🍯 MIÓD -->
+<button onclick="addFloatingQuick('miód')">🫙</button>
+<button onclick="addFloatingQuick('miodobranie')">🫙</button>
+
+<!-- 🍯 KARMIENIE -->
+<button onclick="addFloatingQuick('karmienie')">🍯</button>
+<button onclick="addFloatingQuick('syrop')">🍯</button>
+<button onclick="addFloatingQuick('ciasto')">🍯</button>
+
+<!-- 💊 LECZENIE -->
+<button onclick="addFloatingQuick('leczenie')">💊</button>
+<button onclick="addFloatingQuick('warroza')">💊</button>
+<button onclick="addFloatingQuick('apiwarol')">💊</button>
+
+<!-- 🏷️ PASKI / KWAS / KONIEC -->
+<button onclick="addFloatingQuick('paski')">🏷️</button>
+<button onclick="addFloatingQuick('kwas')">🌬️</button>
+<button onclick="addFloatingQuick('zakończenie leczenia')">🛡️</button>
+
+<!-- 🔍 INSPEKCJE -->
+<button onclick="addFloatingQuick('przegląd')">🔍</button>
+<button onclick="addFloatingQuick('kontrola')">🔍</button>
+<button onclick="addFloatingQuick('inspekcja')">🕵️</button>
+<button onclick="addFloatingQuick('sprawdzenie')">📋</button>
+
+<!-- 🐝 RÓJKA -->
+<button onclick="addFloatingQuick('rój')">🐝</button>
+<button onclick="addFloatingQuick('rojka')">🐝</button>
+
+<!-- 🌸 POŻYTEK -->
+<button onclick="addFloatingQuick('pożytek')">🌸</button>
+<button onclick="addFloatingQuick('pyłek')">🌸</button>
+<button onclick="addFloatingQuick('nektar')">🌸</button>
+
+<!-- 👑 MATKA -->
+<button onclick="addFloatingQuick('matka')">👑</button>
+<button onclick="addFloatingQuick('wymiana matki')">👑</button>
+
+<!-- 🧱 RAMKI / ULE -->
+<button onclick="addFloatingQuick('ramki')">🧱</button>
+<button onclick="addFloatingQuick('ramka')">🧱</button>
+<button onclick="addFloatingQuick('ul')">🏠</button>
+<button onclick="addFloatingQuick('ule')">🏠</button>
+<button onclick="addFloatingQuick('pasieka')">🏠</button>
+
+<!-- 📦 NADSTAWKA -->
+<button onclick="addFloatingQuick('nadstawka')">📦</button>
+
+<!-- 🌦️ POGODA -->
+<button onclick="addFloatingQuick('deszcz')">🌧️</button>
+<button onclick="addFloatingQuick('wiatr')">💨</button>
+<button onclick="addFloatingQuick('burza')">🌩️</button>
+<button onclick="addFloatingQuick('śnieg')">❄️</button>
+<button onclick="addFloatingQuick('zima')">❄️</button>
+<button onclick="addFloatingQuick('mróz')">🥶</button>
+<button onclick="addFloatingQuick('upał')">🥵</button>
+<button onclick="addFloatingQuick('pochmurno')">🌫️</button>
+<button onclick="addFloatingQuick('temperatura')">🌡️</button>
+<button onclick="addFloatingQuick('mgła')">🌁</button>
+<button onclick="addFloatingQuick('słonecznie')">☀️</button>
+<button onclick="addFloatingQuick('grad')">🧊</button>
+
+<!-- 🐣 ROZWÓJ -->
+<button onclick="addFloatingQuick('czerw')">🐣</button>
+<button onclick="addFloatingQuick('czerwiu')">🐣</button>
+
+<!-- 🧹 TECHNICZNE -->
+<button onclick="addFloatingQuick('odsklepianie')">🧹</button>
+<button onclick="addFloatingQuick('miotła')">🧹</button>
+<button onclick="addFloatingQuick('trutnie')">👨‍🌾</button>
+<button onclick="addFloatingQuick('dezynfekcja')">🧴</button>
+
+<!-- ⚠️ PROBLEMY -->
+<button onclick="addFloatingQuick('złe warunki')">⛔</button>
+<button onclick="addFloatingQuick('brak prac')">⛔</button>
+<button onclick="addFloatingQuick('ucieczka pszczół')">🏃‍♂️🐝</button>
+<button onclick="addFloatingQuick('dzikie pszczoły')">🐝🌿</button>
+
+<!-- 🧇 WĘZA -->
+<button onclick="addFloatingQuick('węza')">🧇</button
     </div>
     <br><br>
     <button onclick="saveNote()">Zapisz notatkę</button>
   </div>
 
-<!-- 🛠 PANEL PASIEKI -->
+<!-- PANEL PASIEKI -->
 <div id="apiary-panel">
 
-  <h3>🛠 Panel pasieki</h3>
+<h3>🛠 Panel pasieki</h3>
 
-  <!-- LICZBA ULI -->
-  <label>Liczba uli:</label><br>
-  <input
-    type="number"
-    id="hivesCount"
-    value="24"
-    min="1"
-    max="100"
-  >
+<label>Liczba uli:</label>
+<input type="number" id="hivesCount" value="25" min="1" max="100"><br><br>
+<label>Zebrany miód (kg):</label>
+<input type="number" id="honeyTotal" value="0"><br><br>
 
-  <br><br>
+<h4>📝 Notatki pasieki</h4>
+<textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
+<button onclick="saveApiary()">💾 Zapisz pasiekę</button><hr>
 
-  <!-- MIÓD -->
-  <label>Zebrany miód (kg):</label><br>
-
-  <input
-    type="number"
-    id="honeyCollected"
-    value="0"
-  >
-
-  <br><br>
-
-  <!-- NOTATKI PASIEKI -->
-  <h4>📝 Notatki pasieki</h4>
-
-  <textarea
-    id="apiaryNotes"
-    rows="4"
-    style="width:100%"
-  ></textarea>
-
-  <br><br>
-
-  <!-- ZAPIS -->
-  <button onclick="saveApiaryData()">
-    💾 Zapisz pasiekę
-  </button>
-
-  <hr>
-
-  <!-- RODZINY -->
-  <h4>🐝 Notatki rodzin pszczelich</h4>
-
-  <div id="hiveTable"></div>
-
-  <br>
-
-  <button id="saveFamilyNotesBtn">
-    💾 Zapisz notatki uli
-  </button>
-
-</div
+<h4>🐝 Notatki rodzin pszczelich (23 uli)</h4>
+<textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
+<input id="hivesCount" type="number" value="23" min="1" max="100">
+<div id="hiveTable"></div>
+<button id="saveFamilyNotesBtn">💾 Zapisz notatki uli</button
+<div id="hiveTable"></div>
+<button onclick="saveHiveNotes()">💾 Zapisz notatki rodzin</button>
+</div>
 
 <!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
 <div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
@@ -2592,7 +2437,7 @@ Dodaj miód
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
-    <div>⛔ złe warunki / brak prac w ulu</div>
+    <div>🏠 ule / pasieka</div>
     <div>👨‍🌾 trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
     <div>🏠 ule / pasieka</div>
@@ -2793,226 +2638,39 @@ function updateMarkers() {
       const text = noteData.toLowerCase();
       let icons = [];
 
-if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-// 🍯 MIÓD
-if(
-  text.includes("miód") ||
-  text.includes("miodobranie")
-){
-  icons.push("🫙");
-}
-
-// 🍯 KARMIENIE
-if(
-  text.includes("karmienie") ||
-  text.includes("syrop") ||
-  text.includes("ciasto")
-){
-  icons.push("🍯");
-}
-
-// 💊 LECZENIE
-if(
-  text.includes("leczenie") ||
-  text.includes("warroza") ||
-  text.includes("apiwarol")
-){
-  icons.push("💊");
-}
-
-// 🏷️ PASKI
-if(text.includes("paski")){
-  icons.push("🏷️");
-}
-
-// 🌬️ KWAS
-if(text.includes("kwas")){
-  icons.push("🌬️");
-}
-
-// 🛡️ KONIEC LECZENIA
-if(text.includes("zakończenie leczenia")){
-  icons.push("🛡️");
-}
-
-// 🔍 PRZEGLĄD
-if(
-  text.includes("przegląd") ||
-  text.includes("kontrola")
-){
-  icons.push("🔍");
-}
-
-// 🕵️ INSPEKCJA
-if(text.includes("inspekcja")){
-  icons.push("🕵️");
-}
-
-// 📋 SPRAWDZENIE
-if(text.includes("sprawdzenie")){
-  icons.push("📋");
-}
-
-// 🐝 RÓJ
-if(
-  text.includes("rój") ||
-  text.includes("rojka")
-){
-  icons.push("🐝");
-}
-
-// 🌸 POŻYTEK
-if(
-  text.includes("pożytek") ||
-  text.includes("pyłek") ||
-  text.includes("nektar")
-){
-  icons.push("🌸");
-}
-
-// 👑 MATKA
-if(
-  text.includes("matka") ||
-  text.includes("wymiana matki")
-){
-  icons.push("👑");
-}
-
-// 🧱 RAMKI
-if(
-  text.includes("ramka") ||
-  text.includes("ramki")
-){
-  icons.push("🧱");
-}
-
-// 📦 NADSTAWKA
-if(text.includes("nadstawka")){
-  icons.push("📦");
-}
-
-// 🌧️ DESZCZ
-if(text.includes("deszcz")){
-  icons.push("🌧️");
-}
-
-// 💨 WIATR
-if(text.includes("wiatr")){
-  icons.push("💨");
-}
-
-// 🌩️ BURZA
-if(text.includes("burza")){
-  icons.push("🌩️");
-}
-
-// ❄️ ŚNIEG
-if(
-  text.includes("śnieg") ||
-  text.includes("zima")
-){
-  icons.push("❄️");
-}
-
-// 🥶 MRÓZ
-if(
-  text.includes("mróz") ||
-  text.includes("zimno")
-){
-  icons.push("🥶");
-}
-
-// 🥵 UPAŁ
-if(
-  text.includes("upał") ||
-  text.includes("gorąco")
-){
-  icons.push("🥵");
-}
-
-// 🌫️ POCHMURNO
-if(text.includes("pochmurno")){
-  icons.push("🌫️");
-}
-
-// 🌡️ TEMPERATURA
-if(text.includes("temperatura")){
-  icons.push("🌡️");
-}
-
-// 🌁 MGŁA
-if(text.includes("mgła")){
-  icons.push("🌁");
-}
-
-// ☀️ SŁOŃCE
-if(text.includes("słonecznie")){
-  icons.push("☀️");
-}
-
-// 🧊 GRAD
-if(text.includes("grad")){
-  icons.push("🧊");
-}
-
-// 🐣 CZERW
-if(
-  text.includes("czerw") ||
-  text.includes("czerwiu")
-){
-  icons.push("🐣");
-}
-
-// 🧹 ODSKLEPIANIE
-if(
-  text.includes("odsklepianie") ||
-  text.includes("miotła")
-){
-  icons.push("🧹");
-}
-
-// 👨‍🌾 TRUTNIE
-if(text.includes("trutnie")){
-  icons.push("👨‍🌾");
-}
-
-// 🏠 ULE
-if(
-  text.includes("ul") ||
-  text.includes("ule") ||
-  text.includes("pasieka")
-){
-  icons.push("🏠");
-}
-
-// ⛔ ZŁE WARUNKI
-if(
-  text.includes("złe warunki") ||
-  text.includes("brak prac")
-){
-  icons.push("⛔");
-}
-
-// 🧴 DEZYNFEKCJA
-if(text.includes("dezynfekcja")){
-  icons.push("🧴");
-}
-
-// 🏃‍♂️🐝 UCIECZKA
-if(text.includes("ucieczka pszczół")){
-  icons.push("🏃‍♂️🐝");
-}
-
-// 🐝🌿 DZIKIE
-if(text.includes("dzikie pszczoły")){
-  icons.push("🐝🌿");
-}
-
-// 🧇 WĘZA
-if(text.includes("węza")){
-  icons.push("🧇");
-}
-
+        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
+        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
+        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
+        if(text.includes("paski")) icons.push("🏷️");
+        if(text.includes("kwas")) icons.push("🌬️");
+        if(text.includes("zakończenie leczenia")) icons.push("🛡️");
+        if(text.includes("przegląd")) icons.push("🔍");
+        if(text.includes("sprawdzenie")) icons.push("📋");
+        if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
+        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
+        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
+        if(text.includes("ramka")) icons.push("🧱");
+        if(text.includes("nadstawka")) icons.push("📦");
+        if(text.includes("deszcz")) icons.push("🌧");
+        if(text.includes("wiatr")) icons.push("💨");
+        if(text.includes("burza")) icons.push("🌩️");
+        if(text.includes("śnieg")) icons.push("❄️");
+        if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
+        if(text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
+        if(text.includes("pochmurno")) icons.push("🌫️");
+        if(text.includes("niska temperatura")) icons.push("🌡");
+        if(text.includes("trutnie")) icons.push("👨‍🌾");
+        if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
+        if(text.includes("słonecznie")) icons.push("☀️");
+        if(text.includes("mgła")) icons.push("🌁");
+        if(text.includes("grad")) icons.push("🧊");
+        if(text.includes("czerw")) icons.push("🐣");
+        if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
+        if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
+        if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
+        if(text.includes("dezynfekcja")) icons.push("🧴");
+        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
+        if(text.includes("węza")) icons.push("🧇");
 
         if(icons.length === 0) icons.push("📒");
 
@@ -3031,7 +2689,7 @@ if(text.includes("węza")){
       currentDay = span.dataset.day.padStart(2,"0");
       currentMonth = span.dataset.month.padStart(2,"0");
 
-      textarea = document.getElementById("notes");
+      textarea = document.getElementById("notes-" + currentMonth);
 
       const key = `${currentDay}.${currentMonth}.2026`;
 
@@ -3055,62 +2713,30 @@ textarea.value = note || "";
     });
   })
 
-// =========================
-// ⚡ QUICK NOTES FINAL BOSS
-// =========================
-
-window.addQuick = function(text){
-
-  const textarea =
-    document.getElementById("notes");
-
-  if(!textarea) return;
-
-  if(textarea.value.length > 0){
-    textarea.value += "\n";
-  }
-
-  textarea.value += "• " + text;
-
-  textarea.focus();
-};
 
   // =========================
   // 💾 ZAPIS NOTATKI
   // =========================
-window.saveNote = function() {
+  window.saveNote = function() {
 
-  textarea = document.getElementById("notes");
+    if(!currentDay){
+      alert("Najpierw kliknij dzień");
+      return;
+    }
 
-  // auto dzisiejsza data
-  if(!currentDay){
+    const key = `${currentDay}.${currentMonth}.2026`;
 
-    const today = new Date();
+    if(textarea){
+      localStorage.setItem(getApiaryKey(key), textarea.value);
+    }
 
-    currentDay =
-      String(today.getDate()).padStart(2,"0");
+    updateMarkers();
+    setTimeout(autoScaleCalendarText, 50);
 
-    currentMonth =
-      String(today.getMonth()+1).padStart(2,"0");
-  }
-
-  const key =
-    `${currentDay}.${currentMonth}.2026`;
-
-  if(textarea){
-
-    localStorage.setItem(
-      getApiaryKey(key),
-      textarea.value
-    );
-  }
-
-  updateMarkers();
-
-  setTimeout(autoScaleCalendarText, 50);
-
-  loadWeatherAndAssist();
-};
+    if(typeof loadWeatherAndAssist === "function"){
+      loadWeatherAndAssist();
+    }
+  };
 
   // --- WYSZUKIWARKA NOTATEK ---
   const searchInput = document.getElementById('search-notes');
@@ -3132,7 +2758,7 @@ window.saveNote = function() {
       for(let i=0;i<localStorage.length;i++){
 
         const key = localStorage.key(i);
-        if(!isValidNoteKey(key)) continue;
+        if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
 
         const note = localStorage.getItem(key);
 
@@ -3192,14 +2818,14 @@ const APIARIES = [
   {
     id: "pasieka_1",
     name: "Pasieka Werpol",
-    lat: 52.407231,
-    lon: 23.152673
+    lat: 52.411611,
+    lon: 23.161000
   },
   {
     id: "pasieka_2",
     name: "Pasieka Borysowszczyzna",
-    lat: 52.419870,
-    lon: 23.091900
+    lat: 52.424389,
+    lon: 23.111806
   }
 ];
 
@@ -3221,8 +2847,8 @@ function detectNearestApiary(lat, lon){
     }
   });
 
-  // max 10 km
-  if(minDistance <= 10){
+  // max 5 km
+  if(minDistance <= 5){
     currentApiary = nearest;
   } else {
     currentApiary = null;
@@ -3442,26 +3068,18 @@ function loadWeather5Days() {
       }
 
       // 🔥 lokalizacja (osobno – bez psucia DOM)
-      let loc = {};
+      const loc = await getLocationData(lat, lon);
+      renderLocation(lat, lon, loc);
 
-try{
-  loc = await getLocationData(lat, lon);
-}catch(e){
-  console.log(e);
-}
-
-renderLocation(lat, lon, loc || {});
-
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&current_weather=true&timezone=auto`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max&current_weather=true&timezone=auto`;
 
       fetch(url).then(r=>r.json()).then(data=>{
-      
 
         const cw = data.current_weather || {temperature:0,windspeed:0};
 
         const todayMax = data.daily.temperature_2m_max[0];
         const todayMin = data.daily.temperature_2m_min[0];
-        const todayWind = data.daily.wind_speed_10m_max[0];
+        const todayWind = data.daily.windspeed_10m_max[0];
         const todayRain = data.daily.precipitation_probability_max[0];
 
         const beeStatus =
@@ -3497,7 +3115,7 @@ renderLocation(lat, lon, loc || {});
 
     const tMax=data.daily.temperature_2m_max[i] ?? 0;
     const tMin=data.daily.temperature_2m_min[i] ?? 0;
-    const wind=data.daily.wind_speed_10m_max[i] ?? 0;
+    const wind=data.daily.windspeed_10m_max[i] ?? 0;
     const rain=data.daily.precipitation_probability_max[i] ?? 0;
 
     forecastData.push({
@@ -3553,19 +3171,9 @@ resolve({
   forecast: data.daily
 });
 
-      }).catch((err)=>{
-
-  console.log(err);
-
-  if(weatherBox){
-    weatherBox.innerHTML = `
-      📡 Offline<br>
-      Brak internetu
-    `;
-  }
-
-  resolve(null);
-});
+      }).catch(()=>{
+        resolve(null);
+      });
     }
 
     // 🔥 GPS START (bezpieczny)
@@ -3659,7 +3267,7 @@ function generateBeeForecast(days){
   const date = new Date();
   date.setDate(today.getDate()+d);
 
-  const wind = weatherData?.forecast?.wind_speed_10m_max[d] || 0;
+  const wind = weatherData?.forecast?.windspeed_10m_max[d] || 0;
   const rain = weatherData?.forecast?.precipitation_probability_max[d] || 0;
   const temp = weatherData?.forecast?.temperature_2m_max[d] || 20;
 
@@ -3768,7 +3376,7 @@ loadWeatherAndAssist();
 
     for(let i=0;i<localStorage.length;i++){
       const key = localStorage.key(i);
-      if(!isValidNoteKey(key)) continue;
+      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
       const note = (localStorage.getItem(key) || "").toLowerCase();
       if(note.includes("ul "+hiveNumber)){
         found = true;
@@ -3786,27 +3394,6 @@ loadWeatherAndAssist();
     }
   };
 
-// =========================
-// 🔥 FINAL BOSS KEY SYSTEM
-// =========================
-
-function isValidNoteKey(key){
-
-  return (
-    /^\d{2}\.\d{2}\.2026$/.test(key) ||
-    /^pasieka_\d+_\d{2}\.\d{2}\.2026$/.test(key)
-  );
-}
-
-function getPureDateKey(key){
-
-  const match =
-    key.match(/\d{2}\.\d{2}\.2026$/);
-
-  return match ? match[0] : key;
-}
-
-
 // =============================
 // 🧠 AI PASIEKA PRO MAX
 // =============================
@@ -3818,7 +3405,7 @@ function getHiveData(){
 
   for(let i=0;i<localStorage.length;i++){
     const key = localStorage.key(i);
-    if(!isValidNoteKey(key)) continue;
+    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
 
     const note = (localStorage.getItem(key)||"").toLowerCase();
     const matches = note.match(/ul\s*(\d+)/g);
@@ -3949,86 +3536,9 @@ function generateWeeklyPlanPro(){
 
     let tasks=[];
 
-      <!-- 🍯 MIÓD -->
-<button onclick="addFloatingQuick('miód')">🫙</button>
-<button onclick="addFloatingQuick('miodobranie')">🫙</button>
-
-<!-- 🍯 KARMIENIE -->
-<button onclick="addFloatingQuick('karmienie')">🍯</button>
-<button onclick="addFloatingQuick('syrop')">🍯</button>
-<button onclick="addFloatingQuick('ciasto')">🍯</button>
-
-<!-- 💊 LECZENIE -->
-<button onclick="addFloatingQuick('leczenie')">💊</button>
-<button onclick="addFloatingQuick('warroza')">💊</button>
-<button onclick="addFloatingQuick('apiwarol')">💊</button>
-
-<!-- 🏷️ PASKI / KWAS / KONIEC -->
-<button onclick="addFloatingQuick('paski')">🏷️</button>
-<button onclick="addFloatingQuick('kwas')">🌬️</button>
-<button onclick="addFloatingQuick('zakończenie leczenia')">🛡️</button>
-
-<!-- 🔍 INSPEKCJE -->
-<button onclick="addFloatingQuick('przegląd')">🔍</button>
-<button onclick="addFloatingQuick('kontrola')">🔍</button>
-<button onclick="addFloatingQuick('inspekcja')">🕵️</button>
-<button onclick="addFloatingQuick('sprawdzenie')">📋</button>
-
-<!-- 🐝 RÓJKA -->
-<button onclick="addFloatingQuick('rój')">🐝</button>
-<button onclick="addFloatingQuick('rojka')">🐝</button>
-
-<!-- 🌸 POŻYTEK -->
-<button onclick="addFloatingQuick('pożytek')">🌸</button>
-<button onclick="addFloatingQuick('pyłek')">🌸</button>
-<button onclick="addFloatingQuick('nektar')">🌸</button>
-
-<!-- 👑 MATKA -->
-<button onclick="addFloatingQuick('matka')">👑</button>
-<button onclick="addFloatingQuick('wymiana matki')">👑</button>
-
-<!-- 🧱 RAMKI / ULE -->
-<button onclick="addFloatingQuick('ramki')">🧱</button>
-<button onclick="addFloatingQuick('ramka')">🧱</button>
-<button onclick="addFloatingQuick('ul')">🏠</button>
-<button onclick="addFloatingQuick('ule')">🏠</button>
-<button onclick="addFloatingQuick('pasieka')">🏠</button>
-
-<!-- 📦 NADSTAWKA -->
-<button onclick="addFloatingQuick('nadstawka')">📦</button>
-
-<!-- 🌦️ POGODA -->
-<button onclick="addFloatingQuick('deszcz')">🌧️</button>
-<button onclick="addFloatingQuick('wiatr')">💨</button>
-<button onclick="addFloatingQuick('burza')">🌩️</button>
-<button onclick="addFloatingQuick('śnieg')">❄️</button>
-<button onclick="addFloatingQuick('zima')">❄️</button>
-<button onclick="addFloatingQuick('mróz')">🥶</button>
-<button onclick="addFloatingQuick('upał')">🥵</button>
-<button onclick="addFloatingQuick('pochmurno')">🌫️</button>
-<button onclick="addFloatingQuick('temperatura')">🌡️</button>
-<button onclick="addFloatingQuick('mgła')">🌁</button>
-<button onclick="addFloatingQuick('słonecznie')">☀️</button>
-<button onclick="addFloatingQuick('grad')">🧊</button>
-
-<!-- 🐣 ROZWÓJ -->
-<button onclick="addFloatingQuick('czerw')">🐣</button>
-<button onclick="addFloatingQuick('czerwiu')">🐣</button>
-
-<!-- 🧹 TECHNICZNE -->
-<button onclick="addFloatingQuick('odsklepianie')">🧹</button>
-<button onclick="addFloatingQuick('miotła')">🧹</button>
-<button onclick="addFloatingQuick('trutnie')">👨‍🌾</button>
-<button onclick="addFloatingQuick('dezynfekcja')">🧴</button>
-
-<!-- ⚠️ PROBLEMY -->
-<button onclick="addFloatingQuick('złe warunki')">⛔</button>
-<button onclick="addFloatingQuick('brak prac')">⛔</button>
-<button onclick="addFloatingQuick('ucieczka pszczół')">🏃‍♂️🐝</button>
-<button onclick="addFloatingQuick('dzikie pszczoły')">🐝🌿</button>
-
-<!-- 🧇 WĘZA -->
-<button onclick="addFloatingQuick('węza')">🧇</button
+    if(!note.includes("przegląd")) tasks.push("🔍 przegląd");
+    if(!note.includes("karmienie")) tasks.push("🍯 karmienie");
+    if(!note.includes("leczenie")) tasks.push("💊 leczenie");
 
     if(tasks.length===0) tasks.push("✅ OK");
 
@@ -4055,107 +3565,6 @@ function generateHoneyForecast(){
   box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
 }
 
-// =========================
-// 🚨 FINAL BOSS ALERTY AI
-// =========================
-
-function generateFinalBossAlerts(){
-
-  const box =
-    document.getElementById("apiaryAlerts");
-
-  if(!box) return;
-
-  let alerts = [];
-
-  let honey = 0;
-  let treatments = 0;
-  let swarms = 0;
-
-  for(let i=0;i<localStorage.length;i++){
-
-    const key = localStorage.key(i);
-
-    if(!isValidNoteKey(key)) continue;
-
-    const note =
-      (localStorage.getItem(key)||"")
-      .toLowerCase();
-
-    // 🍯 MIÓD
-    const honeyMatch =
-      note.match(/(\d+)\s*kg/);
-
-    if(honeyMatch){
-
-      honey += parseInt(honeyMatch[1]);
-    }
-
-    // 💊 LECZENIE
-    if(
-      note.includes("warroza") ||
-      note.includes("leczenie")
-    ){
-      treatments++;
-    }
-
-    // 🐝 RÓJ
-    if(
-      note.includes("rój") ||
-      note.includes("rojka")
-    ){
-      swarms++;
-    }
-  }
-
-  // ALERTY
-  if(honey > 50){
-    alerts.push(
-      `🍯 Duży zbiór miodu: ${honey} kg`
-    );
-  }
-
-  if(swarms >= 3){
-    alerts.push(
-      "🐝 Wysoka aktywność rojowa"
-    );
-  }
-
-  if(treatments === 0){
-    alerts.push(
-      "💊 Brak wpisów leczenia"
-    );
-  }
-
-  // POGODA
-  if(typeof weatherData !== "undefined" && weatherData){
-
-    const temp =
-      weatherData.current_weather?.temperature;
-
-    if(temp < 12){
-
-      alerts.push(
-        "❄️ Za zimno na przegląd"
-      );
-    }
-  }
-
-  if(alerts.length===0){
-
-    box.innerHTML =
-      "✅ Brak alertów";
-
-  } else {
-
-    box.innerHTML =
-      alerts.map(a =>
-        `<div>${a}</div>`
-      ).join("");
-  }
-}
-
-
    // =========================
   // 🚀 START SYSTEMU
   // =========================
@@ -4178,7 +3587,6 @@ if(savedGPS === "true"){
   getGPSOnce();
   startLiveGPS();
   startGPSSaveLoop();
-  generateFinalBossAlerts()
 }
 
   setTimeout(autoScaleCalendarText, 100);
@@ -4248,212 +3656,13 @@ if(gpsEnabled){
 
 });
 
-// =====================================
-// 🔥 FINAL BOSS FIX SYSTEM
-// =====================================
-
-// 🫙 MIÓD
-const honeyInput = document.getElementById("honeyCollected");
-
-if(honeyInput){
-
-  // odczyt
-  const savedHoney = localStorage.getItem("honeyCollected2026");
-
-  if(savedHoney){
-    honeyInput.value = savedHoney;
-  }
-
-  // autosave
-  honeyInput.addEventListener("input", () => {
-
-    localStorage.setItem(
-      "honeyCollected2026",
-      honeyInput.value
-    );
-
-    updateHoneyUI();
-  });
-}
-
-// 🔥 UPDATE MIODU
-function updateHoneyUI(){
-
-  const box = document.getElementById("honey-forecast");
-
-  if(!box) return;
-
-  const honey =
-    Number(localStorage.getItem("honeyCollected2026")) || 0;
-
-  box.innerHTML =
-    `🍯 Zebrany miód 2026: <b>${honey} kg</b>`;
-}
-
-// =====================================
-// 📒 NOTATKA DNIA FIX
-// =====================================
-
-document.querySelectorAll(".quick-note-btn").forEach(btn => {
-
-  btn.addEventListener("click", () => {
-
-    const text = btn.dataset.text || "";
-
-    const activeTextarea =
-      document.querySelector("textarea");
-
-    if(!activeTextarea) return;
-
-    activeTextarea.value += text + " ";
-  });
-
-});
-
-// =====================================
-// 💾 ZAPIS PASIEKI FIX
-// =====================================
-
-window.saveApiaryData = function(){
-
-  const hiveCount =
-    document.getElementById("hivesCount");
-
-  const apiaryNotes =
-    document.getElementById("apiaryNotes");
-
-  const honeyCollected =
-    document.getElementById("honeyCollected");
-
-  if(hiveCount){
-    localStorage.setItem(
-      "hivesCount",
-      hiveCount.value
-    );
-  }
-
-  if(apiaryNotes){
-    localStorage.setItem(
-      "apiaryNotes",
-      apiaryNotes.value
-    );
-  }
-
-  if(honeyCollected){
-    localStorage.setItem(
-      "honeyCollected2026",
-      honeyCollected.value
-    );
-  }
-
-  updateHoneyUI();
-
-  alert("✅ Pasieka zapisana");
-};
-
-// =====================================
-// 📥 LOAD PASIEKI
-// =====================================
-
-window.loadApiaryData = function(){
-
-  const hiveCount =
-    document.getElementById("hivesCount");
-
-  const apiaryNotes =
-    document.getElementById("apiaryNotes");
-
-  const honeyCollected =
-    document.getElementById("honeyCollected");
-
-  if(hiveCount){
-
-    hiveCount.value =
-      localStorage.getItem("hivesCount") || 23;
-  }
-
-  if(apiaryNotes){
-
-    apiaryNotes.value =
-      localStorage.getItem("apiaryNotes") || "";
-  }
-
-  if(honeyCollected){
-
-    honeyCollected.value =
-      localStorage.getItem("honeyCollected2026") || 0;
-  }
-
-  updateHoneyUI();
-};
-
-// =====================================
-// 🌤️ POGODA OFFLINE FIX
-// =====================================
-
-function showOfflineWeather(){
-
-  const weatherBox =
-    document.getElementById("weather-data");
-
-  if(weatherBox){
-
-    weatherBox.innerHTML = `
-      📡 Offline<br>
-      Ostatnia prognoza niedostępna
-    `;
-  }
-}
-
-// =====================================
-// 🚨 GLOBAL ERROR FIX
-// =====================================
-
-window.addEventListener("error", (e) => {
-
-  console.log("JS ERROR:", e.message);
-
-});
-
-// =====================================
-// 🚀 AUTO START FIX
-// =====================================
-
-setTimeout(() => {
-
-  try{
-    loadApiaryData();
-  }catch(e){
-    console.log(e);
-  }
-
-  try{
-    updateHoneyUI();
-  }catch(e){
-    console.log(e);
-  }
-
-}, 500);
-
-
 // =========================
 // 🧩 SERVICE WORKER
 // =========================
 if ("serviceWorker" in navigator) {
-
-  window.addEventListener("load", () => {
-
-    navigator.serviceWorker
-      .register("./service-worker.js")
-      .then((reg) => {
-        console.log("SW OK:", reg.scope);
-      })
-      .catch((err) => {
-        console.error("SW ERROR:", err);
-      });
-
-  });
-
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("SW OK"))
+    .catch(err => console.log("SW ERROR", err));
 }
 
 </script>
