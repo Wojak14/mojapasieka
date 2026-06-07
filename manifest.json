@@ -1,6 +1,7 @@
 {
   "name": "Kalendarz Pszczelarski 2026",
   "short_name": "Pasieka 2026",
+  "id": "/",
   "description": "Offline kalendarz pasieczny 2026 z notatkami, pogodą i inteligentnym asystentem.",
 
   "lang": "pl-PL",
@@ -18,12 +19,12 @@
 
   "icons": [
     {
-      "src": "bee_icon_192x192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "bee_icon_512x512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

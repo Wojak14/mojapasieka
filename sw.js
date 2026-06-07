@@ -1,141 +1,114 @@
-const CACHE_NAME = "pasieka-finalboss-v13";
+/**
+ * 🐝 FINAL BOSS SERVICE WORKER v14 (STABLE OFFLINE FIX)
+ */
 
-// ========================================
-// PLIKI OFFLINE
-// ========================================
+const CACHE_NAME = "pasieka-finalboss-v14";
+
+/* =========================
+   📦 STATIC FILES
+========================= */
 
 const STATIC_ASSETS = [
   "./",
   "./index.html",
   "./manifest.json",
 
+  "./core/main.js",
+  "./core/orchestrator.js",
+  "./core/calendar-generator.js",
+  "./core/bee-data.js",
+  "./core/dashboard.js",
+  "./core/quickPanel.js",
+
   "./icons/icon-192.png",
   "./icons/icon-512.png"
 ];
 
-// ========================================
-// INSTALL
-// ========================================
+/* =========================
+   🚀 INSTALL
+========================= */
 
-self.addEventListener("install", event => {
-
+self.addEventListener("install", (event) => {
   event.waitUntil(
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
 
-    caches.open(CACHE_NAME)
-      .then(cache => {
+      for (const asset of STATIC_ASSETS) {
+        try {
+          const res = await fetch(asset, { cache: "reload" });
 
-        return Promise.all(
+          if (res && res.ok) {
+            await cache.put(asset, res.clone());
+          }
+        } catch (e) {
+          console.warn("❌ CACHE MISS:", asset);
+        }
+      }
 
-          STATIC_ASSETS.map(asset => {
-
-            return fetch(asset)
-              .then(response => {
-
-   if(response.ok){
-
-  return cache.put(
-    asset,
-    response.clone()
+      await self.skipWaiting();
+    })()
   );
-})
-              .catch(() => {});
-          })
-        );
-      })
-  );
-
-  self.skipWaiting();
 });
 
-// ========================================
-// ACTIVATE
-// ========================================
+/* =========================
+   🔁 ACTIVATE (CLEAN OLD CACHE)
+========================= */
 
-self.addEventListener("activate", event => {
-
+self.addEventListener("activate", (event) => {
   event.waitUntil(
+    (async () => {
+      const keys = await caches.keys();
 
-    caches.keys().then(keys => {
-
-      return Promise.all(
-
-        keys.map(key => {
-
-          if(key !== CACHE_NAME){
+      await Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME && key.startsWith("pasieka-finalboss")) {
             return caches.delete(key);
           }
-
         })
       );
-    })
-  );
 
-  self.clients.claim();
+      await self.clients.claim();
+    })()
+  );
 });
 
-// ========================================
-// FETCH
-// ========================================
+/* =========================
+   🌐 FETCH STRATEGY
+========================= */
 
-self.addEventListener("fetch", event => {
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
 
-  if(event.request.method !== "GET") return;
+  const url = event.request.url;
+
+  // ❌ NIE CACHEUJ API (pogoda, GPS, itp.)
+  if (url.includes("open-meteo") || url.includes("nominatim")) {
+    return;
+  }
 
   event.respondWith(
+    (async () => {
+      const cached = await caches.match(event.request);
+      if (cached) return cached;
 
-    caches.match(event.request)
+      try {
+        const response = await fetch(event.request);
 
-      .then(cached => {
-
-        if(cached){
-          return cached;
+        // cache tylko poprawnych odpowiedzi
+        if (response && response.status === 200) {
+          const cache = await caches.open(CACHE_NAME);
+          cache.put(event.request, response.clone());
         }
 
-        return fetch(event.request)
+        return response;
+      } catch (err) {
+        // OFFLINE FALLBACK (HTML)
+        if (event.request.mode === "navigate") {
+          return caches.match("./index.html");
+        }
 
-          .then(response => {
-
-            if(
-              !response ||
-              response.status !== 200
-            ){
-              return response;
-            }
-
-            const responseClone =
-              response.clone();
-
-            caches.open(CACHE_NAME)
-              .then(cache => {
-
-                cache.put(
-                  event.request,
-                  responseClone
-                );
-
-              });
-
-            return response;
-
-          })
-
-          .catch(() => {
-
-            // OFFLINE FALLBACK
-            if(
-              event.request.headers
-              .get("accept")
-              ?.includes("text/html")
-            ){
-
-            return caches.match("/index.html")
-  || caches.match("./index.html")
-  || caches.match("/");
-            }
-
-          });
-
-      })
+        return new Response("OFFLINE", { status: 503 });
+      }
+    })()
   );
-
 });
