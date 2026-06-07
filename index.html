@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Kalendarz Pszczelarski 2026</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FBC02D">
+
+<style>
+
+/* =========================
+   BASE
+========================= */
+
+body {
+  font-family: Arial;
+  margin: 0;
+  padding: 10px;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+html, body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+#app {
+  width: 100%;
+}
+
+.day {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+/* =========================
+   QUICK PANEL
+========================= */
+
+#quick-panel {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 220px;
+  background: white;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  z-index: 9999;
+}
+
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.quick-grid button {
+  font-size: 16px;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* =========================
+   NOTES
+========================= */
+
+#notes-panel {
+  margin-top: 10px;
+}
+
+#notes {
+  width: 100%;
+  height: 80px;
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+#dashboard {
+  margin-top: 10px;
+  padding: 10px;
+  border-top: 1px solid #ddd;
+}
+
+/* =========================
+   COLORS
+========================= */
+
+.risk-low { background: #e8f5e9; }
+.risk-medium { background: #fff8e1; }
+.risk-high { background: #ffebee; }
+
+/* =========================
+   DAY PANEL
+========================= */
+
+.day-panel {
+  position: fixed;
+  right: 20px;
+  top: 120px;
+  width: 280px;
+  background: white;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  z-index: 99999;
+}
+
+.day-panel.hidden {
+  display: none;
+}
+
+.day-panel textarea {
+  width: 100%;
+  height: 80px;
+  margin-top: 10px;
+}
+
+/* =========================
+   TABLE DAYS
+========================= */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+}
+
+td {
+  border: 1px solid #ddd;
+  padding: 6px;
+  vertical-align: top;
+  transition: transform 0.2s;
+}
+
+td:hover {
+  transform: scale(1.03);
+  cursor: pointer;
+}
+
+/* =========================
+   MOBILE FIX (ANDROID / IOS)
+========================= */
+
+@media (max-width: 768px) {
+
+  body {
+    padding: 5px;
+  }
+
+  h2 {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  table {
+    min-width: 100%;
+    font-size: 12px;
+  }
+
+  td {
+    padding: 4px;
+    font-size: 11px;
+  }
+
+  .quick-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  #quick-panel {
+    width: 180px;
+    bottom: 5px;
+    right: 5px;
+  }
+
+  #notes {
+    height: 60px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>🐝 Kalendarz Pszczelarski 2026</h2>
+
+<div id="app">
+
+  <div id="calendar">
+
+    <div id="month-01"></div>
+    <div id="month-02"></div>
+    <div id="month-03"></div>
+    <div id="month-04"></div>
+    <div id="month-05"></div>
+    <div id="month-06"></div>
+    <div id="month-07"></div>
+    <div id="month-08"></div>
+    <div id="month-09"></div>
+    <div id="month-10"></div>
+    <div id="month-11"></div>
+    <div id="month-12"></div>
+
+  </div>
+
+  <!-- DAY PANEL -->
+  <div id="day-panel" class="day-panel hidden">
+    <div id="day-title"></div>
+    <div id="day-event"></div>
+
+    <textarea id="day-notes" placeholder="Notatki dnia..."></textarea>
+
+    <button id="save-day">💾 Zapisz dzień</button>
+  </div>
+
+  <div id="ai-panel"></div>
+  <div id="stats-panel"></div>
+
+</div>
+
+<!-- LEGEND -->
+<div id="legend">
+  <b>Legenda ikon:</b>
+</div>
+
+<!-- NOTES -->
+<div id="notes-panel">
+  <textarea id="notes"></textarea>
+  <button id="saveNoteBtn">💾 Zapisz</button>
+</div>
+
+<!-- SEARCH -->
+<div id="search-box">
+  <input id="search-notes" placeholder="Szukaj notatek..." />
+  <div id="search-results"></div>
+</div>
+
+<!-- MODULES -->
+<div id="assistant"></div>
+<div id="weather"></div>
+<div id="gps"></div>
+<div id="location-box"></div>
+<div id="dashboard"></div>
+
+<!-- QUICK PANEL -->
+<div id="quick-panel">
+  <div class="quick-grid"></div>
+</div>
+
+<!-- ENTRY -->
+<script type="module" src="core/main.js"></script>
+
+</body>
+</html>
