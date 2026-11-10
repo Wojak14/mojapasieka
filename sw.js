@@ -1,77 +1,91 @@
-const CACHE_NAME = "pasieka-2026-v7";
+const CACHE_NAME = "pasieka-finalboss-v12";
+const APP_SCOPE = self.registration.scope;
 
-const urlsToCache = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-
-  // 🔥 CORE APP
-  "./app.js",
-  "./script.js",
-  "./style.css",
-
-  // 🔥 IKONY (minimum + stabilność Android)
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+const APP_FILES = [
+  new URL("./", APP_SCOPE).href,
+  new URL("index.html", APP_SCOPE).href,
+  new URL("manifest.json", APP_SCOPE).href
 ];
 
-// =========================
+// ========================================
 // INSTALL
-// =========================
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
-    })
-  );
+// ========================================
+self.addEventListener("install", event => {
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
 
-  // 🔥 natychmiastowa aktywacja (ważne dla Android)
-  self.skipWaiting();
+    for (const url of APP_FILES) {
+      try {
+        const response = await fetch(url, {
+          cache: "reload"
+        });
+
+        if (response.ok) {
+          await cache.put(url, response);
+        } else {
+          console.warn("Nie zapisano:", url, response.status);
+        }
+      } catch (error) {
+        console.warn("Błąd zapisu do cache:", url, error);
+      }
+    }
+
+    self.skipWaiting();
+  })());
 });
 
-// =========================
-// ACTIVATE (clean old cache)
-// =========================
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
-  );
+// ========================================
+// ACTIVATE
+// ========================================
+self.addEventListener("activate", event => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
 
-  // 🔥 przejęcie kontroli bez restartu
-  self.clients.claim();
+    await Promise.all(
+      keys.map(key => {
+        if (key.startsWith("pasieka-finalboss-") &&
+            key !== CACHE_NAME) {
+          return caches.delete(key);
+        }
+      })
+    );
+
+    await self.clients.claim();
+  })());
 });
 
-// =========================
-// FETCH STRATEGY
-// =========================
-self.addEventListener("fetch", (event) => {
-  const url = event.request.url;
+// ========================================
+// FETCH
+// ========================================
+self.addEventListener("fetch", event => {
+  const request = event.request;
 
-  // =========================
-  // 🌦 OPEN-METEO (network first)
-  // =========================
-  if (url.includes("open-meteo.com")) {
-    event.respondWith(networkFirst(event.request));
+  if (request.method !== "GET") return;
+
+  const url = new URL(request.url);
+
+  // Zewnętrzne API pogody
+  if (url.hostname.includes("open-meteo.com")) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
-  // =========================
-  // 📦 APP FILES (cache first)
-  // =========================
-  event.respondWith(cacheFirst(event.request));
+  // Nie przechwytuj innych domen
+  if (url.origin !== self.location.origin) return;
+
+  // Strona HTML
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstPage(request));
+    return;
+  }
+
+  // Pozostałe pliki aplikacji
+  event.respondWith(cacheFirst(request));
 });
 
-// =========================
-// CACHE FIRST (UI offline)
-// =========================
+// ========================================
+// CACHE FIRST
+// ========================================
 async function cacheFirst(request) {
   const cached = await caches.match(request);
 
@@ -80,30 +94,87 @@ async function cacheFirst(request) {
   try {
     const response = await fetch(request);
 
-    // 🔥 tylko poprawne response cache’ujemy
-    if (response && response.status === 200) {
+    if (response.ok) {
       const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
+      await cache.put(request, response.clone());
     }
 
     return response;
-  } catch (e) {
-    return caches.match("./index.html");
+  } catch (error) {
+    // Nie zwracaj HTML zamiast JS, CSS lub obrazka.
+    return new Response("Brak połączenia i pliku w pamięci podręcznej.", {
+      status: 503,
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8"
+      }
+    });
   }
 }
 
-// =========================
-// NETWORK FIRST (API)
-// =========================
+// ========================================
+// STRONA GŁÓWNA - NETWORK FIRST
+// ========================================
+async function networkFirstPage(request) {
+  try {
+    const response = await fetch(request);
+
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+
+    return response;
+  } catch (error) {
+    const cached = await caches.match(request);
+
+    if (cached) return cached;
+
+    const indexUrl = new URL("index.html", APP_SCOPE);
+    const savedIndex = await caches.match(indexUrl.href);
+
+    if (savedIndex) return savedIndex;
+
+    return new Response(
+      "Kalendarz nie został jeszcze zapisany do pracy offline. Otwórz go ponownie przy dostępie do internetu.",
+      {
+        status: 503,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8"
+        }
+      }
+    );
+  }
+}
+
+// ========================================
+// NETWORK FIRST - API POGODY
+// ========================================
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
 
-    const cache = await caches.open(CACHE_NAME);
-    cache.put(request, response.clone());
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
 
     return response;
-  } catch (e) {
-    return caches.match(request);
+  } catch (error) {
+    const cached = await caches.match(request);
+
+    if (cached) return cached;
+
+    return new Response(
+      JSON.stringify({
+        error: "offline",
+        message: "Brak internetu. Pogoda niedostępna."
+      }),
+      {
+        status: 503,
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
   }
 }
