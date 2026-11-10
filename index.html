@@ -404,6 +404,30 @@ Legenda + notatki = szerokość kalendarza
   margin-top: 7px;
 }
 
+
+/* Karty rodzin pszczelich — spójne z dotychczasowym wyglądem kalendarza */
+#hive-management { margin: 14px 0; padding: 10px; border: 1px solid #d9bd63; border-radius: 10px; background: #fffdf5; }
+#hive-management .hive-toolbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:8px 0; }
+#hive-management input, #hive-management select, #hive-management textarea { box-sizing:border-box; max-width:100%; padding:8px; border:1px solid #c9c9c9; border-radius:6px; font:inherit; }
+#hive-management button { padding:8px 10px; border:1px solid #c49a20; border-radius:7px; background:#fff1bd; color:#302600; cursor:pointer; font:inherit; }
+#hive-management button:disabled { opacity:.55; cursor:not-allowed; }
+#hive-card-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:8px; margin:10px 0; }
+.hive-card { min-width:0; padding:9px; border:1px solid #d7d0b7; border-radius:8px; background:#fff; }
+.hive-card.active { border:2px solid #d5a500; background:#fff8dc; }
+.hive-card strong { display:block; margin-bottom:4px; }
+.hive-card small { display:block; color:#555; line-height:1.4; }
+#hive-editor { margin-top:10px; padding:10px; border:1px solid #ddd; border-radius:8px; background:#fff; }
+#hive-editor .hive-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:8px; }
+#hive-editor label { display:flex; flex-direction:column; gap:4px; font-size:13px; }
+#hive-editor textarea { width:100%; }
+.hive-history-item { padding:7px 0; border-bottom:1px solid #eee; font-size:13px; }
+.hive-history-item button { margin-left:5px; padding:4px 7px !important; }
+.hive-section-title { margin:12px 0 6px; font-size:15px; }
+@media (max-width:480px) {
+  #hive-card-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #hive-management { padding:8px; }
+}
+
 </style>
 
 </head>
@@ -497,10 +521,6 @@ font-weight:bold;
   <input type="text" id="search-notes" placeholder="Szukaj notatek...">
   <div id="search-results"></div>
 </div>
-
-</body>
-</html>
-
 
 <!-- STYCZEŃ 2026 -->
 <div class="month" id="month-01">
@@ -2348,28 +2368,116 @@ font-weight:bold;
     <button onclick="saveNote()">Zapisz notatkę</button>
   </div>
 
-<!-- PANEL PASIEKI -->
+<!-- PANEL PASIEKI — zachowane podstawowe ustawienia -->
 <div id="apiary-panel">
-
-<h3>🛠 Panel pasieki</h3>
-
-<label>Liczba uli:</label>
-<input type="number" id="hivesCount" value="25" min="1" max="100"><br><br>
-<label>Zebrany miód (kg):</label>
-<input type="number" id="honeyTotal" value="0"><br><br>
-
-<h4>📝 Notatki pasieki</h4>
-<textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
-<button onclick="saveApiary()">💾 Zapisz pasiekę</button><hr>
-
-<h4>🐝 Notatki rodzin pszczelich (23 uli)</h4>
-<textarea id="apiaryNotes" rows="4" style="width:100%"></textarea>
-<input id="hivesCount" type="number" value="23" min="1" max="100">
-<div id="hiveTable"></div>
-<button id="saveFamilyNotesBtn">💾 Zapisz notatki uli</button
-<div id="hiveTable"></div>
-<button onclick="saveHiveNotes()">💾 Zapisz notatki rodzin</button>
+  <h3>🛠 Panel pasieki</h3>
+  <label for="hivesCount">Liczba uli:</label>
+  <input type="number" id="hivesCount" value="25" min="1" max="100"><br><br>
+  <label for="honeyTotal">Zebrany miód (kg):</label>
+  <input type="number" id="honeyTotal" value="0" min="0" step="0.1"><br><br>
+  <h4>📝 Notatki pasieki</h4>
+  <textarea id="apiaryNotes" rows="4" style="width:100%;box-sizing:border-box;"></textarea>
+  <button type="button" onclick="saveApiary()">💾 Zapisz pasiekę</button>
 </div>
+
+<!-- KARTY RODZIN — lokalna baza, historia i połączenie z kalendarzem -->
+<section id="hive-management">
+  <h3>🐝 Karty rodzin pszczelich</h3>
+  <p style="margin:4px 0 8px;font-size:13px;color:#555;">
+    Każda rodzina ma własną kartę. Przeglądy dodane tutaj trafiają również do notatki wybranego dnia w kalendarzu.
+  </p>
+  <div class="hive-toolbar">
+    <label for="hive-card-count">Liczba kart:</label>
+    <input type="number" id="hive-card-count" min="1" max="100" value="25" style="width:75px;">
+    <button type="button" id="hive-card-count-save">Zastosuj</button>
+  </div>
+  <div id="hive-card-list" aria-live="polite"></div>
+  <div id="hive-editor">
+    <h4 id="hive-editor-title" style="margin:0 0 9px;">Karta ula 1</h4>
+    <div class="hive-fields">
+      <label>Rok matki
+        <input type="number" id="hive-queen-year" min="2000" max="2035" placeholder="np. 2025">
+      </label>
+      <label>Siła rodziny
+        <select id="hive-strength">
+          <option value="">Nie oceniono</option>
+          <option value="słaba">Słaba</option>
+          <option value="średnia">Średnia</option>
+          <option value="silna">Silna</option>
+          <option value="bardzo silna">Bardzo silna</option>
+        </select>
+      </label>
+      <label>Czerw
+        <select id="hive-brood">
+          <option value="">Nie oceniono</option>
+          <option value="brak">Brak</option>
+          <option value="mało">Mało</option>
+          <option value="prawidłowy">Prawidłowy</option>
+          <option value="dużo">Dużo</option>
+        </select>
+      </label>
+      <label>Zapasy pokarmu
+        <select id="hive-stores">
+          <option value="">Nie oceniono</option>
+          <option value="małe">Małe</option>
+          <option value="wystarczające">Wystarczające</option>
+          <option value="duże">Duże</option>
+        </select>
+      </label>
+      <label>Ocena warrozy
+        <select id="hive-varroa">
+          <option value="">Nie oceniono</option>
+          <option value="niska">Niska</option>
+          <option value="średnia">Średnia</option>
+          <option value="wysoka">Wysoka</option>
+          <option value="po leczeniu">Po leczeniu</option>
+        </select>
+      </label>
+      <label>Status rodziny
+        <select id="hive-status">
+          <option value="obserwacja">Obserwacja</option>
+          <option value="dobra">Dobra kondycja</option>
+          <option value="wymaga kontroli">Wymaga kontroli</option>
+          <option value="do połączenia">Do połączenia</option>
+          <option value="stracona">Stracona</option>
+        </select>
+      </label>
+    </div>
+    <label style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">Uwagi o rodzinie
+      <textarea id="hive-profile-notes" rows="3" placeholder="Matka, zachowanie, rozwój, cechy rodziny..."></textarea>
+    </label>
+    <div class="hive-toolbar">
+      <button type="button" id="hive-profile-save">💾 Zapisz kartę</button>
+    </div>
+
+    <h4 class="hive-section-title">➕ Dodaj przegląd / zdarzenie</h4>
+    <div class="hive-fields">
+      <label>Data
+        <input type="date" id="hive-event-date" value="2026-11-10">
+      </label>
+      <label>Rodzaj zdarzenia
+        <select id="hive-event-type">
+          <option value="przegląd">Przegląd</option>
+          <option value="karmienie">Karmienie</option>
+          <option value="leczenie">Leczenie</option>
+          <option value="miodobranie">Miodobranie</option>
+          <option value="kontrola matki">Kontrola matki</option>
+          <option value="rójka">Obserwacja rojowa</option>
+          <option value="inne">Inne</option>
+        </select>
+      </label>
+    </div>
+    <label style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">Opis zdarzenia
+      <textarea id="hive-event-notes" rows="3" placeholder="Co zauważono lub wykonano?"></textarea>
+    </label>
+    <div class="hive-toolbar">
+      <button type="button" id="hive-event-save">📅 Zapisz zdarzenie i połącz z kalendarzem</button>
+    </div>
+
+    <h4 class="hive-section-title">📜 Historia tej rodziny</h4>
+    <div id="hive-profile-history">Wybierz rodzinę.</div>
+  </div>
+</section>
 
 <!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
 <div id="icon-legend" class="full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
@@ -2512,6 +2620,66 @@ document.addEventListener("DOMContentLoaded", function() {
 let textarea = null;
 let currentDay = null;
 let currentMonth = null;
+// Rok kalendarza aktualizuje się automatycznie według daty urządzenia.
+const calendarYear = new Date().getFullYear();
+
+function syncCalendarYear() {
+  // Zmień układ dni tylko wtedy, gdy bieżący rok różni się od roku bazowego.
+  if (calendarYear !== 2026) {
+    for (let month = 1; month <= 12; month++) {
+      const monthId = String(month).padStart(2, "0");
+      const monthBox = document.getElementById("month-" + monthId);
+      const table = monthBox && monthBox.querySelector(".calendar-scroll table");
+      if (!table) continue;
+
+      const oldCells = Array.from(table.querySelectorAll("tr td"));
+      const dayContent = new Map();
+      oldCells.forEach(td => {
+        const span = td.querySelector(".day-number");
+        if (span) dayContent.set(Number(span.dataset.day), { html: td.innerHTML, className: td.className });
+      });
+
+      const firstWeekday = (new Date(calendarYear, month - 1, 1).getDay() + 6) % 7;
+      const daysInMonth = new Date(calendarYear, month, 0).getDate();
+      let rows = '<tr><th>PON</th><th>WT</th><th>ŚR</th><th>CZW</th><th>PT</th><th>SOB</th><th>ND</th></tr>';
+      let cells = [];
+      for (let i = 0; i < firstWeekday; i++) cells.push('<td></td>');
+      for (let day = 1; day <= daysInMonth; day++) {
+        const saved = dayContent.get(day);
+        if (saved) {
+          let html = saved.html.replace(/data-day="\d{1,2}"/g, 'data-day="' + String(day).padStart(2, "0") + '"');
+          html = html.replace(/(<span class="day-number"[^>]*>)[^<]*(<\/span>)/, '$1' + day + '$2');
+          cells.push('<td' + (saved.className ? ' class="' + saved.className + '"' : '') + '>' + html + '</td>');
+        } else {
+          cells.push('<td><span class="day-number" data-day="' + String(day).padStart(2, "0") + '" data-month="' + monthId + '">' + day + '</span></td>');
+        }
+        if (cells.length === 7) { rows += '<tr>' + cells.join('') + '</tr>'; cells = []; }
+      }
+      if (cells.length) {
+        while (cells.length < 7) cells.push('<td></td>');
+        rows += '<tr>' + cells.join('') + '</tr>';
+      }
+      table.innerHTML = rows;
+    }
+  }
+
+  document.title = 'Kalendarz Pszczelarski ' + calendarYear;
+  const mainHeading = document.querySelector('body > h2');
+  if (mainHeading) mainHeading.textContent = 'Kalendarz pszczelarski ' + calendarYear;
+  document.querySelectorAll('.month h2').forEach(h => {
+    h.textContent = h.textContent.replace(/2026/g, String(calendarYear));
+  });
+  document.querySelectorAll('[id^="honey-total"]').forEach(el => {
+    el.textContent = el.textContent.replace(/2026/g, String(calendarYear));
+  });
+  const swarmHeading = document.querySelector('h1');
+  if (swarmHeading) swarmHeading.textContent = swarmHeading.textContent.replace(/2026/g, String(calendarYear));
+  const eventDate = document.getElementById('hive-event-date');
+  if (eventDate) {
+    const now = new Date();
+    eventDate.value = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  }
+}
 
 // 📍 GPS SYSTEM
 let gpsEnabled = false;
@@ -2578,7 +2746,7 @@ function getMonthlyTextarea(month) {
 }
 
 function getDateNoteKey(day, month) {
-  return `${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.2026`;
+  return `${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.${calendarYear}`;
 }
 
 function getNoteKeyCandidates(dateKey) {
@@ -2972,7 +3140,7 @@ function updateMarkers() {
 
     const day = (span.dataset.day || "").padStart(2,"0");
     const month = (span.dataset.month || "").padStart(2,"0");
-    const key = `${day}.${month}.2026`;
+    const key = `${day}.${month}.${calendarYear}`;
 
     const oldMarker = td.querySelector(".note-marker");
     if (oldMarker) oldMarker.remove();
@@ -3213,6 +3381,8 @@ function detectNearestApiary(lat, lon){
   }
 
   updateApiaryUI(minDistance);
+  if (typeof renderHiveCards === "function") { renderHiveCards(); loadHiveEditor(); }
+  if (typeof loadApiaryData === "function") loadApiaryData();
 
   if (currentDay && currentMonth) {
     textarea = getMonthlyTextarea(currentMonth);
@@ -3361,6 +3531,36 @@ function startGPSSaveLoop(){
     );
 
   }, 600000); // 10 min
+}
+
+
+function getApiarySettingsKey() {
+  return "bee-apiary-settings:" + (currentApiary && currentApiary.id ? currentApiary.id : "default");
+}
+
+window.saveApiary = function() {
+  const settings = {
+    hivesCount: document.getElementById("hivesCount")?.value || "25",
+    honeyTotal: document.getElementById("honeyTotal")?.value || "0",
+    notes: document.getElementById("apiaryNotes")?.value || ""
+  };
+  localStorage.setItem(getApiarySettingsKey(), JSON.stringify(settings));
+  const countInput = document.getElementById("hive-card-count");
+  if (countInput) countInput.value = settings.hivesCount;
+  localStorage.setItem("bee-hive-count:" + (currentApiary?.id || "default"), String(settings.hivesCount));
+  if (typeof renderHiveCards === "function") renderHiveCards();
+  alert("Zapisano ustawienia pasieki.");
+};
+
+function loadApiaryData() {
+  let settings = {};
+  try { settings = JSON.parse(localStorage.getItem(getApiarySettingsKey()) || "{}"); } catch (_) {}
+  const count = document.getElementById("hivesCount");
+  const honey = document.getElementById("honeyTotal");
+  const notes = document.getElementById("apiaryNotes");
+  if (count && settings.hivesCount) count.value = settings.hivesCount;
+  if (honey && settings.honeyTotal != null) honey.value = settings.honeyTotal;
+  if (notes && settings.notes != null) notes.value = settings.notes;
 }
 
 // =========================
@@ -3642,7 +3842,7 @@ function generateBeeForecast(days){
   const key =
     String(date.getDate()).padStart(2,"0")+"."+
     String(date.getMonth()+1).padStart(2,"0")+
-    ".2026";
+    "." + calendarYear;
       const note = (readNoteForDate(key)||"").toLowerCase();
       let dayTasks=[];
 
@@ -3908,7 +4108,7 @@ function generateWeeklyPlanPro(){
 
     const d = String(date.getDate()).padStart(2,"0");
     const m = String(date.getMonth()+1).padStart(2,"0");
-    const key = d+"."+m+".2026";
+    const key = d+"."+m+"."+calendarYear;
 
     const note = (readNoteForDate(key)||"").toLowerCase();
 
@@ -3943,9 +4143,300 @@ function generateHoneyForecast(){
   box.innerHTML = `Szacowany zbiór: <b>${total} kg</b>`;
 }
 
+
+// =========================
+// 🐝 KARTY RODZIN — TRWAŁY ZAPIS I HISTORIA POŁĄCZONA Z KALENDARZEM
+// =========================
+let selectedHiveNumber = 1;
+
+function getHiveProfilesKey() {
+  return "bee-hive-profiles:" + (currentApiary && currentApiary.id ? currentApiary.id : "default");
+}
+
+function getHiveProfiles() {
+  try {
+    const data = JSON.parse(localStorage.getItem(getHiveProfilesKey()) || "{}");
+    return data && typeof data === "object" ? data : {};
+  } catch (error) {
+    console.warn("Nie można odczytać kart rodzin:", error);
+    return {};
+  }
+}
+
+function saveHiveProfiles(profiles) {
+  localStorage.setItem(getHiveProfilesKey(), JSON.stringify(profiles));
+}
+
+function getHiveProfile(number) {
+  const profiles = getHiveProfiles();
+  return profiles[String(number)] || {
+    number: Number(number),
+    queenYear: "",
+    strength: "",
+    brood: "",
+    stores: "",
+    varroa: "",
+    status: "obserwacja",
+    notes: "",
+    inspections: []
+  };
+}
+
+function hiveCalendarEntries(number) {
+  const entries = [];
+  document.querySelectorAll("td .day-number").forEach(dayElement => {
+    const dateKey = getDateNoteKey(dayElement.dataset.day, dayElement.dataset.month);
+    const note = readNoteForDate(dateKey) || "";
+    const pattern = new RegExp("\\bul\\s*#?0*" + Number(number) + "\\b", "i");
+    if (pattern.test(note)) {
+      entries.push({ dateKey, note, dayElement });
+    }
+  });
+  return entries.sort((a, b) => {
+    const [ad, am, ay] = a.dateKey.split(".");
+    const [bd, bm, by] = b.dateKey.split(".");
+    return new Date(Number(ay), Number(am)-1, Number(ad)) - new Date(Number(by), Number(bm)-1, Number(bd));
+  }).reverse();
+}
+
+function renderHiveCards() {
+  const list = document.getElementById("hive-card-list");
+  const countInput = document.getElementById("hive-card-count");
+  if (!list || !countInput) return;
+
+  const mainCount = document.getElementById("hivesCount");
+  const savedCount = Number(localStorage.getItem("bee-hive-count:" + (currentApiary?.id || "default")));
+  const count = Math.max(1, Math.min(100, Number(countInput.value || savedCount || mainCount?.value || 25)));
+  countInput.value = count;
+  if (mainCount) mainCount.value = count;
+
+  const profiles = getHiveProfiles();
+  list.textContent = "";
+
+  for (let number = 1; number <= count; number++) {
+    const profile = profiles[String(number)] || {};
+    const card = document.createElement("div");
+    card.className = "hive-card" + (number === selectedHiveNumber ? " active" : "");
+
+    const title = document.createElement("strong");
+    title.textContent = "🐝 Ul " + number;
+    const status = document.createElement("small");
+    status.textContent = "Status: " + (profile.status || "obserwacja");
+    const details = document.createElement("small");
+    details.textContent = [
+      profile.strength ? "Siła: " + profile.strength : "",
+      profile.queenYear ? "Matka: " + profile.queenYear : "",
+      profile.varroa ? "Warroza: " + profile.varroa : ""
+    ].filter(Boolean).join(" · ") || "Karta do uzupełnienia";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = "Otwórz kartę";
+    button.addEventListener("click", () => {
+      selectedHiveNumber = number;
+      renderHiveCards();
+      loadHiveEditor();
+    });
+
+    card.append(title, status, details, button);
+    list.appendChild(card);
+  }
+}
+
+function loadHiveEditor() {
+  const profile = getHiveProfile(selectedHiveNumber);
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value == null ? "" : String(value);
+  };
+
+  document.getElementById("hive-editor-title").textContent = "Karta ula " + selectedHiveNumber;
+  set("hive-queen-year", profile.queenYear);
+  set("hive-strength", profile.strength);
+  set("hive-brood", profile.brood);
+  set("hive-stores", profile.stores);
+  set("hive-varroa", profile.varroa);
+  set("hive-status", profile.status || "obserwacja");
+  set("hive-profile-notes", profile.notes);
+  renderHiveHistory();
+}
+
+function saveHiveProfile() {
+  const profiles = getHiveProfiles();
+  const profile = getHiveProfile(selectedHiveNumber);
+  profile.number = selectedHiveNumber;
+  profile.queenYear = document.getElementById("hive-queen-year").value.trim();
+  profile.strength = document.getElementById("hive-strength").value;
+  profile.brood = document.getElementById("hive-brood").value;
+  profile.stores = document.getElementById("hive-stores").value;
+  profile.varroa = document.getElementById("hive-varroa").value;
+  profile.status = document.getElementById("hive-status").value;
+  profile.notes = document.getElementById("hive-profile-notes").value;
+  profile.updatedAt = new Date().toISOString();
+  profiles[String(selectedHiveNumber)] = profile;
+  saveHiveProfiles(profiles);
+  renderHiveCards();
+  renderHiveHistory();
+  alert("Zapisano kartę ula " + selectedHiveNumber + ".");
+}
+
+function formatCalendarDate(isoDate) {
+  const parts = String(isoDate || "").split("-");
+  if (parts.length !== 3) return "";
+  return parts[2] + "." + parts[1] + "." + parts[0];
+}
+
+function addHiveEvent() {
+  const dateValue = document.getElementById("hive-event-date").value;
+  const type = document.getElementById("hive-event-type").value;
+  const description = document.getElementById("hive-event-notes").value.trim();
+  if (!dateValue) {
+    alert("Wybierz datę zdarzenia.");
+    return;
+  }
+  if (!description) {
+    alert("Wpisz krótki opis przeglądu lub zdarzenia.");
+    return;
+  }
+
+  const dateKey = formatCalendarDate(dateValue);
+  const entryText = "Ul " + selectedHiveNumber + " — " + type + ": " + description;
+  const profiles = getHiveProfiles();
+  const profile = profiles[String(selectedHiveNumber)] || getHiveProfile(selectedHiveNumber);
+  profile.inspections = Array.isArray(profile.inspections) ? profile.inspections : [];
+
+  const duplicate = profile.inspections.some(item =>
+    item.date === dateKey && item.text === entryText
+  );
+  if (!duplicate) {
+    profile.inspections.unshift({
+      date: dateKey,
+      text: entryText,
+      createdAt: new Date().toISOString()
+    });
+  }
+  profile.updatedAt = new Date().toISOString();
+  profiles[String(selectedHiveNumber)] = profile;
+  saveHiveProfiles(profiles);
+
+  // Wpis z bieżącego roku trafia także do odpowiedniego dnia kalendarza.
+  const year = Number(dateValue.slice(0, 4));
+  if (year === calendarYear) {
+    const previous = readNoteForDate(dateKey);
+    const alreadyInCalendar = previous.split("\n").some(line => line.trim() === entryText);
+    if (!alreadyInCalendar) writeNoteForDate(dateKey, previous ? previous + "\n" + entryText : entryText);
+    updateMarkers();
+
+    const dayElement = document.querySelector(`.day-number[data-day="${dateKey.slice(0,2)}"][data-month="${dateKey.slice(3,5)}"]`);
+    if (dayElement) {
+      const target = getMonthlyTextarea(dateKey.slice(3,5));
+      if (target && currentDay === dateKey.slice(0,2) && currentMonth === dateKey.slice(3,5)) {
+        target.value = readNoteForDate(dateKey);
+      }
+    }
+  }
+
+  document.getElementById("hive-event-notes").value = "";
+  renderHiveCards();
+  renderHiveHistory();
+  alert(year === calendarYear
+    ? "Zdarzenie zapisane w historii ula i połączone z kalendarzem."
+    : "Zdarzenie zapisane w historii ula. Do kalendarza trafiają wpisy z bieżącego roku.");
+}
+
+function renderHiveHistory() {
+  const box = document.getElementById("hive-profile-history");
+  if (!box) return;
+  box.textContent = "";
+
+  const profile = getHiveProfile(selectedHiveNumber);
+  const savedEntries = Array.isArray(profile.inspections) ? profile.inspections : [];
+  const calendarEntries = hiveCalendarEntries(selectedHiveNumber);
+
+  const title = document.createElement("div");
+  title.className = "hive-history-item";
+  title.innerHTML = "<b>Wpisy z kalendarza</b>";
+  box.appendChild(title);
+
+  if (!calendarEntries.length) {
+    const empty = document.createElement("div");
+    empty.className = "hive-history-item";
+    empty.textContent = "Brak notatek kalendarza powiązanych z tym ulem. W notatce dnia używaj zapisu „Ul " + selectedHiveNumber + "”.";
+    box.appendChild(empty);
+  } else {
+    calendarEntries.forEach(entry => {
+      const row = document.createElement("div");
+      row.className = "hive-history-item";
+      const date = document.createElement("b");
+      date.textContent = entry.dateKey + " — ";
+      const note = document.createElement("span");
+      note.textContent = entry.note;
+      const open = document.createElement("button");
+      open.type = "button";
+      open.textContent = "Otwórz dzień";
+      open.addEventListener("click", () => entry.dayElement.click());
+      row.append(date, note, open);
+      box.appendChild(row);
+    });
+  }
+
+  const savedTitle = document.createElement("div");
+  savedTitle.className = "hive-history-item";
+  savedTitle.innerHTML = "<b>Zdarzenia zapisane w karcie</b>";
+  box.appendChild(savedTitle);
+
+  if (!savedEntries.length) {
+    const empty = document.createElement("div");
+    empty.className = "hive-history-item";
+    empty.textContent = "Brak dodatkowych zdarzeń.";
+    box.appendChild(empty);
+  } else {
+    savedEntries.forEach(entry => {
+      const row = document.createElement("div");
+      row.className = "hive-history-item";
+      const date = document.createElement("b");
+      date.textContent = (entry.date || "") + " — ";
+      const text = document.createElement("span");
+      text.textContent = entry.text || "";
+      row.append(date, text);
+      box.appendChild(row);
+    });
+  }
+}
+
+function initHiveManagement() {
+  const countInput = document.getElementById("hive-card-count");
+  const storedCount = localStorage.getItem("bee-hive-count:" + (currentApiary?.id || "default"));
+  const mainCount = document.getElementById("hivesCount");
+  const initialCount = storedCount || mainCount?.value || 25;
+  if (countInput) countInput.value = initialCount;
+
+  const countSave = document.getElementById("hive-card-count-save");
+  if (countSave) countSave.addEventListener("click", () => {
+    const count = Math.max(1, Math.min(100, Number(countInput.value || 25)));
+    countInput.value = count;
+    localStorage.setItem("bee-hive-count:" + (currentApiary?.id || "default"), String(count));
+    if (mainCount) mainCount.value = count;
+    if (selectedHiveNumber > count) selectedHiveNumber = count;
+    renderHiveCards();
+    loadHiveEditor();
+  });
+
+  const profileSave = document.getElementById("hive-profile-save");
+  if (profileSave) profileSave.addEventListener("click", saveHiveProfile);
+
+  const eventSave = document.getElementById("hive-event-save");
+  if (eventSave) eventSave.addEventListener("click", addHiveEvent);
+
+  renderHiveCards();
+  loadHiveEditor();
+}
+
+// Utrzymuj widok kart zgodny z pasieką wykrytą przez GPS.
+
    // =========================
   // 🚀 START SYSTEMU
   // =========================
+  syncCalendarYear();
   updateMarkers();
 
 getGPSOnce();     // szybki start
@@ -3978,6 +4469,7 @@ if(savedGPS === "true"){
   if(typeof generateHoneyForecast === "function") generateHoneyForecast();
   if(typeof runAIModule === "function") runAIModule();
   if(typeof loadApiaryData === "function") loadApiaryData();
+  initHiveManagement();
 
   const hivesCountInput = document.getElementById("hivesCount");
   const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
