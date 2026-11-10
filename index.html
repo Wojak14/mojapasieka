@@ -4530,9 +4530,10 @@ if(gpsEnabled){
 // 🧩 SERVICE WORKER
 // =========================
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("SW OK"))
-    .catch(err => console.log("SW ERROR", err));
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error => console.error("Błąd Service Workera:", error));
+  });
 }
 
 </script>
