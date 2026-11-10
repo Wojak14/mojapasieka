@@ -362,6 +362,48 @@ Legenda + notatki = szerokość kalendarza
   cursor:pointer;
 }
 
+
+/* 🎙️ NOTATKI GŁOSOWE — dodatki do istniejącego wyglądu */
+.voice-note-controls {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #e0c36a;
+  border-radius: 8px;
+  background: #fffdf3;
+  box-sizing: border-box;
+}
+.voice-note-controls .voice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 7px;
+}
+.voice-note-controls button {
+  border: 1px solid #b88d16;
+  border-radius: 6px;
+  background: #fff3c4;
+  color: #332600;
+  padding: 8px 10px;
+  cursor: pointer;
+  font: inherit;
+}
+.voice-note-controls button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.voice-note-controls .voice-status {
+  display: block;
+  margin-top: 6px;
+  color: #5c4a16;
+  font-size: 12px;
+}
+.voice-note-controls audio {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin-top: 7px;
+}
+
 </style>
 
 </head>
@@ -2461,7 +2503,8 @@ font-weight:bold;
 – Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
 – Zachować higienę w ulu i narzędziach<br>
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
-<script src="app.js"></script>
+</div>
+<!-- Usunięto odwołanie do app.js z późniejszej wersji modułowej; ta wersja działa z kodem osadzonym w HTML. -->
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -2526,15 +2569,400 @@ function applySmartColorsAndAlerts(td, text){
   }
 }
 
+
+// =========================
+// 💾 TRWAŁY ZAPIS NOTATEK — KLUCZ PER DZIEŃ I PASIEKA
+// =========================
+function getMonthlyTextarea(month) {
+  return document.querySelector(`textarea[id="notes-${String(month).padStart(2,"0")}"]`);
+}
+
+function getDateNoteKey(day, month) {
+  return `${String(day).padStart(2,"0")}.${String(month).padStart(2,"0")}.2026`;
+}
+
+function getNoteKeyCandidates(dateKey) {
+  const keys = [getApiaryKey(dateKey)];
+  if (currentApiary && currentApiary.id) keys.push(currentApiary.id + "_" + dateKey);
+  keys.push(dateKey); // zgodność ze starszymi notatkami bez identyfikatora pasieki
+  return [...new Set(keys)];
+}
+
+function readNoteForDate(dateKey) {
+  const preferredKey = getApiaryKey(dateKey);
+  for (const candidate of getNoteKeyCandidates(dateKey)) {
+    const value = localStorage.getItem(candidate);
+    if (value !== null) {
+      // Migruj starszy wpis do aktualnego klucza, ale pozostaw źródło bez zmian.
+      if (candidate !== preferredKey && value !== "") {
+        localStorage.setItem(preferredKey, value);
+      }
+      return value;
+    }
+  }
+  return "";
+}
+
+function writeNoteForDate(dateKey, value) {
+  // Pusty wpis także jest zapisywany, aby nie przywrócić przypadkiem starej kopii.
+  localStorage.setItem(getApiaryKey(dateKey), String(value ?? ""));
+}
+
+function getVoiceMarkerKeyCandidates(dateKey) {
+  return getNoteKeyCandidates(dateKey).map(key => "voice-note:" + key);
+}
+
+function hasVoiceNoteMarker(dateKey) {
+  return getVoiceMarkerKeyCandidates(dateKey).some(key => localStorage.getItem(key) === "1");
+}
+
+function setVoiceNoteMarker(dateKey) {
+  localStorage.setItem("voice-note:" + getApiaryKey(dateKey), "1");
+}
+
+let voiceDbPromise = null;
+let activeVoiceRecorder = null;
+let activeVoiceRecognition = null;
+let activeVoiceObjectUrl = null;
+
+function openVoiceNotesDb() {
+  if (!("indexedDB" in window)) {
+    return Promise.reject(new Error("Ta przeglądarka nie obsługuje IndexedDB."));
+  }
+  if (voiceDbPromise) return voiceDbPromise;
+
+  voiceDbPromise = new Promise((resolve, reject) => {
+    const request = indexedDB.open("KalendarzPszczelarski2026", 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains("voiceNotes")) {
+        db.createObjectStore("voiceNotes", { keyPath: "key" });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => {
+      voiceDbPromise = null;
+      reject(request.error || new Error("Nie udało się otworzyć bazy notatek głosowych."));
+    };
+    request.onblocked = () => {
+      voiceDbPromise = null;
+      reject(new Error("Baza notatek głosowych jest zablokowana przez inną kartę."));
+    };
+  });
+  return voiceDbPromise;
+}
+
+async function saveVoiceBlob(dateKey, blob) {
+  const db = await openVoiceNotesDb();
+  const storageKey = getApiaryKey(dateKey);
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("voiceNotes", "readwrite");
+    tx.objectStore("voiceNotes").put({
+      key: storageKey,
+      dateKey,
+      blob,
+      mimeType: blob.type || "audio/webm",
+      updatedAt: new Date().toISOString()
+    });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("Nie udało się zapisać nagrania."));
+    tx.onabort = () => reject(tx.error || new Error("Zapis nagrania został przerwany."));
+  });
+}
+
+async function getVoiceBlob(dateKey) {
+  const db = await openVoiceNotesDb();
+  const storageKey = getApiaryKey(dateKey);
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("voiceNotes", "readonly");
+    const request = tx.objectStore("voiceNotes").get(storageKey);
+    request.onsuccess = () => resolve(request.result ? request.result.blob : null);
+    request.onerror = () => reject(request.error || new Error("Nie udało się odczytać nagrania."));
+  });
+}
+
+function selectedNoteDateKey() {
+  if (!currentDay || !currentMonth) return null;
+  return getDateNoteKey(currentDay, currentMonth);
+}
+
+function stopActiveVoiceRecognition() {
+  if (activeVoiceRecognition) {
+    try { activeVoiceRecognition.stop(); } catch (_) {}
+  }
+}
+
+function updateVoiceControlsForSelectedDate() {
+  const selectedKey = selectedNoteDateKey();
+  document.querySelectorAll(".voice-note-controls").forEach(panel => {
+    const month = panel.dataset.month;
+    const status = panel.querySelector(".voice-status");
+    const playButton = panel.querySelector('[data-action="play"]');
+    if (!selectedKey || month !== currentMonth) {
+      if (playButton) playButton.disabled = true;
+      if (status) status.textContent = "Wybierz dzień w kalendarzu, aby użyć notatki głosowej.";
+      return;
+    }
+    if (status) status.textContent = `Notatka głosowa dla ${selectedKey}`;
+    if (playButton) playButton.disabled = !hasVoiceNoteMarker(selectedKey);
+
+    // Sprawdź też bazę, żeby nie pokazywać przycisku odtwarzania dla brakującego pliku.
+    if (playButton) {
+      const dateAtCheck = selectedKey;
+      getVoiceBlob(selectedKey).then(blob => {
+        if (selectedNoteDateKey() === dateAtCheck && month === currentMonth) {
+          playButton.disabled = !blob;
+        }
+      }).catch(() => {
+        if (selectedNoteDateKey() === dateAtCheck && month === currentMonth) {
+          playButton.disabled = true;
+        }
+      });
+    }
+  });
+}
+
+function ensureSelectedDateForMonth(month, status) {
+  if (!currentDay || !currentMonth) {
+    if (status) status.textContent = "Najpierw kliknij konkretny dzień w kalendarzu.";
+    return false;
+  }
+  if (currentMonth !== String(month).padStart(2,"0")) {
+    if (status) status.textContent = "Kliknij dzień w tym miesiącu, aby przypisać notatkę.";
+    return false;
+  }
+  return true;
+}
+
+function initVoiceNoteControls() {
+  const months = new Set(
+    [...document.querySelectorAll('textarea[id^="notes-"]')]
+      .map(field => (field.id.match(/^notes-(\d{2})$/) || [])[1])
+      .filter(Boolean)
+  );
+
+  months.forEach(month => {
+    const field = getMonthlyTextarea(month);
+    if (!field) return;
+
+    const box = field.closest(".full-width-sync") || field.parentElement;
+    if (!box || box.querySelector(`.voice-note-controls[data-month="${month}"]`)) return;
+
+    const panel = document.createElement("div");
+    panel.className = "voice-note-controls";
+    panel.dataset.month = month;
+    panel.innerHTML = `
+      <div class="voice-actions">
+        <button type="button" data-action="record">🎙️ Nagraj</button>
+        <button type="button" data-action="stop-record" disabled>⏹ Zakończ nagrywanie</button>
+        <button type="button" data-action="play" disabled>▶ Odtwórz nagranie</button>
+        <button type="button" data-action="dictate">🗣️ Dyktuj po polsku</button>
+        <button type="button" data-action="stop-dictate" disabled>⏹ Zakończ dyktowanie</button>
+      </div>
+      <audio controls preload="none" aria-label="Odtwarzanie notatki głosowej"></audio>
+      <small class="voice-status">Wybierz dzień w kalendarzu.</small>
+    `;
+
+    const saveButton = [...box.querySelectorAll("button")].find(button =>
+      (button.getAttribute("onclick") || "").includes(`saveNote('${month}')`) ||
+      (button.getAttribute("onclick") || "").includes(`saveNote("${month}")`)
+    );
+    if (saveButton) saveButton.insertAdjacentElement("afterend", panel);
+    else field.insertAdjacentElement("afterend", panel);
+
+    const status = panel.querySelector(".voice-status");
+    const recordButton = panel.querySelector('[data-action="record"]');
+    const stopRecordButton = panel.querySelector('[data-action="stop-record"]');
+    const playButton = panel.querySelector('[data-action="play"]');
+    const dictateButton = panel.querySelector('[data-action="dictate"]');
+    const stopDictateButton = panel.querySelector('[data-action="stop-dictate"]');
+    const audio = panel.querySelector("audio");
+
+    recordButton.addEventListener("click", async () => {
+      if (!ensureSelectedDateForMonth(month, status)) return;
+      if (activeVoiceRecorder && activeVoiceRecorder.state !== "inactive") {
+        status.textContent = "Najpierw zakończ poprzednie nagrywanie.";
+        return;
+      }
+      if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        status.textContent = "Nagrywanie wymaga HTTPS (lub localhost) i dostępu do mikrofonu.";
+        return;
+      }
+      if (!window.MediaRecorder) {
+        status.textContent = "Ta przeglądarka nie obsługuje nagrywania audio.";
+        return;
+      }
+
+      const dateKey = selectedNoteDateKey();
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (selectedNoteDateKey() !== dateKey) {
+          stream.getTracks().forEach(track => track.stop());
+          status.textContent = "Zmieniono wybrany dzień. Kliknij Nagraj ponownie.";
+          return;
+        }
+
+        const supportedTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+        const mimeType = supportedTypes.find(type =>
+          MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type)
+        );
+        const recorder = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream);
+        const chunks = [];
+
+        activeVoiceRecorder = recorder;
+        recordButton.disabled = true;
+        stopRecordButton.disabled = false;
+        status.textContent = `Nagrywanie notatki dla ${dateKey}…`;
+
+        recorder.ondataavailable = event => {
+          if (event.data && event.data.size > 0) chunks.push(event.data);
+        };
+        recorder.onerror = () => {
+          status.textContent = "Wystąpił błąd podczas nagrywania.";
+        };
+        recorder.onstop = async () => {
+          stream.getTracks().forEach(track => track.stop());
+          activeVoiceRecorder = null;
+          recordButton.disabled = false;
+          stopRecordButton.disabled = true;
+
+          const blob = new Blob(chunks, { type: recorder.mimeType || (chunks[0] && chunks[0].type) || "audio/webm" });
+          if (!blob.size) {
+            status.textContent = "Nagranie jest puste. Spróbuj ponownie.";
+            return;
+          }
+          try {
+            await saveVoiceBlob(dateKey, blob);
+            setVoiceNoteMarker(dateKey);
+            updateMarkers();
+            updateVoiceControlsForSelectedDate();
+            status.textContent = `Nagranie zapisane dla ${dateKey}.`;
+          } catch (error) {
+            status.textContent = "Nie udało się zapisać nagrania: " + (error.message || error);
+          }
+        };
+
+        recorder.start();
+      } catch (error) {
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        activeVoiceRecorder = null;
+        recordButton.disabled = false;
+        stopRecordButton.disabled = true;
+        status.textContent = "Nie można uruchomić mikrofonu: " + (error.message || error);
+      }
+    });
+
+    stopRecordButton.addEventListener("click", () => {
+      if (activeVoiceRecorder && activeVoiceRecorder.state !== "inactive") {
+        activeVoiceRecorder.stop();
+      }
+    });
+
+    playButton.addEventListener("click", async () => {
+      if (!ensureSelectedDateForMonth(month, status)) return;
+      const dateKey = selectedNoteDateKey();
+      try {
+        const blob = await getVoiceBlob(dateKey);
+        if (!blob) {
+          playButton.disabled = true;
+          status.textContent = "Brak nagrania dla wybranego dnia.";
+          return;
+        }
+        if (activeVoiceObjectUrl) URL.revokeObjectURL(activeVoiceObjectUrl);
+        activeVoiceObjectUrl = URL.createObjectURL(blob);
+        audio.src = activeVoiceObjectUrl;
+        await audio.play();
+        status.textContent = `Odtwarzanie notatki głosowej: ${dateKey}`;
+      } catch (error) {
+        status.textContent = "Nie udało się odtworzyć nagrania: " + (error.message || error);
+      }
+    });
+
+    dictateButton.addEventListener("click", () => {
+      if (!ensureSelectedDateForMonth(month, status)) return;
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        status.textContent = "Ta przeglądarka nie obsługuje rozpoznawania mowy. Spróbuj Chrome lub Edge.";
+        return;
+      }
+      if (activeVoiceRecognition) {
+        status.textContent = "Najpierw zakończ poprzednie dyktowanie.";
+        return;
+      }
+
+      const dateKey = selectedNoteDateKey();
+      const recognition = new SpeechRecognition();
+      recognition.lang = "pl-PL";
+      recognition.continuous = true;
+      recognition.interimResults = false;
+      activeVoiceRecognition = recognition;
+      dictateButton.disabled = true;
+      stopDictateButton.disabled = false;
+      status.textContent = `Dyktowanie po polsku dla ${dateKey}…`;
+
+      recognition.onresult = event => {
+        if (selectedNoteDateKey() !== dateKey) {
+          try { recognition.stop(); } catch (_) {}
+          return;
+        }
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) transcript += event.results[i][0].transcript;
+        }
+        transcript = transcript.trim();
+        if (!transcript) return;
+
+        const target = getMonthlyTextarea(month);
+        if (!target) return;
+        const existing = target.value.trimEnd();
+        target.value = existing ? existing + " " + transcript : transcript;
+        textarea = target;
+        writeNoteForDate(dateKey, target.value);
+        updateMarkers();
+        setTimeout(autoScaleCalendarText, 50);
+      };
+
+      recognition.onerror = event => {
+        status.textContent = "Błąd rozpoznawania mowy: " + (event.error || "nieznany błąd");
+      };
+      recognition.onend = () => {
+        if (activeVoiceRecognition === recognition) activeVoiceRecognition = null;
+        dictateButton.disabled = false;
+        stopDictateButton.disabled = true;
+        if (selectedNoteDateKey() === dateKey) status.textContent = `Dyktowanie zakończone dla ${dateKey}.`;
+      };
+
+      try {
+        recognition.start();
+      } catch (error) {
+        activeVoiceRecognition = null;
+        dictateButton.disabled = false;
+        stopDictateButton.disabled = true;
+        status.textContent = "Nie udało się rozpocząć dyktowania: " + (error.message || error);
+      }
+    });
+
+    stopDictateButton.addEventListener("click", () => {
+      if (activeVoiceRecognition) {
+        try { activeVoiceRecognition.stop(); } catch (_) {}
+      }
+    });
+  });
+
+  updateVoiceControlsForSelectedDate();
+}
+
+
 // =========================
 // 📅 MARKERY I IKONY
 // =========================
 function updateMarkers() {
-
   document.querySelectorAll("td .day-number").forEach(span => {
-
     const td = span.closest("td");
-    if(!td) return;
+    if (!td) return;
 
     td.classList.remove(
       "has-note","today","tomorrow",
@@ -2547,161 +2975,166 @@ function updateMarkers() {
     const key = `${day}.${month}.2026`;
 
     const oldMarker = td.querySelector(".note-marker");
-    if(oldMarker) oldMarker.remove();
+    if (oldMarker) oldMarker.remove();
 
-    const noteData = localStorage.getItem(getApiaryKey(key));
+    const noteData = readNoteForDate(key);
+    const hasTextNote = !!(noteData && noteData.trim() !== "");
+    const hasVoice = hasVoiceNoteMarker(key);
 
-    if(noteData && noteData.trim() !== "") {
-
+    if (hasTextNote || hasVoice) {
       td.classList.add("has-note");
-
-      applySmartColorsAndAlerts(td, noteData);
+      if (hasTextNote) applySmartColorsAndAlerts(td, noteData);
 
       const marker = document.createElement("span");
       marker.className = "note-marker";
+      const text = (noteData || "").toLowerCase();
+      const icons = [];
 
-      const text = noteData.toLowerCase();
-      let icons = [];
+      if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
+      if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
+      if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
+      if(text.includes("paski")) icons.push("🏷️");
+      if(text.includes("kwas")) icons.push("🌬️");
+      if(text.includes("zakończenie leczenia")) icons.push("🛡️");
+      if(text.includes("przegląd")) icons.push("🔍");
+      if(text.includes("sprawdzenie")) icons.push("📋");
+      if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
+      if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
+      if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
+      if(text.includes("ramka")) icons.push("🧱");
+      if(text.includes("nadstawka")) icons.push("📦");
+      if(text.includes("deszcz")) icons.push("🌧");
+      if(text.includes("wiatr")) icons.push("💨");
+      if(text.includes("burza")) icons.push("🌩️");
+      if(text.includes("śnieg")) icons.push("❄️");
+      if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
+      if(text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
+      if(text.includes("pochmurno")) icons.push("🌫️");
+      if(text.includes("niska temperatura")) icons.push("🌡");
+      if(text.includes("trutnie")) icons.push("👨‍🌾");
+      if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
+      if(text.includes("słonecznie")) icons.push("☀️");
+      if(text.includes("mgła")) icons.push("🌁");
+      if(text.includes("grad")) icons.push("🧊");
+      if(text.includes("czerw")) icons.push("🐣");
+      if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
+      if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
+      if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
+      if(text.includes("dezynfekcja")) icons.push("🧴");
+      if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
+      if(text.includes("węza")) icons.push("🧇");
 
-        if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-        if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-        if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
-        if(text.includes("paski")) icons.push("🏷️");
-        if(text.includes("kwas")) icons.push("🌬️");
-        if(text.includes("zakończenie leczenia")) icons.push("🛡️");
-        if(text.includes("przegląd")) icons.push("🔍");
-        if(text.includes("sprawdzenie")) icons.push("📋");
-        if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
-        if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
-        if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-        if(text.includes("ramka")) icons.push("🧱");
-        if(text.includes("nadstawka")) icons.push("📦");
-        if(text.includes("deszcz")) icons.push("🌧");
-        if(text.includes("wiatr")) icons.push("💨");
-        if(text.includes("burza")) icons.push("🌩️");
-        if(text.includes("śnieg")) icons.push("❄️");
-        if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-        if(text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-        if(text.includes("pochmurno")) icons.push("🌫️");
-        if(text.includes("niska temperatura")) icons.push("🌡");
-        if(text.includes("trutnie")) icons.push("👨‍🌾");
-        if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
-        if(text.includes("słonecznie")) icons.push("☀️");
-        if(text.includes("mgła")) icons.push("🌁");
-        if(text.includes("grad")) icons.push("🧊");
-        if(text.includes("czerw")) icons.push("🐣");
-        if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
-        if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
-        if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
-        if(text.includes("dezynfekcja")) icons.push("🧴");
-        if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
-        if(text.includes("węza")) icons.push("🧇");
-
-        if(icons.length === 0) icons.push("📒");
-
-        marker.innerHTML = icons.join(" ");
-        span.after(marker);
-      }
-    });
-  }
-
-
-  // --- OTWIERANIE NOTATKI PO KLIKU ---
-
- document.querySelectorAll("td .day-number").forEach(span => {
-    span.addEventListener("click", () => {
-
-      currentDay = span.dataset.day.padStart(2,"0");
-      currentMonth = span.dataset.month.padStart(2,"0");
-
-      textarea = document.getElementById("notes-" + currentMonth);
-
-      const key = `${currentDay}.${currentMonth}.2026`;
-
-      if(textarea){
-        let note =
-  localStorage.getItem(getApiaryKey(key));
-
-if(!note && currentApiary){
-  note = localStorage.getItem(
-    currentApiary.id + "_" + key
-  );
+      if (hasTextNote && icons.length === 0) icons.push("📒");
+      if (hasVoice) icons.push("🎙️");
+      marker.textContent = icons.join(" ");
+      span.after(marker);
+    }
+  });
 }
 
-if(!note){
-  note = localStorage.getItem(key);
-}
+// --- OTWIERANIE NOTATKI PO KLIKU ---
+document.querySelectorAll("td .day-number").forEach(span => {
+  span.addEventListener("click", () => {
+    // Zapisz edytowaną notatkę poprzedniego dnia przed przełączeniem.
+    if (currentDay && currentMonth && textarea) {
+      writeNoteForDate(getDateNoteKey(currentDay, currentMonth), textarea.value);
+    }
+    stopActiveVoiceRecognition();
 
-textarea.value = note || "";
-        textarea.focus();
-      }
-    });
-  })
+    currentDay = String(span.dataset.day || "").padStart(2,"0");
+    currentMonth = String(span.dataset.month || "").padStart(2,"0");
+    textarea = getMonthlyTextarea(currentMonth);
+
+    const key = getDateNoteKey(currentDay, currentMonth);
+    if (textarea) {
+      textarea.value = readNoteForDate(key);
+      textarea.focus();
+    }
+    updateVoiceControlsForSelectedDate();
+  });
+});
 
 
-  // =========================
+// =========================
   // 💾 ZAPIS NOTATKI
   // =========================
-  window.saveNote = function() {
-
-    if(!currentDay){
-      alert("Najpierw kliknij dzień");
-      return;
-    }
-
-    const key = `${currentDay}.${currentMonth}.2026`;
-
-    if(textarea){
-      localStorage.setItem(getApiaryKey(key), textarea.value);
-    }
-
-    updateMarkers();
-    setTimeout(autoScaleCalendarText, 50);
-
-    if(typeof loadWeatherAndAssist === "function"){
-      loadWeatherAndAssist();
-    }
-  };
-
-  // --- WYSZUKIWARKA NOTATEK ---
-  const searchInput = document.getElementById('search-notes');
-  const resultsContainer = document.getElementById('search-results');
-
-  if(searchInput && resultsContainer){
-
-    searchInput.addEventListener('input', () => {
-
-      const query = searchInput.value.toLowerCase().trim();
-
-      resultsContainer.innerHTML = '';
-
-      document.querySelectorAll('.day-number')
-        .forEach(d => d.classList.remove('highlight-day'));
-
-      if(!query) return;
-
-      for(let i=0;i<localStorage.length;i++){
-
-        const key = localStorage.key(i);
-        if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
-        const note = localStorage.getItem(key);
-
-        if(note && note.toLowerCase().includes(query)){
-
-          const div = document.createElement('div');
-          div.innerHTML = `<b>${key}</b> ➤ ${note}`;
-          resultsContainer.appendChild(div);
-
-          const [dd,mm] = key.split('.');
-          const el = document.querySelector(`.day-number[data-day="${dd}"][data-month="${mm}"]`);
-          if(el) el.classList.add("highlight-day");
-        }
-      }
-    });
+  window.saveNote = function(monthArg) {
+  if (!currentDay || !currentMonth) {
+    alert("Najpierw kliknij konkretny dzień w kalendarzu.");
+    return;
   }
 
-  // =========================
+  const requestedMonth = String(monthArg || currentMonth).padStart(2,"0");
+  if (requestedMonth !== currentMonth) {
+    alert("Kliknij najpierw dzień w miesiącu, którego notatkę chcesz zapisać.");
+    return;
+  }
+
+  textarea = getMonthlyTextarea(currentMonth);
+  if (!textarea) {
+    alert("Nie znaleziono pola notatki dla wybranego miesiąca.");
+    return;
+  }
+
+  const key = getDateNoteKey(currentDay, currentMonth);
+  writeNoteForDate(key, textarea.value);
+  updateMarkers();
+  setTimeout(autoScaleCalendarText, 50);
+
+  if (typeof loadWeatherAndAssist === "function") {
+    loadWeatherAndAssist();
+  }
+};
+
+// Automatyczny zapis tekstu podczas pisania, ale wyłącznie dla wybranego dnia.
+const noteAutosaveFields = new WeakSet();
+document.querySelectorAll('textarea[id^="notes-"]').forEach(field => {
+  if (noteAutosaveFields.has(field)) return;
+  noteAutosaveFields.add(field);
+  field.addEventListener("input", () => {
+    const match = field.id.match(/^notes-(\d{2})$/);
+    if (!match || !currentDay || currentMonth !== match[1]) return;
+    if (field !== getMonthlyTextarea(match[1])) return;
+    textarea = field;
+    writeNoteForDate(getDateNoteKey(currentDay, currentMonth), field.value);
+    updateMarkers();
+  });
+});
+
+// Dodaj kontrolki audio/dyktowania do pól notatek bez przebudowy układu miesięcy.
+initVoiceNoteControls();
+
+// --- WYSZUKIWARKA NOTATEK ---
+const searchInput = document.getElementById('search-notes');
+const resultsContainer = document.getElementById('search-results');
+
+if (searchInput && resultsContainer) {
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase().trim();
+    resultsContainer.innerHTML = '';
+    document.querySelectorAll('.day-number').forEach(d => d.classList.remove('highlight-day'));
+    if (!query) return;
+
+    document.querySelectorAll('.day-number').forEach(dayElement => {
+      const day = String(dayElement.dataset.day || "").padStart(2,"0");
+      const month = String(dayElement.dataset.month || "").padStart(2,"0");
+      const key = getDateNoteKey(day, month);
+      const note = readNoteForDate(key);
+      if (note && note.toLowerCase().includes(query)) {
+        const div = document.createElement('div');
+        const strong = document.createElement('b');
+        strong.textContent = key;
+        div.appendChild(strong);
+        div.appendChild(document.createTextNode(" ➤ " + note));
+        div.addEventListener("click", () => dayElement.click());
+        resultsContainer.appendChild(div);
+        dayElement.classList.add("highlight-day");
+      }
+    });
+  });
+}
+
+// =========================
   // 📍 SCROLL DO DZIŚ
   // =========================
   function scrollToToday(){
@@ -2743,14 +3176,14 @@ const APIARIES = [
   {
     id: "pasieka_1",
     name: "Pasieka Werpol",
-    lat: 52.411611,
-    lon: 23.161000
+    lat: 52.407231,
+    lon: 23.152673
   },
   {
     id: "pasieka_2",
     name: "Pasieka Borysowszczyzna",
-    lat: 52.424389,
-    lon: 23.111806
+    lat: 52.419870,
+    lon: 23.091900
   }
 ];
 
@@ -2772,14 +3205,22 @@ function detectNearestApiary(lat, lon){
     }
   });
 
-  // max 5 km
-  if(minDistance <= 5){
+  // max 10 km
+  if(minDistance <= 10){
     currentApiary = nearest;
   } else {
     currentApiary = null;
   }
 
   updateApiaryUI(minDistance);
+
+  if (currentDay && currentMonth) {
+    textarea = getMonthlyTextarea(currentMonth);
+    if (textarea) textarea.value = readNoteForDate(getDateNoteKey(currentDay, currentMonth));
+  }
+  if (typeof updateMarkers === "function") updateMarkers();
+  if (typeof updateVoiceControlsForSelectedDate === "function") updateVoiceControlsForSelectedDate();
+
 }
 
 // 📍 PANEL PASIEKI
@@ -3202,7 +3643,7 @@ function generateBeeForecast(days){
     String(date.getDate()).padStart(2,"0")+"."+
     String(date.getMonth()+1).padStart(2,"0")+
     ".2026";
-      const note = (localStorage.getItem(key)||"").toLowerCase();
+      const note = (readNoteForDate(key)||"").toLowerCase();
       let dayTasks=[];
 
       if(note.includes("przegląd")||note.includes("kontrola")) inspections++;
@@ -3283,8 +3724,8 @@ if(swarmRisk>100) swarmRisk=100;
     box.querySelectorAll('div[data-key]').forEach(div=>{
       div.addEventListener('click', ()=>{
         const key = div.dataset.key;
-        const note = localStorage.getItem(key) || "";
-        localStorage.setItem(key, note + "\n" + div.textContent + " [WYKONANE]");
+        const note = readNoteForDate(key) || "";
+        writeNoteForDate(key, note + "\n" + div.textContent + " [WYKONANE]");
         updateMarkers();
 setTimeout(autoScaleCalendarText, 50);  // 🔥 DODAJ TU
 loadWeatherAndAssist();
@@ -3299,20 +3740,34 @@ loadWeatherAndAssist();
     resultsContainer.innerHTML = `<b>🐝 Historia ula ${hiveNumber}</b><br><br>`;
     let found = false;
 
-    for(let i=0;i<localStorage.length;i++){
-      const key = localStorage.key(i);
-      if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-      const note = (localStorage.getItem(key) || "").toLowerCase();
-      if(note.includes("ul "+hiveNumber)){
+    document.querySelectorAll("td .day-number").forEach(dayElement => {
+      const key = getDateNoteKey(dayElement.dataset.day, dayElement.dataset.month);
+      const note = (readNoteForDate(key) || "").toLowerCase();
+      if(note.includes("ul " + String(hiveNumber).toLowerCase())){
         found = true;
         const div = document.createElement('div');
-        div.innerHTML = `<b>${key}</b> ➤ ${note.replace(/ul\s*(\d+)/g, (m,n)=>
-          `<span style="color:blue;cursor:pointer" onclick="showHiveHistory(${n})">${m}</span>`
-        )}`;
+        const strong = document.createElement('b');
+        strong.textContent = key;
+        div.appendChild(strong);
+        div.appendChild(document.createTextNode(" ➤ "));
+        const pattern = /ul\s*(\d+)/gi;
+        let lastIndex = 0;
+        let match;
+        while((match = pattern.exec(note)) !== null){
+          div.appendChild(document.createTextNode(note.slice(lastIndex, match.index)));
+          const link = document.createElement("span");
+          link.textContent = match[0];
+          link.style.color = "blue";
+          link.style.cursor = "pointer";
+          link.addEventListener("click", () => window.showHiveHistory(Number(match[1])));
+          div.appendChild(link);
+          lastIndex = pattern.lastIndex;
+        }
+        div.appendChild(document.createTextNode(note.slice(lastIndex)));
         div.style.marginBottom = "5px";
         resultsContainer.appendChild(div);
       }
-    }
+    });
 
     if(!found){
       resultsContainer.innerHTML += "Brak wpisów dla tego ula";
@@ -3328,11 +3783,9 @@ function getHiveData(){
 
   let hiveStats = {};
 
-  for(let i=0;i<localStorage.length;i++){
-    const key = localStorage.key(i);
-    if(!/^\d{2}\.\d{2}\.2026$/.test(key)) continue;
-
-    const note = (localStorage.getItem(key)||"").toLowerCase();
+  document.querySelectorAll("td .day-number").forEach(dayElement => {
+    const key = getDateNoteKey(dayElement.dataset.day, dayElement.dataset.month);
+    const note = (readNoteForDate(key)||"").toLowerCase();
     const matches = note.match(/ul\s*(\d+)/g);
 
     if(matches){
@@ -3357,7 +3810,7 @@ function getHiveData(){
         if(note.includes("miód")) hiveStats[nr].honey++;
       });
     }
-  }
+  });
 
   return hiveStats;
 }
@@ -3457,7 +3910,7 @@ function generateWeeklyPlanPro(){
     const m = String(date.getMonth()+1).padStart(2,"0");
     const key = d+"."+m+".2026";
 
-    const note = (localStorage.getItem(key)||"").toLowerCase();
+    const note = (readNoteForDate(key)||"").toLowerCase();
 
     let tasks=[];
 
