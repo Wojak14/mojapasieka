@@ -2447,6 +2447,9 @@ font-weight:bold;
       <textarea id="hive-profile-notes" rows="3" placeholder="Matka, zachowanie, rozwój, cechy rodziny..."></textarea>
     </label>
     <div class="hive-toolbar">
+      <label for="hive-new-number">Numer ula:</label>
+      <input type="number" id="hive-new-number" min="1" max="100" style="width:75px;">
+      <button type="button" id="hive-renumber-save">Zmień numer</button>
       <button type="button" id="hive-profile-save">💾 Zapisz kartę</button>
     </div>
 
@@ -2849,6 +2852,20 @@ async function getVoiceBlob(dateKey) {
   });
 }
 
+async function deleteVoiceBlob(dateKey) {
+  const db = await openVoiceNotesDb();
+  const storageKey = getApiaryKey(dateKey);
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("voiceNotes", "readwrite");
+    tx.objectStore("voiceNotes").delete(storageKey);
+    tx.oncomplete = () => {
+      getVoiceMarkerKeyCandidates(dateKey).forEach(key => localStorage.removeItem(key));
+      resolve();
+    };
+    tx.onerror = () => reject(tx.error || new Error("Nie udało się usunąć nagrania."));
+    tx.onabort = () => reject(tx.error || new Error("Usuwanie nagrania zostało przerwane."));
+  });
+}
 function selectedNoteDateKey() {
   if (!currentDay || !currentMonth) return null;
   return getDateNoteKey(currentDay, currentMonth);
@@ -2924,6 +2941,7 @@ function initVoiceNoteControls() {
         <button type="button" data-action="record">🎙️ Nagraj</button>
         <button type="button" data-action="stop-record" disabled>⏹ Zakończ nagrywanie</button>
         <button type="button" data-action="play" disabled>▶ Odtwórz nagranie</button>
+       <button type="button" data-action="delete-audio">🗑️ Usuń nagranie</button>
         <button type="button" data-action="dictate">🗣️ Dyktuj po polsku</button>
         <button type="button" data-action="stop-dictate" disabled>⏹ Zakończ dyktowanie</button>
       </div>
@@ -2945,6 +2963,35 @@ function initVoiceNoteControls() {
     const dictateButton = panel.querySelector('[data-action="dictate"]');
     const stopDictateButton = panel.querySelector('[data-action="stop-dictate"]');
     const audio = panel.querySelector("audio");
+    const deleteAudioButton = panel.querySelector('[data-action="delete-audio"]');
+
+    if (deleteAudioButton) deleteAudioButton.addEventListener("click", async () => {
+      if (!ensureSelectedDateForMonth(month, status)) return;
+      const dateKey = selectedNoteDateKey();
+      const existingBlob = await getVoiceBlob(dateKey).catch(() => null);
+      if (!existingBlob && !hasVoiceNoteMarker(dateKey)) {
+        status.textContent = "Brak nagrania do usunięcia dla tego dnia.";
+        updateVoiceControlsForSelectedDate();
+        return;
+      }
+      if (!window.confirm("Czy na pewno usunąć nagranie głosowe z dnia " + dateKey +
+        "?\n\nTekst notatki i historia ula pozostaną bez zmian.")) return;
+      try {
+        await deleteVoiceBlob(dateKey);
+        audio.pause();
+        audio.removeAttribute("src");
+        audio.load();
+        if (activeVoiceObjectUrl) {
+          URL.revokeObjectURL(activeVoiceObjectUrl);
+          activeVoiceObjectUrl = null;
+        }
+        updateMarkers();
+        updateVoiceControlsForSelectedDate();
+        status.textContent = "Usunięto nagranie. Tekst notatki pozostał.";
+      } catch (error) {
+        status.textContent = "Nie udało się usunąć nagrania: " + (error.message || error);
+      }
+    });
 
     recordButton.addEventListener("click", async () => {
       if (!ensureSelectedDateForMonth(month, status)) return;
@@ -4250,6 +4297,7 @@ function loadHiveEditor() {
   };
 
   document.getElementById("hive-editor-title").textContent = "Karta ula " + selectedHiveNumber;
+  set("hive-new-number", selectedHiveNumber);
   set("hive-queen-year", profile.queenYear);
   set("hive-strength", profile.strength);
   set("hive-brood", profile.brood);
@@ -4258,6 +4306,63 @@ function loadHiveEditor() {
   set("hive-status", profile.status || "obserwacja");
   set("hive-profile-notes", profile.notes);
   renderHiveHistory();
+}
+
+function renumberSelectedHive() {
+  const input = document.getElementById("hive-new-number");
+  const newNumber = Number(input && input.value);
+  const oldNumber = Number(selectedHiveNumber);
+  if (!Number.isInteger(newNumber) || newNumber < 1 || newNumber > 100) {
+    alert("Numer ula musi być liczbą całkowitą od 1 do 100.");
+    if (input) input.value = oldNumber;
+    return;
+  }
+  if (newNumber === oldNumber) return;
+
+  const profiles = getHiveProfiles();
+  const target = profiles[String(newNumber)];
+  if (target && (target.number || target.queenYear || target.strength || target.brood ||
+      target.stores || target.varroa || target.notes || (target.inspections || []).length)) {
+    alert("Karta ula " + newNumber + " jest już używana. Najpierw wybierz wolny numer.");
+    input.value = oldNumber;
+    return;
+  }
+  if (!window.confirm("Zmienić numer ula " + oldNumber + " na " + newNumber +
+      "? Dane karty i zapisana historia zostaną przeniesione.")) {
+    input.value = oldNumber;
+    return;
+  }
+
+  const profile = profiles[String(oldNumber)] || getHiveProfile(oldNumber);
+  profile.number = newNumber;
+  if (Array.isArray(profile.inspections)) {
+    const oldLabel = new RegExp("(\\bUl\\s*)#?0*" + oldNumber + "\\b", "gi");
+    profile.inspections = profile.inspections.map(entry => ({
+      ...entry,
+      text: String(entry.text || "").replace(oldLabel, "$1" + newNumber)
+    }));
+  }
+  delete profiles[String(oldNumber)];
+  profiles[String(newNumber)] = profile;
+  saveHiveProfiles(profiles);
+
+  // Zaktualizuj odwołania w notatkach dni wyświetlanych w kalendarzu,
+  // aby historia ula nadal wskazywała właściwą kartę.
+  const calendarLabel = new RegExp("(\\bUl\\s*)#?0*" + oldNumber + "\\b", "gi");
+  document.querySelectorAll("td .day-number").forEach(dayElement => {
+    const key = getDateNoteKey(dayElement.dataset.day, dayElement.dataset.month);
+    const note = readNoteForDate(key);
+    if (note) {
+      const updated = note.replace(calendarLabel, "$1" + newNumber);
+      if (updated !== note) writeNoteForDate(key, updated);
+    }
+  });
+
+  selectedHiveNumber = newNumber;
+  renderHiveCards();
+  loadHiveEditor();
+  updateMarkers();
+  alert("Zmieniono numer ula. Karta, historia i powiązane wpisy kalendarza zostały zachowane.");
 }
 
 function saveHiveProfile() {
@@ -4423,6 +4528,8 @@ function initHiveManagement() {
 
   const profileSave = document.getElementById("hive-profile-save");
   if (profileSave) profileSave.addEventListener("click", saveHiveProfile);
+  const renumberSave = document.getElementById("hive-renumber-save");
+  if (renumberSave) renumberSave.addEventListener("click", renumberSelectedHive);
 
   const eventSave = document.getElementById("hive-event-save");
   if (eventSave) eventSave.addEventListener("click", addHiveEvent);
