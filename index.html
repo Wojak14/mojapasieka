@@ -2394,6 +2394,19 @@ font-weight:bold;
   <div id="hive-card-list" aria-live="polite"></div>
   <div id="hive-editor">
     <h4 id="hive-editor-title" style="margin:0 0 9px;">Karta ula 1</h4>
+    <div class="hive-toolbar">
+  <label for="hive-new-number">Numer karty ula:</label>
+  <input
+    type="number"
+    id="hive-new-number"
+    min="1"
+    max="100"
+    style="width:75px;"
+  >
+  <button type="button" id="hive-renumber-save">
+    Zmień numer
+  </button>
+</div>
     <div class="hive-fields">
       <label>Rok matki
         <input type="number" id="hive-queen-year" min="2000" max="2035" placeholder="np. 2025">
@@ -2447,10 +2460,12 @@ font-weight:bold;
       <textarea id="hive-profile-notes" rows="3" placeholder="Matka, zachowanie, rozwój, cechy rodziny..."></textarea>
     </label>
     <div class="hive-toolbar">
-      <label for="hive-new-number">Numer ula:</label>
-      <input type="number" id="hive-new-number" min="1" max="100" style="width:75px;">
-      <button type="button" id="hive-renumber-save">Zmień numer</button>
       <button type="button" id="hive-profile-save">💾 Zapisz kartę</button>
+      <button type="button" id="hive-delete-card" style="background:#ffdddd;border-color:#c66;">🗑️ Usuń kartę ula</button>
+   const renumberButton = document.getElementById("hive-renumber-save");
+if (renumberButton) {
+  renumberButton.addEventListener("click", renameSelectedHive);
+}
     </div>
 
     <h4 class="hive-section-title">➕ Dodaj przegląd / zdarzenie</h4>
@@ -2475,6 +2490,10 @@ font-weight:bold;
     </label>
     <div class="hive-toolbar">
       <button type="button" id="hive-event-save">📅 Zapisz zdarzenie i połącz z kalendarzem</button>
+const renumberButton = document.getElementById("hive-renumber-save");
+if (renumberButton) {
+  renumberButton.addEventListener("click", renameSelectedHive);
+}
     </div>
 
     <h4 class="hive-section-title">📜 Historia tej rodziny</h4>
@@ -2842,6 +2861,30 @@ async function saveVoiceBlob(dateKey, blob) {
 }
 
 async function getVoiceBlob(dateKey) {
+async function deleteVoiceBlob(dateKey) {
+  const db = await openVoiceNotesDb();
+  const storageKey = getApiaryKey(dateKey);
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("voiceNotes", "readwrite");
+    tx.objectStore("voiceNotes").delete(storageKey);
+
+    tx.oncomplete = () => {
+      getVoiceMarkerKeyCandidates(dateKey).forEach(key => {
+        localStorage.removeItem(key);
+      });
+      resolve();
+    };
+
+    tx.onerror = () => reject(
+      tx.error || new Error("Nie udało się usunąć nagrania.")
+    );
+
+    tx.onabort = () => reject(
+      tx.error || new Error("Usuwanie nagrania zostało przerwane.")
+    );
+  });
+}
   const db = await openVoiceNotesDb();
   const storageKey = getApiaryKey(dateKey);
   return new Promise((resolve, reject) => {
@@ -2852,20 +2895,6 @@ async function getVoiceBlob(dateKey) {
   });
 }
 
-async function deleteVoiceBlob(dateKey) {
-  const db = await openVoiceNotesDb();
-  const storageKey = getApiaryKey(dateKey);
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction("voiceNotes", "readwrite");
-    tx.objectStore("voiceNotes").delete(storageKey);
-    tx.oncomplete = () => {
-      getVoiceMarkerKeyCandidates(dateKey).forEach(key => localStorage.removeItem(key));
-      resolve();
-    };
-    tx.onerror = () => reject(tx.error || new Error("Nie udało się usunąć nagrania."));
-    tx.onabort = () => reject(tx.error || new Error("Usuwanie nagrania zostało przerwane."));
-  });
-}
 function selectedNoteDateKey() {
   if (!currentDay || !currentMonth) return null;
   return getDateNoteKey(currentDay, currentMonth);
@@ -2943,7 +2972,9 @@ function initVoiceNoteControls() {
         <button type="button" data-action="play" disabled>▶ Odtwórz nagranie</button>
        <button type="button" data-action="delete-audio">🗑️ Usuń nagranie</button>
         <button type="button" data-action="dictate">🗣️ Dyktuj po polsku</button>
+        const deleteAudioButton = panel.querySelector('[data-action="delete-audio"]');
         <button type="button" data-action="stop-dictate" disabled>⏹ Zakończ dyktowanie</button>
+       const deleteAudioButton = panel.querySelector('[data-action="delete-audio"]');
       </div>
       <audio controls preload="none" aria-label="Odtwarzanie notatki głosowej"></audio>
       <small class="voice-status">Wybierz dzień w kalendarzu.</small>
@@ -2963,35 +2994,6 @@ function initVoiceNoteControls() {
     const dictateButton = panel.querySelector('[data-action="dictate"]');
     const stopDictateButton = panel.querySelector('[data-action="stop-dictate"]');
     const audio = panel.querySelector("audio");
-    const deleteAudioButton = panel.querySelector('[data-action="delete-audio"]');
-
-    if (deleteAudioButton) deleteAudioButton.addEventListener("click", async () => {
-      if (!ensureSelectedDateForMonth(month, status)) return;
-      const dateKey = selectedNoteDateKey();
-      const existingBlob = await getVoiceBlob(dateKey).catch(() => null);
-      if (!existingBlob && !hasVoiceNoteMarker(dateKey)) {
-        status.textContent = "Brak nagrania do usunięcia dla tego dnia.";
-        updateVoiceControlsForSelectedDate();
-        return;
-      }
-      if (!window.confirm("Czy na pewno usunąć nagranie głosowe z dnia " + dateKey +
-        "?\n\nTekst notatki i historia ula pozostaną bez zmian.")) return;
-      try {
-        await deleteVoiceBlob(dateKey);
-        audio.pause();
-        audio.removeAttribute("src");
-        audio.load();
-        if (activeVoiceObjectUrl) {
-          URL.revokeObjectURL(activeVoiceObjectUrl);
-          activeVoiceObjectUrl = null;
-        }
-        updateMarkers();
-        updateVoiceControlsForSelectedDate();
-        status.textContent = "Usunięto nagranie. Tekst notatki pozostał.";
-      } catch (error) {
-        status.textContent = "Nie udało się usunąć nagrania: " + (error.message || error);
-      }
-    });
 
     recordButton.addEventListener("click", async () => {
       if (!ensureSelectedDateForMonth(month, status)) return;
@@ -3864,8 +3866,8 @@ function generateBeeForecast(days){
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
 
-    const feedingStart = new Date(2026,8,20);    // 20 sierpnia
-    const treatmentStart = new Date(2026,9,21);  // 21 września
+    const feedingStart = new Date(calendarYear,8,20);    // 20 sierpnia każdego roku
+    const treatmentStart = new Date(calendarYear,9,21);  // 21 września każdego roku
     function isBadWeather(wind, rain, temp){
 
   if(temp < 12) return true;
@@ -4297,7 +4299,6 @@ function loadHiveEditor() {
   };
 
   document.getElementById("hive-editor-title").textContent = "Karta ula " + selectedHiveNumber;
-  set("hive-new-number", selectedHiveNumber);
   set("hive-queen-year", profile.queenYear);
   set("hive-strength", profile.strength);
   set("hive-brood", profile.brood);
@@ -4308,61 +4309,124 @@ function loadHiveEditor() {
   renderHiveHistory();
 }
 
-function renumberSelectedHive() {
+function renameSelectedHive() {
   const input = document.getElementById("hive-new-number");
   const newNumber = Number(input && input.value);
   const oldNumber = Number(selectedHiveNumber);
+
   if (!Number.isInteger(newNumber) || newNumber < 1 || newNumber > 100) {
-    alert("Numer ula musi być liczbą całkowitą od 1 do 100.");
-    if (input) input.value = oldNumber;
+    alert("Podaj numer ula od 1 do 100.");
     return;
   }
-  if (newNumber === oldNumber) return;
+  if (newNumber === oldNumber) {
+    alert("To już jest aktualny numer ula.");
+    return;
+  }
 
   const profiles = getHiveProfiles();
-  const target = profiles[String(newNumber)];
-  if (target && (target.number || target.queenYear || target.strength || target.brood ||
-      target.stores || target.varroa || target.notes || (target.inspections || []).length)) {
-    alert("Karta ula " + newNumber + " jest już używana. Najpierw wybierz wolny numer.");
-    input.value = oldNumber;
+  if (profiles[String(newNumber)]) {
+    alert("Karta ula o takim numerze już istnieje. Nie nadpisano jej.");
     return;
   }
-  if (!window.confirm("Zmienić numer ula " + oldNumber + " na " + newNumber +
-      "? Dane karty i zapisana historia zostaną przeniesione.")) {
-    input.value = oldNumber;
+  if (!confirm("Zmienić numer ula " + oldNumber + " na " + newNumber +
+    "?\n\nDane karty oraz historia zostaną przeniesione. Odwołania do ula w notatkach kalendarza również zostaną zaktualizowane.")) {
     return;
   }
 
   const profile = profiles[String(oldNumber)] || getHiveProfile(oldNumber);
   profile.number = newNumber;
-  if (Array.isArray(profile.inspections)) {
-    const oldLabel = new RegExp("(\\bUl\\s*)#?0*" + oldNumber + "\\b", "gi");
-    profile.inspections = profile.inspections.map(entry => ({
-      ...entry,
-      text: String(entry.text || "").replace(oldLabel, "$1" + newNumber)
-    }));
-  }
-  delete profiles[String(oldNumber)];
+  profile.updatedAt = new Date().toISOString();
   profiles[String(newNumber)] = profile;
+  delete profiles[String(oldNumber)];
   saveHiveProfiles(profiles);
 
-  // Zaktualizuj odwołania w notatkach dni wyświetlanych w kalendarzu,
-  // aby historia ula nadal wskazywała właściwą kartę.
-  const calendarLabel = new RegExp("(\\bUl\\s*)#?0*" + oldNumber + "\\b", "gi");
-  document.querySelectorAll("td .day-number").forEach(dayElement => {
-    const key = getDateNoteKey(dayElement.dataset.day, dayElement.dataset.month);
-    const note = readNoteForDate(key);
-    if (note) {
-      const updated = note.replace(calendarLabel, "$1" + newNumber);
-      if (updated !== note) writeNoteForDate(key, updated);
+  // Zaktualizuj również numer ula w notatkach dni bieżącego kalendarza.
+  const oldPattern = new RegExp("\\b(ul\\s*#?\\s*)0*" + oldNumber + "\\b", "gi");
+  document.querySelectorAll(".day-number[data-day][data-month]").forEach(dayElement => {
+    const dateKey = getDateNoteKey(dayElement.dataset.day, dayElement.dataset.month);
+    const note = readNoteForDate(dateKey);
+    if (note && oldPattern.test(note)) {
+      oldPattern.lastIndex = 0;
+      writeNoteForDate(dateKey, note.replace(oldPattern, "$1" + newNumber));
+      oldPattern.lastIndex = 0;
     }
   });
 
   selectedHiveNumber = newNumber;
+  const countInput = document.getElementById("hive-card-count");
+  const mainCount = document.getElementById("hivesCount");
+  const neededCount = Math.max(newNumber, Number(countInput && countInput.value) || 1);
+  if (countInput) countInput.value = neededCount;
+  if (mainCount) mainCount.value = neededCount;
+  localStorage.setItem("bee-hive-count:" + (currentApiary?.id || "default"), String(neededCount));
+  if (input) input.value = "";
+  updateMarkers();
   renderHiveCards();
   loadHiveEditor();
+  alert("Numer ula zmieniony. Karta i jej historia zostały przeniesione na numer " + newNumber + ".");
+}
+
+function deleteSelectedHive() {
+  const number = Number(selectedHiveNumber);
+  const countInput = document.getElementById("hive-card-count");
+  const oldCount = Math.max(1, Math.min(100, Number(countInput && countInput.value) || 25));
+  if (!confirm("Czy na pewno usunąć kartę ula " + number +
+    "?\n\nKarta i jej historia zostaną usunięte. Karty o wyższych numerach przesuną się o jedno miejsce w dół. Tej operacji nie można cofnąć.")) {
+    return;
+  }
+
+  const profiles = getHiveProfiles();
+  delete profiles[String(number)];
+
+  // Przesuń kolejne karty, aby usunięty numer rzeczywiście zniknął z listy.
+  for (let n = number + 1; n <= oldCount; n++) {
+    const next = profiles[String(n)];
+    if (next) {
+      next.number = n - 1;
+      if (Array.isArray(next.inspections)) {
+        next.inspections = next.inspections.map(item => ({
+          ...item,
+          text: String(item.text || "").replace(
+            new RegExp("\\b(ul\\s*#?\\s*)0*" + n + "\\b", "gi"), "$1" + (n - 1)
+          )
+        }));
+      }
+      profiles[String(n - 1)] = next;
+      delete profiles[String(n)];
+    }
+  }
+  saveHiveProfiles(profiles);
+
+  // Zaktualizuj odniesienia w notatkach: usunięty ul znika,
+  // a numery uli znajdujących się za nim zmniejszają się o jeden.
+  document.querySelectorAll(".day-number[data-day][data-month]").forEach(dayElement => {
+    const dateKey = getDateNoteKey(dayElement.dataset.day, dayElement.dataset.month);
+    const note = readNoteForDate(dateKey);
+    if (!note) return;
+    const cleaned = note.split("\n").filter(line => {
+      const exactDeleted = new RegExp("^\\s*ul\\s*#?\\s*0*" + number + "\\b", "i");
+      return !exactDeleted.test(line);
+    }).map(line => line.replace(
+      new RegExp("\\b(ul\\s*#?\\s*)0*(\\d+)\\b", "gi"),
+      (match, prefix, digits) => {
+        const oldNumber = Number(digits);
+        return oldNumber > number ? prefix + (oldNumber - 1) : match;
+      }
+    )).join("\n").trim();
+    if (cleaned !== note) writeNoteForDate(dateKey, cleaned);
+  });
+
+  const newCount = Math.max(1, oldCount - 1);
+  if (countInput) countInput.value = newCount;
+  const mainCount = document.getElementById("hivesCount");
+  if (mainCount) mainCount.value = newCount;
+  localStorage.setItem("bee-hive-count:" + (currentApiary?.id || "default"), String(newCount));
+
+  selectedHiveNumber = Math.min(number, newCount);
   updateMarkers();
-  alert("Zmieniono numer ula. Karta, historia i powiązane wpisy kalendarza zostały zachowane.");
+  renderHiveCards();
+  loadHiveEditor();
+  alert("Karta ula " + number + " została usunięta. Pozostałe karty zostały uporządkowane.");
 }
 
 function saveHiveProfile() {
@@ -4528,8 +4592,10 @@ function initHiveManagement() {
 
   const profileSave = document.getElementById("hive-profile-save");
   if (profileSave) profileSave.addEventListener("click", saveHiveProfile);
-  const renumberSave = document.getElementById("hive-renumber-save");
-  if (renumberSave) renumberSave.addEventListener("click", renumberSelectedHive);
+  const renumberButton = document.getElementById("hive-renumber-save");
+  if (renumberButton) renumberButton.addEventListener("click", renameSelectedHive);
+  const deleteButton = document.getElementById("hive-delete-card");
+  if (deleteButton) deleteButton.addEventListener("click", deleteSelectedHive);
 
   const eventSave = document.getElementById("hive-event-save");
   if (eventSave) eventSave.addEventListener("click", addHiveEvent);
