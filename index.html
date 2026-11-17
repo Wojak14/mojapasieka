@@ -3866,8 +3866,8 @@ function generateBeeForecast(days){
     let inspections=0, feeding=false, treatment=false, swarm=false, honey=false;
     let tasksByDay={};
 
-    const feedingStart = new Date(calendarYear,8,20);    // 20 sierpnia każdego roku
-    const treatmentStart = new Date(calendarYear,9,21);  // 21 września każdego roku
+    const feedingStart = new Date(2026,8,20);    // 20 sierpnia
+    const treatmentStart = new Date(2026,9,21);  // 21 września
     function isBadWeather(wind, rain, temp){
 
   if(temp < 12) return true;
