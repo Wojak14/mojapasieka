@@ -2356,6 +2356,7 @@ font-weight:bold;
     <input type="number" id="hive-card-count" min="1" max="100" value="25" style="width:75px;">
     <button type="button" id="hive-card-count-save">Zastosuj</button>
   </div>
+  <div id="hive-health-summary" aria-live="polite" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;padding:8px;border:1px solid #e5d8aa;border-radius:8px;background:#fffaf0;font-size:13px;"></div>
   <div id="hive-card-list" aria-live="polite"></div>
   <div id="hive-editor">
     <h4 id="hive-editor-title" style="margin:0 0 9px;">Karta ula 1</h4>
@@ -2421,6 +2422,50 @@ font-weight:bold;
         </select>
       </label>
     </div>
+    <h4 class="hive-section-title">🔬 Ocena biologiczna rodziny</h4>
+    <div class="hive-fields">
+      <label>Ocena matki
+        <select id="hive-queen-status">
+          <option value="">Nie oceniono</option>
+          <option value="matka widziana">Matka widziana</option>
+          <option value="jaja obecne">Jaja / świeży czerw</option>
+          <option value="matka niewidziana, czerw obecny">Matki nie widziano, czerw obecny</option>
+          <option value="brak jaj i czerwiu">Brak jaj i czerwiu</option>
+          <option value="podejrzenie bezmateczności">Podejrzenie bezmateczności</option>
+        </select>
+      </label>
+      <label>Temperament
+        <select id="hive-temperament">
+          <option value="">Nie oceniono</option>
+          <option value="spokojna">Spokojna</option>
+          <option value="umiarkowana">Umiarkowana</option>
+          <option value="agresywna">Agresywna</option>
+        </select>
+      </label>
+      <label>Objawy / obserwacje zdrowotne
+        <select id="hive-disease-signs">
+          <option value="">Nie oceniono</option>
+          <option value="brak widocznych objawów">Brak widocznych objawów</option>
+          <option value="podejrzenie nosemozy">Podejrzenie nosemozy</option>
+          <option value="podejrzenie zgnilca">Podejrzenie zgnilca</option>
+          <option value="podejrzenie grzybicy wapiennej">Podejrzenie grzybicy wapiennej</option>
+          <option value="inne niepokojące objawy">Inne niepokojące objawy</option>
+        </select>
+      </label>
+      <label>Wynik pomiaru warrozy
+        <input type="number" id="hive-varroa-count" min="0" max="10000" step="1" placeholder="liczba roztoczy">
+      </label>
+      <label>Metoda pomiaru
+        <select id="hive-varroa-method">
+          <option value="">Nie podano</option>
+          <option value="próba osypu">Próba osypu</option>
+          <option value="próba alkoholowa">Próba alkoholowa</option>
+          <option value="próba cukrowa">Próba cukrowa</option>
+          <option value="kontrola czerwiu">Kontrola czerwiu</option>
+          <option value="inna metoda">Inna metoda</option>
+        </select>
+      </label>
+    </div>
     <label style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">Uwagi o rodzinie
       <textarea id="hive-profile-notes" rows="3" placeholder="Matka, zachowanie, rozwój, cechy rodziny..."></textarea>
     </label>
@@ -2441,6 +2486,9 @@ font-weight:bold;
           <option value="leczenie">Leczenie</option>
           <option value="miodobranie">Miodobranie</option>
           <option value="kontrola matki">Kontrola matki</option>
+          <option value="kontrola zdrowotna">Kontrola zdrowotna</option>
+          <option value="ocena warrozy">Pomiar / ocena warrozy</option>
+          <option value="wymiana matki">Wymiana matki</option>
           <option value="rójka">Obserwacja rojowa</option>
           <option value="inne">Inne</option>
         </select>
@@ -2923,7 +2971,6 @@ function initVoiceNoteControls() {
        <button type="button" data-action="delete-audio">🗑️ Usuń nagranie</button>
         <button type="button" data-action="dictate">🗣️ Dyktuj po polsku</button>
         <button type="button" data-action="stop-dictate" disabled>⏹ Zakończ dyktowanie</button>
-       const deleteAudioButton = panel.querySelector('[data-action="delete-audio"]');
       </div>
       <audio controls preload="none" aria-label="Odtwarzanie notatki głosowej"></audio>
       <small class="voice-status">Wybierz dzień w kalendarzu.</small>
@@ -4196,6 +4243,11 @@ function getHiveProfile(number) {
     brood: "",
     stores: "",
     varroa: "",
+    queenStatus: "",
+    temperament: "",
+    diseaseSigns: "",
+    varroaCount: "",
+    varroaMethod: "",
     status: "obserwacja",
     notes: "",
     inspections: []
@@ -4219,6 +4271,42 @@ function hiveCalendarEntries(number) {
   }).reverse();
 }
 
+function getHiveHealthAssessment(profile) {
+  const status = String(profile.status || "obserwacja").toLowerCase();
+  const signs = String(profile.diseaseSigns || "").toLowerCase();
+  const queen = String(profile.queenStatus || "").toLowerCase();
+  if (status === "stracona") return { label: "Rodzina stracona", level: "critical", mark: "⛔" };
+  if (status === "do połączenia" || profile.varroa === "wysoka") return { label: "Pilna kontrola", level: "critical", mark: "🔴" };
+  if (status === "wymaga kontroli" || signs.includes("podejrzenie") || signs.includes("niepokojące") || queen.includes("brak") || queen.includes("podejrzenie")) {
+    return { label: "Wymaga uwagi", level: "warning", mark: "🟠" };
+  }
+  if (status === "dobra") return { label: "Dobra kondycja — ocena ręczna", level: "good", mark: "🟢" };
+  return { label: "Do obserwacji", level: "neutral", mark: "⚪" };
+}
+
+function renderHiveHealthSummary(profiles, count, deletedNumbers) {
+  const box = document.getElementById("hive-health-summary");
+  if (!box) return;
+  const active = [];
+  for (let n = 1; n <= count; n++) {
+    if (!deletedNumbers.has(n)) active.push(profiles[String(n)] || {});
+  }
+  const totals = { good: 0, warning: 0, critical: 0, neutral: 0 };
+  active.forEach(profile => totals[getHiveHealthAssessment(profile).level]++);
+  box.textContent = "";
+  [
+    `🐝 Rodziny: ${active.length}`,
+    `🟢 Dobra kondycja: ${totals.good}`,
+    `🟠 Wymaga uwagi: ${totals.warning}`,
+    `🔴 Pilna kontrola: ${totals.critical}`,
+    `⚪ Do obserwacji: ${totals.neutral}`
+  ].forEach(label => {
+    const item = document.createElement("span");
+    item.textContent = label;
+    box.appendChild(item);
+  });
+}
+
 function renderHiveCards() {
   const list = document.getElementById("hive-card-list");
   const countInput = document.getElementById("hive-card-count");
@@ -4234,6 +4322,7 @@ function renderHiveCards() {
   list.textContent = "";
 
   const deletedNumbers = getDeletedHiveNumbers();
+  renderHiveHealthSummary(profiles, count, deletedNumbers);
   for (let number = 1; number <= count; number++) {
     if (deletedNumbers.has(number)) continue;
     const profile = profiles[String(number)] || {};
@@ -4242,13 +4331,20 @@ function renderHiveCards() {
 
     const title = document.createElement("strong");
     title.textContent = "🐝 Ul " + number;
+    const health = getHiveHealthAssessment(profile);
     const status = document.createElement("small");
-    status.textContent = "Status: " + (profile.status || "obserwacja");
+    status.textContent = health.mark + " " + health.label;
     const details = document.createElement("small");
+    const history = Array.isArray(profile.inspections) ? profile.inspections : [];
+    const latest = history.slice().sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")))[0];
     details.textContent = [
       profile.strength ? "Siła: " + profile.strength : "",
-      profile.queenYear ? "Matka: " + profile.queenYear : "",
-      profile.varroa ? "Warroza: " + profile.varroa : ""
+      profile.queenYear ? "Rok matki: " + profile.queenYear : "",
+      profile.brood ? "Czerw: " + profile.brood : "",
+      profile.stores ? "Zapasy: " + profile.stores : "",
+      profile.varroa ? "Warroza: " + profile.varroa : "",
+      latest ? "Ostatni wpis: " + latest.date : "",
+      history.length ? "Wpisów: " + history.length : ""
     ].filter(Boolean).join(" · ") || "Karta do uzupełnienia";
     const button = document.createElement("button");
     button.type = "button";
@@ -4277,6 +4373,11 @@ function loadHiveEditor() {
   set("hive-brood", profile.brood);
   set("hive-stores", profile.stores);
   set("hive-varroa", profile.varroa);
+  set("hive-queen-status", profile.queenStatus);
+  set("hive-temperament", profile.temperament);
+  set("hive-disease-signs", profile.diseaseSigns);
+  set("hive-varroa-count", profile.varroaCount);
+  set("hive-varroa-method", profile.varroaMethod);
   set("hive-status", profile.status || "obserwacja");
   set("hive-profile-notes", profile.notes);
   renderHiveHistory();
@@ -4401,6 +4502,11 @@ function saveHiveProfile() {
   profile.brood = document.getElementById("hive-brood").value;
   profile.stores = document.getElementById("hive-stores").value;
   profile.varroa = document.getElementById("hive-varroa").value;
+  profile.queenStatus = document.getElementById("hive-queen-status").value;
+  profile.temperament = document.getElementById("hive-temperament").value;
+  profile.diseaseSigns = document.getElementById("hive-disease-signs").value;
+  profile.varroaCount = document.getElementById("hive-varroa-count").value;
+  profile.varroaMethod = document.getElementById("hive-varroa-method").value;
   profile.status = document.getElementById("hive-status").value;
   profile.notes = document.getElementById("hive-profile-notes").value;
   profile.updatedAt = new Date().toISOString();
@@ -4434,6 +4540,20 @@ function addHiveEvent() {
   const entryText = "Ul " + selectedHiveNumber + " — " + type + ": " + description;
   const profiles = getHiveProfiles();
   const profile = profiles[String(selectedHiveNumber)] || getHiveProfile(selectedHiveNumber);
+  // Zapisz bieżącą ocenę formularza razem ze zdarzeniem, nawet jeśli użytkownik
+  // nie nacisnął wcześniej osobnego przycisku „Zapisz kartę”.
+  profile.queenYear = document.getElementById("hive-queen-year").value.trim();
+  profile.strength = document.getElementById("hive-strength").value;
+  profile.brood = document.getElementById("hive-brood").value;
+  profile.stores = document.getElementById("hive-stores").value;
+  profile.varroa = document.getElementById("hive-varroa").value;
+  profile.queenStatus = document.getElementById("hive-queen-status").value;
+  profile.temperament = document.getElementById("hive-temperament").value;
+  profile.diseaseSigns = document.getElementById("hive-disease-signs").value;
+  profile.varroaCount = document.getElementById("hive-varroa-count").value;
+  profile.varroaMethod = document.getElementById("hive-varroa-method").value;
+  profile.status = document.getElementById("hive-status").value;
+  profile.notes = document.getElementById("hive-profile-notes").value;
   profile.inspections = Array.isArray(profile.inspections) ? profile.inspections : [];
 
   const duplicate = profile.inspections.some(item =>
@@ -4442,7 +4562,18 @@ function addHiveEvent() {
   if (!duplicate) {
     profile.inspections.unshift({
       date: dateKey,
+      type,
       text: entryText,
+      assessment: {
+        strength: profile.strength,
+        brood: profile.brood,
+        stores: profile.stores,
+        varroa: profile.varroa,
+        queenStatus: profile.queenStatus,
+        diseaseSigns: profile.diseaseSigns,
+        varroaCount: profile.varroaCount,
+        varroaMethod: profile.varroaMethod || document.getElementById("hive-varroa-method").value
+      },
       createdAt: new Date().toISOString()
     });
   }
@@ -4530,6 +4661,22 @@ function renderHiveHistory() {
       const text = document.createElement("span");
       text.textContent = entry.text || "";
       row.append(date, text);
+      if (entry.assessment && typeof entry.assessment === "object") {
+        const assessment = document.createElement("small");
+        const a = entry.assessment;
+        assessment.style.display = "block";
+        assessment.style.color = "#555";
+        assessment.textContent = [
+          a.strength ? "Siła: " + a.strength : "",
+          a.brood ? "Czerw: " + a.brood : "",
+          a.stores ? "Zapasy: " + a.stores : "",
+          a.queenStatus ? "Matka: " + a.queenStatus : "",
+          a.varroa ? "Warroza: " + a.varroa : "",
+          a.varroaCount ? "Pomiar: " + a.varroaCount + (a.varroaMethod ? " (" + a.varroaMethod + ")" : "") : "",
+          a.diseaseSigns ? "Objawy: " + a.diseaseSigns : ""
+        ].filter(Boolean).join(" · ");
+        if (assessment.textContent) row.appendChild(assessment);
+      }
       box.appendChild(row);
     });
   }
