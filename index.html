@@ -3528,6 +3528,15 @@ const APIARIES = [
   }
 ];
 
+// Przywróć ostatnio wybraną pasiekę przed uruchomieniem paneli danych.
+// Zapobiega to odczytowi rejestru finansowego z klucza "default" po odświeżeniu.
+try {
+  const rememberedApiaryId = localStorage.getItem("bee-current-apiary-id");
+  currentApiary = APIARIES.find(apiary => apiary.id === rememberedApiaryId) || null;
+} catch (error) {
+  console.warn("Nie udało się przywrócić ostatniej pasieki", error);
+}
+
 // 📍 WYKRYWANIE PASIEKI
 function detectNearestApiary(lat, lon){
 
@@ -3549,13 +3558,16 @@ function detectNearestApiary(lat, lon){
   // max 10 km
   if(minDistance <= 10){
     currentApiary = nearest;
+    try { localStorage.setItem("bee-current-apiary-id", currentApiary.id); } catch (error) { console.warn("Nie udało się zapamiętać pasieki", error); }
   } else {
     currentApiary = null;
+    try { localStorage.removeItem("bee-current-apiary-id"); } catch (error) { console.warn("Nie udało się wyczyścić wyboru pasieki", error); }
   }
 
   updateApiaryUI(minDistance);
   if (typeof renderHiveCards === "function") { renderHiveCards(); loadHiveEditor(); }
   if (typeof loadApiaryData === "function") loadApiaryData();
+  if (typeof stage5Render === "function") stage5Render();
 
   if (currentDay && currentMonth) {
     textarea = getMonthlyTextarea(currentMonth);
@@ -5088,10 +5100,33 @@ function stage5FinanceKey(){
   return "bee-finance-records:" + (currentApiary && currentApiary.id ? currentApiary.id : "default");
 }
 function stage5GetFinance(){
-  try { const value=JSON.parse(localStorage.getItem(stage5FinanceKey())||"[]"); return Array.isArray(value)?value:[]; }
-  catch(error){ console.warn("Nie można odczytać rejestru finansowego",error); return []; }
+  try {
+    const activeValue = JSON.parse(localStorage.getItem(stage5FinanceKey()) || "[]");
+    const activeRecords = Array.isArray(activeValue) ? activeValue : [];
+    // Wpisy dodane przed ustaleniem lokalizacji mogły trafić do klucza default.
+    // Dołącz je bez duplikatów, aby nie znikały po wykryciu pasieki ani odświeżeniu.
+    if (currentApiary && currentApiary.id) {
+      const legacyValue = JSON.parse(localStorage.getItem("bee-finance-records:default") || "[]");
+      const legacyRecords = Array.isArray(legacyValue) ? legacyValue : [];
+      const byId = new Map();
+      [...legacyRecords, ...activeRecords].forEach((item, index) => {
+        if (item && typeof item === "object") byId.set(item.id || ("legacy-" + index + "-" + JSON.stringify(item)), item);
+      });
+      return Array.from(byId.values());
+    }
+    return activeRecords;
+  } catch(error){ console.warn("Nie można odczytać rejestru finansowego",error); return []; }
 }
-function stage5SaveFinance(records){ localStorage.setItem(stage5FinanceKey(),JSON.stringify(records)); }
+function stage5SaveFinance(records){
+  try {
+    localStorage.setItem(stage5FinanceKey(), JSON.stringify(records));
+    return true;
+  } catch(error) {
+    console.error("Nie udało się zapisać rejestru finansowego", error);
+    alert("Nie udało się zapisać wpisu. Pamięć przeglądarki może być pełna lub zablokowana. Dane nie zostały usunięte.");
+    return false;
+  }
+}
 function stage5Money(value){ return (Number(value)||0).toLocaleString("pl-PL",{minimumFractionDigits:2,maximumFractionDigits:2})+" zł"; }
 function stage5Year(){ return Number(document.getElementById("stage5-year")?.value)||new Date().getFullYear(); }
 function stage5Profiles(){ return typeof getHiveProfiles==="function"?getHiveProfiles():{}; }
@@ -5114,7 +5149,7 @@ function stage5Render(){
   const hiveSelect=document.getElementById("stage5-hive");
   if(hiveSelect){const selected=hiveSelect.value;hiveSelect.replaceChildren(new Option("Cała pasieka / bez przypisania",""));profileEntries.sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([n])=>hiveSelect.add(new Option("Ul "+n,n)));if([...hiveSelect.options].some(o=>o.value===selected))hiveSelect.value=selected;}
   const list=document.getElementById("stage5-finance-list");
-  if(list){list.replaceChildren();if(!records.length){list.textContent="Brak wpisów w wybranym roku.";}else records.forEach(item=>{const row=document.createElement("div");row.className="stage5-entry";const info=document.createElement("div");const title=document.createElement("strong");title.textContent=(item.kind==="income"?"Przychód":"Wydatek")+" · "+(item.category||"Bez kategorii");const details=document.createElement("small");details.textContent=(item.date||"")+" · "+(item.hive?"Ul "+item.hive+" · ":"")+(item.description||"Bez opisu");const amount=document.createElement("div");amount.textContent=(item.kind==="income"?"+":"−")+stage5Money(item.amount);amount.className=item.kind==="income"?"stage5-positive":"stage5-negative";info.append(title,details,amount);const del=document.createElement("button");del.type="button";del.textContent="Usuń";del.addEventListener("click",()=>{if(!confirm("Usunąć tylko ten wpis finansowy?"))return;stage5SaveFinance(stage5GetFinance().filter(x=>x.id!==item.id));stage5Render();});row.append(info,del);list.appendChild(row);});}
+  if(list){list.replaceChildren();if(!records.length){list.textContent="Brak wpisów w wybranym roku.";}else records.forEach(item=>{const row=document.createElement("div");row.className="stage5-entry";const info=document.createElement("div");const title=document.createElement("strong");title.textContent=(item.kind==="income"?"Przychód":"Wydatek")+" · "+(item.category||"Bez kategorii");const details=document.createElement("small");details.textContent=(item.date||"")+" · "+(item.hive?"Ul "+item.hive+" · ":"")+(item.description||"Bez opisu");const amount=document.createElement("div");amount.textContent=(item.kind==="income"?"+":"−")+stage5Money(item.amount);amount.className=item.kind==="income"?"stage5-positive":"stage5-negative";info.append(title,details,amount);const del=document.createElement("button");del.type="button";del.textContent="Usuń";del.addEventListener("click",()=>{if(!confirm("Usunąć tylko ten wpis finansowy?"))return;if(stage5SaveFinance(stage5GetFinance().filter(x=>x.id!==item.id)))stage5Render();});row.append(info,del);list.appendChild(row);});}
   const harvestBox=document.getElementById("stage5-harvest-summary");
   if(harvestBox){harvestBox.replaceChildren();if(!harvests.length)harvestBox.textContent="Brak zapisanych zbiorów w wybranym roku.";else{const byType={};harvests.forEach(x=>{const key=x.type||"Nieokreślony";byType[key]=(byType[key]||0)+Number(x.kg||0);});Object.entries(byType).sort((a,b)=>b[1]-a[1]).forEach(([type,kg])=>{const line=document.createElement("div");line.className="stage5-entry";const span=document.createElement("span");span.textContent=type;const strong=document.createElement("strong");strong.textContent=kg.toLocaleString("pl-PL",{maximumFractionDigits:1})+" kg";line.append(span,strong);harvestBox.appendChild(line);});const total=document.createElement("p");total.innerHTML="<b>Łącznie: "+honey.toLocaleString("pl-PL",{maximumFractionDigits:1})+" kg z "+harvests.length+" wpisów</b>";harvestBox.appendChild(total);}}
 }
@@ -5126,7 +5161,7 @@ function initStage5(){
   const current=new Date().getFullYear();for(let y=current-3;y<=current+1;y++)yearSelect.add(new Option(String(y),String(y)));yearSelect.value=String(current);
   const date=document.getElementById("stage5-date");if(date)date.value=new Date().toISOString().slice(0,10);
   yearSelect.addEventListener("change",stage5Render);
-  document.getElementById("stage5-save")?.addEventListener("click",()=>{const amount=Number(document.getElementById("stage5-amount").value),dateValue=document.getElementById("stage5-date").value;if(!dateValue){alert("Wybierz datę wpisu.");return;}if(!Number.isFinite(amount)||amount<=0){alert("Podaj kwotę większą od zera.");return;}const records=stage5GetFinance();records.push({id:"fin-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),kind:document.getElementById("stage5-kind").value,category:document.getElementById("stage5-category").value,date:dateValue,amount:Number(amount.toFixed(2)),hive:document.getElementById("stage5-hive").value,description:document.getElementById("stage5-description").value.trim()});stage5SaveFinance(records);document.getElementById("stage5-amount").value="";document.getElementById("stage5-description").value="";yearSelect.value=dateValue.slice(0,4);if(![...yearSelect.options].some(o=>o.value===yearSelect.value)){yearSelect.add(new Option(yearSelect.value,yearSelect.value));}stage5Render();alert("Zapisano wpis finansowy.");});
+  document.getElementById("stage5-save")?.addEventListener("click",()=>{const amount=Number(document.getElementById("stage5-amount").value),dateValue=document.getElementById("stage5-date").value;if(!dateValue){alert("Wybierz datę wpisu.");return;}if(!Number.isFinite(amount)||amount<=0){alert("Podaj kwotę większą od zera.");return;}const records=stage5GetFinance();records.push({id:"fin-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),kind:document.getElementById("stage5-kind").value,category:document.getElementById("stage5-category").value,date:dateValue,amount:Number(amount.toFixed(2)),hive:document.getElementById("stage5-hive").value,description:document.getElementById("stage5-description").value.trim()});if(!stage5SaveFinance(records))return;document.getElementById("stage5-amount").value="";document.getElementById("stage5-description").value="";yearSelect.value=dateValue.slice(0,4);if(![...yearSelect.options].some(o=>o.value===yearSelect.value)){yearSelect.add(new Option(yearSelect.value,yearSelect.value));}stage5Render();alert("Zapisano wpis finansowy.");});
   document.getElementById("stage5-export-csv")?.addEventListener("click",stage5Csv);document.getElementById("stage5-export-report")?.addEventListener("click",stage5Report);
   stage5Render();
 }
