@@ -447,6 +447,28 @@ Legenda + notatki = szerokość kalendarza
 #bee-stage5-panel .stage5-entry button{flex-shrink:0;background:#f4dddd;color:#7c2020;margin:0}
 #bee-stage5-panel .stage5-positive{color:#176b31!important}#bee-stage5-panel .stage5-negative{color:#a12a20!important}
 @media(max-width:520px){#bee-stage5-panel{margin:14px 5px;padding:12px}#bee-stage5-panel .stage5-entry{flex-direction:column}#bee-stage5-panel .stage5-entry button{align-self:flex-start}}
+
+/* ETAP 6 — magazyn i funkcje mobilne */
+#bee-stage6-panel{margin:24px auto;padding:16px;max-width:1100px;background:#fff;border:1px solid #b7d7c0;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);color:#292929}
+#bee-stage6-panel h2,#bee-stage6-panel h3{color:#245b36}
+#bee-stage6-panel .s6-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+#bee-stage6-panel label{display:flex;flex-direction:column;gap:4px;font-size:.92rem;font-weight:600}
+#bee-stage6-panel input,#bee-stage6-panel select,#bee-stage6-panel textarea{width:100%;box-sizing:border-box;padding:9px;border:1px solid #c9c9c9;border-radius:7px;background:#fff;font:inherit}
+#bee-stage6-panel button{border:0;border-radius:8px;padding:10px 13px;background:#efbd35;color:#30250a;font-weight:700;cursor:pointer;margin:7px 6px 0 0}
+#bee-stage6-panel button.secondary{background:#eee;color:#333;border:1px solid #ccc}
+#bee-stage6-panel button.danger{background:#f4dddd;color:#7c2020}
+#bee-stage6-panel .s6-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin:12px 0}
+#bee-stage6-panel .s6-stat{background:#eff8f0;border:1px solid #d3e8d7;border-radius:9px;padding:11px}
+#bee-stage6-panel .s6-stat strong{display:block;font-size:1.3rem;margin-top:4px}
+#bee-stage6-panel .s6-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px;border:1px solid #e4e4e4;border-radius:9px;margin:7px 0}
+#bee-stage6-panel .s6-row small{display:block;color:#666;margin-top:3px}
+#bee-stage6-panel .s6-low{border-color:#e4a1a1;background:#fff4f4}
+#bee-stage6-panel #s6-camera{width:100%;max-height:300px;background:#111;border-radius:10px;margin-top:8px}
+#bee-stage6-panel .s6-status{padding:9px;border-radius:8px;background:#f3f3f3;margin:8px 0}
+#bee-mobile-bar{position:sticky;bottom:6px;z-index:1000;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:7px;background:rgba(255,255,255,.94);border:1px solid #ddd;border-radius:12px;box-shadow:0 2px 8px #0002}
+#bee-mobile-bar button{border:0;border-radius:9px;padding:11px;background:#fbc02d;font-weight:bold}
+@media(max-width:520px){#bee-stage6-panel{margin:14px 5px;padding:12px}#bee-stage6-panel .s6-row{flex-direction:column}#bee-stage6-panel .s6-row button{align-self:flex-start}#bee-mobile-bar button{flex:1;min-width:28%}}
+
 </style>
 
 </head>
@@ -2739,6 +2761,48 @@ font-weight:bold;
   <button type="button" id="stage5-export-report" class="secondary">Pobierz raport sezonu TXT</button>
   <div class="stage5-muted" style="margin-top:8px">Wpisy można usuwać pojedynczo. Usunięcie pozycji finansowej nie zmienia kart uli, historii przeglądów ani nagrań.</div>
 </section>
+
+
+<section id="bee-stage6-panel" aria-label="Magazyn i funkcje mobilne">
+  <h2>📦 Magazyn pasieczny i funkcje mobilne</h2>
+  <p style="color:#666">Stan magazynu i rejestr zużycia są zapisywane osobno dla każdej pasieki. Usunięcie pozycji magazynowej nie zmienia kart uli, notatek ani historii rodzin.</p>
+  <div class="s6-stats" id="s6-stats"><div class="s6-stat">Pozycje<strong>0</strong></div><div class="s6-stat">Niski stan<strong>0</strong></div><div class="s6-stat">Łączna ilość<strong>0</strong></div></div>
+  <h3>➕ Dodaj pozycję do magazynu</h3>
+  <div class="s6-fields">
+    <label>Nazwa produktu / sprzętu<input id="s6-name" maxlength="100" placeholder="np. cukier, ramki, węza"></label>
+    <label>Kategoria<select id="s6-category"><option>Pokarm</option><option>Leczenie i higiena</option><option>Matki i hodowla</option><option>Ramki i węza</option><option>Sprzęt pasieczny</option><option>Opakowania</option><option>Narzędzia</option><option>Inne</option></select></label>
+    <label>Ilość początkowa<input id="s6-qty" type="number" min="0" step="0.01" value="0"></label>
+    <label>Jednostka<select id="s6-unit"><option>szt.</option><option>kg</option><option>g</option><option>l</option><option>ml</option><option>opak.</option><option>m</option><option>zest.</option></select></label>
+    <label>Próg minimalny<input id="s6-min" type="number" min="0" step="0.01" value="0"></label>
+    <label>Miejsce przechowywania<input id="s6-place" maxlength="80" placeholder="np. magazyn, półka 2"></label>
+    <label>Data ważności (opcjonalnie)<input id="s6-expiry" type="date"></label>
+    <label>Uwagi<input id="s6-notes" maxlength="180" placeholder="np. numer partii"></label>
+  </div>
+  <button type="button" id="s6-add">Zapisz pozycję</button>
+  <button type="button" class="secondary" id="s6-export">Eksportuj magazyn CSV</button>
+  <h3>📋 Stan magazynu</h3><div id="s6-inventory-list">Brak pozycji w magazynie.</div>
+  <h3>🔄 Rejestr zużycia i dostaw</h3>
+  <div class="s6-fields">
+    <label>Pozycja<select id="s6-move-item"></select></label>
+    <label>Rodzaj operacji<select id="s6-move-kind"><option value="in">Dostawa / zwiększenie</option><option value="out">Zużycie / wydanie</option></select></label>
+    <label>Ilość<input id="s6-move-qty" type="number" min="0.01" step="0.01" placeholder="np. 5"></label>
+    <label>Data<input id="s6-move-date" type="date"></label>
+    <label>Powiązany ul (opcjonalnie)<input id="s6-move-hive" placeholder="np. 7"></label>
+    <label>Opis<input id="s6-move-note" maxlength="140" placeholder="np. karmienie ula 7"></label>
+  </div>
+  <button type="button" id="s6-move-save">Zapisz operację magazynową</button>
+  <div id="s6-movement-list">Brak operacji magazynowych.</div>
+  <h3>📱 Narzędzia mobilne</h3>
+  <div class="s6-status" id="s6-connection">Sprawdzanie połączenia…</div>
+  <button type="button" id="s6-wake" class="secondary">Włącz podtrzymanie ekranu</button>
+  <button type="button" id="s6-vibrate" class="secondary">Test wibracji</button>
+  <button type="button" id="s6-scan" class="secondary">📷 Skanuj kod QR ula</button>
+  <div id="s6-scan-area" hidden><video id="s6-camera" playsinline muted></video><div id="s6-scan-result" class="s6-status">Uruchamianie aparatu…</div><button type="button" id="s6-stop-scan" class="danger">Zatrzymaj skaner</button></div>
+  <p style="font-size:.85rem;color:#666">Skanowanie wymaga obsługi BarcodeDetector przez przeglądarkę i zgody na aparat (zwykle HTTPS). Jeśli urządzenie nie obsługuje skanera, można nadal wyszukać ul ręcznie w kartach. Aplikacja działa offline w zakresie zapisanych danych, gdy Service Worker został wcześniej poprawnie zainstalowany.</p>
+</section>
+<div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
+  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-top">⬆ Góra</button>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -5166,6 +5230,39 @@ function initStage5(){
   stage5Render();
 }
 
+
+// =========================
+// ETAP 6 — MAGAZYN I MOBILNOŚĆ
+// =========================
+function s6ApiaryId(){return currentApiary&&currentApiary.id?String(currentApiary.id):"default";}
+function s6Key(type){return "bee-stage6-"+type+":"+s6ApiaryId();}
+function s6Read(type){try{const active=JSON.parse(localStorage.getItem(s6Key(type))||"[]");const rows=Array.isArray(active)?active:[];if(s6ApiaryId()==="default")return rows;const legacy=JSON.parse(localStorage.getItem("bee-stage6-"+type+":default")||"[]");const merged=new Map();[...(Array.isArray(legacy)?legacy:[]),...rows].forEach((x,i)=>{if(x&&typeof x==="object")merged.set(x.id||("legacy-"+i+"-"+JSON.stringify(x)),x);});return Array.from(merged.values());}catch(e){console.warn("Błąd odczytu magazynu",e);return[];}}
+function s6Write(type,data){try{localStorage.setItem(s6Key(type),JSON.stringify(data));return true;}catch(e){alert("Nie udało się zapisać danych. Pamięć przeglądarki może być pełna; dotychczasowe wpisy pozostają bez zmian.");return false;}}
+function s6Esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function s6Render(){
+ const items=s6Read("inventory"),moves=s6Read("movements"),low=items.filter(x=>Number(x.qty)<=Number(x.min)).length,total=items.reduce((n,x)=>n+Number(x.qty||0),0);
+ document.getElementById("s6-stats").innerHTML=`<div class="s6-stat">Pozycje<strong>${items.length}</strong></div><div class="s6-stat">Niski stan<strong>${low}</strong></div><div class="s6-stat">Suma ilości<strong>${total.toLocaleString("pl-PL")}</strong></div>`;
+ const list=document.getElementById("s6-inventory-list");
+ list.innerHTML=items.length?items.map(x=>`<div class="s6-row ${Number(x.qty)<=Number(x.min)?"s6-low":""}"><div><strong>${s6Esc(x.name)}</strong> — ${s6Esc(x.category)}<small>Stan: ${Number(x.qty).toLocaleString("pl-PL")} ${s6Esc(x.unit)} · Minimum: ${Number(x.min).toLocaleString("pl-PL")} ${s6Esc(x.unit)}${x.place?" · Miejsce: "+s6Esc(x.place):""}${x.expiry?" · Ważność: "+s6Esc(x.expiry):""}${x.notes?" · "+s6Esc(x.notes):""}</small>${Number(x.qty)<=Number(x.min)?'<small style="color:#a12a20;font-weight:bold">⚠ Niski stan magazynowy</small>':""}</div><button type="button" class="danger" data-s6-delete="${s6Esc(x.id)}">Usuń</button></div>`).join(""):"Brak pozycji w magazynie.";
+ const select=document.getElementById("s6-move-item"),old=select.value;select.innerHTML=items.map(x=>`<option value="${s6Esc(x.id)}">${s6Esc(x.name)} (${Number(x.qty)} ${s6Esc(x.unit)})</option>`).join("");if(items.some(x=>x.id===old))select.value=old;
+ const ml=document.getElementById("s6-movement-list");ml.innerHTML=moves.length?moves.slice().reverse().slice(0,50).map(m=>`<div class="s6-row"><div><strong>${m.kind==="in"?"Dostawa":"Zużycie"}: ${s6Esc(m.name)}</strong><small>${s6Esc(m.date)} · ${m.kind==="in"?"+":"−"}${Number(m.qty)} ${s6Esc(m.unit)}${m.hive?" · Ul "+s6Esc(m.hive):""}${m.note?" · "+s6Esc(m.note):""}</small></div></div>`).join(""):"Brak operacji magazynowych.";
+}
+function s6Download(name,content,type){const blob=new Blob(["\ufeff"+content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+let s6WakeLock=null,s6Stream=null,s6ScanTimer=null;
+async function s6StopScan(){if(s6ScanTimer)clearTimeout(s6ScanTimer);s6ScanTimer=null;if(s6Stream){s6Stream.getTracks().forEach(t=>t.stop());s6Stream=null;}const v=document.getElementById("s6-camera");if(v)v.srcObject=null;document.getElementById("s6-scan-area").hidden=true;}
+async function s6StartScan(){const area=document.getElementById("s6-scan-area"),result=document.getElementById("s6-scan-result");area.hidden=false;if(!("BarcodeDetector" in window)){result.textContent="Ta przeglądarka nie obsługuje wbudowanego skanowania QR. Użyj aparatu telefonu lub wyszukaj ul ręcznie.";return;}try{const detector=new BarcodeDetector({formats:["qr_code"]});s6Stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});const video=document.getElementById("s6-camera");video.srcObject=s6Stream;await video.play();result.textContent="Skieruj aparat na kod QR ula…";const scan=async()=>{if(!s6Stream)return;try{const codes=await detector.detect(video);if(codes.length){const raw=codes[0].rawValue||"";result.textContent="Odczytano kod: "+raw; if(raw.startsWith("BEE-HIVE:")){const n=raw.slice(9);result.textContent="Kod ula nr "+n+" odczytany. Otwórz odpowiadającą mu kartę w sekcji rodzin.";}if(navigator.vibrate)navigator.vibrate(100);await s6StopScan();return;}}catch(e){}s6ScanTimer=setTimeout(scan,450);};scan();}catch(e){result.textContent="Nie udało się uruchomić aparatu: "+(e.message||e)+". Sprawdź zgodę na aparat i połączenie HTTPS.";}}
+function initStage6(){
+ const today=new Date().toISOString().slice(0,10);document.getElementById("s6-move-date").value=today;
+ document.getElementById("s6-add").addEventListener("click",()=>{const name=document.getElementById("s6-name").value.trim(),qty=Number(document.getElementById("s6-qty").value),min=Number(document.getElementById("s6-min").value);if(!name){alert("Podaj nazwę pozycji.");return;}if(!Number.isFinite(qty)||qty<0||!Number.isFinite(min)||min<0){alert("Sprawdź ilość i próg minimalny.");return;}const a=s6Read("inventory");a.push({id:"stk-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),name,category:document.getElementById("s6-category").value,qty,unit:document.getElementById("s6-unit").value,min,place:document.getElementById("s6-place").value.trim(),expiry:document.getElementById("s6-expiry").value,notes:document.getElementById("s6-notes").value.trim()});if(s6Write("inventory",a)){["s6-name","s6-place","s6-expiry","s6-notes"].forEach(id=>document.getElementById(id).value="");document.getElementById("s6-qty").value="0";s6Render();}});
+ document.getElementById("s6-inventory-list").addEventListener("click",e=>{const b=e.target.closest("[data-s6-delete]");if(!b)return;const id=b.dataset.s6Delete,item=s6Read("inventory").find(x=>x.id===id);if(!item||!confirm("Usunąć z magazynu pozycję: "+item.name+"? Historia operacji pozostanie zachowana."))return;s6Write("inventory",s6Read("inventory").filter(x=>x.id!==id));s6Render();});
+ document.getElementById("s6-move-save").addEventListener("click",()=>{const id=document.getElementById("s6-move-item").value,qty=Number(document.getElementById("s6-move-qty").value),kind=document.getElementById("s6-move-kind").value,items=s6Read("inventory"),item=items.find(x=>x.id===id);if(!item){alert("Najpierw dodaj pozycję magazynową.");return;}if(!Number.isFinite(qty)||qty<=0){alert("Podaj ilość większą od zera.");return;}if(kind==="out"&&qty>Number(item.qty)){alert("Brak wystarczającej ilości w magazynie.");return;}const moves=s6Read("movements"),move={id:"mov-"+Date.now(),itemId:id,name:item.name,unit:item.unit,kind,qty,date:document.getElementById("s6-move-date").value||today,hive:document.getElementById("s6-move-hive").value.trim(),note:document.getElementById("s6-move-note").value.trim()};item.qty=Number((Number(item.qty)+(kind==="in"?qty:-qty)).toFixed(3));if(!s6Write("inventory",items))return;moves.push(move);if(!s6Write("movements",moves))return;document.getElementById("s6-move-qty").value="";document.getElementById("s6-move-note").value="";s6Render();});
+ document.getElementById("s6-export").addEventListener("click",()=>{const rows=[["Nazwa","Kategoria","Ilość","Jednostka","Minimum","Miejsce","Ważność","Uwagi"],...s6Read("inventory").map(x=>[x.name,x.category,x.qty,x.unit,x.min,x.place,x.expiry,x.notes])];s6Download("magazyn-pasieki.csv",rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n"),"text/csv;charset=utf-8;");});
+ document.getElementById("s6-scan").addEventListener("click",s6StartScan);document.getElementById("s6-quick-scan").addEventListener("click",()=>{document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"});s6StartScan();});document.getElementById("s6-stop-scan").addEventListener("click",s6StopScan);document.getElementById("s6-quick-stock").addEventListener("click",()=>document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"}));document.getElementById("s6-quick-top").addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+ document.getElementById("s6-vibrate").addEventListener("click",()=>{if(navigator.vibrate){navigator.vibrate([100,60,100]);}else alert("Wibracje nie są obsługiwane przez tę przeglądarkę.");});
+ document.getElementById("s6-wake").addEventListener("click",async()=>{try{if(!("wakeLock" in navigator)){alert("Podtrzymanie ekranu nie jest obsługiwane przez tę przeglądarkę.");return;}if(s6WakeLock){await s6WakeLock.release();s6WakeLock=null;document.getElementById("s6-wake").textContent="Włącz podtrzymanie ekranu";}else{s6WakeLock=await navigator.wakeLock.request("screen");document.getElementById("s6-wake").textContent="Wyłącz podtrzymanie ekranu";s6WakeLock.addEventListener("release",()=>{s6WakeLock=null;document.getElementById("s6-wake").textContent="Włącz podtrzymanie ekranu";});}}catch(e){alert("Nie udało się włączyć podtrzymania ekranu: "+(e.message||e));}});
+ const status=document.getElementById("s6-connection");const update=()=>{status.textContent=(navigator.onLine?"🟢 Połączenie z internetem":"🟠 Brak internetu — tryb offline")+" · Pamięć lokalna przeglądarki aktywna";};window.addEventListener("online",update);window.addEventListener("offline",update);update();s6Render();
+}
+
   syncCalendarYear();
   updateMarkers();
 
@@ -5201,6 +5298,7 @@ if(savedGPS === "true"){
   if(typeof loadApiaryData === "function") loadApiaryData();
   initHiveManagement();
   initStage5();
+  initStage6();
 
   const hivesCountInput = document.getElementById("hivesCount");
   const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
