@@ -4739,8 +4739,55 @@ function appendHiveCalendarEvent(dateValue, text) {
   return true;
 }
 
+function removeHiveCalendarEvent(dateValue, exactText) {
+  const dateKey = formatCalendarDate(dateValue);
+  if (!dateKey || Number(String(dateValue).slice(0, 4)) !== calendarYear) return false;
+  const previous = readNoteForDate(dateKey) || "";
+  const lines = previous.split("\n");
+  const index = lines.findIndex(line => line.trim() === exactText);
+  if (index < 0) return false;
+  lines.splice(index, 1); // usuń tylko dokładnie ten jeden wpis, nie pozostałe notatki dnia
+  writeNoteForDate(dateKey, lines.join("\n").replace(/^\n+|\n+$/g, ""));
+  updateMarkers();
+  const day = dateKey.slice(0, 2), month = dateKey.slice(3, 5);
+  if (currentDay === day && currentMonth === month) {
+    const target = getMonthlyTextarea(month);
+    if (target) target.value = readNoteForDate(dateKey);
+  }
+  return true;
+}
+
+function deleteHiveSpecialRecord(type, recordId) {
+  const labels = { queenHistory: "zdarzenie dotyczące matki", splits: "wpis o odkładzie", harvests: "wpis o miodobraniu" };
+  const label = labels[type];
+  if (!label || !confirm("Czy na pewno usunąć wybrany wpis (" + label + ")? Pozostałe wpisy, notatki i nagrania pozostaną bez zmian.")) return;
+  const profiles = getHiveProfiles();
+  const profile = profiles[String(selectedHiveNumber)];
+  if (!profile || !Array.isArray(profile[type])) return;
+  const index = profile[type].findIndex(item => String(item.id) === String(recordId));
+  if (index < 0) { alert("Nie znaleziono wybranego wpisu."); return; }
+  const item = profile[type][index];
+  let calendarText = "";
+  if (type === "queenHistory") {
+    calendarText = "Ul " + selectedHiveNumber + " — " + item.type + (item.year ? " (rok " + item.year + ")" : "") + (item.notes ? ": " + item.notes : "");
+  } else if (type === "splits") {
+    calendarText = "Ul " + selectedHiveNumber + " — utworzono odkład " + (item.number || "bez numeru") + ": " + item.broodFrames + " ramek czerwiu, " + item.foodFrames + " ramek pokarmu; matka: " + item.queenStatus;
+  } else if (type === "harvests") {
+    calendarText = "Ul " + selectedHiveNumber + " — miodobranie: " + Number(item.kg).toFixed(1) + " kg" + (item.type ? " (" + item.type + ")" : "");
+  }
+  profile[type].splice(index, 1);
+  profile.updatedAt = new Date().toISOString();
+  profiles[String(selectedHiveNumber)] = profile;
+  saveHiveProfiles(profiles);
+  // Jeśli zdarzenie było automatycznie dopisane do kalendarza, usuń wyłącznie jego dokładną linię.
+  removeHiveCalendarEvent(item.date, calendarText);
+  renderHiveSpecialHistories(profile);
+  renderHiveCards();
+  renderHiveHistory();
+}
+
 function renderHiveSpecialHistories(profile) {
-  const renderList = (id, items, formatter, emptyText) => {
+  const renderList = (id, items, formatter, emptyText, type) => {
     const box = document.getElementById(id);
     if (!box) return;
     box.textContent = "";
@@ -4748,15 +4795,24 @@ function renderHiveSpecialHistories(profile) {
     items.slice().sort((a,b) => String(b.date || "").localeCompare(String(a.date || ""))).forEach(item => {
       const row = document.createElement("div");
       row.className = "hive-history-item";
-      row.textContent = formatter(item);
+      const text = document.createElement("div");
+      text.textContent = formatter(item);
+      row.appendChild(text);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "🗑 Usuń wpis";
+      remove.className = "hive-delete-entry";
+      remove.style.marginTop = "6px";
+      remove.addEventListener("click", () => deleteHiveSpecialRecord(type, item.id));
+      row.appendChild(remove);
       box.appendChild(row);
     });
   };
   const queens = getHiveSectionArray(profile, "queenHistory");
   const splits = getHiveSectionArray(profile, "splits");
   const harvests = getHiveSectionArray(profile, "harvests");
-  renderList("queen-event-history", queens, q => [q.date, q.type, q.year ? "Rok: " + q.year : "", q.line, q.source, q.mark ? "Opalitek: " + q.mark : "", q.notes].filter(Boolean).join(" · "), "Brak wpisów o matce.");
-  renderList("split-history", splits, x => [x.date, "Odkład: " + (x.number || "bez numeru"), "Czerw: " + x.broodFrames + " ramek", "Pokarm: " + x.foodFrames + " ramek", "Matka: " + x.queenStatus, x.purpose, x.notes].filter(Boolean).join(" · "), "Brak zapisanych odkładów z tej rodziny.");
+  renderList("queen-event-history", queens, q => [q.date, q.type, q.year ? "Rok: " + q.year : "", q.line, q.source, q.mark ? "Opalitek: " + q.mark : "", q.notes].filter(Boolean).join(" · "), "Brak wpisów o matce.", "queenHistory");
+  renderList("split-history", splits, x => [x.date, "Odkład: " + (x.number || "bez numeru"), "Czerw: " + x.broodFrames + " ramek", "Pokarm: " + x.foodFrames + " ramek", "Matka: " + x.queenStatus, x.purpose, x.notes].filter(Boolean).join(" · "), "Brak zapisanych odkładów z tej rodziny.", "splits");
   const total = harvests.reduce((sum, h) => sum + (Number(h.kg) || 0), 0);
   const allProfiles = getHiveProfiles();
   const apiaryTotal = Object.values(allProfiles).reduce((sum, item) =>
@@ -4766,7 +4822,16 @@ function renderHiveSpecialHistories(profile) {
     summary.textContent = "Łącznie z ula " + selectedHiveNumber + ": " + total.toFixed(1) + " kg · miodobrań: " + harvests.length + " · cała pasieka: " + apiaryTotal.toFixed(1) + " kg";
     harvests.slice().sort((a,b) => String(b.date || "").localeCompare(String(a.date || ""))).forEach(h => {
       const row = document.createElement("div"); row.className = "hive-history-item";
-      row.textContent = [h.date, h.type || "Miód", Number(h.kg).toFixed(1) + " kg", h.supers ? h.supers + " nadstawek" : "", h.moisture ? "Wilgotność: " + h.moisture + "%" : "", h.notes].filter(Boolean).join(" · ");
+      const text = document.createElement("div");
+      text.textContent = [h.date, h.type || "Miód", Number(h.kg).toFixed(1) + " kg", h.supers ? h.supers + " nadstawek" : "", h.moisture ? "Wilgotność: " + h.moisture + "%" : "", h.notes].filter(Boolean).join(" · ");
+      row.appendChild(text);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "🗑 Usuń wpis";
+      remove.className = "hive-delete-entry";
+      remove.style.marginTop = "6px";
+      remove.addEventListener("click", () => deleteHiveSpecialRecord("harvests", h.id));
+      row.appendChild(remove);
       summary.appendChild(row);
     });
   }
