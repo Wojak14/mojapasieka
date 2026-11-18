@@ -428,6 +428,25 @@ Legenda + notatki = szerokość kalendarza
   #hive-management { padding:8px; }
 }
 
+
+/* ETAP 5 — analityka i finanse */
+#bee-stage5-panel{margin:24px auto;padding:16px;max-width:1100px;background:#fff;border:1px solid #e2c66b;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);color:#292929}
+#bee-stage5-panel h2{margin:0 0 8px;color:#654b13;font-size:1.35rem}
+#bee-stage5-panel h3{margin:18px 0 10px;color:#654b13;font-size:1.08rem}
+#bee-stage5-panel .stage5-muted{color:#666;font-size:.9rem}
+#bee-stage5-panel .stage5-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:14px 0}
+#bee-stage5-panel .stage5-stat{background:#fff8df;border:1px solid #efdfa8;border-radius:10px;padding:12px;min-height:70px}
+#bee-stage5-panel .stage5-stat strong{display:block;font-size:1.35rem;color:#49370e;margin-top:5px;overflow-wrap:anywhere}
+#bee-stage5-panel .stage5-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+#bee-stage5-panel label{display:flex;flex-direction:column;gap:4px;font-size:.92rem;font-weight:600}
+#bee-stage5-panel input,#bee-stage5-panel select,#bee-stage5-panel textarea{width:100%;box-sizing:border-box;padding:9px;border:1px solid #c9c9c9;border-radius:7px;background:#fff;font:inherit}
+#bee-stage5-panel button{border:0;border-radius:8px;padding:10px 13px;background:#efbd35;color:#30250a;font-weight:700;cursor:pointer;margin:7px 6px 0 0}
+#bee-stage5-panel button.secondary{background:#eee;color:#333;border:1px solid #ccc}
+#bee-stage5-panel .stage5-entry{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;border:1px solid #e3e3e3;border-radius:9px;padding:10px;margin:7px 0}
+#bee-stage5-panel .stage5-entry small{display:block;color:#666;margin-top:3px}
+#bee-stage5-panel .stage5-entry button{flex-shrink:0;background:#f4dddd;color:#7c2020;margin:0}
+#bee-stage5-panel .stage5-positive{color:#176b31!important}#bee-stage5-panel .stage5-negative{color:#a12a20!important}
+@media(max-width:520px){#bee-stage5-panel{margin:14px 5px;padding:12px}#bee-stage5-panel .stage5-entry{flex-direction:column}#bee-stage5-panel .stage5-entry button{align-self:flex-start}}
 </style>
 
 </head>
@@ -2690,6 +2709,36 @@ font-weight:bold;
 – Kontrolować temperaturę i wilgotność w komórkach matecznych
 </div>
 <!-- Usunięto odwołanie do app.js z późniejszej wersji modułowej; ta wersja działa z kodem osadzonym w HTML. -->
+
+
+<section id="bee-stage5-panel" aria-label="Analityka, finanse i raporty pasieki">
+  <h2>📊 Analityka, finanse i raporty pasieki</h2>
+  <div class="stage5-muted">Podsumowania są wyliczane z kart rodzin, zapisanych miodobrań i wpisów finansowych. Dane finansowe są przechowywane oddzielnie dla każdej pasieki.</div>
+  <div class="stage5-fields" style="margin-top:12px;max-width:360px">
+    <label>Rok analizy<select id="stage5-year"></select></label>
+  </div>
+  <div class="stage5-grid" id="stage5-analytics">
+    <div class="stage5-stat">Rodziny<strong>—</strong></div><div class="stage5-stat">Miód<strong>—</strong></div><div class="stage5-stat">Przychody<strong>—</strong></div><div class="stage5-stat">Wydatki<strong>—</strong></div><div class="stage5-stat">Bilans<strong>—</strong></div>
+  </div>
+  <h3>💰 Dodaj przychód lub wydatek</h3>
+  <div class="stage5-fields">
+    <label>Rodzaj wpisu<select id="stage5-kind"><option value="expense">Wydatek</option><option value="income">Przychód</option></select></label>
+    <label>Kategoria<select id="stage5-category"><option>Sprzedaż miodu</option><option>Sprzedaż odkładów</option><option>Sprzedaż matek</option><option>Inne przychody</option><option>Karmienie</option><option>Leczenie i preparaty</option><option>Matki i odkłady</option><option>Sprzęt i wyposażenie</option><option>Opakowania</option><option>Transport i paliwo</option><option>Inne wydatki</option></select></label>
+    <label>Data<input type="date" id="stage5-date"></label>
+    <label>Kwota (zł)<input type="number" id="stage5-amount" min="0.01" step="0.01" placeholder="np. 250.00"></label>
+    <label>Powiązany ul (opcjonalnie)<select id="stage5-hive"><option value="">Cała pasieka / bez przypisania</option></select></label>
+    <label>Opis<input type="text" id="stage5-description" maxlength="180" placeholder="np. zakup cukru, sprzedaż miodu"></label>
+  </div>
+  <button type="button" id="stage5-save">Zapisz wpis finansowy</button>
+  <h3>📒 Rejestr finansowy</h3>
+  <div id="stage5-finance-list" class="stage5-muted">Brak wpisów w wybranym roku.</div>
+  <h3>📦 Zbiory miodu</h3>
+  <div id="stage5-harvest-summary" class="stage5-muted">Brak zapisanych zbiorów w wybranym roku.</div>
+  <h3>📄 Raport i eksport</h3>
+  <button type="button" id="stage5-export-csv">Pobierz rejestr finansowy CSV</button>
+  <button type="button" id="stage5-export-report" class="secondary">Pobierz raport sezonu TXT</button>
+  <div class="stage5-muted" style="margin-top:8px">Wpisy można usuwać pojedynczo. Usunięcie pozycji finansowej nie zmienia kart uli, historii przeglądów ani nagrań.</div>
+</section>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -5031,6 +5080,57 @@ function initHiveManagement() {
    // =========================
   // 🚀 START SYSTEMU
   // =========================
+
+// =========================
+// ETAP 5 — ANALITYKA, FINANSE I RAPORTY
+// =========================
+function stage5FinanceKey(){
+  return "bee-finance-records:" + (currentApiary && currentApiary.id ? currentApiary.id : "default");
+}
+function stage5GetFinance(){
+  try { const value=JSON.parse(localStorage.getItem(stage5FinanceKey())||"[]"); return Array.isArray(value)?value:[]; }
+  catch(error){ console.warn("Nie można odczytać rejestru finansowego",error); return []; }
+}
+function stage5SaveFinance(records){ localStorage.setItem(stage5FinanceKey(),JSON.stringify(records)); }
+function stage5Money(value){ return (Number(value)||0).toLocaleString("pl-PL",{minimumFractionDigits:2,maximumFractionDigits:2})+" zł"; }
+function stage5Year(){ return Number(document.getElementById("stage5-year")?.value)||new Date().getFullYear(); }
+function stage5Profiles(){ return typeof getHiveProfiles==="function"?getHiveProfiles():{}; }
+function stage5Render(){
+  const year=stage5Year(), profiles=stage5Profiles(), finance=stage5GetFinance();
+  const profileEntries=Object.entries(profiles).filter(([number,p])=>p && !p.deleted);
+  const harvests=[];
+  profileEntries.forEach(([number,p])=>(Array.isArray(p.harvests)?p.harvests:[]).forEach(item=>{if(item && String(item.date||"").slice(0,4)===String(year)) harvests.push({...item,hiveNumber:number});}));
+  const records=finance.filter(item=>String(item.date||"").slice(0,4)===String(year)).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const income=records.filter(x=>x.kind==="income").reduce((n,x)=>n+Number(x.amount||0),0);
+  const expense=records.filter(x=>x.kind==="expense").reduce((n,x)=>n+Number(x.amount||0),0);
+  const honey=harvests.reduce((n,x)=>n+Number(x.kg||0),0);
+  const good=profileEntries.filter(([,p])=>["dobra","dobry","zdrowa","zdrowy","bardzo dobra","bardzo dobry"].includes(String(p.status||"").toLowerCase())).length;
+  const attention=profileEntries.filter(([,p])=>["uwaga","pilna kontrola","słaba","slaba"].includes(String(p.status||"").toLowerCase())).length;
+  const analytics=document.getElementById("stage5-analytics");
+  if(analytics){
+    const stats=[ ["Zarejestrowane rodziny",profileEntries.length], ["Zbiory miodu",honey.toLocaleString("pl-PL",{maximumFractionDigits:1})+" kg"], ["Przychody",stage5Money(income)], ["Wydatki",stage5Money(expense)], ["Bilans",stage5Money(income-expense)], ["Dobre / wymagające uwagi",good+" / "+attention] ];
+    analytics.replaceChildren(); stats.forEach(([label,value],i)=>{const card=document.createElement("div");card.className="stage5-stat";const name=document.createElement("span");name.textContent=label;const strong=document.createElement("strong");strong.textContent=value;if(i===4)strong.classList.add(income-expense>=0?"stage5-positive":"stage5-negative");card.append(name,strong);analytics.appendChild(card);});
+  }
+  const hiveSelect=document.getElementById("stage5-hive");
+  if(hiveSelect){const selected=hiveSelect.value;hiveSelect.replaceChildren(new Option("Cała pasieka / bez przypisania",""));profileEntries.sort((a,b)=>Number(a[0])-Number(b[0])).forEach(([n])=>hiveSelect.add(new Option("Ul "+n,n)));if([...hiveSelect.options].some(o=>o.value===selected))hiveSelect.value=selected;}
+  const list=document.getElementById("stage5-finance-list");
+  if(list){list.replaceChildren();if(!records.length){list.textContent="Brak wpisów w wybranym roku.";}else records.forEach(item=>{const row=document.createElement("div");row.className="stage5-entry";const info=document.createElement("div");const title=document.createElement("strong");title.textContent=(item.kind==="income"?"Przychód":"Wydatek")+" · "+(item.category||"Bez kategorii");const details=document.createElement("small");details.textContent=(item.date||"")+" · "+(item.hive?"Ul "+item.hive+" · ":"")+(item.description||"Bez opisu");const amount=document.createElement("div");amount.textContent=(item.kind==="income"?"+":"−")+stage5Money(item.amount);amount.className=item.kind==="income"?"stage5-positive":"stage5-negative";info.append(title,details,amount);const del=document.createElement("button");del.type="button";del.textContent="Usuń";del.addEventListener("click",()=>{if(!confirm("Usunąć tylko ten wpis finansowy?"))return;stage5SaveFinance(stage5GetFinance().filter(x=>x.id!==item.id));stage5Render();});row.append(info,del);list.appendChild(row);});}
+  const harvestBox=document.getElementById("stage5-harvest-summary");
+  if(harvestBox){harvestBox.replaceChildren();if(!harvests.length)harvestBox.textContent="Brak zapisanych zbiorów w wybranym roku.";else{const byType={};harvests.forEach(x=>{const key=x.type||"Nieokreślony";byType[key]=(byType[key]||0)+Number(x.kg||0);});Object.entries(byType).sort((a,b)=>b[1]-a[1]).forEach(([type,kg])=>{const line=document.createElement("div");line.className="stage5-entry";const span=document.createElement("span");span.textContent=type;const strong=document.createElement("strong");strong.textContent=kg.toLocaleString("pl-PL",{maximumFractionDigits:1})+" kg";line.append(span,strong);harvestBox.appendChild(line);});const total=document.createElement("p");total.innerHTML="<b>Łącznie: "+honey.toLocaleString("pl-PL",{maximumFractionDigits:1})+" kg z "+harvests.length+" wpisów</b>";harvestBox.appendChild(total);}}
+}
+function stage5Download(filename,content,type){const blob=new Blob(["\ufeff",content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function stage5Csv(){const year=stage5Year(),records=stage5GetFinance().filter(x=>String(x.date||"").slice(0,4)===String(year));const q=v=>'"'+String(v??"").replace(/"/g,'""')+'"';const lines=[["Data","Rodzaj","Kategoria","Kwota PLN","Ul","Opis"],...records.map(x=>[x.date,x.kind==="income"?"Przychód":"Wydatek",x.category,x.amount,x.hive,x.description])].map(row=>row.map(q).join(";"));stage5Download("pasieka-finanse-"+year+".csv",lines.join("\r\n"),"text/csv;charset=utf-8;");}
+function stage5Report(){const year=stage5Year(),profiles=stage5Profiles(),records=stage5GetFinance().filter(x=>String(x.date||"").slice(0,4)===String(year));let harvests=[];Object.entries(profiles).forEach(([n,p])=>(p.harvests||[]).forEach(x=>{if(String(x.date||"").slice(0,4)===String(year))harvests.push({...x,hive:n});}));const income=records.filter(x=>x.kind==="income").reduce((n,x)=>n+Number(x.amount||0),0),expense=records.filter(x=>x.kind==="expense").reduce((n,x)=>n+Number(x.amount||0),0),kg=harvests.reduce((n,x)=>n+Number(x.kg||0),0);const lines=["RAPORT PASIEKI — "+year,"Wygenerowano: "+new Date().toLocaleString("pl-PL"),"","Rodziny w ewidencji: "+Object.keys(profiles).length,"Liczba wpisów miodobrania: "+harvests.length,"Zebrany miód: "+kg.toLocaleString("pl-PL")+" kg","Przychody: "+stage5Money(income),"Wydatki: "+stage5Money(expense),"Bilans: "+stage5Money(income-expense),"","ZBIORY:",...harvests.map(x=>(x.date||"")+" | Ul "+x.hive+" | "+(x.type||"miód")+" | "+x.kg+" kg"),"","FINANSE:",...records.map(x=>(x.date||"")+" | "+(x.kind==="income"?"Przychód":"Wydatek")+" | "+(x.category||"")+" | "+x.amount+" zł | "+(x.description||""))];stage5Download("raport-pasieki-"+year+".txt",lines.join("\n"),"text/plain;charset=utf-8;");}
+function initStage5(){
+  const yearSelect=document.getElementById("stage5-year");if(!yearSelect)return;
+  const current=new Date().getFullYear();for(let y=current-3;y<=current+1;y++)yearSelect.add(new Option(String(y),String(y)));yearSelect.value=String(current);
+  const date=document.getElementById("stage5-date");if(date)date.value=new Date().toISOString().slice(0,10);
+  yearSelect.addEventListener("change",stage5Render);
+  document.getElementById("stage5-save")?.addEventListener("click",()=>{const amount=Number(document.getElementById("stage5-amount").value),dateValue=document.getElementById("stage5-date").value;if(!dateValue){alert("Wybierz datę wpisu.");return;}if(!Number.isFinite(amount)||amount<=0){alert("Podaj kwotę większą od zera.");return;}const records=stage5GetFinance();records.push({id:"fin-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),kind:document.getElementById("stage5-kind").value,category:document.getElementById("stage5-category").value,date:dateValue,amount:Number(amount.toFixed(2)),hive:document.getElementById("stage5-hive").value,description:document.getElementById("stage5-description").value.trim()});stage5SaveFinance(records);document.getElementById("stage5-amount").value="";document.getElementById("stage5-description").value="";yearSelect.value=dateValue.slice(0,4);if(![...yearSelect.options].some(o=>o.value===yearSelect.value)){yearSelect.add(new Option(yearSelect.value,yearSelect.value));}stage5Render();alert("Zapisano wpis finansowy.");});
+  document.getElementById("stage5-export-csv")?.addEventListener("click",stage5Csv);document.getElementById("stage5-export-report")?.addEventListener("click",stage5Report);
+  stage5Render();
+}
+
   syncCalendarYear();
   updateMarkers();
 
@@ -5065,6 +5165,7 @@ if(savedGPS === "true"){
   if(typeof runAIModule === "function") runAIModule();
   if(typeof loadApiaryData === "function") loadApiaryData();
   initHiveManagement();
+  initStage5();
 
   const hivesCountInput = document.getElementById("hivesCount");
   const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");
