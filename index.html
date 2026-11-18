@@ -2397,6 +2397,11 @@ font-weight:bold;
     <input type="number" id="hive-card-count" min="1" max="100" value="25" style="width:75px;">
     <button type="button" id="hive-card-count-save">Zastosuj</button>
   </div>
+  <div class="hive-toolbar" style="margin-top:8px;">
+    <label for="hive-add-number">Numer nowej karty:</label>
+    <input type="number" id="hive-add-number" min="1" max="100" placeholder="Wpisz numer" style="width:100px;">
+    <button type="button" id="hive-add-card">➕ Dodaj kartę ula</button>
+  </div>
   <div id="hive-health-summary" aria-live="polite" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;padding:8px;border:1px solid #e5d8aa;border-radius:8px;background:#fffaf0;font-size:13px;"></div>
   <div id="hive-card-list" aria-live="polite"></div>
   <div id="hive-editor">
@@ -4695,6 +4700,55 @@ function renameSelectedHive() {
   alert("Numer ula zmieniony. Karta i jej historia zostały przeniesione na numer " + newNumber + ".");
 }
 
+function addHiveWithChosenNumber() {
+  const input = document.getElementById("hive-add-number");
+  const number = Number(input && input.value);
+
+  if (!Number.isInteger(number) || number < 1 || number > 100) {
+    alert("Wpisz numer nowej karty od 1 do 100.");
+    return;
+  }
+
+  const profiles = getHiveProfiles();
+  if (profiles[String(number)]) {
+    alert("Karta ula o numerze " + number + " już istnieje. Wybierz inny numer.");
+    return;
+  }
+
+  if (!confirm("Dodać nową kartę ula o numerze " + number + "?")) return;
+
+  const profile = getHiveProfile(number);
+  profile.number = number;
+  profile.createdAt = new Date().toISOString();
+  profile.updatedAt = profile.createdAt;
+  profiles[String(number)] = profile;
+  saveHiveProfiles(profiles);
+
+  const deletedNumbers = getDeletedHiveNumbers();
+  deletedNumbers.delete(number);
+  saveDeletedHiveNumbers(deletedNumbers);
+
+  const countInput = document.getElementById("hive-card-count");
+  const mainCount = document.getElementById("hivesCount");
+  const currentCount = Math.max(
+    1,
+    Number(countInput && countInput.value) || 1,
+    Number(mainCount && mainCount.value) || 1,
+    Number(localStorage.getItem("bee-hive-count:" + (currentApiary?.id || "default"))) || 1
+  );
+  const newCount = Math.max(currentCount, number);
+  if (countInput) countInput.value = newCount;
+  if (mainCount) mainCount.value = newCount;
+  localStorage.setItem("bee-hive-count:" + (currentApiary?.id || "default"), String(newCount));
+
+  selectedHiveNumber = number;
+  if (input) input.value = "";
+  updateMarkers();
+  renderHiveCards();
+  loadHiveEditor();
+  alert("Dodano kartę ula nr " + number + ". Możesz teraz uzupełnić jej dane.");
+}
+
 function deleteSelectedHive() {
   const number = Number(selectedHiveNumber);
   const countInput = document.getElementById("hive-card-count");
@@ -5125,6 +5179,9 @@ function initHiveManagement() {
     renderHiveCards();
     loadHiveEditor();
   });
+
+  const addCardButton = document.getElementById("hive-add-card");
+  if (addCardButton) addCardButton.addEventListener("click", addHiveWithChosenNumber);
 
   const profileSave = document.getElementById("hive-profile-save");
   if (profileSave) profileSave.addEventListener("click", saveHiveProfile);
