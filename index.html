@@ -2501,6 +2501,56 @@ font-weight:bold;
       <button type="button" id="hive-event-save">📅 Zapisz zdarzenie i połącz z kalendarzem</button>
     </div>
 
+    <h4 class="hive-section-title">👑 Matka pszczela — ewidencja i wymiana</h4>
+    <div class="hive-fields">
+      <label>Data zdarzenia z matką<input type="date" id="queen-event-date"></label>
+      <label>Rodzaj zdarzenia
+        <select id="queen-event-type">
+          <option value="Wprowadzenie matki">Wprowadzenie matki</option>
+          <option value="Wymiana matki">Wymiana matki</option>
+          <option value="Matka unasienniona">Matka unasienniona</option>
+          <option value="Matka nieunasienniona">Matka nieunasienniona</option>
+          <option value="Matka własnego chowu">Matka własnego chowu</option>
+          <option value="Kontrola czerwienia">Kontrola czerwienia</option>
+          <option value="Utrata matki">Utrata matki</option>
+        </select>
+      </label>
+      <label>Rok wygryzienia / oznaczenia<input type="number" id="queen-event-year" min="2000" max="2035" placeholder="np. 2026"></label>
+      <label>Rasa / linia<input type="text" id="queen-event-line" maxlength="80" placeholder="np. kraińska, linia..."></label>
+      <label>Pochodzenie<input type="text" id="queen-event-source" maxlength="100" placeholder="hodowca / własny wychów"></label>
+      <label>Kolor opalitka<input type="text" id="queen-event-mark" maxlength="40" placeholder="np. niebieski"></label>
+    </div>
+    <label style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">Uwagi o matce<textarea id="queen-event-notes" rows="2" placeholder="Czerwienie, zachowanie, ocena... "></textarea></label>
+    <div class="hive-toolbar"><button type="button" id="queen-event-save">💾 Zapisz zdarzenie matki</button></div>
+    <div id="queen-event-history" class="hive-history-item">Brak wpisów o matce.</div>
+
+    <h4 class="hive-section-title">📦 Odkłady — rejestr tworzenia</h4>
+    <div class="hive-fields">
+      <label>Data utworzenia<input type="date" id="split-date"></label>
+      <label>Numer odkładu / nowej rodziny<input type="text" id="split-number" maxlength="30" placeholder="np. O-1"></label>
+      <label>Liczba ramek z czerwiem<input type="number" id="split-brood-frames" min="0" max="50" value="0"></label>
+      <label>Liczba ramek pokarmu<input type="number" id="split-food-frames" min="0" max="50" value="0"></label>
+      <label>Matka w odkładzie
+        <select id="split-queen-status"><option value="Nie określono">Nie określono</option><option value="Matka unasienniona">Matka unasienniona</option><option value="Matka nieunasienniona">Matka nieunasienniona</option><option value="Matecznik">Matecznik</option><option value="Poddana matka">Poddana matka</option><option value="Bez matki">Bez matki</option></select>
+      </label>
+      <label>Cel odkładu<input type="text" id="split-purpose" maxlength="100" placeholder="np. rozwój / rezerwa / sprzedaż"></label>
+    </div>
+    <label style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">Uwagi o odkładzie<textarea id="split-notes" rows="2"></textarea></label>
+    <div class="hive-toolbar"><button type="button" id="split-save">➕ Zapisz utworzenie odkładu</button></div>
+    <div id="split-history" class="hive-history-item">Brak zapisanych odkładów z tej rodziny.</div>
+
+    <h4 class="hive-section-title">🍯 Miodobranie — ewidencja zbiorów</h4>
+    <div class="hive-fields">
+      <label>Data miodobrania<input type="date" id="harvest-date"></label>
+      <label>Rodzaj miodu<input type="text" id="harvest-type" maxlength="60" placeholder="np. rzepakowy, akacjowy, lipowy"></label>
+      <label>Ilość miodu (kg)<input type="number" id="harvest-kg" min="0" max="10000" step="0.1" placeholder="np. 12.5"></label>
+      <label>Liczba odebranych nadstawek<input type="number" id="harvest-supers" min="0" max="500" value="0"></label>
+      <label>Wilgotność (%)<input type="number" id="harvest-moisture" min="0" max="100" step="0.1" placeholder="opcjonalnie"></label>
+    </div>
+    <label style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">Uwagi do zbioru<textarea id="harvest-notes" rows="2"></textarea></label>
+    <div class="hive-toolbar"><button type="button" id="harvest-save">🍯 Zapisz miodobranie</button></div>
+    <div id="harvest-summary" class="hive-history-item">Brak zarejestrowanych zbiorów z tej rodziny.</div>
+
     <h4 class="hive-section-title">📜 Historia tej rodziny</h4>
     <div id="hive-profile-history">Wybierz rodzinę.</div>
   </div>
@@ -4313,7 +4363,10 @@ function getHiveProfile(number) {
     varroaMethod: "",
     status: "obserwacja",
     notes: "",
-    inspections: []
+    inspections: [],
+    queenHistory: [],
+    splits: [],
+    harvests: []
   };
 }
 
@@ -4669,6 +4722,125 @@ function addHiveEvent() {
     : "Zdarzenie zapisane w historii ula. Do kalendarza trafiają wpisy z bieżącego roku.");
 }
 
+function getHiveSectionArray(profile, key) {
+  if (!Array.isArray(profile[key])) profile[key] = [];
+  return profile[key];
+}
+
+function appendHiveCalendarEvent(dateValue, text) {
+  const dateKey = formatCalendarDate(dateValue);
+  const year = Number(String(dateValue).slice(0, 4));
+  if (year !== calendarYear) return false;
+  const previous = readNoteForDate(dateKey) || "";
+  if (!previous.split("\n").some(line => line.trim() === text)) {
+    writeNoteForDate(dateKey, previous ? previous + "\n" + text : text);
+    updateMarkers();
+  }
+  return true;
+}
+
+function renderHiveSpecialHistories(profile) {
+  const renderList = (id, items, formatter, emptyText) => {
+    const box = document.getElementById(id);
+    if (!box) return;
+    box.textContent = "";
+    if (!items.length) { box.textContent = emptyText; return; }
+    items.slice().sort((a,b) => String(b.date || "").localeCompare(String(a.date || ""))).forEach(item => {
+      const row = document.createElement("div");
+      row.className = "hive-history-item";
+      row.textContent = formatter(item);
+      box.appendChild(row);
+    });
+  };
+  const queens = getHiveSectionArray(profile, "queenHistory");
+  const splits = getHiveSectionArray(profile, "splits");
+  const harvests = getHiveSectionArray(profile, "harvests");
+  renderList("queen-event-history", queens, q => [q.date, q.type, q.year ? "Rok: " + q.year : "", q.line, q.source, q.mark ? "Opalitek: " + q.mark : "", q.notes].filter(Boolean).join(" · "), "Brak wpisów o matce.");
+  renderList("split-history", splits, x => [x.date, "Odkład: " + (x.number || "bez numeru"), "Czerw: " + x.broodFrames + " ramek", "Pokarm: " + x.foodFrames + " ramek", "Matka: " + x.queenStatus, x.purpose, x.notes].filter(Boolean).join(" · "), "Brak zapisanych odkładów z tej rodziny.");
+  const total = harvests.reduce((sum, h) => sum + (Number(h.kg) || 0), 0);
+  const allProfiles = getHiveProfiles();
+  const apiaryTotal = Object.values(allProfiles).reduce((sum, item) =>
+    sum + (Array.isArray(item.harvests) ? item.harvests.reduce((sub, h) => sub + (Number(h.kg) || 0), 0) : 0), 0);
+  const summary = document.getElementById("harvest-summary");
+  if (summary) {
+    summary.textContent = "Łącznie z ula " + selectedHiveNumber + ": " + total.toFixed(1) + " kg · miodobrań: " + harvests.length + " · cała pasieka: " + apiaryTotal.toFixed(1) + " kg";
+    harvests.slice().sort((a,b) => String(b.date || "").localeCompare(String(a.date || ""))).forEach(h => {
+      const row = document.createElement("div"); row.className = "hive-history-item";
+      row.textContent = [h.date, h.type || "Miód", Number(h.kg).toFixed(1) + " kg", h.supers ? h.supers + " nadstawek" : "", h.moisture ? "Wilgotność: " + h.moisture + "%" : "", h.notes].filter(Boolean).join(" · ");
+      summary.appendChild(row);
+    });
+  }
+}
+
+function saveQueenEvent() {
+  const date = document.getElementById("queen-event-date").value;
+  if (!date) { alert("Wybierz datę zdarzenia dotyczącego matki."); return; }
+  const profiles = getHiveProfiles();
+  const profile = profiles[String(selectedHiveNumber)] || getHiveProfile(selectedHiveNumber);
+  const event = {
+    id: "queen-" + Date.now(), date, type: document.getElementById("queen-event-type").value,
+    year: document.getElementById("queen-event-year").value,
+    line: document.getElementById("queen-event-line").value.trim(),
+    source: document.getElementById("queen-event-source").value.trim(),
+    mark: document.getElementById("queen-event-mark").value.trim(),
+    notes: document.getElementById("queen-event-notes").value.trim()
+  };
+  getHiveSectionArray(profile, "queenHistory").push(event);
+  if (event.year) profile.queenYear = event.year;
+  if (event.type === "Utrata matki") profile.queenStatus = "podejrzenie bezmateczności";
+  else if (["Wprowadzenie matki", "Wymiana matki", "Matka unasienniona", "Matka nieunasienniona", "Matka własnego chowu"].includes(event.type)) profile.queenStatus = "matka widziana";
+  profile.updatedAt = new Date().toISOString(); profiles[String(selectedHiveNumber)] = profile; saveHiveProfiles(profiles);
+  const calendarText = "Ul " + selectedHiveNumber + " — " + event.type + (event.year ? " (rok " + event.year + ")" : "") + (event.notes ? ": " + event.notes : "");
+  const inCalendar = appendHiveCalendarEvent(date, calendarText);
+  document.getElementById("queen-event-notes").value = "";
+  renderHiveSpecialHistories(profile); renderHiveCards(); loadHiveEditor();
+  alert("Zapisano historię matki w karcie ula." + (inCalendar ? " Dodano również wpis do kalendarza." : " Zdarzenie z innego roku pozostaje w historii ula."));
+}
+
+function saveSplitRecord() {
+  const date = document.getElementById("split-date").value;
+  if (!date) { alert("Wybierz datę utworzenia odkładu."); return; }
+  const brood = Number(document.getElementById("split-brood-frames").value || 0);
+  const food = Number(document.getElementById("split-food-frames").value || 0);
+  if (brood + food < 1) { alert("Podaj przynajmniej jedną ramkę z czerwiem lub pokarmem."); return; }
+  const profiles = getHiveProfiles();
+  const profile = profiles[String(selectedHiveNumber)] || getHiveProfile(selectedHiveNumber);
+  const record = {
+    id: "split-" + Date.now(), date, number: document.getElementById("split-number").value.trim(),
+    broodFrames: brood, foodFrames: food, queenStatus: document.getElementById("split-queen-status").value,
+    purpose: document.getElementById("split-purpose").value.trim(), notes: document.getElementById("split-notes").value.trim()
+  };
+  getHiveSectionArray(profile, "splits").push(record);
+  profile.updatedAt = new Date().toISOString(); profiles[String(selectedHiveNumber)] = profile; saveHiveProfiles(profiles);
+  const text = "Ul " + selectedHiveNumber + " — utworzono odkład " + (record.number || "bez numeru") + ": " + brood + " ramek czerwiu, " + food + " ramek pokarmu; matka: " + record.queenStatus;
+  const inCalendar = appendHiveCalendarEvent(date, text);
+  document.getElementById("split-notes").value = "";
+  renderHiveSpecialHistories(profile); renderHiveCards(); renderHiveHistory();
+  alert("Zapisano odkład w historii rodziny." + (inCalendar ? " Dodano wpis do kalendarza." : " Zdarzenie z innego roku pozostaje w historii ula."));
+}
+
+function saveHarvestRecord() {
+  const date = document.getElementById("harvest-date").value;
+  const kg = Number(document.getElementById("harvest-kg").value);
+  if (!date) { alert("Wybierz datę miodobrania."); return; }
+  if (!Number.isFinite(kg) || kg <= 0) { alert("Podaj prawidłową ilość miodu większą od zera."); return; }
+  const profiles = getHiveProfiles();
+  const profile = profiles[String(selectedHiveNumber)] || getHiveProfile(selectedHiveNumber);
+  const record = {
+    id: "harvest-" + Date.now(), date, type: document.getElementById("harvest-type").value.trim(), kg,
+    supers: Number(document.getElementById("harvest-supers").value || 0),
+    moisture: document.getElementById("harvest-moisture").value,
+    notes: document.getElementById("harvest-notes").value.trim()
+  };
+  getHiveSectionArray(profile, "harvests").push(record);
+  profile.updatedAt = new Date().toISOString(); profiles[String(selectedHiveNumber)] = profile; saveHiveProfiles(profiles);
+  const text = "Ul " + selectedHiveNumber + " — miodobranie: " + kg.toFixed(1) + " kg" + (record.type ? " (" + record.type + ")" : "");
+  const inCalendar = appendHiveCalendarEvent(date, text);
+  document.getElementById("harvest-kg").value = ""; document.getElementById("harvest-notes").value = "";
+  renderHiveSpecialHistories(profile); renderHiveCards(); renderHiveHistory();
+  alert("Zapisano zbiór miodu w karcie ula." + (inCalendar ? " Dodano wpis do kalendarza." : " Zdarzenie z innego roku pozostaje w historii ula."));
+}
+
 function renderHiveHistory() {
   const box = document.getElementById("hive-profile-history");
   if (!box) return;
@@ -4676,6 +4848,7 @@ function renderHiveHistory() {
 
   const profile = getHiveProfile(selectedHiveNumber);
   const savedEntries = Array.isArray(profile.inspections) ? profile.inspections : [];
+  renderHiveSpecialHistories(profile);
   const calendarEntries = hiveCalendarEntries(selectedHiveNumber);
 
   const title = document.createElement("div");
@@ -4772,6 +4945,17 @@ function initHiveManagement() {
 
   const eventSave = document.getElementById("hive-event-save");
   if (eventSave) eventSave.addEventListener("click", addHiveEvent);
+  const queenSave = document.getElementById("queen-event-save");
+  if (queenSave) queenSave.addEventListener("click", saveQueenEvent);
+  const splitSave = document.getElementById("split-save");
+  if (splitSave) splitSave.addEventListener("click", saveSplitRecord);
+  const harvestSave = document.getElementById("harvest-save");
+  if (harvestSave) harvestSave.addEventListener("click", saveHarvestRecord);
+  const today = new Date().toISOString().slice(0, 10);
+  ["hive-event-date", "queen-event-date", "split-date", "harvest-date"].forEach(id => {
+    const field = document.getElementById(id);
+    if (field && !field.value) field.value = today;
+  });
 
   renderHiveCards();
   loadHiveEditor();
