@@ -469,6 +469,15 @@ Legenda + notatki = szerokość kalendarza
 #bee-mobile-bar button{border:0;border-radius:9px;padding:11px;background:#fbc02d;font-weight:bold}
 @media(max-width:520px){#bee-stage6-panel{margin:14px 5px;padding:12px}#bee-stage6-panel .s6-row{flex-direction:column}#bee-stage6-panel .s6-row button{align-self:flex-start}#bee-mobile-bar button{flex:1;min-width:28%}}
 
+
+/* MAPA PASIEKI — lokalizacje poszczególnych uli */
+#apiary-hive-map-panel{margin:12px 0;padding:10px;border:1px solid #c9d9c5;border-radius:9px;background:#f8fff7}
+#apiary-hive-map{width:100%;height:330px;min-height:260px;border:1px solid #cbd5c0;border-radius:8px;background:#edf3e9;z-index:1}
+#apiary-hive-map-status{font-size:13px;color:#555;margin:7px 0}
+#apiary-hive-map-list{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+#apiary-hive-map-list button{font-size:13px;padding:6px 9px}
+@media(max-width:520px){#apiary-hive-map{height:280px}}
+
 </style>
 
 </head>
@@ -2402,6 +2411,18 @@ font-weight:bold;
     <input type="number" id="hive-add-number" min="1" max="100" placeholder="Wpisz numer" style="width:100px;">
     <button type="button" id="hive-add-card">➕ Dodaj kartę ula</button>
   </div>
+  <div id="apiary-hive-map-panel">
+    <h4 style="margin:2px 0 7px;">🗺️ Mapa pasieki — lokalizacja poszczególnych uli</h4>
+    <p style="margin:4px 0 8px;font-size:13px;color:#555;">Wybierz kartę ula, a następnie zapisz jego pozycję GPS podczas wizyty w pasiece. Lokalizacje są zapisywane osobno dla każdego ula.</p>
+    <div class="hive-toolbar">
+      <button type="button" id="hive-save-gps">📍 Zapisz GPS dla wybranego ula</button>
+      <button type="button" id="hive-clear-gps">Usuń lokalizację wybranego ula</button>
+      <button type="button" id="hive-map-fit">Pokaż wszystkie ule</button>
+    </div>
+    <div id="apiary-hive-map-status" aria-live="polite">Mapa ładuje się. Do wyświetlenia mapy potrzebny jest internet; zapisane współrzędne pozostają dostępne offline.</div>
+    <div id="apiary-hive-map"></div>
+    <div id="apiary-hive-map-list"></div>
+  </div>
   <div id="hive-health-summary" aria-live="polite" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;padding:8px;border:1px solid #e5d8aa;border-radius:8px;background:#fffaf0;font-size:13px;"></div>
   <div id="hive-card-list" aria-live="polite"></div>
   <div id="hive-editor">
@@ -2518,22 +2539,6 @@ font-weight:bold;
     <div class="hive-toolbar">
       <button type="button" id="hive-profile-save">💾 Zapisz kartę</button>
       <button type="button" id="hive-delete-card" style="background:#ffdddd;border-color:#c66;">🗑️ Usuń kartę ula</button>
-    </div>
-
-    <h4 class="hive-section-title">🏷️ Oznaczenie ula — kod QR</h4>
-    <div style="padding:10px;border:1px solid #d7d0b7;border-radius:9px;background:#fffdf5;">
-      <p style="margin:0 0 8px;font-size:13px;color:#555;">Wygeneruj indywidualny kod QR tej rodziny. Identyfikator pozostaje przypisany do ula także po zmianie numeru karty.</p>
-      <div class="hive-toolbar">
-        <button type="button" id="hive-qr-generate">▦ Generuj kod QR</button>
-        <button type="button" id="hive-qr-download" disabled>⬇ Pobierz QR jako PNG</button>
-        <button type="button" id="hive-qr-print" disabled>🖨️ Drukuj etykietę</button>
-      </div>
-      <div id="hive-qr-status" role="status" style="font-size:12px;color:#555;margin:6px 0;"></div>
-      <div id="hive-qr-label" style="display:none;text-align:center;width:230px;max-width:100%;padding:12px;margin:8px auto;background:#fff;border:1px solid #ddd;border-radius:8px;color:#111;">
-        <strong id="hive-qr-title" style="display:block;font-size:18px;">UL 1</strong>
-        <div id="hive-qr-code" style="display:flex;justify-content:center;align-items:center;min-height:180px;margin:8px auto;"></div>
-        <small>BEE ASSISTANT PRO</small>
-      </div>
     </div>
 
     <h4 class="hive-section-title">➕ Dodaj przegląd / zdarzenie</h4>
@@ -2676,7 +2681,82 @@ font-weight:bold;
 <div class="notes"><strong>Uwagi:</strong> Dni rojowe należy obserwować, aby ewentualnie podzielić rodziny lub zastosować pułapki rojowe.</div>
 </div>
 
+<h3>🟩 Leczenie warrozy</h3>
+<table>
+<tr><th>Miesiąc</th><th>Działanie</th></tr>
+<tr><td>Marzec</td><td>Kontrola rodzin i leczenie warrozy 15-30</td></tr>
+<tr><td>Kwiecień</td><td>Leczenie warrozy chemiczne / paski 1-20</td></tr>
+<tr><td>Wrzesień</td><td>Leczenie po miodobraniu</td></tr>
+<tr><td>Październik</td><td>Kontrola osypu i końcowe leczenie</td></tr>
+</table>
 
+<h3>🧬🐝 Wychówka matki pszczelej</h3>
+
+<table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse; text-align: left;">
+<tr style="background-color:#e0e0e0; text-align:center;">
+<th>Etap</th>
+<th>Czas trwania</th>
+<th>Czynności pasieczne</th>
+<th>Uwagi</th>
+</tr>
+
+<tr style="background-color:#FFF3E0;">
+<td>Wybór komórek matecznych</td>
+<td>1 dzień</td>
+<td>Kontrola rojowisk, wybór larw do wychowu</td>
+<td>Wybierać larwy młodsze niż 24h</td>
+</tr>
+
+<tr style="background-color:#FFE0B2;">
+<td>Budowa komórek matecznych</td>
+<td>2–3 dni</td>
+<td>Uzupełnianie węzy, obserwacja larw</td>
+<td>Utrzymywać rój w cieple i wilgotności</td>
+</tr>
+
+<tr style="background-color:#FFCC80;">
+<td>Rozwój larwy matki</td>
+<td>4–5 dni</td>
+<td>Kontrola larw, ochrona przed robotnicami</td>
+<td>Nie przerywać pracy pszczół w komórkach</td>
+</tr>
+
+<tr style="background-color:#FFB74D;">
+<td>Przepoczwarczenie</td>
+<td>6–10 dzień</td>
+<td>Obserwacja poczwarek</td>
+<td>Zapobiegać uszkodzeniu komórek matecznych</td>
+</tr>
+
+<tr style="background-color:#FF9800;">
+<td>Wygryzanie się matki</td>
+<td>11–12 dzień</td>
+<td>Kontrola aktywności matki, przygotowanie ula do wprowadzenia</td>
+<td>Nowa matka jest gotowa do osadzenia</td>
+</tr>
+
+<tr style="background-color:#81C784;">
+<td>Wprowadzenie matki do rodziny</td>
+<td>12–14 dzień</td>
+<td>Osadzenie matki w ochronnej klatce, obserwacja akceptacji przez pszczoły</td>
+<td>Stopniowo wypuszczać matkę, by uniknąć agresji</td>
+</tr>
+
+<tr style="background-color:#A5D6A7;">
+<td>Okres adaptacji</td>
+<td>2–4 dni po wprowadzeniu</td>
+<td>Obserwacja akceptacji matki, kontrola czerwienia</td>
+<td>Monitorować akceptację matki i początek składania jaj</td>
+</tr>
+</table>
+
+<div class="notes">
+<strong>Uwagi ogólne:</strong><br>
+– Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
+– Zachować higienę w ulu i narzędziach<br>
+– Kontrolować temperaturę i wilgotność w komórkach matecznych
+</div>
+<!-- Usunięto odwołanie do app.js z późniejszej wersji modułowej; ta wersja działa z kodem osadzonym w HTML. -->
 
 
 <section id="bee-stage5-panel" aria-label="Analityka, finanse i raporty pasieki">
@@ -3616,34 +3696,52 @@ function updateApiaryUI(distance){
   box.innerHTML = html;
 }
 
-// 📍 GPS LIVE
-function getGPSOnce(){
+// 📍 GPS LIVE — z czytelną obsługą błędów
+function getGPSOnce(onSuccess, onError){
+  if (!window.isSecureContext && location.hostname !== "localhost") {
+    const error = new Error("GPS wymaga bezpiecznego połączenia HTTPS. Otwórz aplikację przez adres https://.");
+    if (typeof onError === "function") onError(error);
+    else console.warn(error.message);
+    return;
+  }
 
-  if(!navigator.geolocation) return;
+  if (!navigator.geolocation) {
+    const error = new Error("Ta przeglądarka nie udostępnia lokalizacji GPS.");
+    if (typeof onError === "function") onError(error);
+    else console.warn(error.message);
+    return;
+  }
 
   navigator.geolocation.getCurrentPosition(
-
     pos => {
-
       const lat = Number(pos.coords.latitude);
       const lon = Number(pos.coords.longitude);
-
-      if(!isNaN(lat) && !isNaN(lon)){
-
-        detectNearestApiary(lat, lon);
-
-        localStorage.setItem("lastLat", lat);
-        localStorage.setItem("lastLon", lon);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        const error = new Error("Otrzymano nieprawidłowe współrzędne GPS.");
+        if (typeof onError === "function") onError(error);
+        return;
       }
+      detectNearestApiary(lat, lon);
+      try {
+        localStorage.setItem("lastLat", String(lat));
+        localStorage.setItem("lastLon", String(lon));
+      } catch (storageError) {
+        console.warn("Nie udało się zapisać ostatniej pozycji GPS:", storageError);
+      }
+      if (typeof onSuccess === "function") onSuccess(pos);
     },
-
-    err => console.log("GPS ERROR:", err),
-
-    {
-      enableHighAccuracy:true,
-      timeout:10000,
-      maximumAge:300000
-    }
+    err => {
+      const messages = {
+        1: "Brak zgody na lokalizację. Kliknij ikonę kłódki obok adresu strony, ustaw Lokalizacja → Zezwalaj i odśwież aplikację.",
+        2: "Nie udało się ustalić pozycji. Włącz lokalizację w urządzeniu i spróbuj ponownie.",
+        3: "GPS nie odpowiedział na czas. Spróbuj ponownie na zewnątrz lub przy lepszym sygnale."
+      };
+      const error = new Error(messages[err.code] || ("Błąd GPS: " + (err.message || "nieznana przyczyna")));
+      error.code = err.code;
+      if (typeof onError === "function") onError(error);
+      else console.warn("GPS ERROR:", error.message);
+    },
+    { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
   );
 }
 
@@ -4540,6 +4638,7 @@ function renderHiveCards() {
       selectedHiveNumber = number;
       renderHiveCards();
       loadHiveEditor();
+      if (typeof renderApiaryHiveMap === "function") renderApiaryHiveMap();
     });
 
     card.append(title, status, details, button);
@@ -4555,16 +4654,6 @@ function loadHiveEditor() {
   };
 
   document.getElementById("hive-editor-title").textContent = "Karta ula " + selectedHiveNumber;
-  const qrLabel = document.getElementById("hive-qr-label");
-  const qrCodeBox = document.getElementById("hive-qr-code");
-  const qrStatus = document.getElementById("hive-qr-status");
-  const qrDownload = document.getElementById("hive-qr-download");
-  const qrPrint = document.getElementById("hive-qr-print");
-  if (qrLabel) qrLabel.style.display = "none";
-  if (qrCodeBox) qrCodeBox.innerHTML = "";
-  if (qrStatus) qrStatus.textContent = "Kod nie został jeszcze wygenerowany dla tej karty.";
-  if (qrDownload) qrDownload.disabled = true;
-  if (qrPrint) qrPrint.disabled = true;
   set("hive-queen-year", profile.queenYear);
   set("hive-strength", profile.strength);
   set("hive-brood", profile.brood);
@@ -5113,150 +5202,145 @@ function renderHiveHistory() {
   }
 }
 
-// Generator kodów QR dla kart uli
-let hiveQrLibraryPromise = null;
-function loadHiveQrLibrary() {
-  if (window.QRCode) return Promise.resolve();
-  if (hiveQrLibraryPromise) return hiveQrLibraryPromise;
-  hiveQrLibraryPromise = new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js";
-    script.async = true;
-    script.onload = () => window.QRCode ? resolve() : reject(new Error("Nie udało się uruchomić biblioteki QR."));
-    script.onerror = () => reject(new Error("Przy pierwszym generowaniu kodu QR wymagane jest połączenie z internetem."));
-    document.head.appendChild(script);
-  });
-  return hiveQrLibraryPromise;
+// =========================
+// MAPA PASIEKI — GPS DLA KAŻDEJ KARTY ULA
+// =========================
+let apiaryHiveMap = null;
+let apiaryHiveMapMarkers = {};
+let apiaryMapLibraryLoading = false;
+
+function apiaryMapStatus(message) {
+  const el = document.getElementById("apiary-hive-map-status");
+  if (el) el.textContent = message;
 }
-function createHiveQrIdentity(profile) {
-  if (!profile.qrId) {
-    profile.qrId = "hive-" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+
+function loadApiaryMapLibrary(callback) {
+  if (window.L) { callback(); return; }
+  if (apiaryMapLibraryLoading) {
+    const wait = setInterval(() => { if (window.L) { clearInterval(wait); callback(); } }, 250);
+    setTimeout(() => clearInterval(wait), 12000);
+    return;
+  }
+  apiaryMapLibraryLoading = true;
+  if (!document.getElementById("leaflet-map-css")) {
+    const css = document.createElement("link");
+    css.id = "leaflet-map-css"; css.rel = "stylesheet";
+    css.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+    document.head.appendChild(css);
+  }
+  const script = document.createElement("script");
+  script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+  script.onload = () => { apiaryMapLibraryLoading = false; callback(); };
+  script.onerror = () => {
+    apiaryMapLibraryLoading = false;
+    apiaryMapStatus("Nie udało się pobrać biblioteki mapy. Sprawdź internet. Współrzędne nadal są zapisane w kartach uli.");
+  };
+  document.head.appendChild(script);
+}
+
+function getApiaryHivesWithGPS() {
+  const profiles = getHiveProfiles();
+  const deleted = getDeletedHiveNumbers();
+  return Object.keys(profiles).map(Number).filter(n => Number.isInteger(n) && n >= 1 && !deleted.has(n))
+    .map(n => ({ number:n, profile:profiles[String(n)] }))
+    .filter(x => Number.isFinite(Number(x.profile.apiaryLat)) && Number.isFinite(Number(x.profile.apiaryLon)));
+}
+
+function openHiveFromMap(number) {
+  selectedHiveNumber = Number(number);
+  const countInput = document.getElementById("hive-card-count");
+  const mainCount = document.getElementById("hivesCount");
+  const count = Math.max(Number(countInput && countInput.value || 1), selectedHiveNumber);
+  if (countInput) countInput.value = count;
+  if (mainCount) mainCount.value = count;
+  localStorage.setItem("bee-hive-count:" + (currentApiary?.id || "default"), String(count));
+  renderHiveCards();
+  loadHiveEditor();
+  document.getElementById("hive-editor")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function renderApiaryHiveMap() {
+  const list = document.getElementById("apiary-hive-map-list");
+  if (!list) return;
+  const hives = getApiaryHivesWithGPS();
+  list.textContent = "";
+  hives.forEach(item => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "🐝 Ul " + item.number;
+    btn.addEventListener("click", () => openHiveFromMap(item.number));
+    list.appendChild(btn);
+  });
+  if (!hives.length) apiaryMapStatus("Brak zapisanych lokalizacji uli. Wybierz kartę ula i naciśnij „Zapisz GPS dla wybranego ula”.");
+  else apiaryMapStatus("Zapisane lokalizacje: " + hives.length + ". Kliknij znacznik lub numer ula, aby otworzyć jego kartę.");
+
+  loadApiaryMapLibrary(() => {
+    const mapEl = document.getElementById("apiary-hive-map");
+    if (!mapEl || !window.L) return;
+    if (!apiaryHiveMap) {
+      apiaryHiveMap = L.map(mapEl).setView(hives.length ? [Number(hives[0].profile.apiaryLat), Number(hives[0].profile.apiaryLon)] : [52.1,19.4], hives.length ? 15 : 6);
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(apiaryHiveMap);
+    }
+    Object.values(apiaryHiveMapMarkers).forEach(marker => apiaryHiveMap.removeLayer(marker));
+    apiaryHiveMapMarkers = {};
+    const bounds = [];
+    hives.forEach(item => {
+      const lat = Number(item.profile.apiaryLat), lon = Number(item.profile.apiaryLon);
+      const marker = L.marker([lat,lon]).addTo(apiaryHiveMap)
+        .bindPopup("<b>🐝 Ul " + item.number + "</b><br>" + lat.toFixed(6) + ", " + lon.toFixed(6) + "<br><button type=\"button\" onclick=\"openHiveFromMap(" + item.number + ")\">Otwórz kartę ula</button>");
+      apiaryHiveMapMarkers[item.number] = marker;
+      bounds.push([lat,lon]);
+    });
+    if (bounds.length > 1) apiaryHiveMap.fitBounds(bounds,{padding:[25,25],maxZoom:17});
+    else if (bounds.length === 1) apiaryHiveMap.setView(bounds[0],17);
+    setTimeout(() => apiaryHiveMap && apiaryHiveMap.invalidateSize(), 150);
+  });
+}
+
+function saveGPSForSelectedHive() {
+  if (!navigator.geolocation) { apiaryMapStatus("Ta przeglądarka nie udostępnia GPS."); return; }
+  apiaryMapStatus("Pobieram pozycję GPS dla ula " + selectedHiveNumber + "… Zezwól przeglądarce na dostęp do lokalizacji.");
+  navigator.geolocation.getCurrentPosition(position => {
     const profiles = getHiveProfiles();
+    const profile = profiles[String(selectedHiveNumber)] || getHiveProfile(selectedHiveNumber);
+    profile.number = selectedHiveNumber;
+    profile.apiaryLat = Number(position.coords.latitude);
+    profile.apiaryLon = Number(position.coords.longitude);
+    profile.apiaryGpsAccuracy = Number.isFinite(position.coords.accuracy) ? Math.round(position.coords.accuracy) : null;
+    profile.apiaryLocationUpdated = new Date().toISOString();
+    profile.updatedAt = profile.apiaryLocationUpdated;
     profiles[String(selectedHiveNumber)] = profile;
     saveHiveProfiles(profiles);
+    renderHiveCards();
+    renderApiaryHiveMap();
+    apiaryMapStatus("Zapisano GPS dla ula " + selectedHiveNumber + ": " + profile.apiaryLat.toFixed(6) + ", " + profile.apiaryLon.toFixed(6) + (profile.apiaryGpsAccuracy ? " (dokładność ok. " + profile.apiaryGpsAccuracy + " m)" : ""));
+  }, error => {
+    const messages = {1:"Brak zgody na lokalizację. Zezwól przeglądarce na dostęp do GPS.",2:"Nie udało się ustalić pozycji. Sprawdź sygnał GPS.",3:"Upłynął czas oczekiwania na GPS. Spróbuj ponownie."};
+    apiaryMapStatus(messages[error.code] || "Błąd odczytu GPS.");
+  }, {enableHighAccuracy:true,timeout:20000,maximumAge:0});
+}
+
+function clearGPSForSelectedHive() {
+  const profiles = getHiveProfiles();
+  const profile = profiles[String(selectedHiveNumber)];
+  if (!profile || (!Number.isFinite(Number(profile.apiaryLat)) && !Number.isFinite(Number(profile.apiaryLon)))) {
+    apiaryMapStatus("Wybrany ul nie ma zapisanej lokalizacji."); return;
   }
-  const apiaryId = currentApiary && currentApiary.id ? String(currentApiary.id) : "default";
-  return "BEEASSISTANTPRO|APIARY=" + apiaryId + "|HIVE=" + profile.qrId;
+  if (!confirm("Usunąć wyłącznie lokalizację GPS ula " + selectedHiveNumber + "? Karta, notatki i historia pozostaną bez zmian.")) return;
+  delete profile.apiaryLat; delete profile.apiaryLon; delete profile.apiaryGpsAccuracy; delete profile.apiaryLocationUpdated;
+  profiles[String(selectedHiveNumber)] = profile;
+  saveHiveProfiles(profiles);
+  renderApiaryHiveMap();
+  apiaryMapStatus("Usunięto lokalizację GPS ula " + selectedHiveNumber + ". Pozostałe dane nie zostały zmienione.");
 }
-async function generateHiveQr() {
-  const status = document.getElementById("hive-qr-status");
-  const container = document.getElementById("hive-qr-code");
-  const label = document.getElementById("hive-qr-label");
-  const download = document.getElementById("hive-qr-download");
-  const print = document.getElementById("hive-qr-print");
-  if (!container || !label) return;
-  try {
-    status.textContent = "Przygotowuję kod QR…";
-    const payload = createHiveQrIdentity(getHiveProfile(selectedHiveNumber));
-    await loadHiveQrLibrary();
-    container.innerHTML = "";
-    new QRCode(container, { text: payload, width: 190, height: 190, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
-    document.getElementById("hive-qr-title").textContent = "UL " + selectedHiveNumber;
-    label.style.display = "block";
-    download.disabled = false;
-    print.disabled = false;
-    status.textContent = "Kod QR gotowy. Zawiera stały identyfikator rodziny, niezależny od numeru karty.";
-  } catch (error) { status.textContent = error.message || "Nie udało się wygenerować kodu QR."; }
-}
-function downloadHiveQr() {
-  const box = document.getElementById("hive-qr-code");
-  const img = box && box.querySelector("img");
-  const canvas = box && box.querySelector("canvas");
-  const data = img && img.src ? img.src : (canvas ? canvas.toDataURL("image/png") : "");
-  if (!data) { alert("Najpierw wygeneruj kod QR."); return; }
-  const a = document.createElement("a"); a.href = data; a.download = "QR_UL_" + selectedHiveNumber + ".png";
-  document.body.appendChild(a); a.click(); a.remove();
-}
-function printHiveQrLabel() {
-  const label = document.getElementById("hive-qr-label");
-  if (!label || label.style.display === "none") { alert("Najpierw wygeneruj kod QR."); return; }
-  const win = window.open("", "_blank", "width=420,height=560");
-  if (!win) { alert("Zezwól przeglądarce na otwarcie okna drukowania."); return; }
-  win.document.write("<!doctype html><html lang='pl'><head><meta charset='utf-8'><title>Etykieta ula</title><style>body{font-family:Arial;text-align:center;padding:18px}.label{width:230px;margin:auto;padding:12px;border:1px solid #999}img,canvas{max-width:190px}strong{font-size:22px}</style></head><body><div class='label'>" + label.innerHTML + "</div>
 
-<section id="bee-reference-bottom" class="month" aria-label="Materiały pszczelarskie — leczenie warrozy i wychów matek">
-  <h2>📚 Materiały pszczelarskie</h2>
-  <div class="notes">Sekcje przeniesione na koniec aplikacji — kalendarz i pozostałe funkcje pozostają bez zmian.</div>
-  <h3>🟩 Leczenie warrozy</h3>
-<table>
-<tr><th>Miesiąc</th><th>Działanie</th></tr>
-<tr><td>Marzec</td><td>Kontrola rodzin i leczenie warrozy 15-30</td></tr>
-<tr><td>Kwiecień</td><td>Leczenie warrozy chemiczne / paski 1-20</td></tr>
-<tr><td>Wrzesień</td><td>Leczenie po miodobraniu</td></tr>
-<tr><td>Październik</td><td>Kontrola osypu i końcowe leczenie</td></tr>
-</table>
-
-<h3>🧬🐝 Wychówka matki pszczelej</h3>
-
-<table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse; text-align: left;">
-<tr style="background-color:#e0e0e0; text-align:center;">
-<th>Etap</th>
-<th>Czas trwania</th>
-<th>Czynności pasieczne</th>
-<th>Uwagi</th>
-</tr>
-
-<tr style="background-color:#FFF3E0;">
-<td>Wybór komórek matecznych</td>
-<td>1 dzień</td>
-<td>Kontrola rojowisk, wybór larw do wychowu</td>
-<td>Wybierać larwy młodsze niż 24h</td>
-</tr>
-
-<tr style="background-color:#FFE0B2;">
-<td>Budowa komórek matecznych</td>
-<td>2–3 dni</td>
-<td>Uzupełnianie węzy, obserwacja larw</td>
-<td>Utrzymywać rój w cieple i wilgotności</td>
-</tr>
-
-<tr style="background-color:#FFCC80;">
-<td>Rozwój larwy matki</td>
-<td>4–5 dni</td>
-<td>Kontrola larw, ochrona przed robotnicami</td>
-<td>Nie przerywać pracy pszczół w komórkach</td>
-</tr>
-
-<tr style="background-color:#FFB74D;">
-<td>Przepoczwarczenie</td>
-<td>6–10 dzień</td>
-<td>Obserwacja poczwarek</td>
-<td>Zapobiegać uszkodzeniu komórek matecznych</td>
-</tr>
-
-<tr style="background-color:#FF9800;">
-<td>Wygryzanie się matki</td>
-<td>11–12 dzień</td>
-<td>Kontrola aktywności matki, przygotowanie ula do wprowadzenia</td>
-<td>Nowa matka jest gotowa do osadzenia</td>
-</tr>
-
-<tr style="background-color:#81C784;">
-<td>Wprowadzenie matki do rodziny</td>
-<td>12–14 dzień</td>
-<td>Osadzenie matki w ochronnej klatce, obserwacja akceptacji przez pszczoły</td>
-<td>Stopniowo wypuszczać matkę, by uniknąć agresji</td>
-</tr>
-
-<tr style="background-color:#A5D6A7;">
-<td>Okres adaptacji</td>
-<td>2–4 dni po wprowadzeniu</td>
-<td>Obserwacja akceptacji matki, kontrola czerwienia</td>
-<td>Monitorować akceptację matki i początek składania jaj</td>
-</tr>
-</table>
-
-<div class="notes">
-<strong>Uwagi ogólne:</strong><br>
-– Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
-– Zachować higienę w ulu i narzędziach<br>
-– Kontrolować temperaturę i wilgotność w komórkach matecznych
-</div>
-<!-- Usunięto odwołanie do app.js z późniejszej wersji modułowej; ta wersja działa z kodem osadzonym w HTML. -->
-</section>
-
-<script>window.onload=()=>window.print()<\/script></body></html>");
-  win.document.close();
+function initApiaryHiveMap() {
+  document.getElementById("hive-save-gps")?.addEventListener("click", saveGPSForSelectedHive);
+  document.getElementById("hive-clear-gps")?.addEventListener("click", clearGPSForSelectedHive);
+  document.getElementById("hive-map-fit")?.addEventListener("click", renderApiaryHiveMap);
+  renderApiaryHiveMap();
 }
 
 function initHiveManagement() {
@@ -5286,12 +5370,6 @@ function initHiveManagement() {
   if (renumberButton) renumberButton.addEventListener("click", renameSelectedHive);
   const deleteButton = document.getElementById("hive-delete-card");
   if (deleteButton) deleteButton.addEventListener("click", deleteSelectedHive);
-  const qrGenerate = document.getElementById("hive-qr-generate");
-  if (qrGenerate) qrGenerate.addEventListener("click", generateHiveQr);
-  const qrDownload = document.getElementById("hive-qr-download");
-  if (qrDownload) qrDownload.addEventListener("click", downloadHiveQr);
-  const qrPrint = document.getElementById("hive-qr-print");
-  if (qrPrint) qrPrint.addEventListener("click", printHiveQrLabel);
 
   const eventSave = document.getElementById("hive-event-save");
   if (eventSave) eventSave.addEventListener("click", addHiveEvent);
@@ -5309,6 +5387,7 @@ function initHiveManagement() {
 
   renderHiveCards();
   loadHiveEditor();
+  initApiaryHiveMap();
 }
 
 // Utrzymuj widok kart zgodny z pasieką wykrytą przez GPS.
@@ -5483,33 +5562,33 @@ if(savedGPS === "true"){
 
 setTimeout(autoScaleCalendarText, 200);
 
-// 🔘 GPS TOGGLE
+// 🔘 GPS TOGGLE — uruchamiaj śledzenie dopiero po uzyskaniu zgody i pozycji
 const gpsBtn = document.getElementById("gps-toggle");
 
-if(gpsBtn){
-
+if (gpsBtn) {
   gpsBtn.addEventListener("click", () => {
+    if (gpsEnabled) {
+      gpsEnabled = false;
+      try { localStorage.setItem("gpsEnabled", "false"); } catch (error) { console.warn(error); }
+      gpsBtn.textContent = "📍 GPS: OFF";
+      stopLiveGPS();
+      return;
+    }
 
-    gpsEnabled = !gpsEnabled;
-
-if(gpsEnabled){
-
-  localStorage.setItem("gpsEnabled", "true");
-
-  gpsBtn.innerHTML = "📍 GPS: ON";
-
-  getGPSOnce();
-  startLiveGPS();
-  startGPSSaveLoop();
-
-} else {
-
-  localStorage.setItem("gpsEnabled", "false");
-
-  gpsBtn.innerHTML = "📍 GPS: OFF";
-
-  stopLiveGPS();
-}
+    gpsBtn.textContent = "📍 GPS: SZUKAM…";
+    getGPSOnce(() => {
+      gpsEnabled = true;
+      try { localStorage.setItem("gpsEnabled", "true"); } catch (error) { console.warn(error); }
+      gpsBtn.textContent = "📍 GPS: ON";
+      startLiveGPS();
+      startGPSSaveLoop();
+    }, error => {
+      gpsEnabled = false;
+      try { localStorage.setItem("gpsEnabled", "false"); } catch (storageError) { console.warn(storageError); }
+      gpsBtn.textContent = "📍 GPS: OFF";
+      stopLiveGPS();
+      alert(error.message || "Nie udało się uruchomić GPS.");
+    });
   });
 }
 
