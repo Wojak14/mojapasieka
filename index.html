@@ -445,6 +445,14 @@ Legenda + notatki = szerokość kalendarza
 #bee-stage5-panel .stage5-entry{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;border:1px solid #e3e3e3;border-radius:9px;padding:10px;margin:7px 0}
 #bee-stage5-panel .stage5-entry small{display:block;color:#666;margin-top:3px}
 #bee-stage5-panel .stage5-entry button{flex-shrink:0;background:#f4dddd;color:#7c2020;margin:0}
+#bee-stage5-panel .stage5-recommendations{margin:16px 0;padding:12px;border:1px solid #e7d49a;border-radius:10px;background:#fffdf6}
+#bee-stage5-panel .stage5-recommendations h3{margin:0 0 10px}
+#bee-stage5-panel .stage5-rec-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+#bee-stage5-panel .stage5-rec-nav button{margin:0}
+#bee-stage5-panel .stage5-rec-card{min-height:88px;padding:12px;border:1px solid #efdfa8;border-radius:9px;background:#fff8df}
+#bee-stage5-panel .stage5-rec-card strong{color:#654b13}
+#bee-stage5-panel .stage5-rec-card ul{margin:8px 0 0;padding-left:22px}
+#bee-stage5-panel .stage5-rec-card li{margin:6px 0;line-height:1.45}
 #bee-stage5-panel .stage5-positive{color:#176b31!important}#bee-stage5-panel .stage5-negative{color:#a12a20!important}
 @media(max-width:520px){#bee-stage5-panel{margin:14px 5px;padding:12px}#bee-stage5-panel .stage5-entry{flex-direction:column}#bee-stage5-panel .stage5-entry button{align-self:flex-start}}
 
@@ -2674,6 +2682,15 @@ font-weight:bold;
   </div>
   <div class="stage5-grid" id="stage5-analytics">
     <div class="stage5-stat">Rodziny<strong>—</strong></div><div class="stage5-stat">Miód<strong>—</strong></div><div class="stage5-stat">Przychody<strong>—</strong></div><div class="stage5-stat">Wydatki<strong>—</strong></div><div class="stage5-stat">Bilans<strong>—</strong></div>
+  </div>
+  <div class="stage5-recommendations" aria-label="Rekomendacje dla poszczególnych rodzin">
+    <h3>🐝 Rekomendacje dla konkretnych rodzin</h3>
+    <div class="stage5-rec-nav">
+      <button type="button" id="stage5-rec-prev" class="secondary" aria-label="Poprzednia rodzina">❮ Poprzednia</button>
+      <span id="stage5-rec-counter" aria-live="polite">0 / 0</span>
+      <button type="button" id="stage5-rec-next" class="secondary" aria-label="Następna rodzina">Następna ❯</button>
+    </div>
+    <div id="stage5-rec-card" class="stage5-rec-card" aria-live="polite">Brak zapisanych kart rodzin.</div>
   </div>
   <h3>💰 Dodaj przychód lub wydatek</h3>
   <div class="stage5-fields">
@@ -5436,9 +5453,46 @@ function stage5SaveFinance(records){
 function stage5Money(value){ return (Number(value)||0).toLocaleString("pl-PL",{minimumFractionDigits:2,maximumFractionDigits:2})+" zł"; }
 function stage5Year(){ return Number(document.getElementById("stage5-year")?.value)||new Date().getFullYear(); }
 function stage5Profiles(){ return typeof getHiveProfiles==="function"?getHiveProfiles():{}; }
+let stage5RecommendationIndex=0;
+function stage5HiveRecommendations(profile){
+  const p=profile||{},out=[];
+  const status=String(p.status||"").toLowerCase(),queen=String(p.queenStatus||"").toLowerCase();
+  const signs=String(p.diseaseSigns||"").toLowerCase(),stores=String(p.stores||"").toLowerCase();
+  const varroa=String(p.varroa||"").toLowerCase(),strength=String(p.strength||"").toLowerCase();
+  const brood=String(p.brood||"").toLowerCase(),inspections=Array.isArray(p.inspections)?p.inspections:[];
+  const dateValue=d=>{if(!d)return null;const parts=String(d).split(".");if(parts.length===3)return new Date(Number(parts[2]),Number(parts[1])-1,Number(parts[0]));const parsed=new Date(d);return Number.isNaN(parsed.getTime())?null:parsed;};
+  const dates=inspections.map(x=>dateValue(x.date)).filter(Boolean).sort((a,b)=>b-a);
+  const lastInspection=dates[0]||dateValue(p.updatedAt),daysSince=lastInspection?Math.floor((new Date()-lastInspection)/86400000):null;
+  if(status==="stracona")return ["Rodzina oznaczona jako stracona — karta pozostaje w ewidencji, ale nie generuję zaleceń do dalszej obsługi."];
+  if(status==="do połączenia"||varroa==="wysoka")out.push("PILNE: sprawdź rodzinę i zweryfikuj przyczynę problemu; ocenę warrozy potwierdź pomiarem i postępuj zgodnie z etykietą dopuszczonego preparatu.");
+  if(queen.includes("podejrzenie")||queen.includes("brak jaj")||signs.includes("podejrzenie")||signs.includes("niepokojące"))out.push("Wymaga kontroli: ponowna ocena matki, czerwiu i objawów; przy podejrzeniu choroby skonsultuj dalsze postępowanie ze specjalistą.");
+  if(stores==="małe")out.push("Małe zapasy: sprawdź rzeczywistą ilość pokarmu i pilność uzupełnienia; dobierz sposób do pory roku i obecności miodu towarowego.");
+  if(brood==="brak"||brood==="mało")out.push("Oceń czerw i obecność jaj w kontekście pory roku, wieku matki oraz siły rodziny; pojedyncza obserwacja nie przesądza o bezmateczności.");
+  if(strength==="słaba"&&stores!=="małe")out.push("Słabsza rodzina: sprawdź obsadę, czerw, zapasy i przyczynę osłabienia; unikaj pochopnego łączenia bez oceny stanu.");
+  if(daysSince===null)out.push("Brak daty przeglądu: zaplanuj ocenę rodziny w pierwszym odpowiednim terminie pogodowym.");
+  else if(daysSince>=30)out.push("Ostatni zapisany przegląd jest sprzed "+daysSince+" dni — rozważ kontrolę, jeśli pozwalają na to sezon i pogoda.");
+  if(varroa===""||!String(p.varroaCount||"").trim())out.push("Brak aktualnego pomiaru warrozy w karcie — zaplanuj monitoring odpowiednią metodą dla danego okresu.");
+  return out.length?out:["Brak dodatkowych zaleceń na podstawie obecnie zapisanych ocen. Aktualizuj kartę po każdym przeglądzie."];
+}
+function stage5RenderHiveRecommendation(profiles){
+  const card=document.getElementById("stage5-rec-card"),counter=document.getElementById("stage5-rec-counter");
+  const prev=document.getElementById("stage5-rec-prev"),next=document.getElementById("stage5-rec-next");
+  if(!card||!counter)return;
+  const deleted=typeof getDeletedHiveNumbers==="function"?getDeletedHiveNumbers():new Set();
+  const families=Object.entries(profiles||{}).filter(([n,p])=>p&& !p.deleted && !deleted.has(Number(n))).sort((a,b)=>Number(a[0])-Number(b[0]));
+  if(!families.length){stage5RecommendationIndex=0;counter.textContent="0 / 0";card.textContent="Brak zapisanych kart rodzin. Dodaj kartę ula i uzupełnij jej ocenę, aby zobaczyć indywidualne rekomendacje.";if(prev)prev.disabled=true;if(next)next.disabled=true;return;}
+  stage5RecommendationIndex=((stage5RecommendationIndex%families.length)+families.length)%families.length;
+  const [number,profile]=families[stage5RecommendationIndex];
+  counter.textContent=(stage5RecommendationIndex+1)+" / "+families.length;
+  card.replaceChildren();
+  const heading=document.createElement("strong");heading.textContent="Ul "+number+" — "+(profile.name||"rodzina pszczela");card.appendChild(heading);
+  const list=document.createElement("ul");stage5HiveRecommendations(profile).forEach(message=>{const li=document.createElement("li");li.textContent=message;list.appendChild(li);});card.appendChild(list);
+  if(prev)prev.disabled=families.length<2;if(next)next.disabled=families.length<2;
+}
 function stage5Render(){
   const year=stage5Year(), profiles=stage5Profiles(), finance=stage5GetFinance();
   const profileEntries=Object.entries(profiles).filter(([number,p])=>p && !p.deleted);
+  stage5RenderHiveRecommendation(profiles);
   const harvests=[];
   profileEntries.forEach(([number,p])=>(Array.isArray(p.harvests)?p.harvests:[]).forEach(item=>{if(item && String(item.date||"").slice(0,4)===String(year)) harvests.push({...item,hiveNumber:number});}));
   const records=finance.filter(item=>String(item.date||"").slice(0,4)===String(year)).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
@@ -5469,6 +5523,8 @@ function initStage5(){
   yearSelect.addEventListener("change",stage5Render);
   document.getElementById("stage5-save")?.addEventListener("click",()=>{const amount=Number(document.getElementById("stage5-amount").value),dateValue=document.getElementById("stage5-date").value;if(!dateValue){alert("Wybierz datę wpisu.");return;}if(!Number.isFinite(amount)||amount<=0){alert("Podaj kwotę większą od zera.");return;}const records=stage5GetFinance();records.push({id:"fin-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),kind:document.getElementById("stage5-kind").value,category:document.getElementById("stage5-category").value,date:dateValue,amount:Number(amount.toFixed(2)),hive:document.getElementById("stage5-hive").value,description:document.getElementById("stage5-description").value.trim()});if(!stage5SaveFinance(records))return;document.getElementById("stage5-amount").value="";document.getElementById("stage5-description").value="";yearSelect.value=dateValue.slice(0,4);if(![...yearSelect.options].some(o=>o.value===yearSelect.value)){yearSelect.add(new Option(yearSelect.value,yearSelect.value));}stage5Render();alert("Zapisano wpis finansowy.");});
   document.getElementById("stage5-export-csv")?.addEventListener("click",stage5Csv);document.getElementById("stage5-export-report")?.addEventListener("click",stage5Report);
+  document.getElementById("stage5-rec-prev")?.addEventListener("click",()=>{stage5RecommendationIndex--;stage5RenderHiveRecommendation(stage5Profiles());});
+  document.getElementById("stage5-rec-next")?.addEventListener("click",()=>{stage5RecommendationIndex++;stage5RenderHiveRecommendation(stage5Profiles());});
   stage5Render();
 }
 
