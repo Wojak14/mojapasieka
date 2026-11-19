@@ -2520,6 +2520,22 @@ font-weight:bold;
       <button type="button" id="hive-delete-card" style="background:#ffdddd;border-color:#c66;">🗑️ Usuń kartę ula</button>
     </div>
 
+    <h4 class="hive-section-title">🏷️ Oznaczenie ula — kod QR</h4>
+    <div style="padding:10px;border:1px solid #d7d0b7;border-radius:9px;background:#fffdf5;">
+      <p style="margin:0 0 8px;font-size:13px;color:#555;">Wygeneruj indywidualny kod QR tej rodziny. Identyfikator pozostaje przypisany do ula także po zmianie numeru karty.</p>
+      <div class="hive-toolbar">
+        <button type="button" id="hive-qr-generate">▦ Generuj kod QR</button>
+        <button type="button" id="hive-qr-download" disabled>⬇ Pobierz QR jako PNG</button>
+        <button type="button" id="hive-qr-print" disabled>🖨️ Drukuj etykietę</button>
+      </div>
+      <div id="hive-qr-status" role="status" style="font-size:12px;color:#555;margin:6px 0;"></div>
+      <div id="hive-qr-label" style="display:none;text-align:center;width:230px;max-width:100%;padding:12px;margin:8px auto;background:#fff;border:1px solid #ddd;border-radius:8px;color:#111;">
+        <strong id="hive-qr-title" style="display:block;font-size:18px;">UL 1</strong>
+        <div id="hive-qr-code" style="display:flex;justify-content:center;align-items:center;min-height:180px;margin:8px auto;"></div>
+        <small>BEE ASSISTANT PRO</small>
+      </div>
+    </div>
+
     <h4 class="hive-section-title">➕ Dodaj przegląd / zdarzenie</h4>
     <div class="hive-fields">
       <label>Data
@@ -4614,6 +4630,16 @@ function loadHiveEditor() {
   };
 
   document.getElementById("hive-editor-title").textContent = "Karta ula " + selectedHiveNumber;
+  const qrLabel = document.getElementById("hive-qr-label");
+  const qrCodeBox = document.getElementById("hive-qr-code");
+  const qrStatus = document.getElementById("hive-qr-status");
+  const qrDownload = document.getElementById("hive-qr-download");
+  const qrPrint = document.getElementById("hive-qr-print");
+  if (qrLabel) qrLabel.style.display = "none";
+  if (qrCodeBox) qrCodeBox.innerHTML = "";
+  if (qrStatus) qrStatus.textContent = "Kod nie został jeszcze wygenerowany dla tej karty.";
+  if (qrDownload) qrDownload.disabled = true;
+  if (qrPrint) qrPrint.disabled = true;
   set("hive-queen-year", profile.queenYear);
   set("hive-strength", profile.strength);
   set("hive-brood", profile.brood);
@@ -5162,6 +5188,69 @@ function renderHiveHistory() {
   }
 }
 
+// Generator kodów QR dla kart uli
+let hiveQrLibraryPromise = null;
+function loadHiveQrLibrary() {
+  if (window.QRCode) return Promise.resolve();
+  if (hiveQrLibraryPromise) return hiveQrLibraryPromise;
+  hiveQrLibraryPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js";
+    script.async = true;
+    script.onload = () => window.QRCode ? resolve() : reject(new Error("Nie udało się uruchomić biblioteki QR."));
+    script.onerror = () => reject(new Error("Przy pierwszym generowaniu kodu QR wymagane jest połączenie z internetem."));
+    document.head.appendChild(script);
+  });
+  return hiveQrLibraryPromise;
+}
+function createHiveQrIdentity(profile) {
+  if (!profile.qrId) {
+    profile.qrId = "hive-" + (window.crypto && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+    const profiles = getHiveProfiles();
+    profiles[String(selectedHiveNumber)] = profile;
+    saveHiveProfiles(profiles);
+  }
+  const apiaryId = currentApiary && currentApiary.id ? String(currentApiary.id) : "default";
+  return "BEEASSISTANTPRO|APIARY=" + apiaryId + "|HIVE=" + profile.qrId;
+}
+async function generateHiveQr() {
+  const status = document.getElementById("hive-qr-status");
+  const container = document.getElementById("hive-qr-code");
+  const label = document.getElementById("hive-qr-label");
+  const download = document.getElementById("hive-qr-download");
+  const print = document.getElementById("hive-qr-print");
+  if (!container || !label) return;
+  try {
+    status.textContent = "Przygotowuję kod QR…";
+    const payload = createHiveQrIdentity(getHiveProfile(selectedHiveNumber));
+    await loadHiveQrLibrary();
+    container.innerHTML = "";
+    new QRCode(container, { text: payload, width: 190, height: 190, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+    document.getElementById("hive-qr-title").textContent = "UL " + selectedHiveNumber;
+    label.style.display = "block";
+    download.disabled = false;
+    print.disabled = false;
+    status.textContent = "Kod QR gotowy. Zawiera stały identyfikator rodziny, niezależny od numeru karty.";
+  } catch (error) { status.textContent = error.message || "Nie udało się wygenerować kodu QR."; }
+}
+function downloadHiveQr() {
+  const box = document.getElementById("hive-qr-code");
+  const img = box && box.querySelector("img");
+  const canvas = box && box.querySelector("canvas");
+  const data = img && img.src ? img.src : (canvas ? canvas.toDataURL("image/png") : "");
+  if (!data) { alert("Najpierw wygeneruj kod QR."); return; }
+  const a = document.createElement("a"); a.href = data; a.download = "QR_UL_" + selectedHiveNumber + ".png";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function printHiveQrLabel() {
+  const label = document.getElementById("hive-qr-label");
+  if (!label || label.style.display === "none") { alert("Najpierw wygeneruj kod QR."); return; }
+  const win = window.open("", "_blank", "width=420,height=560");
+  if (!win) { alert("Zezwól przeglądarce na otwarcie okna drukowania."); return; }
+  win.document.write("<!doctype html><html lang='pl'><head><meta charset='utf-8'><title>Etykieta ula</title><style>body{font-family:Arial;text-align:center;padding:18px}.label{width:230px;margin:auto;padding:12px;border:1px solid #999}img,canvas{max-width:190px}strong{font-size:22px}</style></head><body><div class='label'>" + label.innerHTML + "</div><script>window.onload=()=>window.print()<\/script></body></html>");
+  win.document.close();
+}
+
 function initHiveManagement() {
   const countInput = document.getElementById("hive-card-count");
   const storedCount = localStorage.getItem("bee-hive-count:" + (currentApiary?.id || "default"));
@@ -5189,6 +5278,12 @@ function initHiveManagement() {
   if (renumberButton) renumberButton.addEventListener("click", renameSelectedHive);
   const deleteButton = document.getElementById("hive-delete-card");
   if (deleteButton) deleteButton.addEventListener("click", deleteSelectedHive);
+  const qrGenerate = document.getElementById("hive-qr-generate");
+  if (qrGenerate) qrGenerate.addEventListener("click", generateHiveQr);
+  const qrDownload = document.getElementById("hive-qr-download");
+  if (qrDownload) qrDownload.addEventListener("click", downloadHiveQr);
+  const qrPrint = document.getElementById("hive-qr-print");
+  if (qrPrint) qrPrint.addEventListener("click", printHiveQrLabel);
 
   const eventSave = document.getElementById("hive-event-save");
   if (eventSave) eventSave.addEventListener("click", addHiveEvent);
