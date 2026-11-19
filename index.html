@@ -2676,82 +2676,7 @@ font-weight:bold;
 <div class="notes"><strong>Uwagi:</strong> Dni rojowe należy obserwować, aby ewentualnie podzielić rodziny lub zastosować pułapki rojowe.</div>
 </div>
 
-<h3>🟩 Leczenie warrozy</h3>
-<table>
-<tr><th>Miesiąc</th><th>Działanie</th></tr>
-<tr><td>Marzec</td><td>Kontrola rodzin i leczenie warrozy 15-30</td></tr>
-<tr><td>Kwiecień</td><td>Leczenie warrozy chemiczne / paski 1-20</td></tr>
-<tr><td>Wrzesień</td><td>Leczenie po miodobraniu</td></tr>
-<tr><td>Październik</td><td>Kontrola osypu i końcowe leczenie</td></tr>
-</table>
 
-<h3>🧬🐝 Wychówka matki pszczelej</h3>
-
-<table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse; text-align: left;">
-<tr style="background-color:#e0e0e0; text-align:center;">
-<th>Etap</th>
-<th>Czas trwania</th>
-<th>Czynności pasieczne</th>
-<th>Uwagi</th>
-</tr>
-
-<tr style="background-color:#FFF3E0;">
-<td>Wybór komórek matecznych</td>
-<td>1 dzień</td>
-<td>Kontrola rojowisk, wybór larw do wychowu</td>
-<td>Wybierać larwy młodsze niż 24h</td>
-</tr>
-
-<tr style="background-color:#FFE0B2;">
-<td>Budowa komórek matecznych</td>
-<td>2–3 dni</td>
-<td>Uzupełnianie węzy, obserwacja larw</td>
-<td>Utrzymywać rój w cieple i wilgotności</td>
-</tr>
-
-<tr style="background-color:#FFCC80;">
-<td>Rozwój larwy matki</td>
-<td>4–5 dni</td>
-<td>Kontrola larw, ochrona przed robotnicami</td>
-<td>Nie przerywać pracy pszczół w komórkach</td>
-</tr>
-
-<tr style="background-color:#FFB74D;">
-<td>Przepoczwarczenie</td>
-<td>6–10 dzień</td>
-<td>Obserwacja poczwarek</td>
-<td>Zapobiegać uszkodzeniu komórek matecznych</td>
-</tr>
-
-<tr style="background-color:#FF9800;">
-<td>Wygryzanie się matki</td>
-<td>11–12 dzień</td>
-<td>Kontrola aktywności matki, przygotowanie ula do wprowadzenia</td>
-<td>Nowa matka jest gotowa do osadzenia</td>
-</tr>
-
-<tr style="background-color:#81C784;">
-<td>Wprowadzenie matki do rodziny</td>
-<td>12–14 dzień</td>
-<td>Osadzenie matki w ochronnej klatce, obserwacja akceptacji przez pszczoły</td>
-<td>Stopniowo wypuszczać matkę, by uniknąć agresji</td>
-</tr>
-
-<tr style="background-color:#A5D6A7;">
-<td>Okres adaptacji</td>
-<td>2–4 dni po wprowadzeniu</td>
-<td>Obserwacja akceptacji matki, kontrola czerwienia</td>
-<td>Monitorować akceptację matki i początek składania jaj</td>
-</tr>
-</table>
-
-<div class="notes">
-<strong>Uwagi ogólne:</strong><br>
-– Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
-– Zachować higienę w ulu i narzędziach<br>
-– Kontrolować temperaturę i wilgotność w komórkach matecznych
-</div>
-<!-- Usunięto odwołanie do app.js z późniejszej wersji modułowej; ta wersja działa z kodem osadzonym w HTML. -->
 
 
 <section id="bee-stage5-panel" aria-label="Analityka, finanse i raporty pasieki">
@@ -5247,7 +5172,90 @@ function printHiveQrLabel() {
   if (!label || label.style.display === "none") { alert("Najpierw wygeneruj kod QR."); return; }
   const win = window.open("", "_blank", "width=420,height=560");
   if (!win) { alert("Zezwól przeglądarce na otwarcie okna drukowania."); return; }
-  win.document.write("<!doctype html><html lang='pl'><head><meta charset='utf-8'><title>Etykieta ula</title><style>body{font-family:Arial;text-align:center;padding:18px}.label{width:230px;margin:auto;padding:12px;border:1px solid #999}img,canvas{max-width:190px}strong{font-size:22px}</style></head><body><div class='label'>" + label.innerHTML + "</div><script>window.onload=()=>window.print()<\/script></body></html>");
+  win.document.write("<!doctype html><html lang='pl'><head><meta charset='utf-8'><title>Etykieta ula</title><style>body{font-family:Arial;text-align:center;padding:18px}.label{width:230px;margin:auto;padding:12px;border:1px solid #999}img,canvas{max-width:190px}strong{font-size:22px}</style></head><body><div class='label'>" + label.innerHTML + "</div>
+
+<section id="bee-reference-bottom" class="month" aria-label="Materiały pszczelarskie — leczenie warrozy i wychów matek">
+  <h2>📚 Materiały pszczelarskie</h2>
+  <div class="notes">Sekcje przeniesione na koniec aplikacji — kalendarz i pozostałe funkcje pozostają bez zmian.</div>
+  <h3>🟩 Leczenie warrozy</h3>
+<table>
+<tr><th>Miesiąc</th><th>Działanie</th></tr>
+<tr><td>Marzec</td><td>Kontrola rodzin i leczenie warrozy 15-30</td></tr>
+<tr><td>Kwiecień</td><td>Leczenie warrozy chemiczne / paski 1-20</td></tr>
+<tr><td>Wrzesień</td><td>Leczenie po miodobraniu</td></tr>
+<tr><td>Październik</td><td>Kontrola osypu i końcowe leczenie</td></tr>
+</table>
+
+<h3>🧬🐝 Wychówka matki pszczelej</h3>
+
+<table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse; text-align: left;">
+<tr style="background-color:#e0e0e0; text-align:center;">
+<th>Etap</th>
+<th>Czas trwania</th>
+<th>Czynności pasieczne</th>
+<th>Uwagi</th>
+</tr>
+
+<tr style="background-color:#FFF3E0;">
+<td>Wybór komórek matecznych</td>
+<td>1 dzień</td>
+<td>Kontrola rojowisk, wybór larw do wychowu</td>
+<td>Wybierać larwy młodsze niż 24h</td>
+</tr>
+
+<tr style="background-color:#FFE0B2;">
+<td>Budowa komórek matecznych</td>
+<td>2–3 dni</td>
+<td>Uzupełnianie węzy, obserwacja larw</td>
+<td>Utrzymywać rój w cieple i wilgotności</td>
+</tr>
+
+<tr style="background-color:#FFCC80;">
+<td>Rozwój larwy matki</td>
+<td>4–5 dni</td>
+<td>Kontrola larw, ochrona przed robotnicami</td>
+<td>Nie przerywać pracy pszczół w komórkach</td>
+</tr>
+
+<tr style="background-color:#FFB74D;">
+<td>Przepoczwarczenie</td>
+<td>6–10 dzień</td>
+<td>Obserwacja poczwarek</td>
+<td>Zapobiegać uszkodzeniu komórek matecznych</td>
+</tr>
+
+<tr style="background-color:#FF9800;">
+<td>Wygryzanie się matki</td>
+<td>11–12 dzień</td>
+<td>Kontrola aktywności matki, przygotowanie ula do wprowadzenia</td>
+<td>Nowa matka jest gotowa do osadzenia</td>
+</tr>
+
+<tr style="background-color:#81C784;">
+<td>Wprowadzenie matki do rodziny</td>
+<td>12–14 dzień</td>
+<td>Osadzenie matki w ochronnej klatce, obserwacja akceptacji przez pszczoły</td>
+<td>Stopniowo wypuszczać matkę, by uniknąć agresji</td>
+</tr>
+
+<tr style="background-color:#A5D6A7;">
+<td>Okres adaptacji</td>
+<td>2–4 dni po wprowadzeniu</td>
+<td>Obserwacja akceptacji matki, kontrola czerwienia</td>
+<td>Monitorować akceptację matki i początek składania jaj</td>
+</tr>
+</table>
+
+<div class="notes">
+<strong>Uwagi ogólne:</strong><br>
+– Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
+– Zachować higienę w ulu i narzędziach<br>
+– Kontrolować temperaturę i wilgotność w komórkach matecznych
+</div>
+<!-- Usunięto odwołanie do app.js z późniejszej wersji modułowej; ta wersja działa z kodem osadzonym w HTML. -->
+</section>
+
+<script>window.onload=()=>window.print()<\/script></body></html>");
   win.document.close();
 }
 
