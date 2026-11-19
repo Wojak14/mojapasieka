@@ -2665,6 +2665,78 @@ font-weight:bold;
 </div>
 
 </div><!-- TABELA ROJLIWOŚCI -->
+
+<section id="bee-stage5-panel" aria-label="Analityka, finanse i raporty pasieki">
+  <h2>📊 Analityka, finanse i raporty pasieki</h2>
+  <div class="stage5-muted">Podsumowania są wyliczane z kart rodzin, zapisanych miodobrań i wpisów finansowych. Dane finansowe są przechowywane oddzielnie dla każdej pasieki.</div>
+  <div class="stage5-fields" style="margin-top:12px;max-width:360px">
+    <label>Rok analizy<select id="stage5-year"></select></label>
+  </div>
+  <div class="stage5-grid" id="stage5-analytics">
+    <div class="stage5-stat">Rodziny<strong>—</strong></div><div class="stage5-stat">Miód<strong>—</strong></div><div class="stage5-stat">Przychody<strong>—</strong></div><div class="stage5-stat">Wydatki<strong>—</strong></div><div class="stage5-stat">Bilans<strong>—</strong></div>
+  </div>
+  <h3>💰 Dodaj przychód lub wydatek</h3>
+  <div class="stage5-fields">
+    <label>Rodzaj wpisu<select id="stage5-kind"><option value="expense">Wydatek</option><option value="income">Przychód</option></select></label>
+    <label>Kategoria<select id="stage5-category"><option>Sprzedaż miodu</option><option>Sprzedaż odkładów</option><option>Sprzedaż matek</option><option>Inne przychody</option><option>Karmienie</option><option>Leczenie i preparaty</option><option>Matki i odkłady</option><option>Sprzęt i wyposażenie</option><option>Opakowania</option><option>Transport i paliwo</option><option>Inne wydatki</option></select></label>
+    <label>Data<input type="date" id="stage5-date"></label>
+    <label>Kwota (zł)<input type="number" id="stage5-amount" min="0.01" step="0.01" placeholder="np. 250.00"></label>
+    <label>Powiązany ul (opcjonalnie)<select id="stage5-hive"><option value="">Cała pasieka / bez przypisania</option></select></label>
+    <label>Opis<input type="text" id="stage5-description" maxlength="180" placeholder="np. zakup cukru, sprzedaż miodu"></label>
+  </div>
+  <button type="button" id="stage5-save">Zapisz wpis finansowy</button>
+  <h3>📒 Rejestr finansowy</h3>
+  <div id="stage5-finance-list" class="stage5-muted">Brak wpisów w wybranym roku.</div>
+  <h3>📦 Zbiory miodu</h3>
+  <div id="stage5-harvest-summary" class="stage5-muted">Brak zapisanych zbiorów w wybranym roku.</div>
+  <h3>📄 Raport i eksport</h3>
+  <button type="button" id="stage5-export-csv">Pobierz rejestr finansowy CSV</button>
+  <button type="button" id="stage5-export-report" class="secondary">Pobierz raport sezonu TXT</button>
+  <div class="stage5-muted" style="margin-top:8px">Wpisy można usuwać pojedynczo. Usunięcie pozycji finansowej nie zmienia kart uli, historii przeglądów ani nagrań.</div>
+</section>
+
+
+<section id="bee-stage6-panel" aria-label="Magazyn i funkcje mobilne">
+  <h2>📦 Magazyn pasieczny i funkcje mobilne</h2>
+  <p style="color:#666">Stan magazynu i rejestr zużycia są zapisywane osobno dla każdej pasieki. Usunięcie pozycji magazynowej nie zmienia kart uli, notatek ani historii rodzin.</p>
+  <div class="s6-stats" id="s6-stats"><div class="s6-stat">Pozycje<strong>0</strong></div><div class="s6-stat">Niski stan<strong>0</strong></div><div class="s6-stat">Łączna ilość<strong>0</strong></div></div>
+  <h3>➕ Dodaj pozycję do magazynu</h3>
+  <div class="s6-fields">
+    <label>Nazwa produktu / sprzętu<input id="s6-name" maxlength="100" placeholder="np. cukier, ramki, węza"></label>
+    <label>Kategoria<select id="s6-category"><option>Pokarm</option><option>Leczenie i higiena</option><option>Matki i hodowla</option><option>Ramki i węza</option><option>Sprzęt pasieczny</option><option>Opakowania</option><option>Narzędzia</option><option>Inne</option></select></label>
+    <label>Ilość początkowa<input id="s6-qty" type="number" min="0" step="0.01" value="0"></label>
+    <label>Jednostka<select id="s6-unit"><option>szt.</option><option>kg</option><option>g</option><option>l</option><option>ml</option><option>opak.</option><option>m</option><option>zest.</option></select></label>
+    <label>Próg minimalny<input id="s6-min" type="number" min="0" step="0.01" value="0"></label>
+    <label>Miejsce przechowywania<input id="s6-place" maxlength="80" placeholder="np. magazyn, półka 2"></label>
+    <label>Data ważności (opcjonalnie)<input id="s6-expiry" type="date"></label>
+    <label>Uwagi<input id="s6-notes" maxlength="180" placeholder="np. numer partii"></label>
+  </div>
+  <button type="button" id="s6-add">Zapisz pozycję</button>
+  <button type="button" class="secondary" id="s6-export">Eksportuj magazyn CSV</button>
+  <h3>📋 Stan magazynu</h3><div id="s6-inventory-list">Brak pozycji w magazynie.</div>
+  <h3>🔄 Rejestr zużycia i dostaw</h3>
+  <div class="s6-fields">
+    <label>Pozycja<select id="s6-move-item"></select></label>
+    <label>Rodzaj operacji<select id="s6-move-kind"><option value="in">Dostawa / zwiększenie</option><option value="out">Zużycie / wydanie</option></select></label>
+    <label>Ilość<input id="s6-move-qty" type="number" min="0.01" step="0.01" placeholder="np. 5"></label>
+    <label>Data<input id="s6-move-date" type="date"></label>
+    <label>Powiązany ul (opcjonalnie)<input id="s6-move-hive" placeholder="np. 7"></label>
+    <label>Opis<input id="s6-move-note" maxlength="140" placeholder="np. karmienie ula 7"></label>
+  </div>
+  <button type="button" id="s6-move-save">Zapisz operację magazynową</button>
+  <div id="s6-movement-list">Brak operacji magazynowych.</div>
+  <h3>📱 Narzędzia mobilne</h3>
+  <div class="s6-status" id="s6-connection">Sprawdzanie połączenia…</div>
+  <button type="button" id="s6-wake" class="secondary">Włącz podtrzymanie ekranu</button>
+  <button type="button" id="s6-vibrate" class="secondary">Test wibracji</button>
+  <button type="button" id="s6-scan" class="secondary">📷 Skanuj kod QR ula</button>
+  <div id="s6-scan-area" hidden><video id="s6-camera" playsinline muted></video><div id="s6-scan-result" class="s6-status">Uruchamianie aparatu…</div><button type="button" id="s6-stop-scan" class="danger">Zatrzymaj skaner</button></div>
+  <p style="font-size:.85rem;color:#666">Skanowanie wymaga obsługi BarcodeDetector przez przeglądarkę i zgody na aparat (zwykle HTTPS). Jeśli urządzenie nie obsługuje skanera, można nadal wyszukać ul ręcznie w kartach. Aplikacja działa offline w zakresie zapisanych danych, gdy Service Worker został wcześniej poprawnie zainstalowany.</p>
+</section>
+<div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
+  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-top">⬆ Góra</button>
+</div>
+
 <div class="month">
 <h1>Dni największej rojliwości w 2026</h1>
 <table>
@@ -2759,76 +2831,7 @@ font-weight:bold;
 <!-- Usunięto odwołanie do app.js z późniejszej wersji modułowej; ta wersja działa z kodem osadzonym w HTML. -->
 
 
-<section id="bee-stage5-panel" aria-label="Analityka, finanse i raporty pasieki">
-  <h2>📊 Analityka, finanse i raporty pasieki</h2>
-  <div class="stage5-muted">Podsumowania są wyliczane z kart rodzin, zapisanych miodobrań i wpisów finansowych. Dane finansowe są przechowywane oddzielnie dla każdej pasieki.</div>
-  <div class="stage5-fields" style="margin-top:12px;max-width:360px">
-    <label>Rok analizy<select id="stage5-year"></select></label>
-  </div>
-  <div class="stage5-grid" id="stage5-analytics">
-    <div class="stage5-stat">Rodziny<strong>—</strong></div><div class="stage5-stat">Miód<strong>—</strong></div><div class="stage5-stat">Przychody<strong>—</strong></div><div class="stage5-stat">Wydatki<strong>—</strong></div><div class="stage5-stat">Bilans<strong>—</strong></div>
-  </div>
-  <h3>💰 Dodaj przychód lub wydatek</h3>
-  <div class="stage5-fields">
-    <label>Rodzaj wpisu<select id="stage5-kind"><option value="expense">Wydatek</option><option value="income">Przychód</option></select></label>
-    <label>Kategoria<select id="stage5-category"><option>Sprzedaż miodu</option><option>Sprzedaż odkładów</option><option>Sprzedaż matek</option><option>Inne przychody</option><option>Karmienie</option><option>Leczenie i preparaty</option><option>Matki i odkłady</option><option>Sprzęt i wyposażenie</option><option>Opakowania</option><option>Transport i paliwo</option><option>Inne wydatki</option></select></label>
-    <label>Data<input type="date" id="stage5-date"></label>
-    <label>Kwota (zł)<input type="number" id="stage5-amount" min="0.01" step="0.01" placeholder="np. 250.00"></label>
-    <label>Powiązany ul (opcjonalnie)<select id="stage5-hive"><option value="">Cała pasieka / bez przypisania</option></select></label>
-    <label>Opis<input type="text" id="stage5-description" maxlength="180" placeholder="np. zakup cukru, sprzedaż miodu"></label>
-  </div>
-  <button type="button" id="stage5-save">Zapisz wpis finansowy</button>
-  <h3>📒 Rejestr finansowy</h3>
-  <div id="stage5-finance-list" class="stage5-muted">Brak wpisów w wybranym roku.</div>
-  <h3>📦 Zbiory miodu</h3>
-  <div id="stage5-harvest-summary" class="stage5-muted">Brak zapisanych zbiorów w wybranym roku.</div>
-  <h3>📄 Raport i eksport</h3>
-  <button type="button" id="stage5-export-csv">Pobierz rejestr finansowy CSV</button>
-  <button type="button" id="stage5-export-report" class="secondary">Pobierz raport sezonu TXT</button>
-  <div class="stage5-muted" style="margin-top:8px">Wpisy można usuwać pojedynczo. Usunięcie pozycji finansowej nie zmienia kart uli, historii przeglądów ani nagrań.</div>
-</section>
 
-
-<section id="bee-stage6-panel" aria-label="Magazyn i funkcje mobilne">
-  <h2>📦 Magazyn pasieczny i funkcje mobilne</h2>
-  <p style="color:#666">Stan magazynu i rejestr zużycia są zapisywane osobno dla każdej pasieki. Usunięcie pozycji magazynowej nie zmienia kart uli, notatek ani historii rodzin.</p>
-  <div class="s6-stats" id="s6-stats"><div class="s6-stat">Pozycje<strong>0</strong></div><div class="s6-stat">Niski stan<strong>0</strong></div><div class="s6-stat">Łączna ilość<strong>0</strong></div></div>
-  <h3>➕ Dodaj pozycję do magazynu</h3>
-  <div class="s6-fields">
-    <label>Nazwa produktu / sprzętu<input id="s6-name" maxlength="100" placeholder="np. cukier, ramki, węza"></label>
-    <label>Kategoria<select id="s6-category"><option>Pokarm</option><option>Leczenie i higiena</option><option>Matki i hodowla</option><option>Ramki i węza</option><option>Sprzęt pasieczny</option><option>Opakowania</option><option>Narzędzia</option><option>Inne</option></select></label>
-    <label>Ilość początkowa<input id="s6-qty" type="number" min="0" step="0.01" value="0"></label>
-    <label>Jednostka<select id="s6-unit"><option>szt.</option><option>kg</option><option>g</option><option>l</option><option>ml</option><option>opak.</option><option>m</option><option>zest.</option></select></label>
-    <label>Próg minimalny<input id="s6-min" type="number" min="0" step="0.01" value="0"></label>
-    <label>Miejsce przechowywania<input id="s6-place" maxlength="80" placeholder="np. magazyn, półka 2"></label>
-    <label>Data ważności (opcjonalnie)<input id="s6-expiry" type="date"></label>
-    <label>Uwagi<input id="s6-notes" maxlength="180" placeholder="np. numer partii"></label>
-  </div>
-  <button type="button" id="s6-add">Zapisz pozycję</button>
-  <button type="button" class="secondary" id="s6-export">Eksportuj magazyn CSV</button>
-  <h3>📋 Stan magazynu</h3><div id="s6-inventory-list">Brak pozycji w magazynie.</div>
-  <h3>🔄 Rejestr zużycia i dostaw</h3>
-  <div class="s6-fields">
-    <label>Pozycja<select id="s6-move-item"></select></label>
-    <label>Rodzaj operacji<select id="s6-move-kind"><option value="in">Dostawa / zwiększenie</option><option value="out">Zużycie / wydanie</option></select></label>
-    <label>Ilość<input id="s6-move-qty" type="number" min="0.01" step="0.01" placeholder="np. 5"></label>
-    <label>Data<input id="s6-move-date" type="date"></label>
-    <label>Powiązany ul (opcjonalnie)<input id="s6-move-hive" placeholder="np. 7"></label>
-    <label>Opis<input id="s6-move-note" maxlength="140" placeholder="np. karmienie ula 7"></label>
-  </div>
-  <button type="button" id="s6-move-save">Zapisz operację magazynową</button>
-  <div id="s6-movement-list">Brak operacji magazynowych.</div>
-  <h3>📱 Narzędzia mobilne</h3>
-  <div class="s6-status" id="s6-connection">Sprawdzanie połączenia…</div>
-  <button type="button" id="s6-wake" class="secondary">Włącz podtrzymanie ekranu</button>
-  <button type="button" id="s6-vibrate" class="secondary">Test wibracji</button>
-  <button type="button" id="s6-scan" class="secondary">📷 Skanuj kod QR ula</button>
-  <div id="s6-scan-area" hidden><video id="s6-camera" playsinline muted></video><div id="s6-scan-result" class="s6-status">Uruchamianie aparatu…</div><button type="button" id="s6-stop-scan" class="danger">Zatrzymaj skaner</button></div>
-  <p style="font-size:.85rem;color:#666">Skanowanie wymaga obsługi BarcodeDetector przez przeglądarkę i zgody na aparat (zwykle HTTPS). Jeśli urządzenie nie obsługuje skanera, można nadal wyszukać ul ręcznie w kartach. Aplikacja działa offline w zakresie zapisanych danych, gdy Service Worker został wcześniej poprawnie zainstalowany.</p>
-</section>
-<div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
-  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-top">⬆ Góra</button>
-</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
