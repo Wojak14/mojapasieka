@@ -1,5 +1,5 @@
 /* BEE ASSISTANT PRO / Kalendarz Pszczelarski 2027 - cache offline */
-const CACHE_NAME = 'bee-assistant-pro-2027-v6';
+const CACHE_NAME = 'bee-assistant-pro-2027-v7';
 const APP_FILE = './index.html';
 const LOCAL_ASSETS = [
   './',

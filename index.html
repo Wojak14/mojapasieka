@@ -2742,6 +2742,27 @@ font-weight:bold;
   </div>
   <button type="button" id="s6-move-save">Zapisz operację magazynową</button>
   <div id="s6-movement-list">Brak operacji magazynowych.</div>
+  <h3>🏷️ Generator i drukarka kodów QR uli</h3>
+  <p style="color:#666">Wybierz numer karty ula, wygeneruj kod QR i wydrukuj etykietę do oznaczenia ula. Kod zawiera numer ula w formacie BEE-HIVE:numer.</p>
+  <div class="s6-fields" style="max-width:620px">
+    <label>Wybierz kartę ula<select id="s6-qr-hive"></select></label>
+  </div>
+  <button type="button" id="s6-qr-generate">🔳 Generuj kod QR</button>
+  <button type="button" id="s6-qr-print" class="secondary">🖨️ Drukuj kod QR</button>
+  <div id="s6-qr-print-area" style="display:none;margin:12px 0;padding:14px;border:1px dashed #aaa;border-radius:10px;text-align:center;max-width:280px;background:#fff">
+    <strong id="s6-qr-title">Ul</strong>
+    <div id="s6-qr-code" style="display:flex;justify-content:center;align-items:center;min-height:180px;margin:10px auto"></div>
+    <div id="s6-qr-value" style="font-size:12px;overflow-wrap:anywhere"></div>
+  </div>
+  <div id="s6-qr-status" class="s6-status" aria-live="polite">Wybierz ul i kliknij „Generuj kod QR”.</div>
+  <style>
+    @media print {
+      body * { visibility:hidden !important; }
+      #s6-qr-print-area, #s6-qr-print-area * { visibility:visible !important; }
+      #s6-qr-print-area { display:block !important; position:absolute; left:0; top:0; width:75mm; max-width:none; border:0 !important; }
+      @page { margin:10mm; }
+    }
+  </style>
   <h3>📱 Narzędzia mobilne</h3>
   <div class="s6-status" id="s6-connection">Sprawdzanie połączenia…</div>
   <button type="button" id="s6-wake" class="secondary">Włącz podtrzymanie ekranu</button>
@@ -5549,7 +5570,34 @@ function s6Download(name,content,type){const blob=new Blob(["\ufeff"+content],{t
 let s6WakeLock=null,s6Stream=null,s6ScanTimer=null;
 async function s6StopScan(){if(s6ScanTimer)clearTimeout(s6ScanTimer);s6ScanTimer=null;if(s6Stream){s6Stream.getTracks().forEach(t=>t.stop());s6Stream=null;}const v=document.getElementById("s6-camera");if(v)v.srcObject=null;document.getElementById("s6-scan-area").hidden=true;}
 async function s6StartScan(){const area=document.getElementById("s6-scan-area"),result=document.getElementById("s6-scan-result");area.hidden=false;if(!("BarcodeDetector" in window)){result.textContent="Ta przeglądarka nie obsługuje wbudowanego skanowania QR. Użyj aparatu telefonu lub wyszukaj ul ręcznie.";return;}try{const detector=new BarcodeDetector({formats:["qr_code"]});s6Stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});const video=document.getElementById("s6-camera");video.srcObject=s6Stream;await video.play();result.textContent="Skieruj aparat na kod QR ula…";const scan=async()=>{if(!s6Stream)return;try{const codes=await detector.detect(video);if(codes.length){const raw=codes[0].rawValue||"";result.textContent="Odczytano kod: "+raw; if(raw.startsWith("BEE-HIVE:")){const n=raw.slice(9);result.textContent="Kod ula nr "+n+" odczytany. Otwórz odpowiadającą mu kartę w sekcji rodzin.";}if(navigator.vibrate)navigator.vibrate(100);await s6StopScan();return;}}catch(e){}s6ScanTimer=setTimeout(scan,450);};scan();}catch(e){result.textContent="Nie udało się uruchomić aparatu: "+(e.message||e)+". Sprawdź zgodę na aparat i połączenie HTTPS.";}}
+let s6QrInstance=null;
+function s6RefreshQrHiveOptions(){
+ const select=document.getElementById("s6-qr-hive");if(!select)return;
+ const profiles=getHiveProfiles(),deleted=getDeletedHiveNumbers();
+ const numbers=Object.keys(profiles).map(Number).filter(n=>Number.isInteger(n)&&n>0&&!deleted.has(n)).sort((a,b)=>a-b);
+ if(!numbers.length){const count=Math.max(1,Number(document.getElementById("hive-card-count")?.value)||Number(document.getElementById("hivesCount")?.value)||1);for(let n=1;n<=count;n++)if(!deleted.has(n))numbers.push(n);}
+ const old=select.value;select.innerHTML=numbers.map(n=>`<option value="${n}">Ul nr ${n}</option>`).join("");
+ if(numbers.includes(Number(old)))select.value=old;else if(numbers.includes(Number(selectedHiveNumber)))select.value=String(selectedHiveNumber);
+}
+function s6LoadQrLibrary(){return new Promise((resolve,reject)=>{
+ if(window.QRCode)return resolve();
+ const existing=document.querySelector('script[data-s6-qrcode]');
+ if(existing){existing.addEventListener("load",()=>resolve(),{once:true});existing.addEventListener("error",()=>reject(new Error("Nie udało się załadować generatora QR.")),{once:true});return;}
+ const script=document.createElement("script");script.src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js";script.async=true;script.dataset.s6Qrcode="1";script.onload=()=>window.QRCode?resolve():reject(new Error("Biblioteka QR jest niedostępna."));script.onerror=()=>reject(new Error("Nie udało się załadować generatora QR. Połącz się z internetem i spróbuj ponownie."));document.head.appendChild(script);
+ });}
+async function s6GenerateQr(){
+ const number=Number(document.getElementById("s6-qr-hive").value),status=document.getElementById("s6-qr-status"),area=document.getElementById("s6-qr-print-area"),code=document.getElementById("s6-qr-code");
+ if(!Number.isInteger(number)||number<1){status.textContent="Najpierw wybierz prawidłowy numer ula.";return;}
+ status.textContent="Przygotowywanie kodu QR…";
+ try{await s6LoadQrLibrary();code.innerHTML="";const value="BEE-HIVE:"+number; s6QrInstance=new QRCode(code,{text:value,width:200,height:200,colorDark:"#000000",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});document.getElementById("s6-qr-title").textContent="🐝 Ul nr "+number;document.getElementById("s6-qr-value").textContent=value;area.style.display="block";status.textContent="Kod QR ula nr "+number+" jest gotowy do wydruku.";
+ }catch(e){status.textContent=(e.message||"Nie udało się wygenerować kodu QR")+" Generator wymaga pobrania biblioteki przy pierwszym użyciu online.";}
+}
+function s6PrintQr(){const area=document.getElementById("s6-qr-print-area");if(!area||area.style.display==="none"||!area.querySelector("canvas, img")){alert("Najpierw wygeneruj kod QR.");return;}window.print();}
+
 function initStage6(){
+ s6RefreshQrHiveOptions();
+ document.getElementById("s6-qr-generate").addEventListener("click",s6GenerateQr);
+ document.getElementById("s6-qr-print").addEventListener("click",s6PrintQr);
  const today=new Date().toISOString().slice(0,10);document.getElementById("s6-move-date").value=today;
  document.getElementById("s6-add").addEventListener("click",()=>{const name=document.getElementById("s6-name").value.trim(),qty=Number(document.getElementById("s6-qty").value),min=Number(document.getElementById("s6-min").value);if(!name){alert("Podaj nazwę pozycji.");return;}if(!Number.isFinite(qty)||qty<0||!Number.isFinite(min)||min<0){alert("Sprawdź ilość i próg minimalny.");return;}const a=s6Read("inventory");a.push({id:"stk-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),name,category:document.getElementById("s6-category").value,qty,unit:document.getElementById("s6-unit").value,min,place:document.getElementById("s6-place").value.trim(),expiry:document.getElementById("s6-expiry").value,notes:document.getElementById("s6-notes").value.trim()});if(s6Write("inventory",a)){["s6-name","s6-place","s6-expiry","s6-notes"].forEach(id=>document.getElementById(id).value="");document.getElementById("s6-qty").value="0";s6Render();}});
  document.getElementById("s6-inventory-list").addEventListener("click",e=>{const b=e.target.closest("[data-s6-delete]");if(!b)return;const id=b.dataset.s6Delete,item=s6Read("inventory").find(x=>x.id===id);if(!item||!confirm("Usunąć z magazynu pozycję: "+item.name+"? Historia operacji pozostanie zachowana."))return;s6Write("inventory",s6Read("inventory").filter(x=>x.id!==id));s6Render();});
