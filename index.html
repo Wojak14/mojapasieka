@@ -2204,6 +2204,24 @@ font-weight:bold;
     <div class="hive-toolbar"><button type="button" id="harvest-save">🍯 Zapisz miodobranie</button></div>
     <div id="harvest-summary" class="hive-history-item">Brak zarejestrowanych zbiorów z tej rodziny.</div>
 
+
+    <section id="bee-inspection-panel" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5">
+      <h4 class="hive-section-title">🔍 Szczegółowe przeglądy ula</h4>
+      <p style="font-size:13px">Wpisy dotyczą tylko wybranej karty ula i pasieki. Można je później edytować lub usunąć.</p>
+      <div class="hive-fields">
+        <label>Data przeglądu<input id="bee-inspection-date" type="date"></label>
+        <label>Siła rodziny<select id="bee-inspection-strength"><option value="">Nie oceniono</option><option>Słaba</option><option>Średnia</option><option>Silna</option><option>Bardzo silna</option></select></label>
+        <label>Czerw<select id="bee-inspection-brood"><option value="">Nie oceniono</option><option>Brak</option><option>Mało</option><option>Prawidłowy</option><option>Dużo</option><option>Nieregularny</option></select></label>
+        <label>Zapasy<select id="bee-inspection-stores"><option value="">Nie oceniono</option><option>Niskie</option><option>Wystarczające</option><option>Duże</option></select></label>
+        <label>Mateczniki<select id="bee-inspection-cells"><option value="">Nie sprawdzono</option><option>Nie stwierdzono</option><option>Stwierdzono</option></select></label>
+        <label>Nastrój rojowy<select id="bee-inspection-swarm"><option value="">Nie oceniono</option><option>Brak oznak</option><option>Podejrzenie</option><option>Wyraźne oznaki</option></select></label>
+        <label>Matka<select id="bee-inspection-queen"><option value="">Nie sprawdzono</option><option>Widziana</option><option>Nie widziana</option><option>Jaja obecne</option><option>Podejrzenie bezmateczności</option></select></label>
+      </div>
+      <label style="display:flex;flex-direction:column;gap:4px;margin-top:8px">Uwagi z przeglądu<textarea id="bee-inspection-notes" rows="3" placeholder="Obserwacje i wykonane prace"></textarea></label>
+      <div class="hive-toolbar"><button type="button" id="bee-inspection-save">💾 Zapisz przegląd</button><button type="button" id="bee-inspection-cancel" hidden>✖ Anuluj edycję</button></div>
+      <div id="bee-inspection-status" role="status" style="font-size:13px"></div>
+      <div id="bee-inspection-history"></div>
+    </section>
     <h4 class="hive-section-title">📜 Historia tej rodziny</h4>
     <div id="hive-profile-history">Wybierz rodzinę.</div>
   </div>
@@ -4474,6 +4492,7 @@ function loadHiveEditor() {
   set("hive-status", profile.status || "obserwacja");
   set("hive-profile-notes", profile.notes);
   renderHiveHistory();
+  if (typeof beeRenderInspectionHistory === "function") beeRenderInspectionHistory();
 }
 
 function renameSelectedHive() {
@@ -4942,7 +4961,7 @@ function renderHiveHistory() {
   box.textContent = "";
 
   const profile = getHiveProfile(selectedHiveNumber);
-  const savedEntries = Array.isArray(profile.inspections) ? profile.inspections : [];
+  const savedEntries = Array.isArray(profile.inspections) ? profile.inspections.filter(entry => entry.type !== "przegląd szczegółowy") : [];
   renderHiveSpecialHistories(profile);
   const calendarEntries = hiveCalendarEntries(selectedHiveNumber);
 
@@ -5619,5 +5638,83 @@ if ("serviceWorker" in navigator) {
 
 </script>
 
+
+<script>
+/* Szczegółowe przeglądy — zapis wewnątrz istniejących profili uli, bez migracji danych. */
+(function(){
+  const fields = ['date','strength','brood','stores','cells','swarm','queen','notes'];
+  let editingId = null;
+  let editingContext = null;
+  const el = name => document.getElementById('bee-inspection-'+name);
+  const context = () => String((typeof currentApiary !== 'undefined' && currentApiary && currentApiary.id) || 'default') + ':' + String(selectedHiveNumber);
+  const status = msg => { if(el('status')) el('status').textContent = msg; };
+  function reset(){
+    editingId = null; editingContext = null;
+    fields.forEach(k=>{ if(el(k)) el(k).value = ''; });
+    if(el('date')) { const d = new Date(); el('date').value = [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-'); }
+    if(el('save')) el('save').textContent = '💾 Zapisz przegląd';
+    if(el('cancel')) el('cancel').hidden = true;
+  }
+  function data(){const out={};fields.forEach(k=>out[k]=(el(k)?.value || '').trim());return out;}
+  function save(){
+    if(!el('date')?.value){status('Wybierz datę przeglądu.');return;}
+    if(editingId && editingContext !== context()){reset();status('Zmieniono pasiekę lub ul. Wybierz przegląd ponownie.');return;}
+    const profiles = getHiveProfiles();
+    const key = String(selectedHiveNumber);
+    const profile = profiles[key] || getHiveProfile(selectedHiveNumber);
+    if(!Array.isArray(profile.inspections)) profile.inspections=[];
+    const payload = data();
+    if(editingId){
+      const entry = profile.inspections.find(x=>x.id===editingId && x.type==='przegląd szczegółowy');
+      if(!entry){status('Nie znaleziono wpisu do edycji.');reset();return;}
+      entry.details=payload; entry.date=payload.date.split('-').reverse().join('.');
+      entry.text='Przegląd szczegółowy: '+(payload.notes||'bez uwag'); entry.updatedAt=new Date().toISOString();
+    } else {
+      profile.inspections.unshift({id:'inspection-'+Date.now()+'-'+Math.random().toString(36).slice(2,10),type:'przegląd szczegółowy',date:payload.date.split('-').reverse().join('.'),text:'Przegląd szczegółowy: '+(payload.notes||'bez uwag'),details:payload,createdAt:new Date().toISOString()});
+    }
+    profile.updatedAt=new Date().toISOString();profiles[key]=profile;
+    try{saveHiveProfiles(profiles);}catch(e){status('Błąd zapisu: '+e.message);return;}
+    reset();beeRenderInspectionHistory();if(typeof renderHiveCards==='function')renderHiveCards();
+    status('Przegląd zapisany w karcie ula '+key+'.');
+  }
+  function render(){
+    const box=el('history');if(!box)return;
+    if(editingContext && editingContext!==context())reset();
+    box.replaceChildren();
+    const profile=getHiveProfile(selectedHiveNumber);
+    const entries=(Array.isArray(profile.inspections)?profile.inspections:[]).filter(x=>x && x.type==='przegląd szczegółowy');
+    const heading=document.createElement('h4');heading.textContent='Historia szczegółowych przeglądów ('+entries.length+')';box.append(heading);
+    if(!entries.length){const empty=document.createElement('p');empty.textContent='Brak zapisanych szczegółowych przeglądów dla tego ula.';box.append(empty);return;}
+    entries.forEach((entry,index)=>{
+      const row=document.createElement('div');row.className='hive-history-item';
+      const d=entry.details||{};
+      const strong=document.createElement('strong');strong.textContent=(entry.date||'Bez daty')+' — ul '+selectedHiveNumber;row.append(strong);
+      const info=document.createElement('div');info.style.whiteSpace='pre-wrap';
+      info.textContent=[['Siła',d.strength],['Czerw',d.brood],['Zapasy',d.stores],['Mateczniki',d.cells],['Nastrój rojowy',d.swarm],['Matka',d.queen],['Uwagi',d.notes]].filter(x=>x[1]).map(x=>x[0]+': '+x[1]).join(' · ')||'Bez dodatkowych informacji';row.append(info);
+      const edit=document.createElement('button');edit.type='button';edit.textContent='✏️ Edytuj';edit.addEventListener('click',()=>{
+        if(!entry.id){status('Ten wpis nie ma identyfikatora do edycji.');return;}
+        editingId=entry.id;editingContext=context();fields.forEach(k=>{if(el(k))el(k).value=d[k]||'';});
+        if(el('save'))el('save').textContent='💾 Zapisz zmiany';if(el('cancel'))el('cancel').hidden=false;
+        el('date')?.scrollIntoView({behavior:'smooth',block:'center'});status('Edytujesz przegląd z '+(entry.date||'wybranej daty')+'.');
+      });
+      const del=document.createElement('button');del.type='button';del.textContent='🗑️ Usuń';del.addEventListener('click',()=>{
+        if(!confirm('Usunąć ten przegląd ula '+selectedHiveNumber+'? Inne wpisy i nagrania pozostaną bez zmian.'))return;
+        const profiles=getHiveProfiles(),key=String(selectedHiveNumber),p=profiles[key];if(!p||!Array.isArray(p.inspections))return;
+        const pos=p.inspections.findIndex(x=>x.id===entry.id && x.type==='przegląd szczegółowy');if(pos<0)return;
+        p.inspections.splice(pos,1);p.updatedAt=new Date().toISOString();profiles[key]=p;
+        try{saveHiveProfiles(profiles);}catch(e){status('Nie udało się usunąć wpisu: '+e.message);return;}
+        if(editingId===entry.id)reset();render();status('Usunięto tylko wybrany przegląd.');
+      });
+      row.append(edit,del);box.append(row);
+    });
+  }
+  window.beeRenderInspectionHistory=render;
+  document.addEventListener('DOMContentLoaded',()=>{
+    el('save')?.addEventListener('click',save);
+    el('cancel')?.addEventListener('click',()=>{reset();status('Anulowano edycję.');});
+    reset();render();
+  });
+})();
+</script>
 </body>
 </html>
