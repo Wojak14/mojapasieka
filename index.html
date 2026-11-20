@@ -541,7 +541,15 @@ cursor:pointer;
 font-weight:bold;
 ">📅 Dzisiaj
 </button>
+<button type="button" id="hive-down-btn" onclick="scrollToCurrentApiaryHives()" style="margin-top:8px;margin-bottom:10px;margin-left:6px;padding:8px 12px;font-size:14px;border:none;border-radius:8px;background:#FBC02D;cursor:pointer;font-weight:bold;">⬇ Dół — karty uli</button>
 
+<script>
+function scrollToCurrentApiaryHives(){
+  const target = document.getElementById('hive-card-list') || document.getElementById('hive-management');
+  if (!target) return;
+  target.scrollIntoView({behavior:'smooth',block:'start'});
+}
+</script>
 <!-- 🌦 POGODA -->
 <div id="weather-box" style="
 background:#fff8e1;
@@ -2335,7 +2343,7 @@ font-weight:bold;
   <p style="font-size:.85rem;color:#666">Skanowanie wymaga obsługi BarcodeDetector przez przeglądarkę i zgody na aparat (zwykle HTTPS). Jeśli urządzenie nie obsługuje skanera, można nadal wyszukać ul ręcznie w kartach. Aplikacja działa offline w zakresie zapisanych danych, gdy Service Worker został wcześniej poprawnie zainstalowany.</p>
 </section>
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
-  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-top">⬆ Góra</button>
+  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-top">⬆ Góra</button>
 </div>
 
 <div class="month">
@@ -3233,20 +3241,53 @@ try {
   });
 } catch (e) { console.warn("Nie można odczytać dodatkowych pasiek", e); }
 
+// Stały przydział istniejących numerów. Nie zmienia numerów ani historii kart.
+const BEE_BORYS_NUMBERS = new Set([11,12,13,14,16,17,28]);
+function beeHiveBelongsHere(number, apiaryId = currentApiary?.id) {
+  const n = Number(number);
+  if (!Number.isInteger(n) || n < 1) return false;
+  if (apiaryId === "pasieka_2") return BEE_BORYS_NUMBERS.has(n);
+  if (apiaryId === "pasieka_1") return !BEE_BORYS_NUMBERS.has(n);
+  return true;
+}
+// Jednorazowe przeniesienie profili błędnie zapisanych pod drugą pasieką.
+// Kopie oryginalnych danych zostają nienaruszone w kluczach zapasowych.
+function beeReconcileHiveOwnership() {
+  const marker = "bee-hive-ownership-20261120-v1";
+  if (localStorage.getItem(marker) === "done") return;
+  const k1 = "bee-hive-profiles:pasieka_1", k2 = "bee-hive-profiles:pasieka_2";
+  const raw1 = localStorage.getItem(k1), raw2 = localStorage.getItem(k2);
+  const p1 = JSON.parse(raw1 || "{}"), p2 = JSON.parse(raw2 || "{}");
+  if (!p1 || !p2 || Array.isArray(p1) || Array.isArray(p2)) throw new Error("Nieprawidłowe dane kart");
+  if (raw1 !== null) localStorage.setItem("bee-hive-backup-ownership:pasieka_1",raw1);
+  if (raw2 !== null) localStorage.setItem("bee-hive-backup-ownership:pasieka_2",raw2);
+  for (const [n,profile] of Object.entries(p1)) if (BEE_BORYS_NUMBERS.has(Number(n))) {
+    if (!Object.prototype.hasOwnProperty.call(p2,n)) p2[n] = {...profile,apiaryId:"pasieka_2"};
+    delete p1[n];
+  }
+  for (const [n,profile] of Object.entries(p2)) if (!BEE_BORYS_NUMBERS.has(Number(n))) {
+    if (!Object.prototype.hasOwnProperty.call(p1,n)) p1[n] = {...profile,apiaryId:"pasieka_1"};
+    delete p2[n];
+  }
+  localStorage.setItem(k1,JSON.stringify(p1));
+  localStorage.setItem(k2,JSON.stringify(p2));
+  localStorage.setItem(marker,"done");
+}
+try { beeReconcileHiveOwnership(); } catch(error) { console.warn("Nie udało się uporządkować przypisania uli; oryginały zachowane",error); }
 function allHiveNumbersExcept(exceptApiaryId) {
   const taken = new Set();
   APIARIES.filter(a => a.id !== exceptApiaryId).forEach(a => {
     let records = {};
     try { records = JSON.parse(localStorage.getItem("bee-hive-profiles:" + a.id) || "{}"); } catch (_) {}
-    Object.keys(records || {}).forEach(n => { if (/^\d+$/.test(n)) taken.add(Number(n)); });
-    // Zarezerwuj również aktywne numery kart, nawet bez uzupełnionego profilu.
-    const count = Number(localStorage.getItem("bee-hive-count:" + a.id) || 0);
     let deleted = [];
     try { deleted = JSON.parse(localStorage.getItem("bee-hive-deleted:" + a.id) || "[]"); } catch (_) {}
-    for (let n=1;n<=Math.min(100,count);n++) if (!deleted.includes(n)) taken.add(n);
+    Object.keys(records || {}).forEach(n => {
+      if (/^\d+$/.test(n) && !deleted.includes(Number(n))) taken.add(Number(n));
+    });
   });
   return taken;
 }
+
 function switchApiary(id) {
   const chosen = APIARIES.find(a => a.id === id);
   if (!chosen) return;
@@ -3261,7 +3302,7 @@ function switchApiary(id) {
   const count = localStorage.getItem("bee-hive-count:" + chosen.id);
   const countInput = document.getElementById("hive-card-count");
   if (countInput) countInput.value = count || "1";
-  selectedHiveNumber = 1;
+  selectedHiveNumber = chosen.id === "pasieka_2" ? 11 : 1;
   renderHiveCards(); loadHiveEditor();
   updateMarkers();
   if (typeof updateVoiceControlsForSelectedDate === "function") updateVoiceControlsForSelectedDate();
@@ -3293,6 +3334,7 @@ function moveHiveToApiary() {
   if (!answer) return;
   const target = targets[Number(answer)-1];
   if (!target) { alert("Nieprawidłowy wybór."); return; }
+  if (!beeHiveBelongsHere(number,target.id)) { alert("Ten numer ula ma ustalone przypisanie do pasieki. Nie przeniesiono karty."); return; }
   const source = getHiveProfiles();
   const profile = source[String(number)] || getHiveProfile(number);
   const targetKey = "bee-hive-profiles:" + target.id;
@@ -3338,30 +3380,65 @@ try {
   console.warn("Nie udało się przywrócić ostatniej pasieki", error);
 }
 
-// 📍 WYKRYWANIE PASIEKI
+// 📍 Nazwa lokalizacji i odległości do obu pasiek (GPS, w linii prostej).
+let beeLastGeocodeAt = 0;
+let beeLastGeocodePoint = null;
+let beeGeocodeRequest = 0;
+function beeLocationLabel(address) {
+  if (!address || typeof address !== "object") return "";
+  const place = address.village || address.hamlet || address.town || address.city || address.locality || address.suburb || "";
+  const municipality = address.municipality || address.county || "";
+  const region = address.state || "";
+  return [place, municipality, region].filter((v,i,arr) => v && arr.indexOf(v) === i).join(", ");
+}
+async function beeRefreshGPSPlace(lat, lon) {
+  const point = [lat, lon];
+  if (beeLastGeocodePoint && getDistance(lat,lon,...beeLastGeocodePoint) < 0.25 && Date.now()-beeLastGeocodeAt < 300000) return;
+  beeLastGeocodeAt = Date.now();
+  beeLastGeocodePoint = point;
+  const request = ++beeGeocodeRequest;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 7000);
+    let response;
+    try { response = await fetch("https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&accept-language=pl&lat="+encodeURIComponent(lat)+"&lon="+encodeURIComponent(lon), {signal:controller.signal}); }
+    finally { clearTimeout(timeout); }
+    if (!response.ok) return;
+    const data = await response.json();
+    const label = beeLocationLabel(data.address) || data.name || "";
+    if (!label || request !== beeGeocodeRequest) return;
+    try { localStorage.setItem("bee-gps-location-label",JSON.stringify({lat,lon,label})); } catch (_) {}
+    const nameNode = document.getElementById("bee-gps-place-name");
+    if (nameNode) nameNode.textContent = "📍 " + label;
+  } catch (error) { console.warn("Nazwa lokalizacji niedostępna offline:", error.message); }
+}
 function detectNearestApiary(lat, lon){
-
-  if(typeof lat !== "number" || typeof lon !== "number") return;
-
-  let nearest = null;
-  let minDistance = Infinity;
-
-  APIARIES.forEach(apiary => {
-
-    const dist = getDistance(lat, lon, apiary.lat, apiary.lon);
-
-    if(dist < minDistance){
-      minDistance = dist;
-      nearest = apiary;
-    }
-  });
-
-  // GPS jest tylko pomiarem. Nigdy nie zmieniaj aktywnej pasieki
-  // bez decyzji użytkownika (przewóz uli, podróż, słaby sygnał).
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
   const box = document.getElementById("gps-position-status");
-  if (box) box.textContent = "📍 GPS: " + lat.toFixed(6) + ", " + lon.toFixed(6) +
-    (nearest ? " · Najbliżej: " + nearest.name + " (" + minDistance.toFixed(2) + " km)" : "");
-
+  if (!box) return;
+  let cachedName = "";
+  try {
+    const saved = JSON.parse(localStorage.getItem("bee-gps-location-label") || "null");
+    if (saved && typeof saved.label === "string" && getDistance(lat,lon,Number(saved.lat),Number(saved.lon)) < 0.5) cachedName = saved.label;
+  } catch (_) {}
+  // Nazwa zapasowa tylko w pobliżu wskazanego punktu gminy Nurzec-Stacja.
+  if (!cachedName && getDistance(lat,lon,52.41987,23.09190) < 0.5) cachedName = "gmina Nurzec-Stacja";
+  const distances = APIARIES.filter(a => Number.isFinite(Number(a.lat)) && Number.isFinite(Number(a.lon)) && a.lat != null && a.lon != null)
+    .map(a => ({name:a.name,km:getDistance(lat,lon,Number(a.lat),Number(a.lon))}));
+  box.replaceChildren();
+  const place = document.createElement("div");
+  place.id = "bee-gps-place-name";
+  place.textContent = "📍 " + (cachedName || "Ustalanie dokładnej nazwy miejscowości…");
+  box.appendChild(place);
+  distances.forEach(item => {
+    const line = document.createElement("div");
+    line.textContent = "📏 Do " + item.name + ": " + item.km.toFixed(2).replace(".",",") + " km";
+    box.appendChild(line);
+  });
+  const footnote = document.createElement("small");
+  footnote.textContent = "Odległości w linii prostej od bieżącej pozycji GPS";
+  box.appendChild(footnote);
+  beeRefreshGPSPlace(lat,lon);
 }
 
 // 📍 PANEL PASIEKI
@@ -3759,7 +3836,7 @@ function generateBeeForecast(days){
       return Number.isNaN(parsed.getTime()) ? null : parsed;
     };
     for (let number = 1; number <= count; number++) {
-      if (deleted.has(number)) continue;
+      if (deleted.has(number) || !beeHiveBelongsHere(number)) continue;
       const p = profiles[String(number)] || {};
       const add = message => recommendations.push({ number, message });
       const status = String(p.status || "").toLowerCase();
@@ -4271,7 +4348,7 @@ function renderHiveHealthSummary(profiles, count, deletedNumbers) {
   if (!box) return;
   const active = [];
   for (let n = 1; n <= count; n++) {
-    if (!deletedNumbers.has(n)) active.push(profiles[String(n)] || {});
+    if (!deletedNumbers.has(n) && beeHiveBelongsHere(n)) active.push(profiles[String(n)] || {});
   }
   const totals = { good: 0, warning: 0, critical: 0, neutral: 0 };
   active.forEach(profile => totals[getHiveHealthAssessment(profile).level]++);
@@ -4306,7 +4383,7 @@ function renderHiveCards() {
   const deletedNumbers = getDeletedHiveNumbers();
   renderHiveHealthSummary(profiles, count, deletedNumbers);
   for (let number = 1; number <= count; number++) {
-    if (deletedNumbers.has(number)) continue;
+    if (deletedNumbers.has(number) || !beeHiveBelongsHere(number)) continue;
     const profile = profiles[String(number)] || {};
     const card = document.createElement("div");
     card.className = "hive-card" + (number === selectedHiveNumber ? " active" : "");
@@ -4381,6 +4458,7 @@ function renameSelectedHive() {
   }
 
   const profiles = getHiveProfiles();
+  if (!beeHiveBelongsHere(newNumber)) { alert("Ten numer ula jest przypisany do drugiej pasieki."); return; }
   if (allHiveNumbersExcept(currentApiary?.id).has(newNumber)) { alert("Numer ula " + newNumber + " jest już używany w innej pasiece."); return; }
   if (profiles[String(newNumber)]) {
     alert("Karta ula o takim numerze już istnieje. Nie nadpisano jej.");
@@ -4448,6 +4526,7 @@ function addHiveWithChosenNumber() {
   }
 
   const profiles = getHiveProfiles();
+  if (!beeHiveBelongsHere(number)) { alert("Ten numer ula jest przypisany do drugiej pasieki."); return; }
   if (allHiveNumbersExcept(currentApiary?.id).has(number)) { alert("Numer ula " + number + " jest już używany w innej pasiece."); return; }
   if (profiles[String(number)]) {
     alert("Karta ula o numerze " + number + " już istnieje. Wybierz inny numer.");
@@ -4493,7 +4572,7 @@ function deleteSelectedHive() {
   const countInput = document.getElementById("hive-card-count");
   const count = Math.max(1, Math.min(100, Number(countInput && countInput.value) || 25));
 
-  if (!Number.isInteger(number) || number < 1 || number > count) {
+  if (!Number.isInteger(number) || number < 1 || number > count || !beeHiveBelongsHere(number)) {
     alert("Nie wybrano prawidłowej karty ula.");
     return;
   }
@@ -4518,7 +4597,7 @@ function deleteSelectedHive() {
   localStorage.setItem("bee-hive-count:" + (currentApiary?.id || "default"), String(count));
 
   const nextAvailable = Array.from({ length: count }, (_, i) => i + 1)
-    .find(n => !deletedNumbers.has(n));
+    .find(n => !deletedNumbers.has(n) && beeHiveBelongsHere(n));
   selectedHiveNumber = nextAvailable || 1;
 
   updateMarkers();
@@ -5146,7 +5225,7 @@ function stage5SaveFinance(records){
 }
 function stage5Money(value){ return (Number(value)||0).toLocaleString("pl-PL",{minimumFractionDigits:2,maximumFractionDigits:2})+" zł"; }
 function stage5Year(){ return Number(document.getElementById("stage5-year")?.value)||new Date().getFullYear(); }
-function stage5Profiles(){ return typeof getHiveProfiles==="function"?getHiveProfiles():{}; }
+function stage5Profiles(){ const profiles = typeof getHiveProfiles==="function"?getHiveProfiles():{}; return Object.fromEntries(Object.entries(profiles).filter(([n])=>beeHiveBelongsHere(n))); }
 let stage5RecommendationIndex=0;
 function stage5HiveRecommendations(profile){
   const p=profile||{},out=[];
@@ -5247,8 +5326,8 @@ let s6QrInstance=null;
 function s6RefreshQrHiveOptions(){
  const select=document.getElementById("s6-qr-hive");if(!select)return;
  const profiles=getHiveProfiles(),deleted=getDeletedHiveNumbers();
- const numbers=Object.keys(profiles).map(Number).filter(n=>Number.isInteger(n)&&n>0&&!deleted.has(n)).sort((a,b)=>a-b);
- if(!numbers.length){const count=Math.max(1,Number(document.getElementById("hive-card-count")?.value)||Number(document.getElementById("hivesCount")?.value)||1);for(let n=1;n<=count;n++)if(!deleted.has(n))numbers.push(n);}
+ const numbers=Object.keys(profiles).map(Number).filter(n=>Number.isInteger(n)&&n>0&&!deleted.has(n)&&beeHiveBelongsHere(n)).sort((a,b)=>a-b);
+ if(!numbers.length){const count=Math.max(1,Number(document.getElementById("hive-card-count")?.value)||Number(document.getElementById("hivesCount")?.value)||1);for(let n=1;n<=count;n++)if(!deleted.has(n)&&beeHiveBelongsHere(n))numbers.push(n);}
  const old=select.value;select.innerHTML=numbers.map(n=>`<option value="${n}">Ul nr ${n}</option>`).join("");
  if(numbers.includes(Number(old)))select.value=old;else if(numbers.includes(Number(selectedHiveNumber)))select.value=String(selectedHiveNumber);
 }
@@ -5289,7 +5368,7 @@ function initStage6(){
  });
  document.getElementById("s6-move-save").addEventListener("click",()=>{const id=document.getElementById("s6-move-item").value,qty=Number(document.getElementById("s6-move-qty").value),kind=document.getElementById("s6-move-kind").value,items=s6Read("inventory"),item=items.find(x=>x.id===id);if(!item){alert("Najpierw dodaj pozycję magazynową.");return;}if(!Number.isFinite(qty)||qty<=0){alert("Podaj ilość większą od zera.");return;}if(kind==="out"&&qty>Number(item.qty)){alert("Brak wystarczającej ilości w magazynie.");return;}const moves=s6Read("movements"),move={id:"mov-"+Date.now(),itemId:id,name:item.name,unit:item.unit,kind,qty,date:document.getElementById("s6-move-date").value||today,hive:document.getElementById("s6-move-hive").value.trim(),note:document.getElementById("s6-move-note").value.trim()};item.qty=Number((Number(item.qty)+(kind==="in"?qty:-qty)).toFixed(3));if(!s6Write("inventory",items))return;moves.push(move);if(!s6Write("movements",moves))return;document.getElementById("s6-move-qty").value="";document.getElementById("s6-move-note").value="";s6Render();});
  document.getElementById("s6-export").addEventListener("click",()=>{const rows=[["Nazwa","Kategoria","Ilość","Jednostka","Minimum","Miejsce","Ważność","Uwagi"],...s6Read("inventory").map(x=>[x.name,x.category,x.qty,x.unit,x.min,x.place,x.expiry,x.notes])];s6Download("magazyn-pasieki.csv",rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n"),"text/csv;charset=utf-8;");});
- document.getElementById("s6-scan").addEventListener("click",s6StartScan);document.getElementById("s6-quick-scan").addEventListener("click",()=>{document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"});s6StartScan();});document.getElementById("s6-stop-scan").addEventListener("click",s6StopScan);document.getElementById("s6-quick-stock").addEventListener("click",()=>document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"}));document.getElementById("s6-quick-top").addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+ document.getElementById("s6-scan").addEventListener("click",s6StartScan);document.getElementById("s6-quick-scan").addEventListener("click",()=>{document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"});s6StartScan();});document.getElementById("s6-stop-scan").addEventListener("click",s6StopScan);document.getElementById("s6-quick-stock").addEventListener("click",()=>document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"}));document.getElementById("s6-quick-today").addEventListener("click",()=>window.scrollToToday());document.getElementById("s6-quick-top").addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
  document.getElementById("s6-vibrate").addEventListener("click",()=>{if(navigator.vibrate){navigator.vibrate([100,60,100]);}else alert("Wibracje nie są obsługiwane przez tę przeglądarkę.");});
  document.getElementById("s6-wake").addEventListener("click",async()=>{try{if(!("wakeLock" in navigator)){alert("Podtrzymanie ekranu nie jest obsługiwane przez tę przeglądarkę.");return;}if(s6WakeLock){await s6WakeLock.release();s6WakeLock=null;document.getElementById("s6-wake").textContent="Włącz podtrzymanie ekranu";}else{s6WakeLock=await navigator.wakeLock.request("screen");document.getElementById("s6-wake").textContent="Wyłącz podtrzymanie ekranu";s6WakeLock.addEventListener("release",()=>{s6WakeLock=null;document.getElementById("s6-wake").textContent="Włącz podtrzymanie ekranu";});}}catch(e){alert("Nie udało się włączyć podtrzymania ekranu: "+(e.message||e));}});
  const status=document.getElementById("s6-connection");const update=()=>{status.textContent=(navigator.onLine?"🟢 Połączenie z internetem":"🟠 Brak internetu — tryb offline")+" · Pamięć lokalna przeglądarki aktywna";};window.addEventListener("online",update);window.addEventListener("offline",update);update();s6Render();
