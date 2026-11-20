@@ -493,6 +493,8 @@ Legenda + notatki = szerokość kalendarza
 #bee-apiary-choices button,#bee-add-apiary,#bee-change-apiary{padding:12px;border-radius:9px;border:1px solid #b9952c;background:#fff0b8;font-size:16px;font-weight:bold;cursor:pointer}
 #bee-change-apiary{margin:8px 4px;width:auto}
 #gps-position-status{font-size:12px;padding:3px 8px;color:#345}
+/* Podświetlenie po kliknięciu „Dzisiaj” */
+.bee-today-focus { outline: 4px solid #e0a000 !important; outline-offset: -4px; box-shadow: inset 0 0 0 3px #fff !important; }
 </style>
 
 </head>
@@ -3171,16 +3173,19 @@ if (searchInput && resultsContainer) {
   // 📍 SCROLL DO DZIŚ
   // =========================
   function scrollToToday(){
-
-    const today = new Date();
-
-    const d = String(today.getDate()).padStart(2,"0");
-    const m = String(today.getMonth()+1).padStart(2,"0");
-
+    const now = new Date();
+    const d = String(now.getDate()).padStart(2, "0");
+    const m = String(now.getMonth()+1).padStart(2, "0");
     const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
-
-    if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
+    if (!el) return;
+    const cell = el.closest("td") || el;
+    document.querySelectorAll(".bee-today-focus").forEach(x => x.classList.remove("bee-today-focus"));
+    cell.classList.add("bee-today-focus");
+    document.getElementById("month-" + m)?.scrollIntoView({behavior:"smooth",block:"start"});
+    setTimeout(() => cell.scrollIntoView({behavior:"smooth",block:"center",inline:"center"}), 180);
+    setTimeout(() => cell.classList.remove("bee-today-focus"), 6500);
   }
+  window.scrollToToday = scrollToToday;
 // =========================
 // 📍 INTELIGENTNY GPS PASIEKI PRO
 // =========================
@@ -5096,26 +5101,41 @@ function initHiveManagement() {
 function stage5FinanceKey(){
   return "bee-finance-records:" + (currentApiary && currentApiary.id ? currentApiary.id : "default");
 }
+// Jednorazowa, bezstratna migracja starego wspólnego rejestru do Borysowszczyzny.
+// Nie usuwamy oryginałów; kopie są przechowywane w localStorage.
+function stage5MigrateLegacyFinance(){
+  const marker = "bee-finance-migration-borys-v2";
+  if (localStorage.getItem(marker) === "done") return;
+  const destination = "bee-finance-records:pasieka_2";
+  const sources = ["bee-finance-records:default", destination];
+  const all = new Map();
+  sources.forEach(key => {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return;
+    const backupKey = "bee-finance-backup-v2:" + key;
+    if (localStorage.getItem(backupKey) === null) localStorage.setItem(backupKey, raw);
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) throw new Error("Nieprawidłowy format danych finansowych: " + key);
+    parsed.forEach((item, index) => {
+      if (item && typeof item === "object") {
+        const keyId = item.id || ("legacy:" + JSON.stringify(item));
+        all.set(keyId, item);
+      }
+    });
+  });
+  localStorage.setItem(destination, JSON.stringify(Array.from(all.values())));
+  localStorage.setItem(marker, "done");
+}
 function stage5GetFinance(){
   try {
-    const activeValue = JSON.parse(localStorage.getItem(stage5FinanceKey()) || "[]");
-    const activeRecords = Array.isArray(activeValue) ? activeValue : [];
-    // Wpisy dodane przed ustaleniem lokalizacji mogły trafić do klucza default.
-    // Dołącz je bez duplikatów, aby nie znikały po wykryciu pasieki ani odświeżeniu.
-    if (currentApiary && currentApiary.id) {
-      const legacyValue = JSON.parse(localStorage.getItem("bee-finance-records:default") || "[]");
-      const legacyRecords = Array.isArray(legacyValue) ? legacyValue : [];
-      const byId = new Map();
-      [...legacyRecords, ...activeRecords].forEach((item, index) => {
-        if (item && typeof item === "object") byId.set(item.id || ("legacy-" + index + "-" + JSON.stringify(item)), item);
-      });
-      return Array.from(byId.values());
-    }
-    return activeRecords;
+    stage5MigrateLegacyFinance();
+    const records = JSON.parse(localStorage.getItem(stage5FinanceKey()) || "[]");
+    return Array.isArray(records) ? records : [];
   } catch(error){ console.warn("Nie można odczytać rejestru finansowego",error); return []; }
 }
 function stage5SaveFinance(records){
   try {
+    stage5MigrateLegacyFinance();
     localStorage.setItem(stage5FinanceKey(), JSON.stringify(records));
     return true;
   } catch(error) {
@@ -5278,23 +5298,25 @@ function initStage6(){
   syncCalendarYear();
   updateMarkers();
 
-// GPS uruchamia się dopiero po naciśnięciu przycisku przez użytkownika.
-
+// Przywróć preferencję GPS po odświeżeniu; uprawnienia kontroluje przeglądarka.
 const savedGPS = localStorage.getItem("gpsEnabled");
-
-if(savedGPS === "true"){
-
-  gpsEnabled = true;
-
-  const gpsBtn = document.getElementById("gps-toggle");
-
-  if(gpsBtn){
-    gpsBtn.innerHTML = "📍 GPS: ON";
-  }
-
-  // Nie pytaj o lokalizację automatycznie po uruchomieniu.
-  gpsEnabled = false;
-  gpsBtn && (gpsBtn.textContent = "📍 GPS: WŁĄCZ");
+const gpsRestoreButton = document.getElementById("gps-toggle");
+if (savedGPS === "true" && navigator.geolocation) {
+  if (gpsRestoreButton) gpsRestoreButton.textContent = "📍 GPS: SZUKAM…";
+  getGPSOnce(() => {
+    if (localStorage.getItem("gpsEnabled") !== "true") return;
+    gpsEnabled = true;
+    if (gpsRestoreButton) gpsRestoreButton.textContent = "📍 GPS: ON";
+    startLiveGPS();
+    startGPSSaveLoop();
+  }, error => {
+    gpsEnabled = false;
+    if (gpsRestoreButton) gpsRestoreButton.textContent = "📍 GPS: PONÓW";
+    console.warn("Przywracanie GPS:", error.message);
+    // Zachowujemy ustawienie ON; chwilowy brak sygnału nie oznacza wyłączenia GPS.
+  });
+} else if (gpsRestoreButton) {
+  gpsRestoreButton.textContent = "📍 GPS: OFF";
 }
 
   setTimeout(autoScaleCalendarText, 100);
