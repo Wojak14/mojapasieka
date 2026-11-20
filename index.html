@@ -4567,7 +4567,9 @@ function renderHiveCards() {
 }
 
 function beeUpdateVisibleHiveCount(actualCount) {
-  const borys = currentApiary?.id === "pasieka_2";
+  // Licznik jest taki sam w każdej pasiece: zlicza karty faktycznie
+  // wyświetlone po uwzględnieniu usuniętych kart i przypisania do pasieki.
+  // Zakres numeracji pozostaje niezależny (np. karta 28 nie znika przy 7 kartach).
   const input = document.getElementById("hive-card-count");
   const save = document.getElementById("hive-card-count-save");
   const label = document.querySelector('label[for="hive-card-count"]');
@@ -4579,17 +4581,17 @@ function beeUpdateVisibleHiveCount(actualCount) {
     counter = document.createElement("strong");
     counter.id = "bee-real-hive-count";
     counter.setAttribute("aria-live", "polite");
-    counter.style.cssText = "display:inline-block;width:auto;padding:5px 10px;background:#e8f5e9;border-radius:7px;color:#20582e";
+    counter.style.cssText = "display:inline-block;width:auto;padding:5px 10px;background:#e8f5e9;border-radius:7px;color:#20582e;margin-left:8px";
     input.insertAdjacentElement("afterend", counter);
   }
-  counter.textContent = String(actualCount);
-  // Zachowaj zakres numeracji w ukrytym polu: zmiana 28 na 7 ukryłaby ul 28.
-  input.hidden = borys;
-  if (save) save.hidden = borys;
-  counter.hidden = !borys;
-  label.textContent = borys ? "Liczba kart:" : "Zakres numerów kart:";
-  if (mainLabel) mainLabel.textContent = borys ? "Najwyższy numer karty:" : "Liczba uli:";
-  if (mainInput) mainInput.title = borys ? "To zakres numeracji, nie liczba kart. Rzeczywista liczba kart widoczna jest poniżej." : "";
+  counter.textContent = "Rzeczywista liczba kart: " + actualCount;
+  counter.hidden = false;
+  // W obu pasiekach można nadal zmieniać maksymalny numer karty.
+  input.hidden = false;
+  if (save) save.hidden = false;
+  label.textContent = "Najwyższy numer karty:";
+  if (mainLabel) mainLabel.textContent = "Zakres numeracji uli:";
+  if (mainInput) mainInput.title = "Zakres numerów, a nie rzeczywista liczba kart. Licznik widoczny jest obok kart.";
 }
 
 function loadHiveEditor() {
