@@ -470,12 +470,11 @@ Legenda + notatki = szerokość kalendarza
 #bee-stage6-panel .s6-low{border-color:#e4a1a1;background:#fff4f4}
 #bee-stage6-panel #s6-camera{width:100%;max-height:300px;background:#111;border-radius:10px;margin-top:8px}
 #bee-stage6-panel .s6-status{padding:9px;border-radius:8px;background:#f3f3f3;margin:8px 0}
-#bee-mobile-bar{position:fixed;left:6px;right:6px;width:auto;bottom:6px;z-index:1000;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:7px;background:rgba(255,255,255,.94);border:1px solid #ddd;border-radius:12px;box-shadow:0 2px 8px #0002;max-height:35vh;overflow-y:auto}
-#bee-mobile-bar button{touch-action:manipulation;border:0;border-radius:9px;padding:11px;background:#fbc02d;font-weight:bold}
+#bee-mobile-bar{position:fixed!important;left:6px;right:6px;bottom:max(6px,env(safe-area-inset-bottom));width:auto!important;z-index:9000;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:7px;background:rgba(255,255,255,.97);border:1px solid #ddd;border-radius:12px;box-shadow:0 2px 12px #0003;max-height:36vh;overflow-y:auto}
+#bee-mobile-bar button{touch-action:manipulation;cursor:pointer;border:0;border-radius:9px;padding:11px;background:#fbc02d;font-weight:bold}
 @media(max-width:520px){#bee-stage6-panel{margin:14px 5px;padding:12px}#bee-stage6-panel .s6-row{flex-direction:column}#bee-stage6-panel .s6-row button{align-self:flex-start}#bee-mobile-bar button{flex:1;min-width:28%}}
 
 
-body{padding-bottom:125px!important}
 /* MAPA PASIEKI — lokalizacje poszczególnych uli */
 #apiary-hive-map-panel{margin:12px 0;padding:10px;border:1px solid #c9d9c5;border-radius:9px;background:#f8fff7}
 #apiary-hive-map{width:100%;height:330px;min-height:260px;border:1px solid #cbd5c0;border-radius:8px;background:#edf3e9;z-index:1}
@@ -493,6 +492,7 @@ body{padding-bottom:125px!important}
 #gps-position-status{font-size:12px;padding:3px 8px;color:#345}
 /* Podświetlenie po kliknięciu „Dzisiaj” */
 .bee-today-focus { outline: 4px solid #e0a000 !important; outline-offset: -4px; box-shadow: inset 0 0 0 3px #fff !important; }
+body.bee-has-fixed-bar{padding-bottom:155px!important} #bee-mobile-bar button{pointer-events:auto!important;position:relative;z-index:1} @media(max-width:520px){body.bee-has-fixed-bar{padding-bottom:215px!important}}
 </style>
 
 </head>
@@ -2404,40 +2404,60 @@ font-weight:bold;
   <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-top">⬆ Góra</button>
 </div>
 <script>
-/* Niezależna obsługa paska: działa nawet jeśli inicjalizacja pozostałych modułów przerwie się błędem. */
+/* BEE MOBILE BAR: autonomiczna obsługa, bez zależności od innych modułów. */
 (function(){
-  const bar=document.getElementById('bee-mobile-bar');
-  if(!bar)return;
-  const go=id=>{const target=document.getElementById(id);if(target){target.scrollIntoView({behavior:'smooth',block:'start'});return true;}return false;};
-  bar.addEventListener('click',function(event){
-    const btn=event.target.closest('button');
-    if(!btn||!bar.contains(btn))return;
-    switch(btn.id){
-      case 's6-quick-stock':go('bee-stage6-panel');break;
-      case 's6-quick-scan':
-        go('s6-scan-area') || go('bee-stage6-panel');
-        if(typeof s6StartScan==='function')s6StartScan();
-        else {const scan=document.getElementById('s6-scan');if(scan)scan.click();}
-        break;
-      case 's6-quick-today':
-        if(typeof window.scrollToToday==='function')window.scrollToToday();
-        else {const d=new Date(),m=String(d.getMonth()+1).padStart(2,'0');go('month-'+m);}
-        break;
-      case 's6-quick-hives':
-        if(typeof window.scrollToCurrentApiaryHives==='function')window.scrollToCurrentApiaryHives();
-        else go('hive-management');
-        break;
-      case 's6-quick-apiary':
-        if(typeof showApiaryChooser==='function')showApiaryChooser();
-        else document.getElementById('bee-change-apiary')?.click();
-        break;
-      case 's6-quick-analytics':go('bee-stage5-panel');break;
+  'use strict';
+  function goTo(id){
+    var target=document.getElementById(id);
+    if(!target){alert('Nie znaleziono sekcji: '+id);return;}
+    target.scrollIntoView({block:'start',behavior:'auto'});
+  }
+  function action(id){
+    switch(id){
+      case 's6-quick-stock':goTo('bee-stage6-panel');break;
+      case 's6-quick-analytics':goTo('bee-stage5-panel');break;
+      case 's6-quick-hives':goTo('hive-management');break;
       case 's6-quick-top':
-        if(typeof beeScrollToTop==='function')beeScrollToTop();
-        else window.scrollTo({top:0,left:0,behavior:'smooth'});
+        window.scrollTo(0,0);
+        (document.scrollingElement||document.documentElement).scrollTop=0;
+        document.body.scrollTop=0;break;
+      case 's6-quick-today':{
+        var now=new Date(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');
+        var cell=document.querySelector('.day-number[data-month="'+month+'"][data-day="'+day+'"]');
+        if(cell)cell.scrollIntoView({block:'center',behavior:'auto'});
+        else goTo('month-'+month);
+        break;
+      }
+      case 's6-quick-apiary':{
+        var choose=document.getElementById('bee-change-apiary');
+        if(choose)choose.click();
+        else {var dialog=document.getElementById('bee-apiary-start');if(dialog){dialog.hidden=false;dialog.style.display='flex';}}
+        break;
+      }
+      case 's6-quick-scan':
+        goTo('bee-stage6-panel');
+        var scan=document.getElementById('s6-scan');
+        if(scan)scan.click();
+        else alert('Nie znaleziono skanera QR.');
         break;
     }
-  });
+  }
+  function setup(){
+    var bar=document.getElementById('bee-mobile-bar');
+    if(!bar||bar.dataset.beeWired==='yes')return;
+    bar.dataset.beeWired='yes';
+    document.body.classList.add('bee-has-fixed-bar');
+    /* Umieszczenie bezpośrednio w body usuwa problemy z nakładkami i przewijanymi rodzicami. */
+    if(bar.parentElement!==document.body)document.body.appendChild(bar);
+    bar.querySelectorAll('button').forEach(function(btn){
+      btn.addEventListener('click',function(ev){
+        ev.preventDefault();ev.stopPropagation();
+        try{action(btn.id);}catch(err){console.error('BEE pasek:',err);alert('Błąd przycisku: '+err.message);}
+      });
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});
+  else setup();
 })();
 </script>
 
@@ -4424,6 +4444,18 @@ function getHiveProfile(number) {
   };
 }
 
+
+// Most między głównym modułem a historią przeglądów, zadaniami i paskiem mobilnym.
+// Funkcje są definiowane wewnątrz DOMContentLoaded, dlatego bez tego mostu
+// pozostałe skrypty zgłaszają ReferenceError i nie mogą zapisywać danych.
+Object.defineProperty(window, 'selectedHiveNumber', {configurable:true, get:()=>selectedHiveNumber});
+Object.defineProperty(window, 'currentApiary', {configurable:true, get:()=>currentApiary});
+Object.assign(window, {
+  getHiveProfiles, getHiveProfile, saveHiveProfiles, getDeletedHiveNumbers,
+  renderHiveCards, showApiaryChooser, scrollToToday,
+  s6StartScan, s6Render, stage5Render
+});
+
 function hiveCalendarEntries(number) {
   const entries = [];
   document.querySelectorAll("td .day-number").forEach(dayElement => {
@@ -5533,16 +5565,6 @@ if (savedGPS === "true" && navigator.geolocation) {
   if(typeof generateHoneyForecast === "function") generateHoneyForecast();
   if(typeof runAIModule === "function") runAIModule();
   if(typeof loadApiaryData === "function") loadApiaryData();
-
-  // Most dla osobnych skryptów historii przeglądów i listy prac.
-  // Nie zmienia kluczy localStorage ani danych użytkownika.
-  Object.defineProperty(window, 'currentApiary', {configurable:true, get:()=>currentApiary});
-  Object.defineProperty(window, 'selectedHiveNumber', {configurable:true, get:()=>selectedHiveNumber});
-  window.getHiveProfiles = getHiveProfiles;
-  window.getHiveProfile = getHiveProfile;
-  window.saveHiveProfiles = saveHiveProfiles;
-  window.getDeletedHiveNumbers = getDeletedHiveNumbers;
-  window.renderHiveCards = renderHiveCards;
   initHiveManagement();
   initStage5();
   initStage6();
@@ -5846,6 +5868,66 @@ if ("serviceWorker" in navigator) {
  }
  window.beeRenderTasks=()=>{if(editing&&editingApiary!==apiary())reset();render();};
  document.addEventListener('DOMContentLoaded',()=>{$('save')?.addEventListener('click',save);$('cancel')?.addEventListener('click',()=>{reset();msg('Anulowano edycję.');});$('filter')?.addEventListener('change',render);reset();render();});
+})();
+</script>
+
+<script>
+/* GPS niezależny od inicjalizacji pozostałych modułów. */
+(function(){
+  'use strict';
+  let watchId=null, requestId=0, active=false;
+  const button=()=>document.getElementById('gps-toggle');
+  const box=()=>document.getElementById('location-box');
+  function status(message){
+    const el=box(); if(!el)return;
+    let line=document.getElementById('bee-gps-feedback');
+    if(!line){line=document.createElement('div');line.id='bee-gps-feedback';line.style.cssText='margin-top:8px;font-weight:bold;white-space:pre-line';el.appendChild(line);}
+    line.textContent=message;
+  }
+  function setButton(value){const b=button();if(b)b.textContent='📍 GPS: '+value;}
+  function stop(){
+    active=false;requestId++;
+    if(watchId!==null){try{navigator.geolocation.clearWatch(watchId);}catch(e){} watchId=null;}
+    try{localStorage.setItem('gpsEnabled','false');}catch(e){}
+    setButton('OFF');status('GPS wyłączony.');
+  }
+  function onPosition(pos,token){
+    if(!active||token!==requestId)return;
+    const lat=Number(pos.coords.latitude),lon=Number(pos.coords.longitude);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+    try{localStorage.setItem('lastLat',String(lat));localStorage.setItem('lastLon',String(lon));localStorage.setItem('gpsEnabled','true');}catch(e){}
+    setButton('ON');
+    const precision=Number.isFinite(pos.coords.accuracy)?' (dokładność około '+Math.round(pos.coords.accuracy)+' m)':'';
+    status('📍 Pozycja GPS: '+lat.toFixed(5)+', '+lon.toFixed(5)+precision);
+    try{if(typeof window.detectNearestApiary==='function')window.detectNearestApiary(lat,lon);}catch(e){console.warn('GPS — pasieka:',e);}
+  }
+  function errorMessage(e){
+    if(e&&e.code===1)return 'Odmowa dostępu do lokalizacji. W ustawieniach strony zezwól na lokalizację i sprawdź uprawnienia przeglądarki w telefonie.';
+    if(e&&e.code===2)return 'Nie można określić pozycji. Włącz lokalizację telefonu i spróbuj na otwartej przestrzeni.';
+    if(e&&e.code===3)return 'Przekroczono czas oczekiwania na GPS. Spróbuj ponownie.';
+    return 'Błąd lokalizacji: '+(e&&e.message||'nieznany');
+  }
+  function start(){
+    if(!window.isSecureContext){setButton('OFF');status('GPS wymaga HTTPS (np. GitHub Pages).');return;}
+    if(!navigator.geolocation){setButton('OFF');status('Przeglądarka nie obsługuje GPS.');return;}
+    active=true;const token=++requestId;setButton('SZUKAM…');status('Trwa pobieranie pozycji. Zezwól na lokalizację, jeśli telefon zapyta.');
+    function fail(e){if(token!==requestId||!active)return;
+      // Ponów raz z mniejszą dokładnością przy przekroczeniu czasu lub niedostępności pozycji.
+      if((e.code===2||e.code===3)&&!fail.retried){fail.retried=true;status('Ponawiam wyszukiwanie pozycji w trybie oszczędnym…');navigator.geolocation.getCurrentPosition(success,fail,{enableHighAccuracy:false,timeout:30000,maximumAge:60000});return;}
+      active=false;setButton('PONÓW');status('⚠️ '+errorMessage(e));
+    }
+    function success(pos){onPosition(pos,token);if(!active||token!==requestId)return;
+      if(watchId!==null)navigator.geolocation.clearWatch(watchId);
+      watchId=navigator.geolocation.watchPosition(p=>onPosition(p,token),e=>{if(active&&token===requestId)status('⚠️ Aktualizacja GPS: '+errorMessage(e));},{enableHighAccuracy:false,timeout:30000,maximumAge:30000});
+    }
+    navigator.geolocation.getCurrentPosition(success,fail,{enableHighAccuracy:true,timeout:20000,maximumAge:15000});
+  }
+  function init(){const b=button();if(!b)return;
+    // Obsłuż kliknięcie przed starszymi procedurami, które mogły się nie zainicjalizować.
+    b.addEventListener('click',function(e){e.stopImmediatePropagation();e.preventDefault();if(active)stop();else start();},true);
+    if(!active)setButton('OFF');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 </body>
