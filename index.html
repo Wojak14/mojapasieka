@@ -2009,7 +2009,13 @@ font-weight:bold;
     <div id="apiary-hive-map"></div>
     <div id="apiary-hive-map-list"></div>
   </div>
-  <div id="hive-health-summary" aria-live="polite" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;padding:8px;border:1px solid #e5d8aa;border-radius:8px;background:#fffaf0;font-size:13px;"></div>
+  <section id="bee-health-score-panel" style="margin:12px 0;padding:12px;border:1px solid #d9e5d4;border-radius:10px;background:#f8fff7">
+  <h3 style="margin:0 0 7px">🐝 Ocena kondycji rodzin (0–100)</h3>
+  <p style="font-size:13px;margin:0 0 9px">Pomocnicza ocena z danych kart uli. Brak danych nie oznacza dobrej kondycji; wynik nie zastępuje przeglądu ani badania warrozy.</p>
+  <button type="button" id="bee-health-score-refresh">🔄 Odśwież ocenę rodzin</button>
+  <div id="bee-health-score-results" aria-live="polite" style="margin-top:10px"></div>
+</section>
+<div id="hive-health-summary" aria-live="polite" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;padding:8px;border:1px solid #e5d8aa;border-radius:8px;background:#fffaf0;font-size:13px;"></div>
   <div id="hive-card-list" aria-live="polite"></div>
   <div id="hive-editor">
     <h4 id="hive-editor-title" style="margin:0 0 9px;">Karta ula 1</h4>
@@ -2383,8 +2389,11 @@ font-weight:bold;
  <div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0">
   <button type="button" id="bee-task-save">➕ Dodaj zadanie</button>
   <button type="button" id="bee-task-cancel" hidden>✖ Anuluj edycję</button>
+  <button type="button" id="bee-task-export-all" class="secondary">📅 Eksportuj wszystkie terminy (.ics)</button>
   <label style="margin-left:auto">Pokaż <select id="bee-task-filter"><option value="open">Do wykonania</option><option value="all">Wszystkie</option><option value="done">Wykonane</option></select></label>
  </div>
+ <p style="font-size:13px;margin:5px 0">Przy zadaniu naciśnij „🔔 Kalendarz Google”, ustaw powiadomienie w formularzu i zapisz wydarzenie (wymaga internetu). Zbiorczy eksport .ics pozostaje opcją dodatkową. Zmiana zadania w aplikacji nie aktualizuje automatycznie wydarzenia w kalendarzu.</p>
+ <div style="display:flex;flex-wrap:wrap;gap:10px;margin:8px 0"><label>Godzina <input id="bee-task-reminder-time" type="time" value="09:00"></label><label>Przypomnij <select id="bee-task-reminder-before"><option value="0">O godzinie wydarzenia</option><option value="15">15 minut wcześniej</option><option value="60">1 godzinę wcześniej</option><option value="1440" selected>1 dzień wcześniej</option></select></label></div>
  <div id="bee-task-status" role="status" aria-live="polite" style="font-size:13px;margin:8px 0"></div>
  <div id="bee-task-summary" style="font-weight:bold;margin:8px 0"></div>
  <div id="bee-task-list"></div>
@@ -5880,6 +5889,55 @@ if ("serviceWorker" in navigator) {
   }
   try{write(rows);if(editing===id)reset();render();msg(action==='delete'?'Zadanie usunięte.':'Zadanie zaktualizowane.');}catch(e){msg('Błąd zapisu: '+e.message);}
  }
+ // Funkcja 9: standardowy plik iCalendar; przypomnienia uruchamia aplikacja kalendarza Androida.
+ function icsEscape(value){return String(value??'').replace(/\\/g,'\\\\').replace(/\r?\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');}
+ function icsFold(line){const chars=Array.from(line);let lines=[],chunk='',bytes=0;for(const ch of chars){const size=new TextEncoder().encode(ch).length;if(bytes+size>73){lines.push(chunk);chunk=' ';bytes=1;}chunk+=ch;bytes+=size;}lines.push(chunk);return lines.join('\r\n');}
+ function exportCalendar(tasks){
+  const time=($('reminder-time')?.value||'09:00');if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)){msg('Wybierz poprawną godzinę przypomnienia.');return;}
+  const before=Number($('reminder-before')?.value||0);if(![0,15,60,1440].includes(before)){msg('Nieprawidłowe wyprzedzenie alarmu.');return;}
+  const apiaryName=String((typeof currentApiary!=='undefined'&&(currentApiary?.name||currentApiary?.id))||'Pasieka');
+  const now=new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//BEE ASSISTANT PRO//Przypomnienia Android//PL','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  let count=0;
+  for(const task of tasks){
+   if(task.status==='done'||!/^\d{4}-\d{2}-\d{2}$/.test(task.date||''))continue;
+   const [y,m,d]=task.date.split('-').map(Number);const valid=new Date(Date.UTC(y,m-1,d));if(valid.getUTCFullYear()!==y||valid.getUTCMonth()!==m-1||valid.getUTCDate()!==d)continue;
+   const date=task.date.replace(/-/g,'');const hhmm=time.replace(':','');
+   const summary='🐝 '+task.title+' — '+apiaryName+(task.hive?' (ul '+task.hive+')':'');
+   const desc='Pasieka: '+apiaryName+'\n'+(task.hive?'Ul: '+task.hive+'\n':'')+'Priorytet: '+(task.priority||'normalny')+(task.notes?'\nUwagi: '+task.notes:'');
+   const uid=encodeURIComponent(apiary()+'-'+task.id).replace(/%/g,'')+'@bee-assistant-pro.local';
+   lines.push('BEGIN:VEVENT','UID:'+uid,'DTSTAMP:'+now,'DTSTART:'+date+'T'+hhmm+'00','DTEND:'+date+'T'+(function(){const [h,mi]=time.split(':').map(Number);const mins=h*60+mi+30;return String(Math.floor(mins/60)%24).padStart(2,'0')+String(mins%60).padStart(2,'0')+'00';})());
+   // Wydarzenie 30-minutowe; w razie godziny 23:30+ data końca przechodzi na kolejny dzień.
+   if(Number(time.slice(0,2))===23&&Number(time.slice(3))>=30){lines.pop();const next=new Date(Date.UTC(y,m-1,d+1));lines.push('DTEND:'+next.toISOString().slice(0,10).replace(/-/g,'')+'T00'+String((Number(time.slice(3))+30)%60).padStart(2,'0')+'00');}
+   lines.push('SUMMARY:'+icsEscape(summary),'DESCRIPTION:'+icsEscape(desc),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEscape(summary),'TRIGGER:-PT'+before+'M','END:VALARM','END:VEVENT');count++;
+  }
+  if(!count){msg('Brak niewykonanych zadań z poprawną datą do eksportu.');return;}
+  lines.push('END:VCALENDAR');
+  const blob=new Blob([lines.map(icsFold).join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='BEE_ASYSTENT_'+apiary().replace(/[^a-zA-Z0-9_-]/g,'_')+'_przypomnienia.ics';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);
+  msg('Pobrano '+count+' terminów. Otwórz plik .ics i zaimportuj do kalendarza Androida. Sprawdź, czy alarmy zostały zachowane.');
+ }
+ // Bezpośrednie tworzenie wydarzenia w Kalendarzu Google (bez pliku ICS).
+ function openGoogleCalendar(task){
+  if(!task||task.status==='done'||!/^\d{4}-\d{2}-\d{2}$/.test(task.date||'')){msg('Zadanie nie ma poprawnej daty.');return;}
+  const [y,m,d]=task.date.split('-').map(Number);
+  const valid=new Date(Date.UTC(y,m-1,d));
+  if(valid.getUTCFullYear()!==y||valid.getUTCMonth()!==m-1||valid.getUTCDate()!==d){msg('Niepoprawna data zadania.');return;}
+  const time=$('reminder-time')?.value||'09:00';
+  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)){msg('Wybierz poprawną godzinę.');return;}
+  const start=new Date(y,m-1,d,Number(time.slice(0,2)),Number(time.slice(3)));
+  const end=new Date(start.getTime()+30*60000);
+  const fmt=v=>[v.getFullYear(),String(v.getMonth()+1).padStart(2,'0'),String(v.getDate()).padStart(2,'0')].join('')+'T'+[String(v.getHours()).padStart(2,'0'),String(v.getMinutes()).padStart(2,'0'),'00'].join('');
+  const apiaryName=String((typeof currentApiary!=='undefined'&&(currentApiary?.name||currentApiary?.id))||'Pasieka');
+  const title='🐝 '+task.title+' — '+apiaryName+(task.hive?' (ul '+task.hive+')':'');
+  const details='Pasieka: '+apiaryName+'\n'+(task.hive?'Ul: '+task.hive+'\n':'')+'Priorytet: '+(task.priority||'normalny')+(task.notes?'\nUwagi: '+task.notes:'')+'\nUstaw powiadomienie w Kalendarzu Google przed zapisaniem.';
+  const params=new URLSearchParams({action:'TEMPLATE',text:title,dates:fmt(start)+'/'+fmt(end),details,ctz:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Warsaw'});
+  // Nawigacja w tym samym kontekście działa także przy blokadzie wyskakujących okien PWA.
+  const url='https://calendar.google.com/calendar/render?'+params.toString();
+  const win=window.open(url,'_blank','noopener,noreferrer');
+  if(!win){if(confirm('Przejść do Kalendarza Google, aby zapisać przypomnienie?'))window.location.href=url;}
+  msg('Otworzono formularz Kalendarza Google. Ustaw powiadomienie i naciśnij Zapisz. Wymagany internet.');
+ }
  function button(label,callback){const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='margin:4px;padding:8px;border:1px solid #c49a20;border-radius:7px;background:#fff1bd';b.addEventListener('click',callback);return b;}
  function render(){
   if(!$('list'))return;
@@ -5893,12 +5951,13 @@ if ("serviceWorker" in navigator) {
    const details=document.createElement('div');details.style.cssText='font-size:13px;margin:5px 0;white-space:pre-wrap';details.textContent='Termin: '+(task.date||'brak')+' · '+(task.hive?'Ul '+task.hive:'Cała pasieka')+' · Priorytet: '+(task.priority||'normalny')+(task.date<today()&&task.status!=='done'?' · ⚠️ Po terminie':'')+(task.notes?'\n'+task.notes:'');item.append(details);
    item.append(button(task.status==='done'?'↩ Przywróć':'✅ Wykonane',()=>update(task.id,'done')));
    if(task.status!=='done')item.append(button('📅 Przełóż +7 dni',()=>update(task.id,'postpone')));
+   if(task.status!=='done')item.append(button('🔔 Kalendarz Google',()=>openGoogleCalendar(task)));
    item.append(button('✏️ Edytuj',()=>{editing=task.id;editingApiary=apiary();$('title').value=task.title||'';$('date').value=task.date||today();$('hive').value=task.hive||'';$('priority').value=task.priority||'normalny';$('notes').value=task.notes||'';$('save').textContent='💾 Zapisz zmiany';$('cancel').hidden=false;$('title').scrollIntoView({behavior:'smooth',block:'center'});msg('Edytujesz wybrane zadanie.');}));
    item.append(button('🗑️ Usuń',()=>update(task.id,'delete')));list.append(item);
   });
  }
  window.beeRenderTasks=()=>{if(editing&&editingApiary!==apiary())reset();render();};
- document.addEventListener('DOMContentLoaded',()=>{$('save')?.addEventListener('click',save);$('cancel')?.addEventListener('click',()=>{reset();msg('Anulowano edycję.');});$('filter')?.addEventListener('change',render);reset();render();});
+ document.addEventListener('DOMContentLoaded',()=>{$('save')?.addEventListener('click',save);$('cancel')?.addEventListener('click',()=>{reset();msg('Anulowano edycję.');});$('filter')?.addEventListener('change',render);$('export-all')?.addEventListener('click',()=>exportCalendar(read()));reset();render();});
 })();
 </script>
 
@@ -5959,6 +6018,82 @@ if ("serviceWorker" in navigator) {
     if(!active)setButton('OFF');
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
+<script>
+/* BEE ASSISTANT PRO — pomocnicza ocena kondycji, tylko odczyt danych */
+(function () {
+  'use strict';
+  function calculate(p) {
+    const checks = [p.strength,p.brood,p.stores,p.varroa,p.queenStatus,p.status];
+    const answered = checks.filter(v => String(v || '').trim() && String(v).toLowerCase() !== 'obserwacja').length;
+    if (answered < 2) return {score:null, note:'Za mało danych (uzupełnij przynajmniej 2 pola karty)'};
+    let score=75;
+    const weights={
+      strength:{'słaba':-22,'średnia':-9,'silna':8,'bardzo silna':12},
+      brood:{'brak':-23,'mało':-12,'prawidłowy':8,'dużo':10},
+      stores:{'małe':-18,'wystarczające':5,'duże':7},
+      varroa:{'niska':5,'średnia':-12,'wysoka':-35},
+      status:{'dobra':8,'wymaga kontroli':-20,'do połączenia':-40,'stracona':-75}
+    };
+    Object.keys(weights).forEach(key=>{const v=String(p[key]||'').toLowerCase();score+=weights[key][v]||0;});
+    const queen=String(p.queenStatus||'').toLowerCase();
+    if (queen.includes('brak') || queen.includes('bezmatecz')) score-=25;
+    else if (queen.includes('podejrzenie')) score-=15;
+    const signs=String(p.diseaseSigns||'').toLowerCase();
+    if (signs.includes('podejrzenie') || signs.includes('niepokojące')) score-=20;
+    if (String(p.status||'').toLowerCase()==='stracona') score=0;
+    return {score:Math.max(0,Math.min(100,Math.round(score))),note:answered<4?'Ocena wstępna — część danych nieuzupełniona':'Ocena orientacyjna'};
+  }
+  function refresh(){
+    const box=document.getElementById('bee-health-score-results');
+    if(!box)return;
+    if(typeof window.getHiveProfiles!=='function'||typeof window.getDeletedHiveNumbers!=='function'){
+      box.textContent='Karty uli nie są jeszcze gotowe.';return;
+    }
+    const profiles=window.getHiveProfiles();
+    const deleted=window.getDeletedHiveNumbers();
+    const countInput=document.getElementById('hive-card-count');
+    const limit=Math.min(100,Math.max(1,Number(countInput&&countInput.value)||25));
+    box.replaceChildren();
+    let total=0;
+    for(let n=1;n<=limit;n++){
+      if(deleted.has(n) || (typeof window.beeHiveBelongsHere==='function' && !window.beeHiveBelongsHere(n)))continue;
+      // Ta sama reguła przynależności co na liście kart uli.
+      const owner=localStorage.getItem('bee-hive-owner:'+n);
+      const apiary=window.currentApiary&&window.currentApiary.id;
+      if(owner && owner!==apiary)continue;
+      if(!owner && apiary==='pasieka_2' && ![11,12,13,14,16,17,28].includes(n))continue;
+      if(!owner && apiary==='pasieka_1' && [11,12,13,14,16,17,28].includes(n))continue;
+      const result=calculate(profiles[String(n)]||{});
+      const line=document.createElement('div');
+      line.style.cssText='padding:9px 0;border-bottom:1px solid #e0e9da;font-size:14px';
+      const strong=document.createElement('strong');
+      strong.textContent='Ul '+n+' — '+(result.score===null?'brak oceny':result.score+'/100');
+      const description=document.createElement('div');
+      description.style.cssText='font-size:12px;color:#555;margin-top:3px';
+      description.textContent=result.note;
+      line.append(strong,description);
+      if(result.score!==null){
+        const bar=document.createElement('div');bar.style.cssText='height:7px;background:#e5e7eb;border-radius:5px;margin-top:6px;overflow:hidden';
+        const fill=document.createElement('div');fill.style.width=result.score+'%';fill.style.height='100%';
+        fill.style.background=result.score>=75?'#39804a':result.score>=45?'#d49a24':'#c4493d';
+        bar.appendChild(fill);line.appendChild(bar);
+      }
+      box.appendChild(line);total++;
+    }
+    if(!total)box.textContent='Brak kart w wybranej pasiece.';
+  }
+  function init(){
+    const button=document.getElementById('bee-health-score-refresh');
+    if(!button)return;
+    button.addEventListener('click',refresh);
+    document.addEventListener('click',e=>{
+      if(e.target.closest('#hive-card-list, #apiary-chooser, #hive-save, #hive-delete, #hive-renumber-save'))setTimeout(refresh,120);
+    });
+    refresh();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
 </body>
