@@ -4561,6 +4561,35 @@ function renderHiveCards() {
     card.append(title, status, details, button);
     list.appendChild(card);
   }
+  // Liczba kart to liczba faktycznie widocznych rekordów, a nie najwyższy numer ula.
+  // Np. Borysowszczyzna: 11, 12, 13, 14, 16, 17, 28 => 7 kart.
+  beeUpdateVisibleHiveCount(list.children.length);
+}
+
+function beeUpdateVisibleHiveCount(actualCount) {
+  const borys = currentApiary?.id === "pasieka_2";
+  const input = document.getElementById("hive-card-count");
+  const save = document.getElementById("hive-card-count-save");
+  const label = document.querySelector('label[for="hive-card-count"]');
+  const mainLabel = document.querySelector('label[for="hivesCount"]');
+  const mainInput = document.getElementById("hivesCount");
+  if (!input || !label) return;
+  let counter = document.getElementById("bee-real-hive-count");
+  if (!counter) {
+    counter = document.createElement("strong");
+    counter.id = "bee-real-hive-count";
+    counter.setAttribute("aria-live", "polite");
+    counter.style.cssText = "display:inline-block;width:auto;padding:5px 10px;background:#e8f5e9;border-radius:7px;color:#20582e";
+    input.insertAdjacentElement("afterend", counter);
+  }
+  counter.textContent = String(actualCount);
+  // Zachowaj zakres numeracji w ukrytym polu: zmiana 28 na 7 ukryłaby ul 28.
+  input.hidden = borys;
+  if (save) save.hidden = borys;
+  counter.hidden = !borys;
+  label.textContent = borys ? "Liczba kart:" : "Zakres numerów kart:";
+  if (mainLabel) mainLabel.textContent = borys ? "Najwyższy numer karty:" : "Liczba uli:";
+  if (mainInput) mainInput.title = borys ? "To zakres numeracji, nie liczba kart. Rzeczywista liczba kart widoczna jest poniżej." : "";
 }
 
 function loadHiveEditor() {
