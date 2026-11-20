@@ -2349,6 +2349,17 @@ font-weight:bold;
   <div id="s6-scan-area" hidden><video id="s6-camera" playsinline muted></video><div id="s6-scan-result" class="s6-status">Uruchamianie aparatu…</div><button type="button" id="s6-stop-scan" class="danger">Zatrzymaj skaner</button></div>
   <p style="font-size:.85rem;color:#666">Skanowanie wymaga obsługi BarcodeDetector przez przeglądarkę i zgody na aparat (zwykle HTTPS). Jeśli urządzenie nie obsługuje skanera, można nadal wyszukać ul ręcznie w kartach. Aplikacja działa offline w zakresie zapisanych danych, gdy Service Worker został wcześniej poprawnie zainstalowany.</p>
 </section>
+
+<section id="bee-backup-panel" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;">
+  <h2 style="margin-top:0;color:#654b13">💾 Kopia bezpieczeństwa obu pasiek</h2>
+  <p>Eksport obejmuje wszystkie zapisane dane aplikacji w tej przeglądarce, w tym nagrania głosowe. Przechowuj plik w bezpiecznym miejscu.</p>
+  <button type="button" id="bee-backup-export" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬇ Pobierz pełną kopię</button>
+  <label style="display:block;margin-top:14px;font-weight:bold" for="bee-backup-file">Przywróć kopię z pliku JSON</label>
+  <input type="file" id="bee-backup-file" accept=".json,application/json" style="margin:8px 0;max-width:100%">
+  <button type="button" id="bee-backup-import" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬆ Przywróć brakujące dane</button>
+  <p style="font-size:13px;color:#555">Bezpieczne przywracanie: istniejące wpisy i nagrania nie są nadpisywane ani usuwane. Aby zastąpić już istniejące dane, potrzebny będzie osobny tryb przywracania.</p>
+  <div id="bee-backup-status" role="status" aria-live="polite" style="font-size:13px;margin-top:8px"></div>
+</section>
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
   <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-top">⬆ Góra</button>
 </div>
@@ -5512,6 +5523,99 @@ if ("serviceWorker" in navigator) {
       .catch(error => console.error("Błąd Service Workera:", error));
   });
 }
+
+
+// ETAP 7: pełny eksport localStorage oraz nagrań z IndexedDB; import wyłącznie brakujących danych.
+(function(){
+  const status = document.getElementById('bee-backup-status');
+  const report = message => { if(status) status.textContent = message; };
+  const fileInput = document.getElementById('bee-backup-file');
+  const bytesToBase64 = bytes => {
+    let binary=''; const chunk=16384;
+    for(let i=0;i<bytes.length;i+=chunk) binary+=String.fromCharCode(...bytes.subarray(i,i+chunk));
+    return btoa(binary);
+  };
+  const base64ToBytes = value => {
+    const binary=atob(value); const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+    return bytes;
+  };
+  function getAllVoice(db){
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('voiceNotes','readonly');
+      const req=tx.objectStore('voiceNotes').getAll();
+      req.onsuccess=()=>resolve(req.result||[]);
+      req.onerror=()=>reject(req.error);
+      tx.onerror=()=>reject(tx.error);
+    });
+  }
+  function putMissingVoice(db,items){
+    return new Promise((resolve,reject)=>{
+      const tx=db.transaction('voiceNotes','readwrite');
+      const store=tx.objectStore('voiceNotes');
+      let added=0;
+      items.forEach(item=>{
+        const req=store.get(item.key);
+        req.onsuccess=()=>{ if(!req.result){ store.put(item); added++; } };
+      });
+      tx.oncomplete=()=>resolve(added);
+      tx.onerror=()=>reject(tx.error||new Error('Błąd zapisu nagrań'));
+      tx.onabort=()=>reject(tx.error||new Error('Przerwano zapis nagrań'));
+    });
+  }
+  document.getElementById('bee-backup-export')?.addEventListener('click',async function(){
+    this.disabled=true; report('Tworzenie kopii — proszę czekać…');
+    try{
+      const storage={};
+      for(let i=0;i<localStorage.length;i++){
+        const key=localStorage.key(i); storage[key]=localStorage.getItem(key);
+      }
+      const db=await openVoiceNotesDb();
+      const records=await getAllVoice(db);
+      const voice=[];
+      for(const rec of records){
+        if(!(rec.blob instanceof Blob)) throw new Error('Nie można odczytać jednego z nagrań. Eksport przerwany.');
+        voice.push({key:rec.key,dateKey:rec.dateKey,mimeType:rec.mimeType||rec.blob.type||'audio/webm',updatedAt:rec.updatedAt,base64:bytesToBase64(new Uint8Array(await rec.blob.arrayBuffer()))});
+      }
+      const backup={format:'bee-assistant-pro-backup',version:1,createdAt:new Date().toISOString(),storage,voice};
+      const url=URL.createObjectURL(new Blob([JSON.stringify(backup)],{type:'application/json'}));
+      const a=document.createElement('a'); a.href=url; a.download='kopia-pasieki-'+new Date().toISOString().slice(0,10)+'.json';
+      document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+      report('Kopia gotowa: '+Object.keys(storage).length+' wpisów pamięci i '+voice.length+' nagrań. Zapisz pobrany plik w bezpiecznym miejscu.');
+    }catch(err){console.error(err);report('Błąd eksportu: '+err.message);}
+    finally{this.disabled=false;}
+  });
+  document.getElementById('bee-backup-import')?.addEventListener('click',async function(){
+    const file=fileInput?.files?.[0];if(!file){report('Najpierw wybierz plik kopii JSON.');return;}
+    this.disabled=true; report('Sprawdzanie kopii…');
+    try{
+      const data=JSON.parse(await file.text());
+      if(data?.format!=='bee-assistant-pro-backup'||data.version!==1||!data.storage||typeof data.storage!=='object'||Array.isArray(data.storage)||!Array.isArray(data.voice))throw new Error('Nieprawidłowy format kopii.');
+      const keys=Object.keys(data.storage);
+      if(keys.length>100000||data.voice.length>10000)throw new Error('Kopia przekracza dopuszczalną liczbę rekordów.');
+      for(const key of keys){if(typeof data.storage[key]!=='string')throw new Error('Nieprawidłowy wpis pamięci.');}
+      const voice=[];const seen=new Set();
+      for(const item of data.voice){
+        if(!item||typeof item.key!=='string'||!item.key||typeof item.base64!=='string'||seen.has(item.key))throw new Error('Nieprawidłowy wpis nagrania.');
+        seen.add(item.key);
+        const bytes=base64ToBytes(item.base64);
+        voice.push({key:item.key,dateKey:item.dateKey||'',mimeType:item.mimeType||'audio/webm',updatedAt:item.updatedAt||'',blob:new Blob([bytes],{type:item.mimeType||'audio/webm'})});
+      }
+      if(!confirm('Przywrócić brakujące wpisy z kopii? Obecne dane pozostaną bez zmian.')){report('Anulowano przywracanie.');return;}
+      const db=await openVoiceNotesDb();
+      // Import jest niedestrukcyjny: brak usuwania lub nadpisywania obecnych rekordów.
+      const addedVoice=await putMissingVoice(db,voice);
+      let addedKeys=0,failedKeys=0;
+      for(const key of keys){
+        if(localStorage.getItem(key)!==null)continue;
+        try{localStorage.setItem(key,data.storage[key]);addedKeys++;}
+        catch(err){failedKeys++;console.error('Nie zapisano wpisu',key,err);}
+      }
+      report('Przywrócono '+addedKeys+' nowych wpisów i '+addedVoice+' nagrań.'+(failedKeys?' Nie udało się zapisać '+failedKeys+' wpisów (możliwy brak miejsca).':'')+' Odśwież stronę, aby zobaczyć dane.');
+    }catch(err){console.error(err);report('Błąd przywracania: '+err.message);}
+    finally{this.disabled=false;}
+  });
+})();
 
 </script>
 
