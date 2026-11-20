@@ -470,11 +470,12 @@ Legenda + notatki = szerokość kalendarza
 #bee-stage6-panel .s6-low{border-color:#e4a1a1;background:#fff4f4}
 #bee-stage6-panel #s6-camera{width:100%;max-height:300px;background:#111;border-radius:10px;margin-top:8px}
 #bee-stage6-panel .s6-status{padding:9px;border-radius:8px;background:#f3f3f3;margin:8px 0}
-#bee-mobile-bar{position:sticky;bottom:6px;z-index:1000;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:7px;background:rgba(255,255,255,.94);border:1px solid #ddd;border-radius:12px;box-shadow:0 2px 8px #0002}
-#bee-mobile-bar button{border:0;border-radius:9px;padding:11px;background:#fbc02d;font-weight:bold}
+#bee-mobile-bar{position:fixed;left:6px;right:6px;width:auto;bottom:6px;z-index:1000;display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:7px;background:rgba(255,255,255,.94);border:1px solid #ddd;border-radius:12px;box-shadow:0 2px 8px #0002;max-height:35vh;overflow-y:auto}
+#bee-mobile-bar button{touch-action:manipulation;border:0;border-radius:9px;padding:11px;background:#fbc02d;font-weight:bold}
 @media(max-width:520px){#bee-stage6-panel{margin:14px 5px;padding:12px}#bee-stage6-panel .s6-row{flex-direction:column}#bee-stage6-panel .s6-row button{align-self:flex-start}#bee-mobile-bar button{flex:1;min-width:28%}}
 
 
+body{padding-bottom:125px!important}
 /* MAPA PASIEKI — lokalizacje poszczególnych uli */
 #apiary-hive-map-panel{margin:12px 0;padding:10px;border:1px solid #c9d9c5;border-radius:9px;background:#f8fff7}
 #apiary-hive-map{width:100%;height:330px;min-height:260px;border:1px solid #cbd5c0;border-radius:8px;background:#edf3e9;z-index:1}
@@ -2402,6 +2403,43 @@ font-weight:bold;
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
   <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-top">⬆ Góra</button>
 </div>
+<script>
+/* Niezależna obsługa paska: działa nawet jeśli inicjalizacja pozostałych modułów przerwie się błędem. */
+(function(){
+  const bar=document.getElementById('bee-mobile-bar');
+  if(!bar)return;
+  const go=id=>{const target=document.getElementById(id);if(target){target.scrollIntoView({behavior:'smooth',block:'start'});return true;}return false;};
+  bar.addEventListener('click',function(event){
+    const btn=event.target.closest('button');
+    if(!btn||!bar.contains(btn))return;
+    switch(btn.id){
+      case 's6-quick-stock':go('bee-stage6-panel');break;
+      case 's6-quick-scan':
+        go('s6-scan-area') || go('bee-stage6-panel');
+        if(typeof s6StartScan==='function')s6StartScan();
+        else {const scan=document.getElementById('s6-scan');if(scan)scan.click();}
+        break;
+      case 's6-quick-today':
+        if(typeof window.scrollToToday==='function')window.scrollToToday();
+        else {const d=new Date(),m=String(d.getMonth()+1).padStart(2,'0');go('month-'+m);}
+        break;
+      case 's6-quick-hives':
+        if(typeof window.scrollToCurrentApiaryHives==='function')window.scrollToCurrentApiaryHives();
+        else go('hive-management');
+        break;
+      case 's6-quick-apiary':
+        if(typeof showApiaryChooser==='function')showApiaryChooser();
+        else document.getElementById('bee-change-apiary')?.click();
+        break;
+      case 's6-quick-analytics':go('bee-stage5-panel');break;
+      case 's6-quick-top':
+        if(typeof beeScrollToTop==='function')beeScrollToTop();
+        else window.scrollTo({top:0,left:0,behavior:'smooth'});
+        break;
+    }
+  });
+})();
+</script>
 
 <div class="month">
 <h1>Dni największej rojliwości w 2026</h1>
@@ -5442,7 +5480,7 @@ function initStage6(){
  });
  document.getElementById("s6-move-save").addEventListener("click",()=>{const id=document.getElementById("s6-move-item").value,qty=Number(document.getElementById("s6-move-qty").value),kind=document.getElementById("s6-move-kind").value,items=s6Read("inventory"),item=items.find(x=>x.id===id);if(!item){alert("Najpierw dodaj pozycję magazynową.");return;}if(!Number.isFinite(qty)||qty<=0){alert("Podaj ilość większą od zera.");return;}if(kind==="out"&&qty>Number(item.qty)){alert("Brak wystarczającej ilości w magazynie.");return;}const moves=s6Read("movements"),move={id:"mov-"+Date.now(),itemId:id,name:item.name,unit:item.unit,kind,qty,date:document.getElementById("s6-move-date").value||today,hive:document.getElementById("s6-move-hive").value.trim(),note:document.getElementById("s6-move-note").value.trim()};item.qty=Number((Number(item.qty)+(kind==="in"?qty:-qty)).toFixed(3));if(!s6Write("inventory",items))return;moves.push(move);if(!s6Write("movements",moves))return;document.getElementById("s6-move-qty").value="";document.getElementById("s6-move-note").value="";s6Render();});
  document.getElementById("s6-export").addEventListener("click",()=>{const rows=[["Nazwa","Kategoria","Ilość","Jednostka","Minimum","Miejsce","Ważność","Uwagi"],...s6Read("inventory").map(x=>[x.name,x.category,x.qty,x.unit,x.min,x.place,x.expiry,x.notes])];s6Download("magazyn-pasieki.csv",rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n"),"text/csv;charset=utf-8;");});
- document.getElementById("s6-scan").addEventListener("click",s6StartScan);document.getElementById("s6-quick-scan").addEventListener("click",()=>{document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"});s6StartScan();});document.getElementById("s6-stop-scan").addEventListener("click",s6StopScan);document.getElementById("s6-quick-stock").addEventListener("click",()=>document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"}));document.getElementById("s6-quick-today").addEventListener("click",()=>window.scrollToToday());document.getElementById("s6-quick-hives").addEventListener("click",()=>window.scrollToCurrentApiaryHives());document.getElementById("s6-quick-apiary").addEventListener("click",showApiaryChooser);document.getElementById("s6-quick-analytics").addEventListener("click",()=>document.getElementById("bee-stage5-panel")?.scrollIntoView({behavior:"smooth",block:"start"}));document.getElementById("s6-quick-top").addEventListener("click",beeScrollToTop);
+ document.getElementById("s6-scan").addEventListener("click",s6StartScan);document.getElementById("s6-stop-scan").addEventListener("click",s6StopScan);
  document.getElementById("s6-vibrate").addEventListener("click",()=>{if(navigator.vibrate){navigator.vibrate([100,60,100]);}else alert("Wibracje nie są obsługiwane przez tę przeglądarkę.");});
  document.getElementById("s6-wake").addEventListener("click",async()=>{try{if(!("wakeLock" in navigator)){alert("Podtrzymanie ekranu nie jest obsługiwane przez tę przeglądarkę.");return;}if(s6WakeLock){await s6WakeLock.release();s6WakeLock=null;document.getElementById("s6-wake").textContent="Włącz podtrzymanie ekranu";}else{s6WakeLock=await navigator.wakeLock.request("screen");document.getElementById("s6-wake").textContent="Wyłącz podtrzymanie ekranu";s6WakeLock.addEventListener("release",()=>{s6WakeLock=null;document.getElementById("s6-wake").textContent="Włącz podtrzymanie ekranu";});}}catch(e){alert("Nie udało się włączyć podtrzymania ekranu: "+(e.message||e));}});
  const status=document.getElementById("s6-connection");const update=()=>{status.textContent=(navigator.onLine?"🟢 Połączenie z internetem":"🟠 Brak internetu — tryb offline")+" · Pamięć lokalna przeglądarki aktywna";};window.addEventListener("online",update);window.addEventListener("offline",update);update();s6Render();
@@ -5495,6 +5533,16 @@ if (savedGPS === "true" && navigator.geolocation) {
   if(typeof generateHoneyForecast === "function") generateHoneyForecast();
   if(typeof runAIModule === "function") runAIModule();
   if(typeof loadApiaryData === "function") loadApiaryData();
+
+  // Most dla osobnych skryptów historii przeglądów i listy prac.
+  // Nie zmienia kluczy localStorage ani danych użytkownika.
+  Object.defineProperty(window, 'currentApiary', {configurable:true, get:()=>currentApiary});
+  Object.defineProperty(window, 'selectedHiveNumber', {configurable:true, get:()=>selectedHiveNumber});
+  window.getHiveProfiles = getHiveProfiles;
+  window.getHiveProfile = getHiveProfile;
+  window.saveHiveProfiles = saveHiveProfiles;
+  window.getDeletedHiveNumbers = getDeletedHiveNumbers;
+  window.renderHiveCards = renderHiveCards;
   initHiveManagement();
   initStage5();
   initStage6();
