@@ -449,7 +449,7 @@ Legenda + notatki = szerokość kalendarza
 #bee-stage5-panel .stage5-recommendations h3{margin:0 0 10px}
 #bee-stage5-panel .stage5-rec-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 #bee-stage5-panel .stage5-rec-nav button{margin:0}
-#bee-stage5-panel .stage5-rec-card{min-height:88px;padding:12px;border:1px solid #efdfa8;border-radius:9px;background:#fff8df}
+#bee-stage5-panel .stage5-rec-card{max-height:260px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;min-height:88px;padding:12px;border:1px solid #efdfa8;border-radius:9px;background:#fff8df}
 #bee-stage5-panel .stage5-rec-card strong{color:#654b13}
 #bee-stage5-panel .stage5-rec-card ul{margin:8px 0 0;padding-left:22px}
 #bee-stage5-panel .stage5-rec-card li{margin:6px 0;line-height:1.45}
@@ -486,11 +486,29 @@ Legenda + notatki = szerokość kalendarza
 #apiary-hive-map-list button{font-size:13px;padding:6px 9px}
 @media(max-width:520px){#apiary-hive-map{height:280px}}
 
+#bee-apiary-start[hidden]{display:none!important}
+#bee-apiary-start{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:12px;overflow-y:auto}
+.bee-apiary-dialog{max-width:480px;background:#fffdf5;padding:20px;border-radius:14px;border:2px solid #e5bc38;box-shadow:0 10px 35px #0005}
+#bee-apiary-choices{display:grid;gap:10px;margin:16px 0}
+#bee-apiary-choices button,#bee-add-apiary,#bee-change-apiary{padding:12px;border-radius:9px;border:1px solid #b9952c;background:#fff0b8;font-size:16px;font-weight:bold;cursor:pointer}
+#bee-change-apiary{margin:8px 4px;width:auto}
+#gps-position-status{font-size:12px;padding:3px 8px;color:#345}
 </style>
 
 </head>
 
 <body>
+<div id="bee-apiary-start" hidden role="dialog" aria-modal="true" aria-label="Wybór pasieki">
+  <div class="bee-apiary-dialog">
+    <h2>🐝 Wybierz pasiekę</h2>
+    <p>Wybierz lokalizację przed rozpoczęciem pracy. Numery uli są wspólne dla wszystkich pasiek.</p>
+    <div id="bee-apiary-choices"></div>
+    <button type="button" id="bee-add-apiary">➕ Dodaj pasiekę</button>
+  </div>
+</div>
+<button type="button" id="bee-change-apiary">🐝 Zmień pasiekę</button>
+<div id="gps-position-status" aria-live="polite"></div>
+
 
 
 <div>🟩 Prace pasieczne | 🟨 Miodobranie | 🟧 Rojka | 🔴 Leczenie | ⬛ Zimowla</div>
@@ -519,8 +537,7 @@ border-radius:8px;
 background:#FBC02D;
 cursor:pointer;
 font-weight:bold;
-">
-
+">📅 Dzisiaj
 </button>
 
 <!-- 🌦 POGODA -->
@@ -665,48 +682,6 @@ font-weight:bold;
   <button type="button" onclick="saveNote('01')">Zapisz notatkę</button>
 </div>
 
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
-</div>
-
-
 </div> <!-- zamknięcie miesiąca -->
 
 <div class="page-break"></div>
@@ -791,48 +766,6 @@ font-weight:bold;
   <br><br>
   <button type="button" onclick="saveNote('02')">Zapisz notatkę</button>
 </div>
-
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
-</div>
-
 
 </div> <!-- zamknięcie miesiąca -->
 
@@ -943,47 +876,6 @@ font-weight:bold;
   <textarea id="notes-03" rows="6" style="width:100%;"></textarea>
   <br><br>
   <button type="button" onclick="saveNote('03')">Zapisz notatkę</button>
-</div>
-
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1108,48 +1000,6 @@ font-weight:bold;
   <br><br>
   <button type="button" onclick="saveNote('04')">Zapisz notatkę</button>
 </div>
-
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
-</div>
-
 
 <!-- Licznik miodu -->
 <div id="inspection-honey-04">
@@ -1310,47 +1160,6 @@ font-weight:bold;
   <button type="button" onclick="saveNote('05')">Zapisz notatkę</button>
 </div>
 
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
-</div>
-
 </div> <!-- zamknięcie miesiąca -->
 <div class="page-break"></div>
 
@@ -1453,48 +1262,6 @@ font-weight:bold;
   <button type="button" onclick="saveNote('06')">Zapisz notatkę</button>
 </div>
 
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
-</div>
-
-
 </div> <!-- zamknięcie miesiąca -->
 <div class="page-break"></div>
 
@@ -1586,47 +1353,6 @@ font-weight:bold;
   <textarea id="notes-07" rows="6" style="width:100%;"></textarea>
   <br><br>
   <button type="button" onclick="saveNote('07')">Zapisz notatkę</button>
-</div>
-
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1727,48 +1453,6 @@ font-weight:bold;
   <button type="button" onclick="saveNote('08')">Zapisz notatkę</button>
 </div>
 
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
-</div>
-
-
 </div> <!-- zamknięcie miesiąca -->
 
 <div class="page-break"></div>
@@ -1860,47 +1544,6 @@ font-weight:bold;
   <textarea id="notes-09" rows="6" style="width:100%;"></textarea>
   <br><br>
   <button type="button" onclick="saveNote('09')">Zapisz notatkę</button>
-</div>
-
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -1996,47 +1639,6 @@ font-weight:bold;
   <textarea id="notes-10" rows="6" style="width:100%;"></textarea>
   <br><br>
   <button type="button" onclick="saveNote('10')">Zapisz notatkę</button>
-</div>
-
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
 </div>
 
 </div> <!-- zamknięcie miesiąca -->
@@ -2137,48 +1739,6 @@ font-weight:bold;
   <br><br>
   <button type="button" onclick="saveNote('11')">Zapisz notatkę</button>
 </div>
-
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
-</div>
-
 
 <!-- Panel sezonowy / informacje dodatkowe -->
 <div id="season-info-11"></div>
@@ -2546,6 +2106,7 @@ font-weight:bold;
     </label>
     <div class="hive-toolbar">
       <button type="button" id="hive-profile-save">💾 Zapisz kartę</button>
+      <button type="button" id="bee-move-hive">🚚 Przenieś ul do innej pasieki</button>
       <button type="button" id="hive-delete-card" style="background:#ffdddd;border-color:#c66;">🗑️ Usuń kartę ula</button>
     </div>
 
@@ -3659,6 +3220,110 @@ const APIARIES = [
   }
 ];
 
+// Dodatkowe pasieki użytkownika, bez nadpisywania istniejących.
+try {
+  const extra = JSON.parse(localStorage.getItem("bee-extra-apiaries") || "[]");
+  if (Array.isArray(extra)) extra.forEach(a => {
+    if (a && typeof a.id === "string" && typeof a.name === "string" && !APIARIES.some(x => x.id === a.id)) APIARIES.push(a);
+  });
+} catch (e) { console.warn("Nie można odczytać dodatkowych pasiek", e); }
+
+function allHiveNumbersExcept(exceptApiaryId) {
+  const taken = new Set();
+  APIARIES.filter(a => a.id !== exceptApiaryId).forEach(a => {
+    let records = {};
+    try { records = JSON.parse(localStorage.getItem("bee-hive-profiles:" + a.id) || "{}"); } catch (_) {}
+    Object.keys(records || {}).forEach(n => { if (/^\d+$/.test(n)) taken.add(Number(n)); });
+    // Zarezerwuj również aktywne numery kart, nawet bez uzupełnionego profilu.
+    const count = Number(localStorage.getItem("bee-hive-count:" + a.id) || 0);
+    let deleted = [];
+    try { deleted = JSON.parse(localStorage.getItem("bee-hive-deleted:" + a.id) || "[]"); } catch (_) {}
+    for (let n=1;n<=Math.min(100,count);n++) if (!deleted.includes(n)) taken.add(n);
+  });
+  return taken;
+}
+function switchApiary(id) {
+  const chosen = APIARIES.find(a => a.id === id);
+  if (!chosen) return;
+  currentApiary = chosen;
+  localStorage.setItem("bee-current-apiary-id", chosen.id);
+  const overlay = document.getElementById("bee-apiary-start");
+  if (overlay) overlay.hidden = true;
+  const change = document.getElementById("bee-change-apiary");
+  if (change) change.textContent = "🐝 Zmień pasiekę (" + chosen.name + ")";
+  updateApiaryUI(null);
+  loadApiaryData();
+  const count = localStorage.getItem("bee-hive-count:" + chosen.id);
+  const countInput = document.getElementById("hive-card-count");
+  if (countInput) countInput.value = count || "1";
+  selectedHiveNumber = 1;
+  renderHiveCards(); loadHiveEditor();
+  updateMarkers();
+  if (typeof updateVoiceControlsForSelectedDate === "function") updateVoiceControlsForSelectedDate();
+  if (typeof stage5Render === "function") stage5Render();
+  if (typeof s6Render === "function") s6Render();
+  if (typeof s6RefreshQrHiveOptions === "function") s6RefreshQrHiveOptions();
+  if (typeof renderApiaryHiveMap === "function") renderApiaryHiveMap();
+  if (typeof loadWeather5Days === "function" && navigator.onLine) loadWeather5Days();
+}
+function showApiaryChooser() {
+  const overlay = document.getElementById("bee-apiary-start");
+  const choices = document.getElementById("bee-apiary-choices");
+  if (!overlay || !choices) return;
+  choices.replaceChildren();
+  APIARIES.forEach(a => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "🐝 " + a.name;
+    btn.addEventListener("click", () => switchApiary(a.id));
+    choices.appendChild(btn);
+  });
+  overlay.hidden = false;
+}
+function moveHiveToApiary() {
+  if (!currentApiary) return;
+  const number = Number(selectedHiveNumber);
+  const targets = APIARIES.filter(a => a.id !== currentApiary.id);
+  const answer = prompt("Przenieś ul " + number + " do pasieki:\n" + targets.map((a,i)=>(i+1)+". "+a.name).join("\n") + "\nPodaj numer z listy:");
+  if (!answer) return;
+  const target = targets[Number(answer)-1];
+  if (!target) { alert("Nieprawidłowy wybór."); return; }
+  const source = getHiveProfiles();
+  const profile = source[String(number)] || getHiveProfile(number);
+  const targetKey = "bee-hive-profiles:" + target.id;
+  let dest = {};
+  try { dest = JSON.parse(localStorage.getItem(targetKey) || "{}"); } catch (_) {}
+  if (dest[String(number)]) { alert("W pasiece docelowej już istnieje ul o tym numerze. Nie przeniesiono danych."); return; }
+  if (!confirm("Przenieść ul " + number + " do " + target.name + "? Numer i historia karty zostaną zachowane.")) return;
+  // Zachowaj profil w docelowej lokalizacji przed usunięciem ze źródła.
+  dest[String(number)] = {...profile,number,apiaryId:target.id};
+  try { localStorage.setItem(targetKey, JSON.stringify(dest)); } catch (e) { alert("Brak miejsca na zapis. Nie przeniesiono ula."); return; }
+  delete source[String(number)];
+  saveHiveProfiles(source);
+  const deleted = getDeletedHiveNumbers(); deleted.add(number); saveDeletedHiveNumbers(deleted);
+  const targetDeletedKey = "bee-hive-deleted:" + target.id;
+  let td=[]; try { td=JSON.parse(localStorage.getItem(targetDeletedKey)||"[]"); }catch(_){}
+  localStorage.setItem(targetDeletedKey,JSON.stringify(td.filter(n=>Number(n)!==number)));
+  const targetCountKey = "bee-hive-count:" + target.id;
+  localStorage.setItem(targetCountKey,String(Math.max(number,Number(localStorage.getItem(targetCountKey)||0))));
+  renderHiveCards(); loadHiveEditor();
+  alert("Przeniesiono ul " + number + " do " + target.name + ".");
+}
+function initApiaryChooser() {
+  document.getElementById("bee-change-apiary")?.addEventListener("click", showApiaryChooser);
+  document.getElementById("bee-move-hive")?.addEventListener("click", moveHiveToApiary);
+  document.getElementById("bee-add-apiary")?.addEventListener("click", () => {
+    const name = prompt("Nazwa nowej pasieki:")?.trim();
+    if (!name) return;
+    if (APIARIES.some(a => a.name.toLocaleLowerCase("pl") === name.toLocaleLowerCase("pl"))) { alert("Taka pasieka już istnieje."); return; }
+    const a = {id:"pasieka_user_" + Date.now(),name,lat:null,lon:null};
+    APIARIES.push(a);
+    localStorage.setItem("bee-extra-apiaries",JSON.stringify(APIARIES.filter(x => x.id.startsWith("pasieka_user_"))));
+    showApiaryChooser();
+  });
+  showApiaryChooser();
+}
+
 // Przywróć ostatnio wybraną pasiekę przed uruchomieniem paneli danych.
 // Zapobiega to odczytowi rejestru finansowego z klucza "default" po odświeżeniu.
 try {
@@ -3686,26 +3351,11 @@ function detectNearestApiary(lat, lon){
     }
   });
 
-  // max 10 km
-  if(minDistance <= 10){
-    currentApiary = nearest;
-    try { localStorage.setItem("bee-current-apiary-id", currentApiary.id); } catch (error) { console.warn("Nie udało się zapamiętać pasieki", error); }
-  } else {
-    currentApiary = null;
-    try { localStorage.removeItem("bee-current-apiary-id"); } catch (error) { console.warn("Nie udało się wyczyścić wyboru pasieki", error); }
-  }
-
-  updateApiaryUI(minDistance);
-  if (typeof renderHiveCards === "function") { renderHiveCards(); loadHiveEditor(); }
-  if (typeof loadApiaryData === "function") loadApiaryData();
-  if (typeof stage5Render === "function") stage5Render();
-
-  if (currentDay && currentMonth) {
-    textarea = getMonthlyTextarea(currentMonth);
-    if (textarea) textarea.value = readNoteForDate(getDateNoteKey(currentDay, currentMonth));
-  }
-  if (typeof updateMarkers === "function") updateMarkers();
-  if (typeof updateVoiceControlsForSelectedDate === "function") updateVoiceControlsForSelectedDate();
+  // GPS jest tylko pomiarem. Nigdy nie zmieniaj aktywnej pasieki
+  // bez decyzji użytkownika (przewóz uli, podróż, słaby sygnał).
+  const box = document.getElementById("gps-position-status");
+  if (box) box.textContent = "📍 GPS: " + lat.toFixed(6) + ", " + lon.toFixed(6) +
+    (nearest ? " · Najbliżej: " + nearest.name + " (" + minDistance.toFixed(2) + " km)" : "");
 
 }
 
@@ -3723,7 +3373,7 @@ function updateApiaryUI(distance){
       <hr>
       🐝 <b>Aktywna pasieka:</b><br>
       ${currentApiary.name}<br>
-      📏 ${distance.toFixed(2)} km
+      📏 ${Number.isFinite(distance) ? distance.toFixed(2) + " km" : "wybrana ręcznie"}
     `;
 
   } else {
@@ -3791,6 +3441,7 @@ function startLiveGPS(){
 
   if(!navigator.geolocation) return;
 
+  if (gpsWatchId !== null) navigator.geolocation.clearWatch(gpsWatchId);
   gpsWatchId = navigator.geolocation.watchPosition(
 
     pos => {
@@ -4725,6 +4376,7 @@ function renameSelectedHive() {
   }
 
   const profiles = getHiveProfiles();
+  if (allHiveNumbersExcept(currentApiary?.id).has(newNumber)) { alert("Numer ula " + newNumber + " jest już używany w innej pasiece."); return; }
   if (profiles[String(newNumber)]) {
     alert("Karta ula o takim numerze już istnieje. Nie nadpisano jej.");
     return;
@@ -4791,6 +4443,7 @@ function addHiveWithChosenNumber() {
   }
 
   const profiles = getHiveProfiles();
+  if (allHiveNumbersExcept(currentApiary?.id).has(number)) { alert("Numer ula " + number + " jest już używany w innej pasiece."); return; }
   if (profiles[String(number)]) {
     alert("Karta ula o numerze " + number + " już istnieje. Wybierz inny numer.");
     return;
@@ -5555,7 +5208,7 @@ function initStage5(){
 // =========================
 function s6ApiaryId(){return currentApiary&&currentApiary.id?String(currentApiary.id):"default";}
 function s6Key(type){return "bee-stage6-"+type+":"+s6ApiaryId();}
-function s6Read(type){try{const active=JSON.parse(localStorage.getItem(s6Key(type))||"[]");const rows=Array.isArray(active)?active:[];if(s6ApiaryId()==="default")return rows;const legacy=JSON.parse(localStorage.getItem("bee-stage6-"+type+":default")||"[]");const merged=new Map();[...(Array.isArray(legacy)?legacy:[]),...rows].forEach((x,i)=>{if(x&&typeof x==="object")merged.set(x.id||("legacy-"+i+"-"+JSON.stringify(x)),x);});return Array.from(merged.values());}catch(e){console.warn("Błąd odczytu magazynu",e);return[];}}
+function s6Read(type){try{const rows=JSON.parse(localStorage.getItem(s6Key(type))||"[]");return Array.isArray(rows)?rows:[];}catch(e){console.warn("Błąd odczytu magazynu",e);return[];}}
 function s6Write(type,data){try{localStorage.setItem(s6Key(type),JSON.stringify(data));return true;}catch(e){alert("Nie udało się zapisać danych. Pamięć przeglądarki może być pełna; dotychczasowe wpisy pozostają bez zmian.");return false;}}
 function s6Esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function s6Render(){
@@ -5564,7 +5217,7 @@ function s6Render(){
  const list=document.getElementById("s6-inventory-list");
  list.innerHTML=items.length?items.map(x=>`<div class="s6-row ${Number(x.qty)<=Number(x.min)?"s6-low":""}"><div><strong>${s6Esc(x.name)}</strong> — ${s6Esc(x.category)}<small>Stan: ${Number(x.qty).toLocaleString("pl-PL")} ${s6Esc(x.unit)} · Minimum: ${Number(x.min).toLocaleString("pl-PL")} ${s6Esc(x.unit)}${x.place?" · Miejsce: "+s6Esc(x.place):""}${x.expiry?" · Ważność: "+s6Esc(x.expiry):""}${x.notes?" · "+s6Esc(x.notes):""}</small>${Number(x.qty)<=Number(x.min)?'<small style="color:#a12a20;font-weight:bold">⚠ Niski stan magazynowy</small>':""}</div><button type="button" class="danger" data-s6-delete="${s6Esc(x.id)}">Usuń</button></div>`).join(""):"Brak pozycji w magazynie.";
  const select=document.getElementById("s6-move-item"),old=select.value;select.innerHTML=items.map(x=>`<option value="${s6Esc(x.id)}">${s6Esc(x.name)} (${Number(x.qty)} ${s6Esc(x.unit)})</option>`).join("");if(items.some(x=>x.id===old))select.value=old;
- const ml=document.getElementById("s6-movement-list");ml.innerHTML=moves.length?moves.slice().reverse().slice(0,50).map(m=>`<div class="s6-row"><div><strong>${m.kind==="in"?"Dostawa":"Zużycie"}: ${s6Esc(m.name)}</strong><small>${s6Esc(m.date)} · ${m.kind==="in"?"+":"−"}${Number(m.qty)} ${s6Esc(m.unit)}${m.hive?" · Ul "+s6Esc(m.hive):""}${m.note?" · "+s6Esc(m.note):""}</small></div></div>`).join(""):"Brak operacji magazynowych.";
+ const ml=document.getElementById("s6-movement-list");ml.innerHTML=moves.length?moves.slice().reverse().slice(0,50).map(m=>`<div class="s6-row"><div><strong>${m.kind==="in"?"Dostawa":"Zużycie"}: ${s6Esc(m.name)}</strong><small>${s6Esc(m.date)} · ${m.kind==="in"?"+":"−"}${Number(m.qty)} ${s6Esc(m.unit)}${m.hive?" · Ul "+s6Esc(m.hive):""}${m.note?" · "+s6Esc(m.note):""}</small></div><button type="button" class="danger" data-s6-move-delete="${s6Esc(m.id)}">Usuń</button></div>`).join(""):"Brak operacji magazynowych.";
 }
 function s6Download(name,content,type){const blob=new Blob(["\ufeff"+content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 let s6WakeLock=null,s6Stream=null,s6ScanTimer=null;
@@ -5601,6 +5254,19 @@ function initStage6(){
  const today=new Date().toISOString().slice(0,10);document.getElementById("s6-move-date").value=today;
  document.getElementById("s6-add").addEventListener("click",()=>{const name=document.getElementById("s6-name").value.trim(),qty=Number(document.getElementById("s6-qty").value),min=Number(document.getElementById("s6-min").value);if(!name){alert("Podaj nazwę pozycji.");return;}if(!Number.isFinite(qty)||qty<0||!Number.isFinite(min)||min<0){alert("Sprawdź ilość i próg minimalny.");return;}const a=s6Read("inventory");a.push({id:"stk-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),name,category:document.getElementById("s6-category").value,qty,unit:document.getElementById("s6-unit").value,min,place:document.getElementById("s6-place").value.trim(),expiry:document.getElementById("s6-expiry").value,notes:document.getElementById("s6-notes").value.trim()});if(s6Write("inventory",a)){["s6-name","s6-place","s6-expiry","s6-notes"].forEach(id=>document.getElementById(id).value="");document.getElementById("s6-qty").value="0";s6Render();}});
  document.getElementById("s6-inventory-list").addEventListener("click",e=>{const b=e.target.closest("[data-s6-delete]");if(!b)return;const id=b.dataset.s6Delete,item=s6Read("inventory").find(x=>x.id===id);if(!item||!confirm("Usunąć z magazynu pozycję: "+item.name+"? Historia operacji pozostanie zachowana."))return;s6Write("inventory",s6Read("inventory").filter(x=>x.id!==id));s6Render();});
+ document.getElementById("s6-movement-list").addEventListener("click", e => {
+   const btn=e.target.closest("[data-s6-move-delete]"); if(!btn)return;
+   const id=btn.dataset.s6MoveDelete,moves=s6Read("movements"),move=moves.find(m=>m.id===id);
+   if(!move || !confirm("Usunąć operację: " + move.name + " (" + move.qty + " " + move.unit + ")? Stan magazynu zostanie skorygowany."))return;
+   const items=s6Read("inventory"),item=items.find(x=>x.id===move.itemId);
+   if(!item){alert("Nie można skorygować stanu: pozycja magazynowa została usunięta. Operacja pozostaje w historii.");return;}
+   const next=Number((Number(item.qty)+(move.kind==="in"?-Number(move.qty):Number(move.qty))).toFixed(3));
+   if(next<0){alert("Nie można cofnąć dostawy: stan magazynu stałby się ujemny. Najpierw skoryguj inne operacje.");return;}
+   item.qty=next;
+   if(!s6Write("inventory",items))return;
+   if(!s6Write("movements",moves.filter(m=>m.id!==id))){item.qty=Number((next+(move.kind==="in"?Number(move.qty):-Number(move.qty))).toFixed(3));s6Write("inventory",items);return;}
+   s6Render();
+ });
  document.getElementById("s6-move-save").addEventListener("click",()=>{const id=document.getElementById("s6-move-item").value,qty=Number(document.getElementById("s6-move-qty").value),kind=document.getElementById("s6-move-kind").value,items=s6Read("inventory"),item=items.find(x=>x.id===id);if(!item){alert("Najpierw dodaj pozycję magazynową.");return;}if(!Number.isFinite(qty)||qty<=0){alert("Podaj ilość większą od zera.");return;}if(kind==="out"&&qty>Number(item.qty)){alert("Brak wystarczającej ilości w magazynie.");return;}const moves=s6Read("movements"),move={id:"mov-"+Date.now(),itemId:id,name:item.name,unit:item.unit,kind,qty,date:document.getElementById("s6-move-date").value||today,hive:document.getElementById("s6-move-hive").value.trim(),note:document.getElementById("s6-move-note").value.trim()};item.qty=Number((Number(item.qty)+(kind==="in"?qty:-qty)).toFixed(3));if(!s6Write("inventory",items))return;moves.push(move);if(!s6Write("movements",moves))return;document.getElementById("s6-move-qty").value="";document.getElementById("s6-move-note").value="";s6Render();});
  document.getElementById("s6-export").addEventListener("click",()=>{const rows=[["Nazwa","Kategoria","Ilość","Jednostka","Minimum","Miejsce","Ważność","Uwagi"],...s6Read("inventory").map(x=>[x.name,x.category,x.qty,x.unit,x.min,x.place,x.expiry,x.notes])];s6Download("magazyn-pasieki.csv",rows.map(r=>r.map(v=>'"'+String(v??"").replace(/"/g,'""')+'"').join(";")).join("\r\n"),"text/csv;charset=utf-8;");});
  document.getElementById("s6-scan").addEventListener("click",s6StartScan);document.getElementById("s6-quick-scan").addEventListener("click",()=>{document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"});s6StartScan();});document.getElementById("s6-stop-scan").addEventListener("click",s6StopScan);document.getElementById("s6-quick-stock").addEventListener("click",()=>document.getElementById("bee-stage6-panel").scrollIntoView({behavior:"smooth"}));document.getElementById("s6-quick-top").addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
@@ -5612,7 +5278,7 @@ function initStage6(){
   syncCalendarYear();
   updateMarkers();
 
-getGPSOnce();     // szybki start
+// GPS uruchamia się dopiero po naciśnięciu przycisku przez użytkownika.
 
 const savedGPS = localStorage.getItem("gpsEnabled");
 
@@ -5626,15 +5292,15 @@ if(savedGPS === "true"){
     gpsBtn.innerHTML = "📍 GPS: ON";
   }
 
-  getGPSOnce();
-  startLiveGPS();
-  startGPSSaveLoop();
+  // Nie pytaj o lokalizację automatycznie po uruchomieniu.
+  gpsEnabled = false;
+  gpsBtn && (gpsBtn.textContent = "📍 GPS: WŁĄCZ");
 }
 
   setTimeout(autoScaleCalendarText, 100);
   scrollToToday();
 
-  if(typeof loadWeatherAndAssist === "function") loadWeatherAndAssist();
+  // Pogoda jest pobierana dopiero po wyborze pasieki.
   if(typeof analyzeHivesPro === "function") analyzeHivesPro();
   if(typeof generateHiveRanking === "function") generateHiveRanking();
   if(typeof generateHiveAlerts === "function") generateHiveAlerts();
@@ -5645,6 +5311,7 @@ if(savedGPS === "true"){
   initHiveManagement();
   initStage5();
   initStage6();
+  initApiaryChooser();
 
   const hivesCountInput = document.getElementById("hivesCount");
   const saveFamilyNotesBtn = document.getElementById("saveFamilyNotesBtn");

@@ -1,74 +1,39 @@
-/* BEE ASSISTANT PRO / Kalendarz Pszczelarski 2027 - cache offline */
-const CACHE_NAME = 'bee-assistant-pro-2027-v7';
-const APP_FILE = './index.html';
-const LOCAL_ASSETS = [
-  './',
-  APP_FILE,
-  './manifest.json',
-  './bee_icon_192x192.png',
-  './bee_icon_512x512.png'
-];
-const QR_LIBRARY = 'https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js';
-
+/* Pasieka PWA: bezpieczny cache plików lokalnych, bez usuwania danych użytkownika. */
+const CACHE_NAME = 'bee-pasieka-offline-20261120-v1';
+const APP_SHELL = ['./', './index.html', './manifest.json', './bee_icon_192x192.png', './bee_icon_512x512.png'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_NAME);
-    await cache.addAll(LOCAL_ASSETS);
-    // Biblioteka QR jest pobierana podczas instalacji, aby generator działał
-    // również bez internetu po pierwszym uruchomieniu online.
-    try {
-      const response = await fetch(QR_LIBRARY, { mode: 'no-cors', cache: 'reload' });
-      if (response && (response.ok || response.type === 'opaque')) {
-        await cache.put(QR_LIBRARY, response);
-      }
-    } catch (_) {
-      // Nie blokuj instalacji aplikacji, jeśli CDN jest chwilowo niedostępny.
-    }
+    await Promise.all(APP_SHELL.map(async url => {
+      try { const response = await fetch(url, {cache:'reload'}); if(response.ok) await cache.put(url,response); }
+      catch(e) { console.warn('Brak zasobu podczas instalacji:',url); }
+    }));
     await self.skipWaiting();
   })());
 });
-
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)));
+    await Promise.all(keys.filter(k => k.startsWith('bee-pasieka-offline-') && k !== CACHE_NAME).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
-
 self.addEventListener('fetch', event => {
   const request = event.request;
-  if (request.method !== 'GET') return;
+  if(request.method !== 'GET') return;
   const url = new URL(request.url);
-
-  // Dokument aplikacji: najpierw sieć, a bez internetu ostatnia zapisana wersja.
-  if (request.mode === 'navigate') {
+  if(url.origin !== self.location.origin) return; // API pogody, mapy i biblioteki CDN wymagają sieci
+  if(request.mode === 'navigate') {
     event.respondWith((async () => {
-      try {
-        const fresh = await fetch(request);
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(APP_FILE, fresh.clone()).catch(() => {});
-        return fresh;
-      } catch (_) {
-        return (await caches.match(request)) || (await caches.match(APP_FILE)) || Response.error();
-      }
+      try { const response=await fetch(request); if(response.ok){const cache=await caches.open(CACHE_NAME);await cache.put('./index.html',response.clone());} return response; }
+      catch(e) { return await caches.match('./index.html') || await caches.match('./') || Response.error(); }
     })());
     return;
   }
-
-  // Cache-first dla zasobów lokalnych i bibliotek zewnętrznych (QR/Leaflet).
   event.respondWith((async () => {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    try {
-      const response = await fetch(request);
-      if (response && (response.ok || response.type === 'opaque')) {
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(request, response.clone()).catch(() => {});
-      }
-      return response;
-    } catch (_) {
-      return Response.error();
-    }
+    const cached=await caches.match(request);
+    if(cached) return cached;
+    try { const response=await fetch(request); if(response.ok){const cache=await caches.open(CACHE_NAME);await cache.put(request,response.clone());} return response; }
+    catch(e){return Response.error();}
   })());
 });
