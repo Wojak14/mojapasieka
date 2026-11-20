@@ -506,7 +506,7 @@ Legenda + notatki = szerokość kalendarza
   </div>
 </div>
 <button type="button" id="bee-change-apiary">🐝 Zmień pasiekę</button>
-<div id="gps-position-status" aria-live="polite"></div>
+<!-- Dane GPS są wyświetlane wyłącznie w panelu lokalizacji przy pogodzie. -->
 
 
 
@@ -3431,7 +3431,7 @@ async function beeRefreshGPSPlace(lat, lon) {
 }
 function detectNearestApiary(lat, lon){
   if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
-  const box = document.getElementById("gps-position-status");
+  const box = document.getElementById("location-box");
   if (!box) return;
   let cachedName = "";
   try {
@@ -3439,9 +3439,10 @@ function detectNearestApiary(lat, lon){
     if (saved && typeof saved.label === "string" && getDistance(lat,lon,Number(saved.lat),Number(saved.lon)) < 0.5) cachedName = saved.label;
   } catch (_) {}
   // Nazwa zapasowa tylko w pobliżu wskazanego punktu gminy Nurzec-Stacja.
-  if (!cachedName && getDistance(lat,lon,52.41987,23.09190) < 0.5) cachedName = "gmina Nurzec-Stacja";
+  if (!cachedName && getDistance(lat,lon,52.41987,23.09190) < 0.5) cachedName = "Nurzec-Stacja, gmina Nurzec-Stacja, województwo podlaskie";
   const distances = APIARIES.filter(a => Number.isFinite(Number(a.lat)) && Number.isFinite(Number(a.lon)) && a.lat != null && a.lon != null)
     .map(a => ({name:a.name,km:getDistance(lat,lon,Number(a.lat),Number(a.lon))}));
+  box.dataset.gpsActive = "true";
   box.replaceChildren();
   const place = document.createElement("div");
   place.id = "bee-gps-place-name";
@@ -3483,6 +3484,8 @@ function updateApiaryUI(distance){
     `;
   }
 
+  // Nie nadpisuj lokalizacji GPS podczas przełączania pasiek.
+  if (box.dataset.gpsActive === "true") return;
   box.innerHTML = html;
 }
 
@@ -3684,8 +3687,10 @@ function loadWeather5Days() {
     };
 
     const renderLocation = (lat, lon, loc) => {
-      const city = loc?.city || loc?.town || loc?.village || loc?.municipality || loc?.county || "Lokalizacja pasieki";
-      if (locationBox) locationBox.innerHTML = `📍 <b>${city}</b><br>🌍 ${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      // Panel GPS ma pierwszeństwo. Nie pokazuj współrzędnych ani drugiej lokalizacji.
+      if (!locationBox || locationBox.dataset.gpsActive === "true") return;
+      const city = loc?.village || loc?.town || loc?.city || loc?.municipality || loc?.county || currentApiary?.name || "Lokalizacja pasieki";
+      locationBox.textContent = "📍 " + city + " — lokalizacja prognozy pogody (GPS nieaktywny)";
     };
 
     const fetchWeather = async (lat, lon) => {
