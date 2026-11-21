@@ -2159,6 +2159,31 @@ font-weight:bold;
       <button type="button" id="hive-delete-card" style="background:#ffdddd;border-color:#c66;">🗑️ Usuń kartę ula</button>
     </div>
 
+    <section id="bee-frame-inventory" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5">
+      <h4 class="hive-section-title">🪵 Ramki, czerw i żelazny zapas</h4>
+      <p style="font-size:13px">Stan dotyczy wyłącznie wybranego ula w bieżącej pasiece. Puste pole oznacza brak pomiaru, nie zero.</p>
+      <div class="hive-fields">
+        <label>Ramki gniazdowe — liczba<input type="number" id="bee-fi-nest" min="0" max="100" step="1" placeholder="np. 10"></label>
+        <label>Ramki nadstawkowe w jednej nadstawce<input type="number" id="bee-fi-super" min="0" max="100" step="1" placeholder="np. 10"></label>
+        <label>Ramki z pokarmem<input type="number" id="bee-fi-food" min="0" max="100" step="1" placeholder="np. 3"></label>
+        <label>Żelazny zapas — wymagane ramki<input type="number" id="bee-fi-reserve" min="0" max="100" step="1" placeholder="np. 2"></label>
+        <label>Ramki z czerwiem otwartym<input type="number" id="bee-fi-open" min="0" max="100" step="1" placeholder="np. 2"></label>
+        <label>Ramki z czerwiem zasklepionym<input type="number" id="bee-fi-capped" min="0" max="100" step="1" placeholder="np. 4"></label>
+      </div>
+      <div id="bee-fi-summary" style="margin:9px 0;font-size:13px" aria-live="polite"></div>
+      <div class="hive-toolbar"><button type="button" id="bee-fi-save">💾 Zapisz stan ramek i zapasów</button></div>
+      <h4 class="hive-section-title">➕ Dodanie lub wycofanie ramki</h4>
+      <div class="hive-fields">
+        <label>Data operacji<input type="date" id="bee-fi-action-date"></label>
+        <label>Operacja<select id="bee-fi-action"><option value="dodanie">Dodanie ramki</option><option value="wycofanie">Wycofanie ramki</option></select></label>
+        <label>Rodzaj ramki<select id="bee-fi-kind"><option value="pracy">Ramka pracy</option><option value="trutowa">Ramka trutowa</option><option value="gniazdowa">Ramka gniazdowa</option><option value="nadstawkowa">Ramka nadstawkowa</option><option value="inna">Inna</option></select></label>
+        <label>Liczba ramek<input type="number" id="bee-fi-quantity" min="1" max="100" step="1" value="1"></label>
+        <label>Powód wycofania<select id="bee-fi-reason"><option value="">Nie dotyczy / nie podano</option><option value="do przetopu">Do przetopu</option><option value="usunięcie zasklepionego czerwiu trutowego">Usunięcie zasklepionego czerwiu trutowego</option><option value="pęknięta ramka">Pęknięta ramka</option><option value="stara / ciemna ramka">Stara / ciemna ramka</option><option value="uszkodzona ramka">Uszkodzona ramka</option><option value="inne">Inny powód (opis poniżej)</option></select></label>
+        <label>Uwagi / inny powód<input type="text" id="bee-fi-action-notes" maxlength="250" placeholder="Szczegóły operacji"></label>
+      </div>
+      <div class="hive-toolbar"><button type="button" id="bee-fi-action-save">📋 Zapisz operację</button></div>
+      <div id="bee-fi-action-history" aria-live="polite"></div>
+    </section>
     <h4 class="hive-section-title">➕ Dodaj przegląd / zdarzenie</h4>
     <div class="hive-fields">
       <label>Data
@@ -4577,6 +4602,102 @@ function beeUpdateVisibleHiveCount(actualCount) {
   if (mainInput) mainInput.title = "Zakres numerów, a nie rzeczywista liczba kart. Licznik widoczny jest obok kart.";
 }
 
+
+/* Ramki i zapasy: dane są częścią profilu wybranego ula (oddzielnie dla każdej pasieki). */
+const beeFiFields = {
+  nest:"bee-fi-nest", super:"bee-fi-super", food:"bee-fi-food",
+  reserve:"bee-fi-reserve", open:"bee-fi-open", capped:"bee-fi-capped"
+};
+function beeFiLoad(){
+  const p=getHiveProfile(selectedHiveNumber);
+  const f=p.frameInventory || {};
+  Object.entries(beeFiFields).forEach(([key,id])=>{
+    const el=document.getElementById(id);
+    if(el) el.value=f[key] == null ? "" : String(f[key]);
+  });
+  beeFiSummary();
+  beeFiRenderHistory();
+}
+function beeFiSummary(){
+  const f={};
+  Object.entries(beeFiFields).forEach(([key,id])=>{f[key]=document.getElementById(id)?.value ?? "";});
+  const box=document.getElementById("bee-fi-summary");
+  if(!box) return;
+  const reserve=f.reserve === "" ? null : Number(f.reserve);
+  const food=f.food === "" ? null : Number(f.food);
+  const brood=f.open !== "" && f.capped !== "" ? Number(f.open)+Number(f.capped) : null;
+  const pieces=[];
+  if(brood !== null) pieces.push("Czerw łącznie: "+brood+" ramek");
+  if(food !== null && reserve !== null) pieces.push(food>=reserve?"Żelazny zapas: spełniony ("+food+"/"+reserve+" ramek)":"⚠️ Żelazny zapas: poniżej zadanej wartości ("+food+"/"+reserve+" ramek)");
+  box.textContent=pieces.join(" · ") || "Uzupełnij wartości, aby zobaczyć podsumowanie.";
+}
+function beeFiSave(){
+  const values={};
+  for(const [key,id] of Object.entries(beeFiFields)){
+    const raw=document.getElementById(id)?.value ?? "";
+    if(raw !== "" && (!Number.isInteger(Number(raw)) || Number(raw)<0 || Number(raw)>100)){
+      alert("Podaj poprawną liczbę ramek (0–100)."); return;
+    }
+    values[key]=raw === "" ? null : Number(raw);
+  }
+  const profiles=getHiveProfiles();
+  const p=profiles[String(selectedHiveNumber)] || getHiveProfile(selectedHiveNumber);
+  p.frameInventory=values;
+  p.updatedAt=new Date().toISOString();
+  profiles[String(selectedHiveNumber)]=p;
+  saveHiveProfiles(profiles);
+  beeFiSummary();
+  renderHiveCards();
+  alert("Zapisano stan ramek i zapasów ula "+selectedHiveNumber+".");
+}
+function beeFiRenderHistory(){
+  const box=document.getElementById("bee-fi-action-history");
+  if(!box) return;
+  box.replaceChildren();
+  const p=getHiveProfile(selectedHiveNumber);
+  const events=Array.isArray(p.frameOperations)?p.frameOperations:[];
+  if(!events.length){box.textContent="Brak operacji na ramkach.";return;}
+  events.slice().reverse().forEach(e=>{
+    const row=document.createElement("div");
+    row.className="hive-history-item";
+    const info=document.createElement("span");
+    info.textContent=[e.date,e.action==="dodanie"?"Dodano":"Wycofano",e.quantity+" × "+e.kind,e.reason||"",e.notes||""].filter(Boolean).join(" · ");
+    const del=document.createElement("button");
+    del.type="button"; del.textContent="🗑️ Usuń";
+    del.addEventListener("click",()=>{
+      if(!confirm("Usunąć tylko tę operację na ramkach z ula "+selectedHiveNumber+"?"))return;
+      const profiles=getHiveProfiles();
+      const profile=profiles[String(selectedHiveNumber)]||getHiveProfile(selectedHiveNumber);
+      profile.frameOperations=(profile.frameOperations||[]).filter(x=>x.id!==e.id);
+      profiles[String(selectedHiveNumber)]=profile;
+      saveHiveProfiles(profiles);
+      beeFiRenderHistory();
+    });
+    row.append(info,del);box.appendChild(row);
+  });
+}
+function beeFiSaveAction(){
+  const date=document.getElementById("bee-fi-action-date").value;
+  const action=document.getElementById("bee-fi-action").value;
+  const kind=document.getElementById("bee-fi-kind").value;
+  const quantity=Number(document.getElementById("bee-fi-quantity").value);
+  const reason=document.getElementById("bee-fi-reason").value;
+  const notes=document.getElementById("bee-fi-action-notes").value.trim();
+  if(!date || !Number.isInteger(quantity) || quantity<1 || quantity>100){alert("Podaj datę i liczbę ramek od 1 do 100.");return;}
+  if(action==="wycofanie" && !reason && !notes){alert("Podaj powód wycofania ramki.");return;}
+  if(action==="wycofanie" && reason==="inne" && !notes){alert("Opisz inny powód wycofania.");return;}
+  const profiles=getHiveProfiles();
+  const p=profiles[String(selectedHiveNumber)] || getHiveProfile(selectedHiveNumber);
+  if(!Array.isArray(p.frameOperations))p.frameOperations=[];
+  p.frameOperations.push({id:Date.now().toString(36)+"-"+Math.random().toString(36).slice(2),date,action,kind,quantity,reason:action==="wycofanie"?reason:"",notes});
+  p.updatedAt=new Date().toISOString();
+  profiles[String(selectedHiveNumber)]=p;
+  saveHiveProfiles(profiles);
+  document.getElementById("bee-fi-action-notes").value="";
+  beeFiRenderHistory();
+  alert("Zapisano operację dla ula "+selectedHiveNumber+".");
+}
+
 function loadHiveEditor() {
   const profile = getHiveProfile(selectedHiveNumber);
   const set = (id, value) => {
@@ -4597,6 +4718,7 @@ function loadHiveEditor() {
   set("hive-varroa-method", profile.varroaMethod);
   set("hive-status", profile.status || "obserwacja");
   set("hive-profile-notes", profile.notes);
+  beeFiLoad();
   renderHiveHistory();
   if (typeof beeRenderInspectionHistory === "function") beeRenderInspectionHistory();
 }
@@ -5300,6 +5422,10 @@ function initHiveManagement() {
   const addCardButton = document.getElementById("hive-add-card");
   if (addCardButton) addCardButton.addEventListener("click", addHiveWithChosenNumber);
 
+  document.getElementById("bee-fi-save")?.addEventListener("click", beeFiSave);
+  document.getElementById("bee-fi-action-save")?.addEventListener("click", beeFiSaveAction);
+  Object.values(beeFiFields).forEach(id=>document.getElementById(id)?.addEventListener("input",beeFiSummary));
+  document.getElementById("bee-fi-action-date").value=new Date().toLocaleDateString("sv-SE");
   const profileSave = document.getElementById("hive-profile-save");
   if (profileSave) profileSave.addEventListener("click", saveHiveProfile);
   const renumberButton = document.getElementById("hive-renumber-save");
