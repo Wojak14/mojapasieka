@@ -505,6 +505,28 @@ body.bee-has-fixed-bar{padding-bottom:155px!important} #bee-mobile-bar button{po
 #bee-season-guides .bee-guide-note{font-size:.9rem;color:#635b48;line-height:1.5}
 #bee-queen-start{display:block;max-width:100%;width:100%;font:inherit;padding:11px;margin:8px 0;border:1px solid #d5b954;border-radius:8px}
 #bee-queen-schedule .bee-guide-item strong{display:block}
+
+/* OPPO / Android: ogranicz szerokość strony bez zmiany układu na komputerze. */
+@media (max-width: 600px) {
+  html, body { width:100%; max-width:100%; overflow-x:clip; }
+  body { min-width:0; }
+  body > * { max-width:100%; }
+  section, main, article, .calendar-scroll, #hive-management,
+  #hive-editor, #bee-stage5-panel, #bee-stage6-panel,
+  #bee-season-guides { min-width:0; max-width:100%; }
+  /* Przewijanie szerokich kalendarzy pozostaje wewnątrz ich kontenerów. */
+  .calendar-scroll { display:block; width:100%; max-width:100%; overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
+  .calendar-scroll > table { width:max-content; min-width:840px; max-width:none; table-layout:auto; }
+  .calendar-scroll td { min-width:120px; }
+  /* Inne tabele nie mogą rozszerzać całej aplikacji do 120vw. */
+  table:not(.calendar-scroll > table) { width:100%; min-width:0; max-width:100%; table-layout:auto; }
+  td:not(.calendar-scroll td) { min-width:0; height:auto; overflow-wrap:anywhere; }
+  .legend, .legend-box { min-width:0; max-width:100%; width:100%; }
+  .legend-item { min-width:0; overflow-wrap:anywhere; }
+  input, select, textarea, button { max-width:100%; }
+  img, video, canvas, svg { max-width:100%; height:auto; }
+  .hive-fields, .stage5-fields, .s6-fields { min-width:0; }
+}
 </style>
 
 </head>
