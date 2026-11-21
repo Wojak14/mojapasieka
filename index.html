@@ -2212,6 +2212,7 @@ font-weight:bold;
       <div class="hive-toolbar">
         <button type="button" id="bee-voice-start">🎤 Rozpocznij dyktowanie</button>
         <button type="button" id="bee-voice-stop" disabled>⏹ Zatrzymaj</button>
+        <button type="button" id="bee-voice-clear">🗑️ Usuń notatkę głosową</button>
       </div>
       <label style="display:block;font-size:13px">Rozpoznany tekst (można poprawić)
         <textarea id="bee-voice-text" rows="3" style="display:block;width:100%;max-width:100%;box-sizing:border-box;margin-top:5px" placeholder="Możesz również wpisać przegląd ręcznie"></textarea>
@@ -6292,6 +6293,13 @@ if ("serviceWorker" in navigator) {
       catch(e){recognition=null;start.disabled=false;stop.disabled=true;say('Nie można uruchomić mikrofonu: '+e.message);}
     });
     stop.addEventListener('click',()=>{if(recognition)try{recognition.stop()}catch(_){};});
+    $('bee-voice-clear').addEventListener('click',()=>{
+      if(!txt.value.trim() && !proposal){say('Brak notatki głosowej do usunięcia.');return;}
+      if(!window.confirm('Usunąć rozpoznaną notatkę głosową z formularza?\n\nZapisane wcześniej przeglądy, notatki i nagrania pozostaną bez zmian.'))return;
+      if(recognition){try{recognition.abort()}catch(_){};recognition=null;start.disabled=false;stop.disabled=true;}
+      txt.value='';invalidate();capturedHive=null;
+      say('Usunięto tekst notatki głosowej z formularza. Zapisane dane pozostają bez zmian.');
+    });
     function parse(text){
       const number=text.match(/\b(?:ul|ula|ulu|numer(?:ze)?)\s*(?:nr\.?\s*)?(\d{1,3})\b/i);
       const brood=text.match(/\b(?:czerw(?:iu|iem)?|czerwiu)\s*(\d{1,2})\s*(?:ram(?:ki|ek|kach|ka)|ramek)?/i);
