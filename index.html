@@ -2222,6 +2222,23 @@ font-weight:bold;
       <div class="hive-toolbar"><button type="button" id="bee-voice-confirm" disabled>✅ Zatwierdź i zapisz przegląd</button></div>
       <div id="bee-voice-status" role="status" style="font-size:13px;color:#574414"></div>
     </section>
+    <section id="bee-varroa-monitor" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5">
+      <h4 class="hive-section-title">🔬 Monitoring warrozy — etap 2</h4>
+      <p style="font-size:13px">Wyniki są przypisane do wybranego ula i pasieki. Wybierz metodę, ponieważ wyniki różnych metod mają inne jednostki i nie są bezpośrednio porównywalne.</p>
+      <div class="hive-fields">
+        <label>Data pomiaru<input id="bee-vm-date" type="date"></label>
+        <label>Metoda<select id="bee-vm-method"><option value="">Wybierz metodę</option><option value="natural">Osyp naturalny (roztocza / dobę)</option><option value="alcohol">Próba alkoholowa (% pszczół)</option><option value="sugar">Próba cukrowa (% pszczół)</option><option value="brood">Kontrola czerwiu (% komórek)</option><option value="other">Inna metoda (liczba bez przeliczenia)</option></select></label>
+        <label>Liczba znalezionych roztoczy<input id="bee-vm-mites" type="number" min="0" step="1" placeholder="np. 12"></label>
+        <label id="bee-vm-denom-label">Liczba badanych pszczół / komórek<input id="bee-vm-denom" type="number" min="1" step="1" placeholder="np. 300"></label>
+        <label id="bee-vm-days-label">Liczba dni obserwacji<input id="bee-vm-days" type="number" min="1" step="1" placeholder="np. 3"></label>
+      </div>
+      <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;margin-top:8px">Uwagi do pomiaru<input id="bee-vm-notes" maxlength="400" placeholder="np. pomiar przed leczeniem"></label>
+      <div id="bee-vm-result" style="font-size:13px;margin:9px 0" aria-live="polite">Wybierz metodę i wpisz wynik.</div>
+      <div class="hive-toolbar"><button id="bee-vm-save" type="button">💾 Zapisz pomiar warrozy</button></div>
+      <h4 class="hive-section-title">Historia pomiarów wybranego ula</h4>
+      <div id="bee-vm-history" aria-live="polite"></div>
+      <p style="font-size:12px;color:#665a40">Wynik jest pomiarem, nie diagnozą ani automatycznym zaleceniem leczenia. Interpretuj go w odniesieniu do metody, pory sezonu i lokalnych zaleceń weterynaryjnych.</p>
+    </section>
     <h4 class="hive-section-title">➕ Dodaj przegląd / zdarzenie</h4>
     <div class="hive-fields">
       <label>Data
@@ -4767,6 +4784,7 @@ function loadHiveEditor() {
   set("hive-status", profile.status || "obserwacja");
   set("hive-profile-notes", profile.notes);
   beeFiLoad();
+  if (typeof window.beeVarroaRender === "function") window.beeVarroaRender();
   renderHiveHistory();
   if (typeof beeRenderInspectionHistory === "function") beeRenderInspectionHistory();
 }
@@ -6344,6 +6362,85 @@ if ("serviceWorker" in navigator) {
     });
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
+<script>
+/* Etap 2 — lokalny monitoring warrozy. Korzysta z tego samego profilu ula co reszta aplikacji. */
+(function(){
+  const el=id=>document.getElementById(id);
+  const val=id=>el(id)?.value.trim()||'';
+  const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const context=()=>{
+    if(typeof window.getHiveProfiles!=='function'||typeof window.saveHiveProfiles!=='function'||typeof window.getHiveProfile!=='function')return null;
+    const n=Number(window.selectedHiveNumber);
+    if(!Number.isInteger(n)||n<1)return null;
+    return {n,profiles:window.getHiveProfiles()};
+  };
+  function measure(){
+    const method=val('bee-vm-method'), raw=val('bee-vm-mites'), den=val('bee-vm-denom'), days=val('bee-vm-days');
+    if(!method||raw==='')return null;
+    const mites=Number(raw);
+    if(!Number.isSafeInteger(mites)||mites<0||mites>1000000)return null;
+    let divisor=null,unit='roztoczy',result=mites;
+    if(method==='natural'){
+      divisor=Number(days);if(!Number.isSafeInteger(divisor)||divisor<1||divisor>365)return null;
+      result=mites/divisor;unit='roztoczy / dobę';
+    }else if(method==='alcohol'||method==='sugar'||method==='brood'){
+      divisor=Number(den);if(!Number.isSafeInteger(divisor)||divisor<1||divisor>1000000||mites>divisor)return null;
+      result=mites/divisor*100;unit=method==='brood'?'% badanych komórek':'% badanych pszczół';
+    }
+    return {method,mites,divisor,result,unit};
+  }
+  function update(){
+    const method=val('bee-vm-method');
+    el('bee-vm-denom-label').hidden=!['alcohol','sugar','brood'].includes(method);
+    el('bee-vm-days-label').hidden=method!=='natural';
+    const m=measure();
+    el('bee-vm-result').textContent=m?'Wynik: '+m.result.toLocaleString('pl-PL',{maximumFractionDigits:2})+' '+m.unit:'Uzupełnij metodę, liczbę roztoczy oraz wymaganą wielkość próby lub czas obserwacji.';
+  }
+  function render(){
+    const box=el('bee-vm-history');if(!box)return;
+    const c=context();if(!c){box.textContent='Wybierz kartę ula.';return;}
+    const p=c.profiles[String(c.n)]||window.getHiveProfile(c.n);
+    const records=Array.isArray(p.varroaMeasurements)?p.varroaMeasurements:[];
+    if(!records.length){box.textContent='Brak zapisanych pomiarów dla ula '+c.n+'.';return;}
+    box.innerHTML='';
+    records.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).forEach(r=>{
+      const item=document.createElement('div');item.className='hive-history-item';
+      const info=document.createElement('span');
+      info.textContent=r.date+' — '+r.methodLabel+': '+Number(r.result).toLocaleString('pl-PL',{maximumFractionDigits:2})+' '+r.unit+' ('+r.mites+' roztoczy'+(r.divisor?' / '+r.divisor:'')+')'+(r.notes?' — '+r.notes:'');
+      const del=document.createElement('button');del.type='button';del.textContent='🗑️ Usuń';
+      del.addEventListener('click',()=>{
+        const now=context();if(!now||now.n!==c.n)return;
+        if(!confirm('Usunąć wyłącznie ten pomiar warrozy z ula '+c.n+'?'))return;
+        const current=now.profiles[String(c.n)]||window.getHiveProfile(c.n);
+        current.varroaMeasurements=(Array.isArray(current.varroaMeasurements)?current.varroaMeasurements:[]).filter(x=>x.id!==r.id);
+        current.updatedAt=new Date().toISOString();now.profiles[String(c.n)]=current;
+        try{window.saveHiveProfiles(now.profiles);render();}catch(e){alert('Nie udało się usunąć pomiaru: '+e.message);}
+      });
+      item.append(info,document.createTextNode(' '),del);box.appendChild(item);
+    });
+  }
+  function save(){
+    const c=context();if(!c){alert('Wybierz kartę ula.');return;}
+    const date=val('bee-vm-date'),m=measure();
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(new Date(date+'T12:00:00').getTime())){alert('Podaj prawidłową datę.');return;}
+    if(!m){alert('Uzupełnij poprawnie metodę, liczbę roztoczy i wielkość próby albo liczbę dni.');return;}
+    const labels={natural:'Osyp naturalny',alcohol:'Próba alkoholowa',sugar:'Próba cukrowa',brood:'Kontrola czerwiu',other:'Inna metoda'};
+    const p=c.profiles[String(c.n)]||window.getHiveProfile(c.n);
+    if(!Array.isArray(p.varroaMeasurements))p.varroaMeasurements=[];
+    p.varroaMeasurements.push({...m,id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2),date,methodLabel:labels[m.method],notes:val('bee-vm-notes'),createdAt:new Date().toISOString()});
+    p.updatedAt=new Date().toISOString();c.profiles[String(c.n)]=p;
+    try{window.saveHiveProfiles(c.profiles);el('bee-vm-mites').value='';el('bee-vm-notes').value='';update();render();alert('Zapisano pomiar warrozy dla ula '+c.n+'.');}
+    catch(e){alert('Nie udało się zapisać pomiaru: '+e.message);}
+  }
+  window.beeVarroaRender=render;
+  document.addEventListener('DOMContentLoaded',()=>{
+    ['bee-vm-method','bee-vm-mites','bee-vm-denom','bee-vm-days'].forEach(id=>el(id)?.addEventListener('input',update));
+    el('bee-vm-save')?.addEventListener('click',save);
+    if(el('bee-vm-date'))el('bee-vm-date').value=new Date().toLocaleDateString('en-CA');
+    update();render();
+  });
 })();
 </script>
 </body>
