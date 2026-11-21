@@ -493,6 +493,18 @@ Legenda + notatki = szerokość kalendarza
 /* Podświetlenie po kliknięciu „Dzisiaj” */
 .bee-today-focus { outline: 4px solid #e0a000 !important; outline-offset: -4px; box-shadow: inset 0 0 0 3px #fff !important; }
 body.bee-has-fixed-bar{padding-bottom:155px!important} #bee-mobile-bar button{pointer-events:auto!important;position:relative;z-index:1} @media(max-width:520px){body.bee-has-fixed-bar{padding-bottom:215px!important}}
+
+/* Nowe panele sezonowe — tylko ich własne style */
+#bee-season-guides{margin:22px 8px;padding:14px;background:#fffdf5;border:1px solid #e2c66b;border-radius:14px;max-width:1100px}
+#bee-season-guides h2{font-size:1.35rem;color:#654b13}
+#bee-season-guides .bee-guide{margin:15px 0;padding:13px;border:1px solid #e7d49a;border-radius:12px;background:white}
+#bee-season-guides h3{margin:0 0 12px;color:#654b13;font-size:1.13rem}
+#bee-season-guides .bee-guide-item{padding:10px 0;border-bottom:1px solid #eee;line-height:1.45}
+#bee-season-guides .bee-guide-item:last-child{border-bottom:0}
+#bee-season-guides .bee-guide-item p{margin:5px 0}
+#bee-season-guides .bee-guide-note{font-size:.9rem;color:#635b48;line-height:1.5}
+#bee-queen-start{display:block;max-width:100%;width:100%;font:inherit;padding:11px;margin:8px 0;border:1px solid #d5b954;border-radius:8px}
+#bee-queen-schedule .bee-guide-item strong{display:block}
 </style>
 
 </head>
@@ -553,9 +565,12 @@ function beeScrollToTop(){
   if (document.body && document.body !== root) document.body.scrollTop = 0;
 }
 function scrollToCurrentApiaryHives(){
-  const target = document.getElementById('hive-card-list') || document.getElementById('hive-management');
-  if (!target) return;
-  target.scrollIntoView({behavior:'smooth',block:'start'});
+  const section = document.getElementById('hive-management');
+  if (!section) return;
+  const bottom = section.getBoundingClientRect().bottom + window.scrollY;
+  const bar = document.getElementById('bee-mobile-bar');
+  const offset = (bar ? bar.getBoundingClientRect().height : 0) + 20;
+  window.scrollTo({top: Math.max(0,bottom - window.innerHeight + offset), behavior:'smooth'});
 }
 </script>
 <!-- 🌦 POGODA -->
@@ -1856,6 +1871,7 @@ font-weight:bold;
   <button type="button" onclick="saveNote('12')">Zapisz notatkę</button>
 </div>
 
+
 <!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
 <div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
   <b>Legenda ikon:</b>
@@ -1895,6 +1911,7 @@ font-weight:bold;
     <div>🏠 ule / pasieka</div>
     <div>🧇 węza</div>
   </div>
+
 </div>
 
 
@@ -2234,45 +2251,7 @@ font-weight:bold;
   </div>
 </section>
 
-<!-- 🔥 LEGENDA (ROZCIĄGNIĘTA) -->
-<div class="icon-legend full-width-sync" style="margin:10px 0;padding:10px;border:1px solid #ccc;border-radius:8px;width:100%;box-sizing:border-box;">
-  <b>Legenda ikon:</b>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
-    <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
-    <div>💊 leczenie / warroza / apiwarol</div>
-    <div>🏷️ paski</div>
-    <div>🌬️ kwas</div>
-    <div>🛡️ zakończenie leczenia</div>
-    <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
-    <div>🐝 rój / rójka</div>
-    <div>🏃‍♂️🐝 ucieczka pszczół</div>
-    <div>🌸 pożytek</div>
-    <div>👑 matka / wymiana matki / wychów matki pszczelej</div>
-    <div>🐣 czerw</div>
-    <div>🧱 ramka</div>
-    <div>📦 nadstawka</div>
-    <div>🌧 deszcz</div>
-    <div>💨 wiatr</div>
-    <div>🌩️ burza</div>
-    <div>❄️ śnieg / zima</div>
-    <div>🥶 mróz / zimno</div>
-    <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
-    <div>☀️ słonecznie</div>
-    <div>🌁 mgła</div>
-    <div>🧊 grad</div>
-    <div>🧹 odsklepianie</div>
-    <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
-    <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
-    <div>🧇 węza</div>
-  </div>
+
 </div>
 
 </div><!-- TABELA ROJLIWOŚCI -->
@@ -2410,7 +2389,7 @@ font-weight:bold;
   <div id="bee-backup-status" role="status" aria-live="polite" style="font-size:13px;margin-top:8px"></div>
 </section>
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
-  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-top">⬆ Góra</button>
+  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-down">⬇ Dół</button><button type="button" id="s6-quick-top">⬆ Góra</button>
 </div>
 <script>
 /* BEE MOBILE BAR: autonomiczna obsługa, bez zależności od innych modułów. */
@@ -2426,6 +2405,8 @@ font-weight:bold;
       case 's6-quick-stock':goTo('bee-stage6-panel');break;
       case 's6-quick-analytics':goTo('bee-stage5-panel');break;
       case 's6-quick-hives':goTo('hive-management');break;
+      case 's6-quick-down':
+        window.scrollTo({top:Math.max(document.documentElement.scrollHeight,document.body.scrollHeight),behavior:'smooth'});break;
       case 's6-quick-top':
         window.scrollTo(0,0);
         (document.scrollingElement||document.documentElement).scrollTop=0;
@@ -2470,97 +2451,58 @@ font-weight:bold;
 })();
 </script>
 
-<div class="month">
-<h1>Dni największej rojliwości w 2026</h1>
-<table>
-<tr><th>Miesiąc</th><th>Dni rojowe</th></tr>
-<tr><td>Marzec</td><td>17, 25</td></tr>
-<tr><td>Kwiecień</td><td>8, 15, 23</td></tr>
-<tr><td>Maj</td><td>5, 12, 20</td></tr>
-<tr><td>Czerwiec</td><td>3, 10, 18</td></tr>
-<tr><td>Lipiec</td><td>7, 15, 22</td></tr>
-<tr><td>Sierpień</td><td>5, 13, 21</td></tr>
-<tr><td>Wrzesień</td><td>2, 10, 18</td></tr>
-<tr><td>Październik</td><td>6, 14</td></tr>
-</table>
-<div class="notes"><strong>Uwagi:</strong> Dni rojowe należy obserwować, aby ewentualnie podzielić rodziny lub zastosować pułapki rojowe.</div>
-</div>
-
-<h3>🟩 Leczenie warrozy</h3>
-<table>
-<tr><th>Miesiąc</th><th>Działanie</th></tr>
-<tr><td>Marzec</td><td>Kontrola rodzin i leczenie warrozy 15-30</td></tr>
-<tr><td>Kwiecień</td><td>Leczenie warrozy chemiczne / paski 1-20</td></tr>
-<tr><td>Wrzesień</td><td>Leczenie po miodobraniu</td></tr>
-<tr><td>Październik</td><td>Kontrola osypu i końcowe leczenie</td></tr>
-</table>
-
-<h3>🧬🐝 Wychówka matki pszczelej</h3>
-
-<table border="1" cellpadding="6" cellspacing="0" style="width:100%; border-collapse: collapse; text-align: left;">
-<tr style="background-color:#e0e0e0; text-align:center;">
-<th>Etap</th>
-<th>Czas trwania</th>
-<th>Czynności pasieczne</th>
-<th>Uwagi</th>
-</tr>
-
-<tr style="background-color:#FFF3E0;">
-<td>Wybór komórek matecznych</td>
-<td>1 dzień</td>
-<td>Kontrola rojowisk, wybór larw do wychowu</td>
-<td>Wybierać larwy młodsze niż 24h</td>
-</tr>
-
-<tr style="background-color:#FFE0B2;">
-<td>Budowa komórek matecznych</td>
-<td>2–3 dni</td>
-<td>Uzupełnianie węzy, obserwacja larw</td>
-<td>Utrzymywać rój w cieple i wilgotności</td>
-</tr>
-
-<tr style="background-color:#FFCC80;">
-<td>Rozwój larwy matki</td>
-<td>4–5 dni</td>
-<td>Kontrola larw, ochrona przed robotnicami</td>
-<td>Nie przerywać pracy pszczół w komórkach</td>
-</tr>
-
-<tr style="background-color:#FFB74D;">
-<td>Przepoczwarczenie</td>
-<td>6–10 dzień</td>
-<td>Obserwacja poczwarek</td>
-<td>Zapobiegać uszkodzeniu komórek matecznych</td>
-</tr>
-
-<tr style="background-color:#FF9800;">
-<td>Wygryzanie się matki</td>
-<td>11–12 dzień</td>
-<td>Kontrola aktywności matki, przygotowanie ula do wprowadzenia</td>
-<td>Nowa matka jest gotowa do osadzenia</td>
-</tr>
-
-<tr style="background-color:#81C784;">
-<td>Wprowadzenie matki do rodziny</td>
-<td>12–14 dzień</td>
-<td>Osadzenie matki w ochronnej klatce, obserwacja akceptacji przez pszczoły</td>
-<td>Stopniowo wypuszczać matkę, by uniknąć agresji</td>
-</tr>
-
-<tr style="background-color:#A5D6A7;">
-<td>Okres adaptacji</td>
-<td>2–4 dni po wprowadzeniu</td>
-<td>Obserwacja akceptacji matki, kontrola czerwienia</td>
-<td>Monitorować akceptację matki i początek składania jaj</td>
-</tr>
-</table>
-
-<div class="notes">
-<strong>Uwagi ogólne:</strong><br>
-– Wszystkie czynności wykonywać przy sprzyjającej pogodzie<br>
-– Zachować higienę w ulu i narzędziach<br>
-– Kontrolować temperaturę i wilgotność w komórkach matecznych
-</div>
+<section id="bee-season-guides" aria-label="Praktyczne poradniki pasieczne">
+<h2>🐝 Sezon pasieczny — praktyczne poradniki</h2>
+<p class="bee-guide-note">Terminy są orientacyjne. Oceniaj rzeczywiste warunki pogodowe, pożytki i stan każdej rodziny.</p>
+<article class="bee-guide"><h3>🐝 Okresy największego ryzyka rójki</h3>
+<div class="bee-guide-item"><strong>Marzec – początek kwietnia</strong><p>Obserwuj rozwój silnych rodzin; wczesna rójka jest mniej typowa, ale możliwa przy wyjątkowo ciepłej wiośnie.</p></div>
+<div class="bee-guide-item"><strong>Kwiecień – maj · ryzyko rośnie</strong><p>Kontroluj zatłoczenie gniazda, miejsce do czerwienia i obecność mateczników. Szczególnie uważaj przy intensywnym pożytku.</p></div>
+<div class="bee-guide-item"><strong>Maj – czerwiec · zwykle szczyt</strong><p>W silnych rodzinach planuj regularne kontrole nastroju rojowego. Terminy zależą od pogody i lokalnego sezonu.</p></div>
+<div class="bee-guide-item"><strong>Lipiec i później</strong><p>Ryzyko zazwyczaj maleje, ale nie zanika całkowicie. Kieruj się obserwacjami, nie sztywnymi datami.</p></div>
+</article>
+<article class="bee-guide"><h3>🛡️ Monitorowanie i zwalczanie warrozy</h3>
+<div class="bee-guide-item"><strong>Wiosna</strong><p>Sprawdź porażenie metodą pomiarową i zapisz wynik dla konkretnego ula. Nie zakładaj automatycznie potrzeby leczenia.</p></div>
+<div class="bee-guide-item"><strong>W sezonie pożytkowym</strong><p>Kontroluj poziom roztoczy; dobór metody musi uwzględniać obecność nadstawek miodowych i etykietę dopuszczonego produktu.</p></div>
+<div class="bee-guide-item"><strong>Po ostatnim miodobraniu</strong><p>Oceń porażenie i w razie wskazań zaplanuj odpowiednie leczenie, zgodne z instrukcją produktu i zaleceniami lekarza weterynarii.</p></div>
+<div class="bee-guide-item"><strong>Jesień / okres bezczerwiowy</strong><p>Zweryfikuj skuteczność i warunki ewentualnego zabiegu końcowego. Zapisz datę, preparat i wynik kontroli.</p></div>
+<p class="bee-guide-note">Nie stosuj leków według stałych dat z kalendarza — decyzja wymaga pomiaru, oceny rodziny i przestrzegania aktualnej etykiety produktu.</p>
+</article>
+<article class="bee-guide"><h3>👑 Wychów matek pszczelich</h3>
+<p>Wybierz datę przekładania młodych larw. Kalkulator pokaże orientacyjny harmonogram dla metody przekładania larw.</p>
+<label for="bee-queen-start">Data przekładania larw</label>
+<input type="date" id="bee-queen-start">
+<div id="bee-queen-schedule" aria-live="polite"></div>
+<p class="bee-guide-note">Daty są przybliżone. Wiek larw, temperatura i metoda wychowu mogą zmienić przebieg; kontroluj mateczniki ostrożnie.</p>
+</article>
+</section>
+<script>
+/* Kalkulator orientacyjny — przekładanie larw młodszych niż 24 godziny. */
+(function(){
+ const input=document.getElementById('bee-queen-start'),output=document.getElementById('bee-queen-schedule');
+ if(!input||!output)return;
+ const stages=[
+  [0,'Przekładanie larw','Wybierz zdrowe larwy młodsze niż 24 godziny.'],
+  [4,'Kontrola przyjęcia / zasklepiania','Kontroluj ostrożnie; termin zależy od wieku larw.'],
+  [9,'Przygotowanie do wygryzania','Zabezpiecz dojrzałe mateczniki zgodnie z metodą wychowu.'],
+  [11,'Przewidywane wygryzanie','Możliwy zakres około 10–12 dni po przekładaniu.'],
+  [18,'Orientacyjny okres lotów godowych','Pogoda może przesunąć termin.'],
+  [25,'Kontrola rozpoczęcia czerwienia','Sprawdź obecność jaj; nie niepokój rodziny zbyt wcześnie.']
+ ];
+ function render(){
+  output.replaceChildren();if(!input.value)return;
+  const date=new Date(input.value+'T12:00:00');if(isNaN(date.getTime()))return;
+  const fmt=new Intl.DateTimeFormat('pl-PL',{day:'2-digit',month:'long',year:'numeric'});
+  stages.forEach(([days,title,desc])=>{
+   const d=new Date(date);d.setDate(d.getDate()+days);
+   const el=document.createElement('div');el.className='bee-guide-item';
+   const strong=document.createElement('strong');strong.textContent=fmt.format(d)+' — '+title;
+   const p=document.createElement('p');p.textContent=desc;el.append(strong,p);output.append(el);
+  });
+ }
+ input.addEventListener('change',render);
+ input.value=new Date().toLocaleDateString('en-CA');render();
+})();
+</script>
 <!-- Usunięto odwołanie do app.js z późniejszej wersji modułowej; ta wersja działa z kodem osadzonym w HTML. -->
 
 
