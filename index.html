@@ -527,6 +527,15 @@ body.bee-has-fixed-bar{padding-bottom:155px!important} #bee-mobile-bar button{po
   img, video, canvas, svg { max-width:100%; height:auto; }
   .hive-fields, .stage5-fields, .s6-fields { min-width:0; }
 }
+
+/* Android: zwijany pasek nie zasłania kopii bezpieczeństwa. */
+@media (max-width: 600px) {
+  #bee-mobile-bar { max-height:none!important; overflow:visible!important; display:grid!important; grid-template-columns:1fr 1fr!important; align-items:stretch!important; }
+  #bee-mobile-bar:not(.bee-bar-expanded) > button:not(#bee-bar-toggle):not(#bee-bar-backup) { display:none!important; }
+  #bee-mobile-bar > button { min-width:0!important; width:100%!important; margin:0!important; padding:9px 6px!important; font-size:13px!important; }
+  body.bee-has-fixed-bar { padding-bottom:100px!important; }
+  #bee-backup-panel, #bee-sync-prep-panel { scroll-margin-bottom:110px; }
+}
 </style>
 
 </head>
@@ -2477,9 +2486,31 @@ font-weight:bold;
 </section>
 
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
+  <button type="button" id="bee-bar-toggle" aria-expanded="false" aria-controls="bee-mobile-bar">☰ Menu</button><button type="button" id="bee-bar-backup">💾 Kopia</button>
   <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-down">⬇ Dół</button><button type="button" id="s6-quick-top">⬆ Góra</button>
 </div>
 <script>
+/* Zwinięte menu na Androidzie + szybki dostęp do kopii. Nie zmienia danych. */
+(function(){
+  function init(){
+    var bar=document.getElementById('bee-mobile-bar');
+    var toggle=document.getElementById('bee-bar-toggle');
+    var backup=document.getElementById('bee-bar-backup');
+    if(!bar||!toggle||!backup)return;
+    toggle.addEventListener('click',function(){
+      var expanded=bar.classList.toggle('bee-bar-expanded');
+      toggle.setAttribute('aria-expanded',String(expanded));
+      toggle.textContent=expanded?'✕ Zwiń':'☰ Menu';
+    });
+    backup.addEventListener('click',function(){
+      bar.classList.remove('bee-bar-expanded');
+      toggle.setAttribute('aria-expanded','false');toggle.textContent='☰ Menu';
+      var panel=document.getElementById('bee-backup-panel');
+      if(panel){panel.scrollIntoView({behavior:'auto',block:'center'});}
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
 /* BEE MOBILE BAR: autonomiczna obsługa, bez zależności od innych modułów. */
 (function(){
   'use strict';
