@@ -6532,5 +6532,73 @@ if ("serviceWorker" in navigator) {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
+
+<section id="bee-sync-preflight" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;box-sizing:border-box">
+<h2 style="margin-top:0;color:#654b13">☁️ Przygotowanie synchronizacji Android i Windows</h2>
+<p><strong>Tryb bezpieczny — tylko odczyt.</strong> Nie łączy się z chmurą, nie importuje, nie usuwa ani nie nadpisuje danych. Pliki kopii są analizowane wyłącznie na tym urządzeniu.</p>
+<p>1. Na Androidzie i Windows osobno wybierz „⬇ Pobierz pełną kopię” w sekcji „Kopia bezpieczeństwa obu pasiek”. Zachowaj oba pliki JSON w bezpiecznym miejscu i nie udostępniaj ich publicznie — mogą zawierać prywatne dane oraz nagrania.</p>
+<p>2. Wybierz poniżej oba pliki, aby sprawdzić, które rekordy występują tylko na jednym urządzeniu, a które mają różną zawartość. <strong>Nie używaj jeszcze funkcji przywracania kopii do łączenia urządzeń.</strong></p>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin:12px 0">
+<label style="flex:1;min-width:210px">Kopia z Androida<input id="bee-sync-android" type="file" accept=".json,application/json" style="display:block;max-width:100%;margin-top:5px"></label>
+<label style="flex:1;min-width:210px">Kopia z Windows<input id="bee-sync-windows" type="file" accept=".json,application/json" style="display:block;max-width:100%;margin-top:5px"></label>
+</div>
+<button type="button" id="bee-sync-compare" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">🔍 Porównaj kopie bez zmieniania danych</button>
+<button type="button" id="bee-sync-report" disabled style="padding:11px;background:#e9dfb8;border:0;border-radius:8px;font-weight:bold;margin:5px">⬇ Pobierz raport porównania</button>
+<div id="bee-sync-result" role="status" aria-live="polite" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px;font-size:14px"></div>
+<p style="font-size:12px;color:#654b13">Raport zawiera identyfikatory rekordów i podsumowanie różnic, ale nie zawiera treści notatek ani plików audio. Zachowaj go prywatnie. Porównanie nie jest synchronizacją.</p>
+</section>
+<script>
+/* Przygotowanie synchronizacji: wyłącznie lokalny odczyt dwóch plików kopii; zero zapisu do localStorage / IndexedDB. */
+(function(){
+  const el=id=>document.getElementById(id);
+  let report=null;
+  function validate(data,label){
+    if(!data||data.format!=='bee-assistant-pro-backup'||data.version!==1||!data.storage||typeof data.storage!=='object'||Array.isArray(data.storage)||!Array.isArray(data.voice))throw Error(label+': nieprawidłowy format kopii');
+    const keys=Object.keys(data.storage);
+    if(keys.length>100000||data.voice.length>10000)throw Error(label+': zbyt wiele rekordów');
+    for(const key of keys)if(typeof data.storage[key]!=='string')throw Error(label+': nieprawidłowy wpis '+key);
+    const seen=new Set();
+    for(const item of data.voice){if(!item||typeof item.key!=='string'||!item.key||typeof item.base64!=='string'||seen.has(item.key))throw Error(label+': nieprawidłowy rekord audio');seen.add(item.key);}
+    return data;
+  }
+  function compareMaps(a,b){
+    const onlyAndroid=[],onlyWindows=[],different=[],same=[];
+    for(const key of Object.keys(a)){
+      if(!Object.prototype.hasOwnProperty.call(b,key))onlyAndroid.push(key);
+      else if(a[key]===b[key])same.push(key);
+      else different.push(key);
+    }
+    for(const key of Object.keys(b))if(!Object.prototype.hasOwnProperty.call(a,key))onlyWindows.push(key);
+    return {onlyAndroid,onlyWindows,different,sameCount:same.length};
+  }
+  async function read(file,label){
+    if(!file)throw Error('Wybierz kopię: '+label);
+    if(file.size>200*1024*1024)throw Error(label+': plik większy niż 200 MB; wymaga osobnej analizy');
+    return validate(JSON.parse(await file.text()),label);
+  }
+  function audioMap(data){const m=Object.create(null);for(const item of data.voice)m[item.key]=item.base64;return m;}
+  el('bee-sync-compare').addEventListener('click',async function(){
+    this.disabled=true;el('bee-sync-report').disabled=true;report=null;el('bee-sync-result').textContent='Porównywanie kopii…';
+    try{
+      const a=await read(el('bee-sync-android').files[0],'Android');
+      const w=await read(el('bee-sync-windows').files[0],'Windows');
+      const storage=compareMaps(a.storage,w.storage),voice=compareMaps(audioMap(a),audioMap(w));
+      report={format:'bee-assistant-pro-sync-preflight',version:1,createdAt:new Date().toISOString(),source:{android:{backupCreatedAt:a.createdAt||null,storageCount:Object.keys(a.storage).length,voiceCount:a.voice.length},windows:{backupCreatedAt:w.createdAt||null,storageCount:Object.keys(w.storage).length,voiceCount:w.voice.length}},storage,voice,warning:'Raport diagnostyczny, bez synchronizacji i bez przenoszenia danych. Nie publikuj identyfikatorów rekordów.'};
+      el('bee-sync-result').textContent='Porównanie zakończone — bez zmian w danych.\n'+
+        'Pamięć aplikacji: tylko Android '+storage.onlyAndroid.length+', tylko Windows '+storage.onlyWindows.length+', różna zawartość '+storage.different.length+', identyczne '+storage.sameCount+'.\n'+
+        'Nagrania: tylko Android '+voice.onlyAndroid.length+', tylko Windows '+voice.onlyWindows.length+', różna zawartość '+voice.different.length+', identyczne '+voice.sameCount+'.\n'+
+        'Uwaga: różne wartości nie są automatycznie konfliktami — wymagają analizy przed migracją.';
+      el('bee-sync-report').disabled=false;
+    }catch(err){el('bee-sync-result').textContent='Nie wykonano porównania: '+err.message;}
+    finally{this.disabled=false;}
+  });
+  el('bee-sync-report').addEventListener('click',function(){
+    if(!report)return;
+    const url=URL.createObjectURL(new Blob([JSON.stringify(report,null,2)],{type:'application/json'}));
+    const a=document.createElement('a');a.href=url;a.download='raport-przygotowania-synchronizacji-'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  });
+})();
+</script>
+
 </body>
 </html>
