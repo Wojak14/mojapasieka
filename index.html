@@ -2239,6 +2239,16 @@ font-weight:bold;
       <div id="bee-vm-history" aria-live="polite"></div>
       <p style="font-size:12px;color:#665a40">Wynik jest pomiarem, nie diagnozą ani automatycznym zaleceniem leczenia. Interpretuj go w odniesieniu do metody, pory sezonu i lokalnych zaleceń weterynaryjnych.</p>
     </section>
+    <section id="bee-family-development" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5">
+      <h4 class="hive-section-title">📈 Wykres rozwoju rodziny</h4>
+      <p style="font-size:13px;margin:5px 0 10px">Historia liczby ramek z czerwiem i zapasami na podstawie zapisanych szczegółowych przeglądów wybranego ula. Każda pasieka ma oddzielne dane.</p>
+      <div class="hive-toolbar"><button type="button" id="bee-growth-refresh">🔄 Odśwież wykres</button></div>
+      <div id="bee-growth-status" role="status" style="font-size:13px;margin:8px 0"></div>
+      <div style="width:100%;max-width:100%;overflow:hidden"><canvas id="bee-growth-canvas" role="img" aria-label="Wykres rozwoju rodziny" style="display:block;width:100%;height:250px;max-width:100%"></canvas></div>
+      <div id="bee-growth-legend" style="font-size:12px;margin-top:6px"></div>
+      <div id="bee-growth-table" style="overflow-x:auto;margin-top:8px"></div>
+      <p style="font-size:12px;color:#665a40">Na wykresie uwzględniane są tylko wpisy z jednoznaczną liczbą ramek, np. „4 ramki” lub „4”. Opisy słowne pozostają w historii przeglądów.</p>
+    </section>
     <h4 class="hive-section-title">➕ Dodaj przegląd / zdarzenie</h4>
     <div class="hive-fields">
       <label>Data
@@ -4785,6 +4795,7 @@ function loadHiveEditor() {
   set("hive-profile-notes", profile.notes);
   beeFiLoad();
   if (typeof window.beeVarroaRender === "function") window.beeVarroaRender();
+  if (typeof window.beeGrowthRender === "function") window.beeGrowthRender();
   renderHiveHistory();
   if (typeof beeRenderInspectionHistory === "function") beeRenderInspectionHistory();
 }
@@ -5984,7 +5995,7 @@ if ("serviceWorker" in navigator) {
     }
     profile.updatedAt=new Date().toISOString();profiles[key]=profile;
     try{saveHiveProfiles(profiles);}catch(e){status('Błąd zapisu: '+e.message);return;}
-    reset();beeRenderInspectionHistory();if(typeof renderHiveCards==='function')renderHiveCards();
+    reset();beeRenderInspectionHistory();if(typeof renderHiveCards==='function')renderHiveCards();if(typeof window.beeGrowthRender==='function')window.beeGrowthRender();
     status('Przegląd zapisany w karcie ula '+key+'.');
   }
   function render(){
@@ -6441,6 +6452,84 @@ if ("serviceWorker" in navigator) {
     if(el('bee-vm-date'))el('bee-vm-date').value=new Date().toLocaleDateString('en-CA');
     update();render();
   });
+})();
+</script>
+<script>
+/* Wykres rozwoju rodziny — bez bibliotek zewnętrznych, działa offline na Windows i Android. */
+(function(){
+  const $=id=>document.getElementById(id);
+  const numeric=v=>{
+    const str=String(v??'').trim();
+    const m=str.match(/^(\d{1,3})(?:[.,](\d))?(?:\s*(?:ramek|ramki|ramka|plastrów|plastry|plaster|szt\.?))?$/i);
+    return m?Number(m[1]+(m[2]?'.'+m[2]:'')):null;
+  };
+  const day=s=>{
+    const v=String(s||'').trim();
+    let m=v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m)return `${m[1]}-${m[2]}-${m[3]}`;
+    m=v.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+    return m?`${m[3]}-${m[2]}-${m[1]}`:null;
+  };
+  function points(){
+    if(typeof getHiveProfile!=='function'||typeof selectedHiveNumber==='undefined')return [];
+    const p=getHiveProfile(selectedHiveNumber);
+    return (Array.isArray(p.inspections)?p.inspections:[])
+      .filter(x=>x&&x.type==='przegląd szczegółowy'&&x.details)
+      .map(x=>({date:day(x.details.date||x.date),brood:numeric(x.details.brood),stores:numeric(x.details.stores)}))
+      .filter(x=>x.date&&(x.brood!==null||x.stores!==null))
+      .sort((a,b)=>a.date.localeCompare(b.date));
+  }
+  function render(){
+    const canvas=$('bee-growth-canvas'),status=$('bee-growth-status'),legend=$('bee-growth-legend'),table=$('bee-growth-table');
+    if(!canvas||!status||!legend||!table)return;
+    const entries=points(),n=typeof selectedHiveNumber==='undefined'?'?':selectedHiveNumber;
+    status.textContent=entries.length?`Ul ${n}: ${entries.length} pomiarów z liczbą ramek.`:`Ul ${n}: brak liczbowych danych z przeglądów. Zapisz szczegółowy przegląd, podając np. „4 ramki” w polu Czerw lub Zapasy.`;
+    legend.textContent='● Czerw (ramki)     ● Zapasy (ramki)';
+    legend.style.whiteSpace='pre-wrap';
+    table.replaceChildren();
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const w=Math.max(280,Math.round(canvas.getBoundingClientRect().width||300)),h=250;
+    canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+    const ctx=canvas.getContext('2d');if(!ctx)return;
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+    const dark='#51492e',blue='#2876b7',gold='#a56b0a',left=40,right=12,top=15,bottom=43;
+    const pw=w-left-right,ph=h-top-bottom;
+    const values=entries.flatMap(x=>[x.brood,x.stores]).filter(x=>x!==null);
+    const max=Math.max(4,Math.ceil((Math.max(0,...values)+1)/2)*2);
+    ctx.font='12px sans-serif';ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){
+      const y=top+ph*(1-i/4);
+      ctx.strokeStyle='#e2dfd1';ctx.beginPath();ctx.moveTo(left,y);ctx.lineTo(w-right,y);ctx.stroke();
+      ctx.fillStyle=dark;ctx.textAlign='right';ctx.fillText(String(Math.round(max*i/4*10)/10),left-7,y+4);
+    }
+    if(!entries.length){ctx.fillStyle=dark;ctx.textAlign='center';ctx.fillText('Brak danych do wykresu',w/2,h/2);return;}
+    const dates=[...new Set(entries.map(x=>x.date))];
+    const xpos=d=>left+(dates.length===1?pw/2:dates.indexOf(d)/(dates.length-1)*pw);
+    const ypos=v=>top+ph*(1-v/max);
+    const series=[['brood',blue],['stores',gold]];
+    series.forEach(([key,color])=>{
+      const arr=entries.filter(x=>x[key]!==null);
+      ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2.5;
+      ctx.beginPath();arr.forEach((x,i)=>{const px=xpos(x.date),py=ypos(x[key]);i?ctx.lineTo(px,py):ctx.moveTo(px,py);});ctx.stroke();
+      arr.forEach(x=>{ctx.beginPath();ctx.arc(xpos(x.date),ypos(x[key]),3.5,0,Math.PI*2);ctx.fill();});
+    });
+    ctx.fillStyle=dark;ctx.font='11px sans-serif';ctx.textAlign='center';
+    const ticks=dates.length<=4?dates:dates.filter((_,i)=>i===0||i===dates.length-1||i%Math.ceil(dates.length/4)===0);
+    ticks.forEach(d=>{const x=xpos(d);ctx.save();ctx.translate(x,h-28);ctx.rotate(-Math.PI/7);ctx.fillText(d.slice(5),0,0);ctx.restore();});
+    const t=document.createElement('table');t.style.cssText='width:100%;min-width:0;font-size:12px;border-collapse:collapse';
+    const head=document.createElement('tr');['Data','Czerw (ramki)','Zapasy (ramki)'].forEach(v=>{const th=document.createElement('th');th.textContent=v;head.append(th);});t.append(head);
+    entries.forEach(x=>{const tr=document.createElement('tr');[x.date,x.brood??'—',x.stores??'—'].forEach(v=>{const td=document.createElement('td');td.textContent=String(v);td.style.padding='4px';tr.append(td);});t.append(tr);});
+    table.append(t);
+  }
+  window.beeGrowthRender=render;
+  function init(){
+    $('bee-growth-refresh')?.addEventListener('click',render);
+    // Po edycji lub usunięciu wpisu historia jest odświeżana asynchronicznie.
+    $('bee-inspection-history')?.addEventListener('click',()=>setTimeout(render,100));
+    window.addEventListener('resize',render);
+    render();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
 </body>
