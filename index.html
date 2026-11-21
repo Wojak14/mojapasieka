@@ -5898,6 +5898,17 @@ if ("serviceWorker" in navigator) {
 
 // ETAP 7: pełny eksport localStorage oraz nagrań z IndexedDB; import wyłącznie brakujących danych.
 (function(){
+  let preparedBackupFile = null;
+  function openBackupVoiceDb(){
+    return new Promise((resolve,reject)=>{
+      if(!window.indexedDB){reject(new Error('IndexedDB niedostępne'));return;}
+      const req=indexedDB.open('KalendarzPszczelarski2026',1);
+      req.onupgradeneeded=()=>{const db=req.result;if(!db.objectStoreNames.contains('voiceNotes'))db.createObjectStore('voiceNotes',{keyPath:'key'});};
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error||new Error('Nie można otworzyć nagrań'));
+      req.onblocked=()=>reject(new Error('Baza nagrań jest zablokowana. Zamknij inne karty aplikacji.'));
+    });
+  }
   function initializeBackupControls(){
   const status = document.getElementById('bee-backup-status');
   const report = message => { if(status) status.textContent = message; };
@@ -5942,7 +5953,7 @@ if ("serviceWorker" in navigator) {
       for(let i=0;i<localStorage.length;i++){
         const key=localStorage.key(i); storage[key]=localStorage.getItem(key);
       }
-      const db=await openVoiceNotesDb();
+      const db=await openBackupVoiceDb();
       const records=await getAllVoice(db);
       const voice=[];
       for(const rec of records){
@@ -5950,12 +5961,27 @@ if ("serviceWorker" in navigator) {
         voice.push({key:rec.key,dateKey:rec.dateKey,mimeType:rec.mimeType||rec.blob.type||'audio/webm',updatedAt:rec.updatedAt,base64:bytesToBase64(new Uint8Array(await rec.blob.arrayBuffer()))});
       }
       const backup={format:'bee-assistant-pro-backup',version:1,createdAt:new Date().toISOString(),storage,voice};
-      const url=URL.createObjectURL(new Blob([JSON.stringify(backup)],{type:'application/json'}));
-      const a=document.createElement('a'); a.href=url; a.download='kopia-pasieki-'+new Date().toISOString().slice(0,10)+'.json';
-      document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-      report('Rozpoczęto pobieranie kopii: '+Object.keys(storage).length+' wpisów pamięci i '+voice.length+' nagrań. Sprawdź folder Pobrane na urządzeniu.');
+      const filename='kopia-pasieki-'+new Date().toISOString().slice(0,10)+'.json';
+      preparedBackupFile=new File([JSON.stringify(backup)],filename,{type:'application/json'});
+      const shareButton=document.getElementById('bee-backup-share');
+      if(shareButton)shareButton.hidden=false;
+      const url=URL.createObjectURL(preparedBackupFile);
+      const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),120000);
+      report('Kopia przygotowana: '+Object.keys(storage).length+' wpisów i '+voice.length+' nagrań. Jeśli Android nie pobrał pliku, naciśnij „Udostępnij / Zapisz kopię” poniżej.');
     }catch(err){console.error(err);report('Błąd eksportu: '+err.message);}
     finally{this.disabled=false;}
+  });
+  document.getElementById('bee-backup-share')?.addEventListener('click',async function(){
+    if(!preparedBackupFile){report('Najpierw naciśnij „Pobierz pełną kopię”.');return;}
+    try{
+      if(!navigator.share||!navigator.canShare||!navigator.canShare({files:[preparedBackupFile]})){
+        report('Udostępnianie plików nie jest obsługiwane w tej przeglądarce. Otwórz aplikację w Chrome i spróbuj pobrać kopię.');return;
+      }
+      await navigator.share({files:[preparedBackupFile],title:'Kopia BEE ASSISTANT PRO'});
+      report('Plik przekazano do systemowego okna udostępniania. Sprawdź, czy został zapisany w wybranym miejscu.');
+    }catch(err){if(err.name!=='AbortError')report('Nie udało się udostępnić pliku: '+err.message);}
   });
   document.getElementById('bee-backup-import')?.addEventListener('click',async function(){
     const file=fileInput?.files?.[0];if(!file){report('Najpierw wybierz plik kopii JSON.');return;}
@@ -5974,7 +6000,7 @@ if ("serviceWorker" in navigator) {
         voice.push({key:item.key,dateKey:item.dateKey||'',mimeType:item.mimeType||'audio/webm',updatedAt:item.updatedAt||'',blob:new Blob([bytes],{type:item.mimeType||'audio/webm'})});
       }
       if(!confirm('Przywrócić brakujące wpisy z kopii? Obecne dane pozostaną bez zmian.')){report('Anulowano przywracanie.');return;}
-      const db=await openVoiceNotesDb();
+      const db=await openBackupVoiceDb();
       // Import jest niedestrukcyjny: brak usuwania lub nadpisywania obecnych rekordów.
       const addedVoice=await putMissingVoice(db,voice);
       let addedKeys=0,failedKeys=0;
@@ -6326,6 +6352,7 @@ if ("serviceWorker" in navigator) {
   <h2 style="margin-top:0;color:#654b13">💾 Kopia bezpieczeństwa obu pasiek</h2>
   <p>Eksport obejmuje wszystkie zapisane dane aplikacji w tej przeglądarce, w tym nagrania głosowe. Przechowuj plik w bezpiecznym miejscu.</p>
   <button type="button" id="bee-backup-export" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬇ Pobierz pełną kopię</button>
+  <button type="button" id="bee-backup-share" hidden style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:6px">📤 Udostępnij / Zapisz kopię (Android)</button>
   <label style="display:block;margin-top:14px;font-weight:bold" for="bee-backup-file">Przywróć kopię z pliku JSON</label>
   <input type="file" id="bee-backup-file" accept=".json,application/json" style="margin:8px 0;max-width:100%">
   <button type="button" id="bee-backup-import" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬆ Przywróć brakujące dane</button>
