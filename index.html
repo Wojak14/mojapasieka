@@ -551,7 +551,7 @@ cursor:pointer;
 font-weight:bold;
 ">📅 Dzisiaj
 </button>
-<button type="button" id="hive-down-btn" onclick="scrollToCurrentApiaryHives()" style="margin-top:8px;margin-bottom:10px;margin-left:6px;padding:8px 12px;font-size:14px;border:none;border-radius:8px;background:#FBC02D;cursor:pointer;font-weight:bold;">⬇ Dół — karty uli</button>
+<button type="button" id="hive-down-btn" style="margin-top:8px;margin-bottom:10px;margin-left:6px;padding:8px 12px;font-size:14px;border:none;border-radius:8px;background:#FBC02D;cursor:pointer;font-weight:bold;">⬇ Dół — karty uli</button>
 
 <script>
 function beeScrollToTop(){
@@ -565,13 +565,21 @@ function beeScrollToTop(){
   if (document.body && document.body !== root) document.body.scrollTop = 0;
 }
 function scrollToCurrentApiaryHives(){
-  const section = document.getElementById('hive-management');
-  if (!section) return;
-  const bottom = section.getBoundingClientRect().bottom + window.scrollY;
-  const bar = document.getElementById('bee-mobile-bar');
-  const offset = (bar ? bar.getBoundingClientRect().height : 0) + 20;
-  window.scrollTo({top: Math.max(0,bottom - window.innerHeight + offset), behavior:'smooth'});
+  // Przycisk górny prowadzi do początku kart aktualnie wybranej pasieki.
+  // Nie przewijamy do końca całej sekcji (może być bardzo długa).
+  const target = document.getElementById('hive-management');
+  if (!target) return;
+  const root = document.scrollingElement || document.documentElement;
+  const y = Math.max(0, target.getBoundingClientRect().top + (window.pageYOffset || root.scrollTop || 0) - 8);
+  try { window.scrollTo({top:y, left:0, behavior:'auto'}); }
+  catch (_) { window.scrollTo(0,y); }
+  root.scrollTop = y;
+  if (document.body && document.body !== root) document.body.scrollTop = y;
 }
+document.addEventListener('DOMContentLoaded', function(){
+  const button = document.getElementById('hive-down-btn');
+  if (button) button.addEventListener('click', scrollToCurrentApiaryHives);
+});
 </script>
 <!-- 🌦 POGODA -->
 <div id="weather-box" style="
