@@ -4964,6 +4964,13 @@ function formatCalendarDate(isoDate) {
   return parts[2] + "." + parts[1] + "." + parts[0];
 }
 
+// Most dla panelu głosowego: główny moduł działa w zakresie DOMContentLoaded.
+window.beeVoiceHiveContext = function(){
+  return {hive:Number(selectedHiveNumber), apiary:currentApiary?.id || null,
+          apiaryName:currentApiary?.name || 'wybrana'};
+};
+window.beeVoiceSaveHiveEvent = function(){ return addHiveEvent(); };
+
 function addHiveEvent() {
   const dateValue = document.getElementById("hive-event-date").value;
   const type = document.getElementById("hive-event-type").value;
@@ -6270,6 +6277,7 @@ if ("serviceWorker" in navigator) {
     const start=$('bee-voice-start'), stop=$('bee-voice-stop'), txt=$('bee-voice-text');
     const preview=$('bee-voice-preview-box'), confirmBtn=$('bee-voice-confirm'), status=$('bee-voice-status');
     if(!start||!stop||!txt||!preview||!confirmBtn) return;
+    if(typeof window.beeVoiceHiveContext!=='function'){status.textContent='Moduł kart uli nie został uruchomiony. Odśwież aplikację.';return;}
     let recognition=null, proposal=null, capturedHive=null;
     const say=s=>{status.textContent=s;};
     function invalidate(){proposal=null;confirmBtn.disabled=true;preview.textContent='';}
@@ -6279,11 +6287,11 @@ if ("serviceWorker" in navigator) {
       if(!SR){say('Rozpoznawanie mowy nie jest dostępne w tej przeglądarce. Możesz wpisać tekst ręcznie.');return;}
       if(recognition) return;
       invalidate();
-      capturedHive=Number(selectedHiveNumber);
+      capturedHive=window.beeVoiceHiveContext().hive;
       const r=new SR(); recognition=r; r.lang='pl-PL';r.continuous=true;r.interimResults=false;
       start.disabled=true;stop.disabled=false;
       r.onresult=e=>{
-        if(Number(selectedHiveNumber)!==capturedHive){try{r.stop()}catch(_){};say('Zmieniono ul podczas dyktowania. Sprawdź tekst i wybierz ponownie kartę.');return;}
+        if(window.beeVoiceHiveContext().hive!==capturedHive){try{r.stop()}catch(_){};say('Zmieniono ul podczas dyktowania. Sprawdź tekst i wybierz ponownie kartę.');return;}
         let words='';for(let i=e.resultIndex;i<e.results.length;i++)if(e.results[i].isFinal)words+=' '+e.results[i][0].transcript;
         if(words.trim()){txt.value=(txt.value.trim()+' '+words.trim()).trim();invalidate();}
       };
@@ -6309,29 +6317,29 @@ if ("serviceWorker" in navigator) {
     }
     $('bee-voice-preview').addEventListener('click',()=>{
       invalidate();const t=txt.value.trim();if(!t){say('Najpierw podyktuj lub wpisz treść przeglądu.');return;}
-      const hive=Number(selectedHiveNumber), p=parse(t);
+      const hive=window.beeVoiceHiveContext().hive, p=parse(t);
       if(p.number!==null && p.number!==hive){say('Wypowiedziano ul '+p.number+', ale wybrana jest karta '+hive+'. Wybierz właściwą kartę przed zapisem.');return;}
       const date=$('hive-event-date')?.value;
       if(!date){say('Wybierz datę przeglądu w formularzu zdarzenia poniżej.');return;}
-      proposal={...p,hive,date,apiary:typeof currentApiary==='object'?currentApiary?.id:null};
-      preview.textContent='Pasieka: '+(typeof currentApiary==='object'?(currentApiary?.name||currentApiary?.id||'wybrana'):'wybrana')+'\nUl: '+hive+'\nData: '+date+'\nMatka: '+(p.queen||'nie określono')+'\nCzerw: '+(p.brood===null?'nie określono':p.brood+' ramek')+'\nGniazdo: '+(p.nest===null?'nie określono':p.nest+' ramek')+'\nPełny opis: '+t;
+      proposal={...p,hive,date,apiary:window.beeVoiceHiveContext().apiary};
+      preview.textContent='Pasieka: '+(window.beeVoiceHiveContext().apiaryName)+'\nUl: '+hive+'\nData: '+date+'\nMatka: '+(p.queen||'nie określono')+'\nCzerw: '+(p.brood===null?'nie określono':p.brood+' ramek')+'\nGniazdo: '+(p.nest===null?'nie określono':p.nest+' ramek')+'\nPełny opis: '+t;
       confirmBtn.disabled=false;say('Sprawdź dane. Zapis nastąpi dopiero po zatwierdzeniu.');
     });
     confirmBtn.addEventListener('click',()=>{
       const p=proposal;
-      if(!p||p.text!==txt.value.trim()||p.hive!==Number(selectedHiveNumber)||p.date!==$('hive-event-date')?.value||p.apiary!==(typeof currentApiary==='object'?currentApiary?.id:null)){
+      if(!p||p.text!==txt.value.trim()||p.hive!==window.beeVoiceHiveContext().hive||p.date!==$('hive-event-date')?.value||p.apiary!==(window.beeVoiceHiveContext().apiary)){
         invalidate();say('Zmieniły się dane, pasieka lub wybrany ul. Sprawdź wpis ponownie.');return;
       }
       if(!window.confirm('Zapisać przegląd ula '+p.hive+' z dnia '+p.date+' do historii i kalendarza?'))return;
       const notes=$('hive-event-notes'), type=$('hive-event-type');
-      if(!notes||!type||typeof addHiveEvent!=='function'){say('Formularz zapisu nie jest dostępny. Nic nie zapisano.');return;}
+      if(!notes||!type||typeof window.beeVoiceSaveHiveEvent!=='function'){say('Formularz zapisu nie jest dostępny. Nic nie zapisano.');return;}
       const parts=[p.text];
       if(p.brood!==null)parts.push('Czerw: '+p.brood+' ramek');
       if(p.nest!==null)parts.push('Gniazdo: '+p.nest+' ramek');
       notes.value=parts.join(' | ');type.value='przegląd';
       if(p.queen && $('hive-queen-status'))$('hive-queen-status').value=p.queen;
       // Nie nadpisujemy pól liczbowych ramek: weryfikacja danych odbywa się w opisie.
-      try{addHiveEvent();txt.value='';invalidate();say('Przekazano przegląd do istniejącego zapisu historii i kalendarza.');}
+      try{window.beeVoiceSaveHiveEvent();txt.value='';invalidate();say('Przekazano przegląd do istniejącego zapisu historii i kalendarza.');}
       catch(e){say('Błąd zapisu: '+e.message+'. Tekst pozostaje w formularzu zdarzenia.');}
     });
   }
