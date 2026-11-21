@@ -3151,6 +3151,7 @@ function updateMarkers() {
       span.after(marker);
     }
   });
+  beeMarkTodayPermanently();
 }
 
 // --- OTWIERANIE NOTATKI PO KLIKU ---
@@ -3260,6 +3261,17 @@ if (searchInput && resultsContainer) {
 // =========================
   // 📍 SCROLL DO DZIŚ
   // =========================
+  // Stałe oznaczenie bieżącego dnia, niezależne od wybranej pasieki i przewijania.
+  function beeMarkTodayPermanently(){
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, "0");
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    document.querySelectorAll("td.bee-today-focus").forEach(td => td.classList.remove("bee-today-focus"));
+    const number = document.querySelector(`.day-number[data-day="${day}"][data-month="${month}"]`);
+    const cell = number && number.closest("td");
+    if (cell) cell.classList.add("bee-today-focus");
+  }
+  window.beeMarkTodayPermanently = beeMarkTodayPermanently;
   function scrollToToday(){
     const now = new Date();
     const d = String(now.getDate()).padStart(2, "0");
@@ -3267,11 +3279,9 @@ if (searchInput && resultsContainer) {
     const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
     if (!el) return;
     const cell = el.closest("td") || el;
-    document.querySelectorAll(".bee-today-focus").forEach(x => x.classList.remove("bee-today-focus"));
-    cell.classList.add("bee-today-focus");
+    beeMarkTodayPermanently();
     document.getElementById("month-" + m)?.scrollIntoView({behavior:"smooth",block:"start"});
     setTimeout(() => cell.scrollIntoView({behavior:"smooth",block:"center",inline:"center"}), 180);
-    setTimeout(() => cell.classList.remove("bee-today-focus"), 6500);
   }
   window.scrollToToday = scrollToToday;
 // =========================
@@ -5551,7 +5561,12 @@ if (savedGPS === "true" && navigator.geolocation) {
 }
 
   setTimeout(autoScaleCalendarText, 100);
+  beeMarkTodayPermanently();
   scrollToToday();
+  setInterval(beeMarkTodayPermanently, 60000);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) beeMarkTodayPermanently();
+  });
 
   // Pogoda jest pobierana dopiero po wyborze pasieki.
   if(typeof analyzeHivesPro === "function") analyzeHivesPro();
