@@ -2378,16 +2378,6 @@ font-weight:bold;
  <div id="bee-task-list"></div>
 </section>
 
-<section id="bee-backup-panel" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;">
-  <h2 style="margin-top:0;color:#654b13">💾 Kopia bezpieczeństwa obu pasiek</h2>
-  <p>Eksport obejmuje wszystkie zapisane dane aplikacji w tej przeglądarce, w tym nagrania głosowe. Przechowuj plik w bezpiecznym miejscu.</p>
-  <button type="button" id="bee-backup-export" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬇ Pobierz pełną kopię</button>
-  <label style="display:block;margin-top:14px;font-weight:bold" for="bee-backup-file">Przywróć kopię z pliku JSON</label>
-  <input type="file" id="bee-backup-file" accept=".json,application/json" style="margin:8px 0;max-width:100%">
-  <button type="button" id="bee-backup-import" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬆ Przywróć brakujące dane</button>
-  <p style="font-size:13px;color:#555">Bezpieczne przywracanie: istniejące wpisy i nagrania nie są nadpisywane ani usuwane. Aby zastąpić już istniejące dane, potrzebny będzie osobny tryb przywracania.</p>
-  <div id="bee-backup-status" role="status" aria-live="polite" style="font-size:13px;margin-top:8px"></div>
-</section>
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
   <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-down">⬇ Dół</button><button type="button" id="s6-quick-top">⬆ Góra</button>
 </div>
@@ -2406,7 +2396,19 @@ font-weight:bold;
       case 's6-quick-analytics':goTo('bee-stage5-panel');break;
       case 's6-quick-hives':goTo('hive-management');break;
       case 's6-quick-down':
-        window.scrollTo({top:Math.max(document.documentElement.scrollHeight,document.body.scrollHeight),behavior:'smooth'});break;
+        var bottom=document.getElementById('bee-backup-panel');
+        if(bottom){
+          bottom.scrollIntoView({block:'end',behavior:'auto'});
+          var root=document.scrollingElement||document.documentElement;
+          var max=Math.max(0,root.scrollHeight-root.clientHeight);
+          root.scrollTop=max;
+          window.scrollTo(0,max);
+        }else{
+          var root=document.scrollingElement||document.documentElement;
+          root.scrollTop=root.scrollHeight;
+          window.scrollTo(0,Math.max(document.body.scrollHeight,document.documentElement.scrollHeight));
+        }
+        break;
       case 's6-quick-top':
         window.scrollTo(0,0);
         (document.scrollingElement||document.documentElement).scrollTop=0;
@@ -2455,12 +2457,16 @@ font-weight:bold;
 <h2>🐝 Sezon pasieczny — praktyczne poradniki</h2>
 <p class="bee-guide-note">Terminy są orientacyjne. Oceniaj rzeczywiste warunki pogodowe, pożytki i stan każdej rodziny.</p>
 <article class="bee-guide"><h3>🐝 Okresy największego ryzyka rójki</h3>
+<p class="bee-guide-note"><strong>Daty obserwacji z kalendarza 2026 (orientacyjne):</strong> Marzec: 17, 25; Kwiecień: 8, 15, 23; Maj: 5, 12, 20; Czerwiec: 3, 10, 18; Lipiec: 7, 15, 22; Sierpień: 5, 13, 21; Wrzesień: 2, 10, 18; Październik: 6, 14. Nie oznaczają pewnego wystąpienia rójki.</p>
+
 <div class="bee-guide-item"><strong>Marzec – początek kwietnia</strong><p>Obserwuj rozwój silnych rodzin; wczesna rójka jest mniej typowa, ale możliwa przy wyjątkowo ciepłej wiośnie.</p></div>
 <div class="bee-guide-item"><strong>Kwiecień – maj · ryzyko rośnie</strong><p>Kontroluj zatłoczenie gniazda, miejsce do czerwienia i obecność mateczników. Szczególnie uważaj przy intensywnym pożytku.</p></div>
 <div class="bee-guide-item"><strong>Maj – czerwiec · zwykle szczyt</strong><p>W silnych rodzinach planuj regularne kontrole nastroju rojowego. Terminy zależą od pogody i lokalnego sezonu.</p></div>
 <div class="bee-guide-item"><strong>Lipiec i później</strong><p>Ryzyko zazwyczaj maleje, ale nie zanika całkowicie. Kieruj się obserwacjami, nie sztywnymi datami.</p></div>
 </article>
 <article class="bee-guide"><h3>🛡️ Monitorowanie i zwalczanie warrozy</h3>
+<p class="bee-guide-note"><strong>Terminy z wcześniejszego harmonogramu:</strong> 15–30 marca — kontrola porażenia; 1–20 kwietnia — ponowna ocena i ewentualne planowanie działań; wrzesień — kontrola po miodobraniu; październik — kontrola osypu i skuteczności; do 20 listopada — okres wskazany w dotychczasowym kalendarzu. Sam termin nie oznacza konieczności leczenia. Stosuj wyłącznie dopuszczone preparaty zgodnie z etykietą i rzeczywistym wynikiem monitorowania.</p>
+
 <div class="bee-guide-item"><strong>Wiosna</strong><p>Sprawdź porażenie metodą pomiarową i zapisz wynik dla konkretnego ula. Nie zakładaj automatycznie potrzeby leczenia.</p></div>
 <div class="bee-guide-item"><strong>W sezonie pożytkowym</strong><p>Kontroluj poziom roztoczy; dobór metody musi uwzględniać obecność nadstawek miodowych i etykietę dopuszczonego produktu.</p></div>
 <div class="bee-guide-item"><strong>Po ostatnim miodobraniu</strong><p>Oceń porażenie i w razie wskazań zaplanuj odpowiednie leczenie, zgodne z instrukcją produktu i zaleceniami lekarza weterynarii.</p></div>
@@ -6038,5 +6044,18 @@ if ("serviceWorker" in navigator) {
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+
+<!-- Ostatnia sekcja strony: pełna kopia obu pasiek -->
+<section id="bee-backup-panel" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;">
+  <h2 style="margin-top:0;color:#654b13">💾 Kopia bezpieczeństwa obu pasiek</h2>
+  <p>Eksport obejmuje wszystkie zapisane dane aplikacji w tej przeglądarce, w tym nagrania głosowe. Przechowuj plik w bezpiecznym miejscu.</p>
+  <button type="button" id="bee-backup-export" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬇ Pobierz pełną kopię</button>
+  <label style="display:block;margin-top:14px;font-weight:bold" for="bee-backup-file">Przywróć kopię z pliku JSON</label>
+  <input type="file" id="bee-backup-file" accept=".json,application/json" style="margin:8px 0;max-width:100%">
+  <button type="button" id="bee-backup-import" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬆ Przywróć brakujące dane</button>
+  <p style="font-size:13px;color:#555">Bezpieczne przywracanie: istniejące wpisy i nagrania nie są nadpisywane ani usuwane. Aby zastąpić już istniejące dane, potrzebny będzie osobny tryb przywracania.</p>
+  <div id="bee-backup-status" role="status" aria-live="polite" style="font-size:13px;margin-top:8px"></div>
+</section>
+
 </body>
 </html>
