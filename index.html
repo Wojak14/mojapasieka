@@ -5898,6 +5898,7 @@ if ("serviceWorker" in navigator) {
 
 // ETAP 7: pełny eksport localStorage oraz nagrań z IndexedDB; import wyłącznie brakujących danych.
 (function(){
+  function initializeBackupControls(){
   const status = document.getElementById('bee-backup-status');
   const report = message => { if(status) status.textContent = message; };
   const fileInput = document.getElementById('bee-backup-file');
@@ -5952,7 +5953,7 @@ if ("serviceWorker" in navigator) {
       const url=URL.createObjectURL(new Blob([JSON.stringify(backup)],{type:'application/json'}));
       const a=document.createElement('a'); a.href=url; a.download='kopia-pasieki-'+new Date().toISOString().slice(0,10)+'.json';
       document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-      report('Kopia gotowa: '+Object.keys(storage).length+' wpisów pamięci i '+voice.length+' nagrań. Zapisz pobrany plik w bezpiecznym miejscu.');
+      report('Rozpoczęto pobieranie kopii: '+Object.keys(storage).length+' wpisów pamięci i '+voice.length+' nagrań. Sprawdź folder Pobrane na urządzeniu.');
     }catch(err){console.error(err);report('Błąd eksportu: '+err.message);}
     finally{this.disabled=false;}
   });
@@ -5986,6 +5987,9 @@ if ("serviceWorker" in navigator) {
     }catch(err){console.error(err);report('Błąd przywracania: '+err.message);}
     finally{this.disabled=false;}
   });
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',initializeBackupControls,{once:true});
+  else initializeBackupControls();
 })();
 
 </script>
