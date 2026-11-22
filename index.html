@@ -6677,7 +6677,7 @@ if ("serviceWorker" in navigator) {
 <!-- Firebase: niezależny panel diagnostyczny, bez synchronizacji danych. -->
 <section id="bee-firebase-panel" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;">
   <h2 style="margin-top:0;color:#654b13">☁️ Firebase — diagnostyka połączenia</h2>
-  <p>Logowanie Google i test odczytu Firestore. Ta wersja <strong>nie przesyła, nie pobiera i nie scala danych pasiek</strong>.</p>
+  <p>Logowanie Google i test odczytu bazy Firestore default. Ta wersja <strong>nie przesyła, nie pobiera i nie scala danych pasiek</strong>.</p>
   <button type="button" id="bee-fb-login" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Zaloguj przez Google</button>
   <button type="button" id="bee-fb-test" disabled style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Sprawdź Firestore</button>
   <button type="button" id="bee-fb-logout" disabled style="padding:10px;background:#eee;border:1px solid #ccc;border-radius:8px;margin:4px">Wyloguj</button>
@@ -6695,6 +6695,8 @@ if ("serviceWorker" in navigator) {
 (() => {
   "use strict";
   const PROJECT_ID = "bee-assistant-pro";
+  // Istniejąca baza Enterprise ma identyfikator "default" (bez nawiasów).
+  const DATABASE_ID = "default";
   const AUTH_DOMAIN = "bee-assistant-pro.firebaseapp.com";
   const APP_ID = "1:536204773669:web:85468bca09c7064a5df2cc";
   const SENDER_ID = "536204773669";
@@ -6729,7 +6731,7 @@ if ("serviceWorker" in navigator) {
           const auth=authSdk.getAuth(app);
           // Wymuszony long polling: test diagnostyczny użytkownika potwierdził działanie tej ścieżki.
           // Ustawienie musi nastąpić przed pierwszym użyciem instancji Firestore.
-          const db=dbSdk.initializeFirestore(app,{experimentalForceLongPolling:true});
+          const db=dbSdk.initializeFirestore(app,{experimentalForceLongPolling:true},DATABASE_ID);
           // Wyłącznie inicjalizacja. Brak signIn, odczytów, zapisów i listenerów.
           instance=Object.freeze({app,auth,db});
           state.mode="prepared";
@@ -6802,7 +6804,7 @@ if ("serviceWorker" in navigator) {
       try{
         const token=await current.getIdToken();
         const url='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(PROJECT_ID)+
-          '/databases/(default)/documents/users/'+encodeURIComponent(current.uid)+'/connection_checks/status';
+          '/databases/'+encodeURIComponent(DATABASE_ID)+'/documents/users/'+encodeURIComponent(current.uid)+'/connection_checks/status';
         const controller=new AbortController();
         const timeout=setTimeout(()=>controller.abort(),15000);
         let response;
@@ -6814,9 +6816,9 @@ if ("serviceWorker" in navigator) {
         try{payload=await response.json();}catch(_){}
         const apiCode=String(payload?.error?.status||'');
         const apiMessage=String(payload?.error?.message||'').slice(0,250);
-        if(response.ok||response.status===404){
+        if(response.ok||(response.status===404 && !/database.*does not exist/i.test(apiMessage))){
           restStatus.textContent='REST API działa (HTTP '+response.status+'). '+
-            (response.status===404?'Dokument testowy nie istnieje — to oczekiwany wynik odczytu.':'Odczyt poprawny.')+
+            (response.status===404?'Dokument testowy nie istnieje (baza odpowiada).':'Odczyt poprawny.')+
             ' Nie zapisano żadnych danych.';
         }else{
           restStatus.textContent='REST API odpowiedziało: HTTP '+response.status+
@@ -6835,7 +6837,7 @@ if ("serviceWorker" in navigator) {
       if(!window.confirm('Test utworzy jeden tymczasowy dokument diagnostyczny w Firestore, odczyta go i spróbuje usunąć. Nie dotknie danych pasiek. Uruchomić?'))return;
       busy=true;buttons();
       const id='rest-test-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
-      const path='projects/'+PROJECT_ID+'/databases/(default)/documents/users/'+encodeURIComponent(current.uid)+'/connection_checks/'+id;
+      const path='projects/'+PROJECT_ID+'/databases/'+encodeURIComponent(DATABASE_ID)+'/documents/users/'+encodeURIComponent(current.uid)+'/connection_checks/'+id;
       const url='https://firestore.googleapis.com/v1/'+path;
       let created=false, verified=false, removed=false;
       const controller=new AbortController();
