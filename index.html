@@ -6736,7 +6736,9 @@ if ("serviceWorker" in navigator) {
           const app=appSdk.getApps().find(a=>a.name==="bee-assistant-pro-integration") ||
             appSdk.initializeApp(config,"bee-assistant-pro-integration");
           const auth=authSdk.getAuth(app);
-          const db=dbSdk.getFirestore(app);
+          // Wymuszony long polling: test diagnostyczny użytkownika potwierdził działanie tej ścieżki.
+          // Ustawienie musi nastąpić przed pierwszym użyciem instancji Firestore.
+          const db=dbSdk.initializeFirestore(app,{experimentalForceLongPolling:true});
           // Wyłącznie inicjalizacja. Brak signIn, odczytów, zapisów i listenerów.
           instance=Object.freeze({app,auth,db});
           state.mode="prepared";
@@ -6797,7 +6799,7 @@ if ("serviceWorker" in navigator) {
         const ref=sdk.dbSdk.doc(instance.db,'users',current.uid,'connection_checks','status');
         await sdk.dbSdk.getDocFromServer(ref);
         say('Połączenie z Firestore działa. Uprawnienia odczytu poprawne. Nie zapisano żadnych danych.');
-      }catch(e){say('Test Firestore nie powiódł się: '+(e.code||e.message)+'. '+((e.code==='unavailable')?'Serwer nie odpowiedział. Sprawdź internet, wyłącz na próbę VPN/blokowanie reklam, odśwież stronę i ponów test. Ten błąd nie oznacza utraty danych ani automatycznie błędnych reguł.':(e.code==='permission-denied'?'Sprawdź opublikowane reguły Firestore i zalogowane konto.':'Sprawdź połączenie i spróbuj ponownie.')));}
+      }catch(e){say('Test Firestore nie powiódł się: '+(e.code||e.message)+'. '+((e.code==='unavailable')?'Połączenie long polling nie powiodło się w tej aplikacji. Sprawdź kartę Konsola w narzędziach deweloperskich i prześlij komunikat błędu. Dane lokalne pozostają bez zmian.':(e.code==='permission-denied'?'Serwer odrzucił odczyt. Sprawdź opublikowane reguły Firestore i zalogowane konto.':'Sprawdź połączenie i spróbuj ponownie.')));}
       finally{busy=false;buttons();}
     });
     logout.addEventListener('click',async()=>{
