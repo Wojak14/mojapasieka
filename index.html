@@ -7069,5 +7069,137 @@ if ("serviceWorker" in navigator) {
   else window.addEventListener('load',scheduleAutoToday,{once:true});
 })();
 </script>
+
+<section id="bee-live-sync" style="margin:18px 5px;padding:14px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px">
+<h2>☁️ Synchronizacja Android ↔ Windows — tryb bezpieczny</h2>
+<p>Zaloguj się przez Google w panelu Firebase powyżej. Włącz na obu urządzeniach to samo konto. Synchronizacja nowych zmian działa automatycznie co 8 sekund po włączeniu na każdym urządzeniu. Wcześniejsze różnice są chronione przed nadpisaniem. Nagrania głosowe nie są jeszcze synchronizowane.</p>
+<button id="bee-live-enable" type="button" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">Włącz bezpieczną synchronizację</button>
+<button id="bee-live-disable" type="button" style="padding:10px;margin-left:5px">Wyłącz</button>
+<button id="bee-live-check" type="button" style="padding:10px;margin-left:5px">Synchronizuj teraz</button>
+<p id="bee-live-status" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
+<p style="font-size:12px">Zmiany konfliktowe nie są nadpisywane; pozostają na urządzeniu. Synchronizacja nie scala automatycznie różniących się historii rodzin. Zachowaj obie kopie JSON.</p>
+</section>
+<script type="module" id="bee-live-sync-engine">
+(async()=>{
+"use strict";
+const $=id=>document.getElementById(id);
+const status=$("bee-live-status"), enable=$("bee-live-enable"), disable=$("bee-live-disable"), check=$("bee-live-check");
+const P="bee-live-sync:", FLAG=P+"enabled", BASE=P+"baseline", DEVICE=P+"device";
+const excluded=k=>k.startsWith(P)||k.startsWith("firebase:")||k.startsWith("firebaseLocalStorage")||
+  k==="gpsEnabled"||k==="lastLat"||k==="lastLon"||k==="bee-current-apiary-id"||
+  k.startsWith("bee-gps-")||k.startsWith("bee-sync-");
+const capture=()=>{const o={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!excluded(k))o[k]=localStorage.getItem(k);}return o;};
+const hash=async v=>{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(v));return Array.from(new Uint8Array(b),x=>x.toString(16).padStart(2,"0")).join("");};
+const sdkVersion="10.14.1", project="bee-assistant-pro", database="default";
+let authSdk, auth, running=false, busy=false, timer=null, baseline={}, device=localStorage.getItem(DEVICE);
+if(!device){device=crypto.randomUUID();localStorage.setItem(DEVICE,device);}
+try{baseline=JSON.parse(localStorage.getItem(BASE)||"{}");}catch(_){baseline={};}
+const say=m=>status.textContent=m;
+const docId=async k=>"k_"+await hash(k);
+const endpoint=(uid,id)=>"https://firestore.googleapis.com/v1/projects/"+project+"/databases/"+database+
+ "/documents/users/"+encodeURIComponent(uid)+"/syncKeys/"+encodeURIComponent(id);
+const collection=uid=>"https://firestore.googleapis.com/v1/projects/"+project+"/databases/"+database+
+ "/documents/users/"+encodeURIComponent(uid)+"/syncKeys?pageSize=300";
+async function req(url,method="GET",body){
+ const user=auth?.currentUser;if(!user)throw Error("Zaloguj się przez Google w panelu Firebase.");
+ const token=await user.getIdToken();
+ const r=await fetch(url,{method,headers:{Authorization:"Bearer "+token,...(body?{"Content-Type":"application/json"}:{})},body:body?JSON.stringify(body):undefined,cache:"no-store"});
+ if(r.status===404)return null;
+ if(!r.ok)throw Error("Firestore HTTP "+r.status+": "+(await r.text()).slice(0,180));
+ return r.status===204?null:await r.json();
+}
+const unpack=d=>({key:d.fields?.key?.stringValue,value:d.fields?.value?.stringValue,
+ device:d.fields?.device?.stringValue,updated:d.updateTime});
+async function list(uid){
+ let url=collection(uid), result=[];
+ for(let n=0;n<30 && url;n++){
+  const x=await req(url);if(!x)break;
+  result.push(...(x.documents||[]).map(unpack).filter(x=>x.key&&!excluded(x.key)));
+  url=x.nextPageToken?collection(uid)+"&pageToken="+encodeURIComponent(x.nextPageToken):null;
+ }
+ return result;
+}
+async function write(uid,k,v){
+ const id=await docId(k),url=endpoint(uid,id);
+ const current=await req(url);
+ // Never replace a cloud value that changed independently.
+ if(current && current.fields?.value?.stringValue!==baseline[k] && current.fields?.device?.stringValue!==device)return false;
+ const body={fields:{key:{stringValue:k},value:{stringValue:v},device:{stringValue:device}}};
+ const suffix="?updateMask.fieldPaths=key&updateMask.fieldPaths=value&updateMask.fieldPaths=device"+
+ (current?"&currentDocument.updateTime="+encodeURIComponent(current.updateTime):"&currentDocument.exists=false");
+ try{await req(url+suffix,"PATCH",body);return true;}catch(e){
+  if(/HTTP 409|HTTP 412/.test(e.message))return false;
+  throw e;
+ }
+}
+async function sync(){
+ if(busy||!running||!navigator.onLine)return;
+ if(!auth?.currentUser){say("Oczekiwanie na logowanie Google. Dane lokalne bez zmian.");return;}
+ busy=true;
+ try{
+  const uid=auth.currentUser.uid;
+  const cloud=await list(uid), remote=new Map(cloud.map(x=>[x.key,x]));
+  const local=capture();let downloaded=0,uploaded=0,conflicts=0, changed=false;
+  // Only keys observed since enrollment are candidates for uploading.
+  for(const [k,v] of Object.entries(local)){
+   if(!(k in baseline)){baseline[k]=v;changed=true;continue;}
+   if(v===baseline[k])continue;
+   const r=remote.get(k);
+   if(r && r.value!==baseline[k] && r.value!==v){conflicts++;continue;}
+   if(!r || r.value!==v){
+    if(await write(uid,k,v)){uploaded++;baseline[k]=v;changed=true;}
+    else conflicts++;
+   }else{baseline[k]=v;changed=true;}
+  }
+  // Cloud updates can only be imported when local value is unchanged since last synced baseline,
+  // and only for keys that were absent at enrollment or already share a synced baseline.
+  for(const r of cloud){
+   const v=localStorage.getItem(r.key);
+   if(v===r.value){if(baseline[r.key]!==v){baseline[r.key]=v;changed=true;}continue;}
+   if(v===null && !(r.key in baseline)){
+    localStorage.setItem(r.key,r.value);baseline[r.key]=r.value;downloaded++;changed=true;
+   }else if(r.key in baseline && v===baseline[r.key] && baseline[r.key]!==undefined &&
+     // Existing local data must never be overwritten by an unknown first-time remote state.
+     localStorage.getItem(P+"trusted:"+r.key)==="1"){
+    localStorage.setItem(r.key,r.value);baseline[r.key]=r.value;downloaded++;changed=true;
+   }else conflicts++;
+  }
+  if(changed)localStorage.setItem(BASE,JSON.stringify(baseline));
+  say("Połączono: "+new Date().toLocaleTimeString("pl-PL")+
+   "\nWysłano zmian: "+uploaded+" | Pobrano nowych wpisów: "+downloaded+
+   " | Konflikty/chronione istniejące wpisy: "+conflicts+
+   (downloaded?"\nOdśwież stronę, aby zobaczyć pobrane wpisy.":"")+
+   "\nNagrania głosowe pozostają lokalne.");
+ }catch(e){say("Błąd synchronizacji: "+e.message+"\nDane lokalne pozostają bez zmian.");}
+ finally{busy=false;}
+}
+async function setup(){
+ if(auth)return;
+ const appSdk=await import("https://www.gstatic.com/firebasejs/"+sdkVersion+"/firebase-app.js");
+ authSdk=await import("https://www.gstatic.com/firebasejs/"+sdkVersion+"/firebase-auth.js");
+ const app=appSdk.getApps().find(a=>a.name==="bee-assistant-pro-integration")||
+  appSdk.initializeApp({apiKey:"AIzaSyCmA-MQLEqVMNTdA4PVkQs4QCmp7dVpews",authDomain:"bee-assistant-pro.firebaseapp.com",projectId:project,
+  appId:"1:536204773669:web:85468bca09c7064a5df2cc",messagingSenderId:"536204773669"},"bee-assistant-pro-integration");
+ auth=authSdk.getAuth(app);
+}
+async function start(){
+ try{
+  await setup();
+  if(!auth.currentUser){say("Najpierw zaloguj się przyciskiem Google w panelu Firebase.");return;}
+  if(!localStorage.getItem(FLAG)){
+   if(!confirm("Włączyć synchronizację nowych zmian? Istniejące konflikty pozostaną nietknięte. Zachowaj kopie JSON."))return;
+   baseline=capture();localStorage.setItem(BASE,JSON.stringify(baseline));
+  }
+  localStorage.setItem(FLAG,"1");running=true;
+  if(timer)clearInterval(timer);timer=setInterval(sync,8000);await sync();
+ }catch(e){say("Nie uruchomiono: "+e.message);}
+}
+enable.addEventListener("click",start);
+disable.addEventListener("click",()=>{running=false;clearInterval(timer);timer=null;localStorage.removeItem(FLAG);say("Synchronizacja wyłączona. Dane lokalne bez zmian.");});
+check.addEventListener("click",async()=>{if(!running)await start();else await sync();});
+say("Synchronizacja wyłączona. Zaloguj się przez Google, a następnie włącz na obu urządzeniach.");
+if(localStorage.getItem(FLAG)==="1"){setup().then(()=>{running=true;timer=setInterval(sync,8000);sync();}).catch(e=>say(e.message));}
+})();
+</script>
 </body>
 </html>
