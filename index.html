@@ -7037,36 +7037,9 @@ if ("serviceWorker" in navigator) {
     }
   }
   document.addEventListener('click',handleToday,true);
-  /* Jednorazowe przewinięcie po uruchomieniu, jednak bez przerywania pracy użytkownika.
-     Działa identycznie na Androidzie i Windows, również po wczytaniu z cache PWA. */
-  var userInteracted=false, autoDone=false;
-  ['pointerdown','touchstart','keydown','wheel'].forEach(function(type){
-    document.addEventListener(type,function(){userInteracted=true;},{capture:true,passive:true,once:true});
-  });
-  function autoNavigateToToday(){
-    if(autoDone||userInteracted)return;
-    autoDone=true;
-    /* Nie zasłaniaj okna wyboru pasieki; przejście nastąpi po jej wybraniu. */
-    var dialog=document.getElementById('bee-apiary-start');
-    if(dialog&&!dialog.hidden&&getComputedStyle(dialog).display!=='none'){
-      autoDone=false;
-      var observer=new MutationObserver(function(){
-        if(dialog.hidden||getComputedStyle(dialog).display==='none'){
-          observer.disconnect();
-          requestAnimationFrame(function(){requestAnimationFrame(function(){if(!autoDone){autoDone=true;navigateToToday();}});});
-        }
-      });
-      observer.observe(dialog,{attributes:true,attributeFilter:['hidden','style','class']});
-      return;
-    }
-    navigateToToday();
-  }
-  function scheduleAutoToday(){
-    /* Po layout i przywróceniu dokumentu, bez ciągłego ponawiania przewijania. */
-    requestAnimationFrame(function(){requestAnimationFrame(autoNavigateToToday);});
-  }
-  if(document.readyState==='complete')scheduleAutoToday();
-  else window.addEventListener('load',scheduleAutoToday,{once:true});
+  /* Brak automatycznego przewijania po uruchomieniu i wyborze pasieki.
+     Dzisiejsza data jest stale podświetlana przez beeMarkTodayPermanently().
+     Nawigacja odbywa się tylko po kliknięciu dwóch przycisków „Dzisiaj”. */
 })();
 </script>
 
