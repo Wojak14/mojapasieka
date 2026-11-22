@@ -6662,5 +6662,133 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+
+<!-- Firebase: niezależny panel diagnostyczny, bez synchronizacji danych. -->
+<section id="bee-firebase-panel" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;">
+  <h2 style="margin-top:0;color:#654b13">☁️ Firebase — połączenie testowe</h2>
+  <p>Logowanie Google i test odczytu Firestore. Ta wersja <strong>nie przesyła, nie pobiera i nie scala danych pasiek</strong>.</p>
+  <button type="button" id="bee-fb-login" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Zaloguj przez Google</button>
+  <button type="button" id="bee-fb-test" disabled style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Sprawdź Firestore</button>
+  <button type="button" id="bee-fb-logout" disabled style="padding:10px;background:#eee;border:1px solid #ccc;border-radius:8px;margin:4px">Wyloguj</button>
+  <p id="bee-fb-status" role="status" aria-live="polite" style="font-size:13px;overflow-wrap:anywhere">Firebase nie jest jeszcze uruchomiony.</p>
+</section>
+
+<!-- Firebase: przygotowana, domyślnie wyłączona warstwa integracyjna.
+     Bez zmian wyglądu, localStorage, IndexedDB i istniejących funkcji.
+     Żadne dane nie są automatycznie wysyłane ani pobierane. -->
+<script type="module" id="bee-firebase-preparation">
+(() => {
+  "use strict";
+  const PROJECT_ID = "bee-assistant-pro";
+  const AUTH_DOMAIN = "bee-assistant-pro.firebaseapp.com";
+  const APP_ID = "1:536204773669:web:85468bca09c7064a5df2cc";
+  const SENDER_ID = "536204773669";
+  const STORAGE_BUCKET = "bee-assistant-pro.firebasestorage.app";
+  // Wklej dokładny apiKey z Firebase Console -> Ustawienia projektu -> Twoje aplikacje.
+  // Nie wpisuj tutaj hasła, tokenu konta ani klucza konta usługi.
+  const API_KEY = "AIzaSyCmA-MQLEqVMNTdA4PVkQs4QCmp7dVpews";
+  const SDK_VERSION = "10.14.1";
+  let ready = null;
+  let instance = null;
+  const state = {mode:"disabled", connected:false, error:null};
+  const adapter = Object.freeze({
+    getStatus() { return {...state, projectId:PROJECT_ID}; },
+    async prepare() {
+      if (instance) return instance;
+      if (!API_KEY) throw new Error("Brak potwierdzonego apiKey. Integracja pozostaje wyłączona.");
+      if (!navigator.onLine) throw new Error("Do pierwszego uruchomienia Firebase potrzebny jest internet.");
+      if (ready) return ready;
+      ready = (async () => {
+        state.mode="initializing";
+        try {
+          const base=`https://www.gstatic.com/firebasejs/${SDK_VERSION}`;
+          const [appSdk,authSdk,dbSdk] = await Promise.all([
+            import(`${base}/firebase-app.js`),
+            import(`${base}/firebase-auth.js`),
+            import(`${base}/firebase-firestore.js`)
+          ]);
+          const config={apiKey:API_KEY,authDomain:AUTH_DOMAIN,projectId:PROJECT_ID,
+            storageBucket:STORAGE_BUCKET,messagingSenderId:SENDER_ID,appId:APP_ID};
+          const app=appSdk.getApps().find(a=>a.name==="bee-assistant-pro-integration") ||
+            appSdk.initializeApp(config,"bee-assistant-pro-integration");
+          const auth=authSdk.getAuth(app);
+          const db=dbSdk.getFirestore(app);
+          // Wyłącznie inicjalizacja. Brak signIn, odczytów, zapisów i listenerów.
+          instance=Object.freeze({app,auth,db});
+          state.mode="prepared";
+          state.connected=false; // Inicjalizacja SDK nie oznacza połączenia z serwerem.
+          state.error=null;
+          return instance;
+        } catch(err) {
+          state.mode="error";
+          state.error=String(err?.message || err);
+          ready=null;
+          throw err;
+        }
+      })();
+      return ready;
+    }
+  });
+  Object.defineProperty(window,"beeFirebase",{value:adapter,writable:false,configurable:false});
+  // Obsługa wyłącznie świadomie klikanych działań. Brak automatycznej synchronizacji.
+  function bindDiagnosticPanel(){
+    const $=id=>document.getElementById(id);
+    const login=$('bee-fb-login'), test=$('bee-fb-test'), logout=$('bee-fb-logout'), status=$('bee-fb-status');
+    if(!login||!test||!logout||!status)return;
+    let busy=false, current=null, sdk=null;
+    const say=msg=>{status.textContent=msg;};
+    const buttons=()=>{login.disabled=busy||!!current;test.disabled=busy||!current;logout.disabled=busy||!current;};
+    async function load(){
+      const instance=await adapter.prepare();
+      if(!sdk){
+        const base=`https://www.gstatic.com/firebasejs/${SDK_VERSION}`;
+        const [authSdk,dbSdk]=await Promise.all([import(`${base}/firebase-auth.js`),import(`${base}/firebase-firestore.js`)]);
+        sdk={authSdk,dbSdk};
+        authSdk.onAuthStateChanged(instance.auth,user=>{
+          current=user;
+          if(!busy)say(user?'Zalogowano: '+(user.email||'konto Google')+'. Dane lokalne bez zmian.':'Nie zalogowano. Dane lokalne bez zmian.');
+          buttons();
+        },err=>say('Błąd sesji: '+err.message));
+      }
+      return instance;
+    }
+    login.addEventListener('click',async()=>{
+      busy=true;buttons();say('Uruchamianie logowania Google…');
+      try{
+        const instance=await load();
+        const provider=new sdk.authSdk.GoogleAuthProvider();
+        const result=await sdk.authSdk.signInWithPopup(instance.auth,provider);
+        current=result.user;
+        say('Zalogowano: '+(current.email||'konto Google')+'. Nie wysłano danych pasiek.');
+      }catch(e){say('Logowanie nie powiodło się: '+(e.code||e.message)+'. Jeśli przeglądarka blokuje okno, zezwól na wyskakujące okna dla tej strony.');}
+      finally{busy=false;buttons();}
+    });
+    test.addEventListener('click',async()=>{
+      if(!current)return;
+      busy=true;buttons();say('Sprawdzanie odczytu Firestore…');
+      try{
+        const instance=await load();
+        // Odczyt nieistniejącego dokumentu w przestrzeni zalogowanego UID.
+        // Nie tworzymy ani nie modyfikujemy żadnego dokumentu.
+        const ref=sdk.dbSdk.doc(instance.db,'users',current.uid,'connection_checks','status');
+        await sdk.dbSdk.getDocFromServer(ref);
+        say('Połączenie z Firestore działa. Uprawnienia odczytu poprawne. Nie zapisano żadnych danych.');
+      }catch(e){say('Test Firestore nie powiódł się: '+(e.code||e.message));}
+      finally{busy=false;buttons();}
+    });
+    logout.addEventListener('click',async()=>{
+      busy=true;buttons();
+      try{const instance=await load();await sdk.authSdk.signOut(instance.auth);current=null;say('Wylogowano z Firebase. Dane lokalne pozostały bez zmian.');}
+      catch(e){say('Błąd wylogowania: '+e.message);}
+      finally{busy=false;buttons();}
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindDiagnosticPanel);
+  else bindDiagnosticPanel();
+
+})();
+</script>
+
 </body>
 </html>
