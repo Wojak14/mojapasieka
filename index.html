@@ -536,6 +536,18 @@ body.bee-has-fixed-bar{padding-bottom:155px!important} #bee-mobile-bar button{po
   body.bee-has-fixed-bar { padding-bottom:100px!important; }
   #bee-backup-panel, #bee-sync-prep-panel { scroll-margin-bottom:110px; }
 }
+
+/* Mobilne menu: jeden przycisk po prawej, rozwijane nad nim. */
+@media(max-width:600px){
+  #bee-mobile-bar{position:fixed!important;left:auto!important;right:10px!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:min(260px,calc(100vw - 20px))!important;max-height:min(75vh,620px)!important;overflow-y:auto!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:4px!important;padding:6px!important;background:transparent!important;border:0!important;box-shadow:none!important;z-index:9000!important;pointer-events:none!important}
+  #bee-mobile-bar > button{pointer-events:auto!important;width:100%!important;min-width:0!important;flex:none!important;margin:0!important;padding:10px!important;box-shadow:0 2px 8px #0003}
+  #bee-mobile-bar:not(.bee-bar-expanded) > button:not(#bee-bar-toggle){display:none!important}
+  #bee-mobile-bar #bee-bar-toggle{order:99;align-self:flex-end;width:auto!important;min-width:104px!important;background:#fbc02d!important}
+  #bee-mobile-bar.bee-bar-expanded{background:rgba(255,255,255,.98)!important;border:1px solid #ddd!important;box-shadow:0 2px 12px #0003!important;pointer-events:auto!important}
+  #bee-mobile-bar.bee-bar-expanded > button{display:block!important}
+  body.bee-has-fixed-bar{padding-bottom:70px!important}
+  #bee-firebase-panel{scroll-margin-bottom:90px!important;padding-bottom:20px!important}
+}
 </style>
 
 </head>
@@ -2545,7 +2557,8 @@ font-weight:bold;
       case 's6-quick-today':{
         var now=new Date(),month=String(now.getMonth()+1).padStart(2,'0'),day=String(now.getDate()).padStart(2,'0');
         var cell=document.querySelector('.day-number[data-month="'+month+'"][data-day="'+day+'"]');
-        if(cell)cell.scrollIntoView({block:'center',behavior:'auto'});
+        if(typeof window.scrollToToday==='function')window.scrollToToday();
+        else if(cell)cell.scrollIntoView({block:'center',behavior:'auto'});
         else goTo('month-'+month);
         break;
       }
@@ -2573,6 +2586,7 @@ font-weight:bold;
     bar.querySelectorAll('button').forEach(function(btn){
       btn.addEventListener('click',function(ev){
         ev.preventDefault();ev.stopPropagation();
+        if(btn.id!=='bee-bar-toggle'){bar.classList.remove('bee-bar-expanded');var t=document.getElementById('bee-bar-toggle');if(t){t.setAttribute('aria-expanded','false');t.textContent='☰ Menu';}}
         try{action(btn.id);}catch(err){console.error('BEE pasek:',err);alert('Błąd przycisku: '+err.message);}
       });
     });
@@ -3419,8 +3433,17 @@ if (searchInput && resultsContainer) {
     if (!el) return;
     const cell = el.closest("td") || el;
     beeMarkTodayPermanently();
-    document.getElementById("month-" + m)?.scrollIntoView({behavior:"smooth",block:"start"});
-    setTimeout(() => cell.scrollIntoView({behavior:"smooth",block:"center",inline:"center"}), 180);
+    // Najpierw tylko pionowe przewijanie strony. scrollIntoView na komórce
+    // przewijał także poziome kontenery i powodował nieoczekiwane skoki.
+    const root = document.scrollingElement || document.documentElement;
+    const targetY = Math.max(0, cell.getBoundingClientRect().top + window.scrollY - Math.max(70,window.innerHeight*0.22));
+    window.scrollTo({top:targetY,left:0,behavior:'instant'});
+    root.scrollTop = targetY;
+    const scroll = cell.closest('.calendar-scroll');
+    if(scroll){
+      const left = cell.getBoundingClientRect().left - scroll.getBoundingClientRect().left + scroll.scrollLeft;
+      scroll.scrollLeft = Math.max(0,left - Math.max(0,(scroll.clientWidth-cell.clientWidth)/2));
+    }
   }
   window.scrollToToday = scrollToToday;
 // =========================
@@ -6666,7 +6689,7 @@ if ("serviceWorker" in navigator) {
 
 <!-- Firebase: niezależny panel diagnostyczny, bez synchronizacji danych. -->
 <section id="bee-firebase-panel" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;">
-  <h2 style="margin-top:0;color:#654b13">☁️ Firebase — połączenie testowe</h2>
+  <h2 style="margin-top:0;color:#654b13">☁️ Firebase — diagnostyka połączenia</h2>
   <p>Logowanie Google i test odczytu Firestore. Ta wersja <strong>nie przesyła, nie pobiera i nie scala danych pasiek</strong>.</p>
   <button type="button" id="bee-fb-login" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Zaloguj przez Google</button>
   <button type="button" id="bee-fb-test" disabled style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Sprawdź Firestore</button>
@@ -6766,7 +6789,7 @@ if ("serviceWorker" in navigator) {
     });
     test.addEventListener('click',async()=>{
       if(!current)return;
-      busy=true;buttons();say('Sprawdzanie odczytu Firestore…');
+      busy=true;buttons();say('Sprawdzanie odczytu Firestore… (wymagany internet)');
       try{
         const instance=await load();
         // Odczyt nieistniejącego dokumentu w przestrzeni zalogowanego UID.
@@ -6774,7 +6797,7 @@ if ("serviceWorker" in navigator) {
         const ref=sdk.dbSdk.doc(instance.db,'users',current.uid,'connection_checks','status');
         await sdk.dbSdk.getDocFromServer(ref);
         say('Połączenie z Firestore działa. Uprawnienia odczytu poprawne. Nie zapisano żadnych danych.');
-      }catch(e){say('Test Firestore nie powiódł się: '+(e.code||e.message));}
+      }catch(e){say('Test Firestore nie powiódł się: '+(e.code||e.message)+'. '+((e.code==='unavailable')?'Serwer nie odpowiedział. Sprawdź internet, wyłącz na próbę VPN/blokowanie reklam, odśwież stronę i ponów test. Ten błąd nie oznacza utraty danych ani automatycznie błędnych reguł.':(e.code==='permission-denied'?'Sprawdź opublikowane reguły Firestore i zalogowane konto.':'Sprawdź połączenie i spróbuj ponownie.')));}
       finally{busy=false;buttons();}
     });
     logout.addEventListener('click',async()=>{
