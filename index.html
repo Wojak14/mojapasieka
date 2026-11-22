@@ -582,7 +582,7 @@ body.bee-has-fixed-bar{padding-bottom:155px!important} #bee-mobile-bar button{po
 <div id="today"></div>
 <div id="upcoming"></div>
 
-<button id="today-btn" onclick="scrollToToday()" style="
+<button id="today-btn" type="button" style="
 margin-top:8px;
 margin-bottom:10px;
 padding:8px 12px;
@@ -5896,6 +5896,7 @@ if (gpsBtn) {
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js")
+      .then(registration => registration.update().catch(() => {}))
       .catch(error => console.error("Błąd Service Workera:", error));
   });
 }
@@ -6799,42 +6800,50 @@ if ("serviceWorker" in navigator) {
 
 
 <script>
-/* Nawigacja do bieżącego dnia: niezależna od ładowania modułów aplikacji.
-   Nie zapisuje ani nie modyfikuje żadnych danych pasieki. */
+/* Wspólna nawigacja Windows/Android. Nie zmienia danych ani położenia po zakończeniu. */
 (function(){
   function navigateToToday(){
-    var now=new Date();
-    var day=String(now.getDate()).padStart(2,'0');
-    var month=String(now.getMonth()+1).padStart(2,'0');
+    var now=new Date(), day=String(now.getDate()).padStart(2,'0'), month=String(now.getMonth()+1).padStart(2,'0');
     var number=document.querySelector('.day-number[data-day="'+day+'"][data-month="'+month+'"]');
-    if(!number){ console.warn('BEE ASSISTANT PRO: nie znaleziono dnia w kalendarzu',day,month); return false; }
+    if(!number){console.warn('Nie znaleziono bieżącej daty:',day,month);return false;}
     var cell=number.closest('td')||number;
-    document.querySelectorAll('td.bee-today-focus').forEach(function(e){e.classList.remove('bee-today-focus');});
+    document.querySelectorAll('td.bee-today-focus').forEach(function(el){el.classList.remove('bee-today-focus');});
     cell.classList.add('bee-today-focus');
-    // Wyśrodkuj dzień poziomo wyłącznie w jego tabeli, bez przewijania całej strony na bok.
     var scroller=cell.closest('.calendar-scroll');
     if(scroller){
-      var r=cell.getBoundingClientRect(), sr=scroller.getBoundingClientRect();
-      var left=scroller.scrollLeft+(r.left-sr.left)-(scroller.clientWidth-r.width)/2;
-      scroller.scrollLeft=Math.max(0,left);
+      var rect=cell.getBoundingClientRect(), wrap=scroller.getBoundingClientRect();
+      var targetX=scroller.scrollLeft+rect.left-wrap.left-(scroller.clientWidth-rect.width)/2;
+      scroller.scrollLeft=Math.max(0,targetX);
     }
-    // Przewiń stronę do komórki, nie do początku miesiąca.
+    /* Native scrolling resolves different document scroll roots on desktop/mobile. */
+    try{cell.scrollIntoView({behavior:'instant',block:'center',inline:'nearest'});}
+    catch(_){cell.scrollIntoView(true);}
+    /* Prevent horizontal page shift; leave day centered vertically. */
     var root=document.scrollingElement||document.documentElement;
-    var top=cell.getBoundingClientRect().top+(window.pageYOffset||root.scrollTop||0);
-    var target=Math.max(0,top-Math.max(55,Math.round(window.innerHeight*0.25)));
-    window.scrollTo({top:target,left:0,behavior:'auto'});
-    root.scrollTop=target;
+    var y=cell.getBoundingClientRect().top+(window.scrollY||root.scrollTop||0)-Math.round(window.innerHeight/2)+cell.getBoundingClientRect().height/2;
+    var max=Math.max(0,root.scrollHeight-window.innerHeight);
+    y=Math.max(0,Math.min(max,y));
+    window.scrollTo(0,y);
+    root.scrollTop=y;
     return true;
   }
   window.beeNavigateToToday=navigateToToday;
   window.scrollToToday=navigateToToday;
-  // Delegacja obsługuje zarówno górny przycisk, jak i przycisk mobilnego menu.
-  document.addEventListener('click',function(e){
-    var btn=e.target.closest&&e.target.closest('#today-btn, #s6-quick-today');
-    if(!btn)return;
-    e.preventDefault();e.stopImmediatePropagation();
+  function handleToday(event){
+    var target=event.target;
+    var button=target&&target.closest&&target.closest('#today-btn, #s6-quick-today');
+    if(!button)return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
     navigateToToday();
-  },true);
+    /* Close the mobile menu without causing a second scroll. */
+    if(button.id==='s6-quick-today'){
+      var bar=document.getElementById('bee-mobile-bar'), toggle=document.getElementById('bee-bar-toggle');
+      if(bar)bar.classList.remove('bee-bar-expanded');
+      if(toggle){toggle.setAttribute('aria-expanded','false');toggle.textContent='☰ Menu';}
+    }
+  }
+  document.addEventListener('click',handleToday,true);
 })();
 </script>
 </body>
