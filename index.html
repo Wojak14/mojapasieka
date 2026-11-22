@@ -6682,6 +6682,8 @@ if ("serviceWorker" in navigator) {
   <button type="button" id="bee-fb-test" disabled style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Sprawdź Firestore</button>
   <button type="button" id="bee-fb-logout" disabled style="padding:10px;background:#eee;border:1px solid #ccc;border-radius:8px;margin:4px">Wyloguj</button>
   <button type="button" id="bee-fb-rest" disabled style="padding:10px;background:#e5f2ff;border:1px solid #a7c6e8;border-radius:8px;font-weight:bold;margin:4px">Sprawdź Firestore REST</button>
+  <button type="button" id="bee-fb-write-test" disabled style="padding:10px;background:#e5f2ff;border:1px solid #a7c6e8;border-radius:8px;font-weight:bold;margin:4px">Test zapisu i odczytu REST</button>
+  <p id="bee-fb-write-status" role="status" aria-live="polite" style="font-size:13px;overflow-wrap:anywhere">Test zapisu nie został uruchomiony.</p>
   <p id="bee-fb-rest-status" role="status" aria-live="polite" style="font-size:13px;overflow-wrap:anywhere">Test REST nie został uruchomiony.</p>
   <p id="bee-fb-status" role="status" aria-live="polite" style="font-size:13px;overflow-wrap:anywhere">Firebase nie jest jeszcze uruchomiony.</p>
 </section>
@@ -6748,11 +6750,12 @@ if ("serviceWorker" in navigator) {
   // Obsługa wyłącznie świadomie klikanych działań. Brak automatycznej synchronizacji.
   function bindDiagnosticPanel(){
     const $=id=>document.getElementById(id);
+    const writeTest=$('bee-fb-write-test'), writeStatus=$('bee-fb-write-status');
     const login=$('bee-fb-login'), test=$('bee-fb-test'), rest=$('bee-fb-rest'), restStatus=$('bee-fb-rest-status'), logout=$('bee-fb-logout'), status=$('bee-fb-status');
     if(!login||!test||!logout||!status)return;
     let busy=false, current=null, sdk=null;
     const say=msg=>{status.textContent=msg;};
-    const buttons=()=>{login.disabled=busy||!!current;test.disabled=busy||!current;if(rest)rest.disabled=busy||!current;logout.disabled=busy||!current;};
+    const buttons=()=>{login.disabled=busy||!!current;test.disabled=busy||!current;if(rest)rest.disabled=busy||!current;if(writeTest)writeTest.disabled=busy||!current;logout.disabled=busy||!current;};
     async function load(){
       const instance=await adapter.prepare();
       if(!sdk){
@@ -6824,6 +6827,54 @@ if ("serviceWorker" in navigator) {
         restStatus.textContent='REST API: błąd połączenia '+String(e?.name||'')+
           ' — '+String(e?.message||e).slice(0,220)+'. Dane lokalne bez zmian.';
       }finally{busy=false;buttons();}
+    });
+    // Izolowany test REST: utworzenie, odczyt i usunięcie JEDNEGO losowego dokumentu
+    // w users/{uid}/connection_checks/. Nie dotyka danych pasiek ani pamięci lokalnej.
+    if(writeTest)writeTest.addEventListener('click',async()=>{
+      if(!current || busy)return;
+      if(!window.confirm('Test utworzy jeden tymczasowy dokument diagnostyczny w Firestore, odczyta go i spróbuje usunąć. Nie dotknie danych pasiek. Uruchomić?'))return;
+      busy=true;buttons();
+      const id='rest-test-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
+      const path='projects/'+PROJECT_ID+'/databases/(default)/documents/users/'+encodeURIComponent(current.uid)+'/connection_checks/'+id;
+      const url='https://firestore.googleapis.com/v1/'+path;
+      let created=false, verified=false, removed=false;
+      const controller=new AbortController();
+      const timeout=setTimeout(()=>controller.abort(),20000);
+      async function request(method, token, body){
+        const response=await fetch(url,{method,headers:{Authorization:'Bearer '+token,...(body?{'Content-Type':'application/json'}:{})},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:controller.signal});
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok)throw new Error('HTTP '+response.status+' '+String(data?.error?.status||'')+' '+String(data?.error?.message||'').slice(0,180));
+        return data;
+      }
+      try{
+        writeStatus.textContent='REST: zapis testowy…';
+        const token=await current.getIdToken();
+        const marker=id;
+        await request('PATCH',token,{fields:{marker:{stringValue:marker},purpose:{stringValue:'temporary_connection_test'}}});
+        created=true;
+        writeStatus.textContent='REST: odczyt dokumentu testowego…';
+        const doc=await request('GET',token);
+        if(doc?.fields?.marker?.stringValue!==marker)throw new Error('Odczyt nie potwierdził zapisanej wartości.');
+        verified=true;
+        writeStatus.textContent='REST: usuwanie dokumentu testowego…';
+        await request('DELETE',token);
+        removed=true;
+        writeStatus.textContent='SUKCES: REST zapisał, odczytał i usunął dokument testowy. Android i Windows można sprawdzić tym samym przyciskiem. Dane pasiek bez zmian.';
+      }catch(e){
+        writeStatus.textContent='Test REST: '+String(e?.message||e).slice(0,260)+'. '+(created?'Dokument został utworzony. ':'Nie potwierdzono utworzenia dokumentu. ')+(verified?'Odczyt działa. ':'')+'Dane pasiek bez zmian.';
+      }finally{
+        clearTimeout(timeout);
+        if(created&&!removed){
+          try{
+            // Nowy token i osobne żądanie, aby timeout testu nie zablokował sprzątania.
+            const token=await current.getIdToken();
+            const r=await fetch(url,{method:'DELETE',headers:{Authorization:'Bearer '+token},cache:'no-store'});
+            if(r.ok){removed=true;writeStatus.textContent+=' Tymczasowy dokument usunięty.';}
+            else writeStatus.textContent+=' Uwaga: nie udało się usunąć dokumentu testowego ('+r.status+').';
+          }catch(_){writeStatus.textContent+=' Uwaga: nie potwierdzono usunięcia dokumentu testowego.';}
+        }
+        busy=false;buttons();
+      }
     });
     logout.addEventListener('click',async()=>{
       busy=true;buttons();
