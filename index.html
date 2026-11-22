@@ -6357,6 +6357,64 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+<script>
+/* Kontrolowany test kopii scalonej: zero nadpisywania na aktywnych urządzeniach. */
+(function(){
+  function init(){
+    const $=id=>document.getElementById(id);
+    const input=$('bee-backup-file'),preview=$('bee-merge-preview'),apply=$('bee-merge-test-import'),report=$('bee-merge-report');
+    if(!input||!preview||!apply||!report)return;
+    let checked=null;
+    const say=msg=>{report.textContent=msg;};
+    function meaningfulKey(k){
+      return /^(pasieka_[12]_\d{2}\.\d{2}\.\d{4}|bee-hive-profiles:|bee-stage6-inventory:|bee-finance-records:|bee-hive-deleted:|voice-note:|bee-tasks:|apiary-notes-)/.test(k);
+    }
+    function currentMeaningful(){let n=0;for(let i=0;i<localStorage.length;i++)if(meaningfulKey(localStorage.key(i)))n++;return n;}
+    function voiceDb(){return new Promise((resolve,reject)=>{const r=indexedDB.open('KalendarzPszczelarski2026',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('voiceNotes'))r.result.createObjectStore('voiceNotes',{keyPath:'key'});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+    function voiceCount(db){return new Promise((resolve,reject)=>{const tx=db.transaction('voiceNotes','readonly'),r=tx.objectStore('voiceNotes').count();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+    function putVoice(db,records){return new Promise((resolve,reject)=>{const tx=db.transaction('voiceNotes','readwrite'),store=tx.objectStore('voiceNotes');for(const item of records){const raw=atob(item.base64),bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);store.add({key:item.key,dateKey:item.dateKey||'',mimeType:item.mimeType||'audio/webm',updatedAt:item.updatedAt||'',blob:new Blob([bytes],{type:item.mimeType||'audio/webm'})});}tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error);});}
+    input.addEventListener('change',()=>{checked=null;apply.disabled=true;say('');});
+    preview.addEventListener('click',async()=>{
+      checked=null;apply.disabled=true;
+      const file=input.files?.[0];if(!file){say('Wybierz plik JSON.');return;}
+      try{
+        const data=JSON.parse(await file.text());
+        if(data?.format!=='bee-assistant-pro-backup'||data.version!==1||!data.storage||Array.isArray(data.storage)||!Array.isArray(data.voice))throw Error('Niepoprawny format kopii.');
+        const keys=Object.keys(data.storage);if(keys.length>100000||data.voice.length>10000)throw Error('Zbyt wiele rekordów.');
+        if(keys.some(k=>typeof data.storage[k]!=='string'))throw Error('Niepoprawny wpis localStorage.');
+        const seen=new Set();for(const v of data.voice){if(!v||typeof v.key!=='string'||!v.key||typeof v.base64!=='string'||seen.has(v.key))throw Error('Niepoprawne nagranie.');seen.add(v.key);}
+        const profiles=['pasieka_1','pasieka_2'].map(a=>{const raw=data.storage['bee-hive-profiles:'+a];return a+': '+(raw?Object.keys(JSON.parse(raw)).length:0)+' kart';});
+        let missing=0,different=0,same=0;for(const k of keys){const cur=localStorage.getItem(k);if(cur===null)missing++;else if(cur===data.storage[k])same++;else different++;}
+        const db=await voiceDb(),count=await voiceCount(db);db.close();
+        const active=currentMeaningful()>0||count>0;
+        say('Plik: '+file.name+'\nKlucze: '+keys.length+' | nagrania: '+data.voice.length+'\n'+profiles.join(' | ')+'\nNa tym urządzeniu: '+missing+' brakujących, '+same+' identycznych, '+different+' różnych kluczy.\nLokalne nagrania: '+count+'\n'+(active?'⛔ Wykryto istniejące dane. Import testowy zablokowany — nic nie zmieniono.':'✅ Pusty profil testowy: można uruchomić import po potwierdzeniu.'));
+        if(!active){checked={file,data};apply.disabled=false;}
+      }catch(err){say('Nie można sprawdzić pliku: '+err.message);}
+    });
+    apply.addEventListener('click',async()=>{
+      if(!checked||input.files?.[0]!==checked.file)return;
+      apply.disabled=true;
+      const db=await voiceDb();
+      try{
+        if(currentMeaningful()>0||(await voiceCount(db))>0){say('⛔ W międzyczasie pojawiły się dane. Import anulowany.');return;}
+        if(!confirm('IMPORT TESTOWY wyłącznie w pustym profilu. Nie używaj tego na Androidzie ani Windows z danymi. Kontynuować?'))return;
+        const {data}=checked;
+        const added=[];
+        try{
+          for(const [k,v] of Object.entries(data.storage)){
+            if(localStorage.getItem(k)!==null)continue;
+            localStorage.setItem(k,v);added.push(k);
+          }
+          await putVoice(db,data.voice);
+        }catch(err){for(const k of added)localStorage.removeItem(k);throw err;}
+        checked=null;say('Testowy import zakończony: '+added.length+' nowych kluczy i '+data.voice.length+' nagrań. Odśwież stronę i sprawdź karty uli, kalendarz i odtwarzanie nagrań. Nie jest to synchronizacja Firestore.');
+      }catch(err){say('Błąd importu: '+err.message+' Sprawdź dane w profilu testowym.');}finally{db.close();}
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
+
 <!-- Ostatnia sekcja strony: pełna kopia obu pasiek -->
 <section id="bee-backup-panel" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;">
   <h2 style="margin-top:0;color:#654b13">💾 Kopia bezpieczeństwa obu pasiek</h2>
@@ -6368,6 +6426,14 @@ if ("serviceWorker" in navigator) {
   <button type="button" id="bee-backup-import" style="padding:11px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">⬆ Przywróć brakujące dane</button>
   <p style="font-size:13px;color:#555">Bezpieczne przywracanie: istniejące wpisy i nagrania nie są nadpisywane ani usuwane. Aby zastąpić już istniejące dane, potrzebny będzie osobny tryb przywracania.</p>
   <div id="bee-backup-status" role="status" aria-live="polite" style="font-size:13px;margin-top:8px"></div>
+  <div id="bee-merge-test" style="margin-top:14px;padding:12px;border:1px solid #d9bd63;border-radius:9px">
+    <strong>🧪 Kontrola scalonej kopii — etap testowy</strong>
+    <p style="font-size:13px">Wybierz scalony JSON powyżej i sprawdź różnice. Import testowy jest możliwy wyłącznie w pustym profilu przeglądarki; na urządzeniu z danymi zostanie zablokowany.</p>
+    <button type="button" id="bee-merge-preview" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">🔍 Sprawdź scaloną kopię</button>
+    <button type="button" id="bee-merge-test-import" disabled style="padding:10px;background:#ddd;border:0;border-radius:8px;font-weight:bold;margin:6px">🧪 Import do pustego profilu</button>
+    <div id="bee-merge-report" role="status" aria-live="polite" style="font-size:13px;white-space:pre-wrap;margin-top:8px"></div>
+  </div>
+
 </section>
 
 <script>
