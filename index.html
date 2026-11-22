@@ -3425,26 +3425,8 @@ if (searchInput && resultsContainer) {
     if (cell) cell.classList.add("bee-today-focus");
   }
   window.beeMarkTodayPermanently = beeMarkTodayPermanently;
-  function scrollToToday(){
-    const now = new Date();
-    const d = String(now.getDate()).padStart(2, "0");
-    const m = String(now.getMonth()+1).padStart(2, "0");
-    const el = document.querySelector(`.day-number[data-day="${d}"][data-month="${m}"]`);
-    if (!el) return;
-    const cell = el.closest("td") || el;
-    beeMarkTodayPermanently();
-    // Najpierw tylko pionowe przewijanie strony. scrollIntoView na komórce
-    // przewijał także poziome kontenery i powodował nieoczekiwane skoki.
-    const root = document.scrollingElement || document.documentElement;
-    const targetY = Math.max(0, cell.getBoundingClientRect().top + window.scrollY - Math.max(70,window.innerHeight*0.22));
-    window.scrollTo({top:targetY,left:0,behavior:'instant'});
-    root.scrollTop = targetY;
-    const scroll = cell.closest('.calendar-scroll');
-    if(scroll){
-      const left = cell.getBoundingClientRect().left - scroll.getBoundingClientRect().left + scroll.scrollLeft;
-      scroll.scrollLeft = Math.max(0,left - Math.max(0,(scroll.clientWidth-cell.clientWidth)/2));
-    }
-  }
+  // Oba przyciski korzystają z jednej, niezależnej funkcji nawigacji.
+  function scrollToToday(){ return window.beeNavigateToToday(); }
   window.scrollToToday = scrollToToday;
 // =========================
 // 📍 INTELIGENTNY GPS PASIEKI PRO
@@ -5834,7 +5816,7 @@ if (savedGPS === "true" && navigator.geolocation) {
 
   setTimeout(autoScaleCalendarText, 100);
   beeMarkTodayPermanently();
-  scrollToToday();
+  // Nie przesuwaj strony automatycznie przy uruchomieniu aplikacji.
   setInterval(beeMarkTodayPermanently, 60000);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) beeMarkTodayPermanently();
@@ -6815,5 +6797,45 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+<script>
+/* Nawigacja do bieżącego dnia: niezależna od ładowania modułów aplikacji.
+   Nie zapisuje ani nie modyfikuje żadnych danych pasieki. */
+(function(){
+  function navigateToToday(){
+    var now=new Date();
+    var day=String(now.getDate()).padStart(2,'0');
+    var month=String(now.getMonth()+1).padStart(2,'0');
+    var number=document.querySelector('.day-number[data-day="'+day+'"][data-month="'+month+'"]');
+    if(!number){ console.warn('BEE ASSISTANT PRO: nie znaleziono dnia w kalendarzu',day,month); return false; }
+    var cell=number.closest('td')||number;
+    document.querySelectorAll('td.bee-today-focus').forEach(function(e){e.classList.remove('bee-today-focus');});
+    cell.classList.add('bee-today-focus');
+    // Wyśrodkuj dzień poziomo wyłącznie w jego tabeli, bez przewijania całej strony na bok.
+    var scroller=cell.closest('.calendar-scroll');
+    if(scroller){
+      var r=cell.getBoundingClientRect(), sr=scroller.getBoundingClientRect();
+      var left=scroller.scrollLeft+(r.left-sr.left)-(scroller.clientWidth-r.width)/2;
+      scroller.scrollLeft=Math.max(0,left);
+    }
+    // Przewiń stronę do komórki, nie do początku miesiąca.
+    var root=document.scrollingElement||document.documentElement;
+    var top=cell.getBoundingClientRect().top+(window.pageYOffset||root.scrollTop||0);
+    var target=Math.max(0,top-Math.max(55,Math.round(window.innerHeight*0.25)));
+    window.scrollTo({top:target,left:0,behavior:'auto'});
+    root.scrollTop=target;
+    return true;
+  }
+  window.beeNavigateToToday=navigateToToday;
+  window.scrollToToday=navigateToToday;
+  // Delegacja obsługuje zarówno górny przycisk, jak i przycisk mobilnego menu.
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest&&e.target.closest('#today-btn, #s6-quick-today');
+    if(!btn)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    navigateToToday();
+  },true);
+})();
+</script>
 </body>
 </html>
