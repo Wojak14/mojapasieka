@@ -6681,6 +6681,8 @@ if ("serviceWorker" in navigator) {
   <button type="button" id="bee-fb-login" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Zaloguj przez Google</button>
   <button type="button" id="bee-fb-test" disabled style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:4px">Sprawdź Firestore</button>
   <button type="button" id="bee-fb-logout" disabled style="padding:10px;background:#eee;border:1px solid #ccc;border-radius:8px;margin:4px">Wyloguj</button>
+  <button type="button" id="bee-fb-rest" disabled style="padding:10px;background:#e5f2ff;border:1px solid #a7c6e8;border-radius:8px;font-weight:bold;margin:4px">Sprawdź Firestore REST</button>
+  <p id="bee-fb-rest-status" role="status" aria-live="polite" style="font-size:13px;overflow-wrap:anywhere">Test REST nie został uruchomiony.</p>
   <p id="bee-fb-status" role="status" aria-live="polite" style="font-size:13px;overflow-wrap:anywhere">Firebase nie jest jeszcze uruchomiony.</p>
 </section>
 
@@ -6746,11 +6748,11 @@ if ("serviceWorker" in navigator) {
   // Obsługa wyłącznie świadomie klikanych działań. Brak automatycznej synchronizacji.
   function bindDiagnosticPanel(){
     const $=id=>document.getElementById(id);
-    const login=$('bee-fb-login'), test=$('bee-fb-test'), logout=$('bee-fb-logout'), status=$('bee-fb-status');
+    const login=$('bee-fb-login'), test=$('bee-fb-test'), rest=$('bee-fb-rest'), restStatus=$('bee-fb-rest-status'), logout=$('bee-fb-logout'), status=$('bee-fb-status');
     if(!login||!test||!logout||!status)return;
     let busy=false, current=null, sdk=null;
     const say=msg=>{status.textContent=msg;};
-    const buttons=()=>{login.disabled=busy||!!current;test.disabled=busy||!current;logout.disabled=busy||!current;};
+    const buttons=()=>{login.disabled=busy||!!current;test.disabled=busy||!current;if(rest)rest.disabled=busy||!current;logout.disabled=busy||!current;};
     async function load(){
       const instance=await adapter.prepare();
       if(!sdk){
@@ -6788,6 +6790,40 @@ if ("serviceWorker" in navigator) {
         say('Połączenie z Firestore działa. Uprawnienia odczytu poprawne. Nie zapisano żadnych danych.');
       }catch(e){say('Test Firestore nie powiódł się: '+(e.code||e.message)+'. '+((e.code==='unavailable')?'Połączenie long polling nie powiodło się w tej aplikacji. Sprawdź kartę Konsola w narzędziach deweloperskich i prześlij komunikat błędu. Dane lokalne pozostają bez zmian.':(e.code==='permission-denied'?'Serwer odrzucił odczyt. Sprawdź opublikowane reguły Firestore i zalogowane konto.':'Sprawdź połączenie i spróbuj ponownie.')));}
       finally{busy=false;buttons();}
+    });
+    // Drugi, niezależny test: HTTPS REST API. Wyłącznie odczyt dokumentu testowego.
+    // Nie logujemy ani nie wyświetlamy tokenu użytkownika.
+    if(rest)rest.addEventListener('click',async()=>{
+      if(!current)return;
+      busy=true;buttons();restStatus.textContent='Sprawdzanie REST API Firestore…';
+      try{
+        const token=await current.getIdToken();
+        const url='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(PROJECT_ID)+
+          '/databases/(default)/documents/users/'+encodeURIComponent(current.uid)+'/connection_checks/status';
+        const controller=new AbortController();
+        const timeout=setTimeout(()=>controller.abort(),15000);
+        let response;
+        try{
+          response=await fetch(url,{method:'GET',headers:{Authorization:'Bearer '+token},
+            cache:'no-store',signal:controller.signal});
+        }finally{clearTimeout(timeout);}
+        let payload={};
+        try{payload=await response.json();}catch(_){}
+        const apiCode=String(payload?.error?.status||'');
+        const apiMessage=String(payload?.error?.message||'').slice(0,250);
+        if(response.ok||response.status===404){
+          restStatus.textContent='REST API działa (HTTP '+response.status+'). '+
+            (response.status===404?'Dokument testowy nie istnieje — to oczekiwany wynik odczytu.':'Odczyt poprawny.')+
+            ' Nie zapisano żadnych danych.';
+        }else{
+          restStatus.textContent='REST API odpowiedziało: HTTP '+response.status+
+            (apiCode?' / '+apiCode:'')+(apiMessage?' — '+apiMessage:'')+
+            '. Dane lokalne bez zmian.';
+        }
+      }catch(e){
+        restStatus.textContent='REST API: błąd połączenia '+String(e?.name||'')+
+          ' — '+String(e?.message||e).slice(0,220)+'. Dane lokalne bez zmian.';
+      }finally{busy=false;buttons();}
     });
     logout.addEventListener('click',async()=>{
       busy=true;buttons();
@@ -6848,6 +6884,36 @@ if ("serviceWorker" in navigator) {
     }
   }
   document.addEventListener('click',handleToday,true);
+  /* Jednorazowe przewinięcie po uruchomieniu, jednak bez przerywania pracy użytkownika.
+     Działa identycznie na Androidzie i Windows, również po wczytaniu z cache PWA. */
+  var userInteracted=false, autoDone=false;
+  ['pointerdown','touchstart','keydown','wheel'].forEach(function(type){
+    document.addEventListener(type,function(){userInteracted=true;},{capture:true,passive:true,once:true});
+  });
+  function autoNavigateToToday(){
+    if(autoDone||userInteracted)return;
+    autoDone=true;
+    /* Nie zasłaniaj okna wyboru pasieki; przejście nastąpi po jej wybraniu. */
+    var dialog=document.getElementById('bee-apiary-start');
+    if(dialog&&!dialog.hidden&&getComputedStyle(dialog).display!=='none'){
+      autoDone=false;
+      var observer=new MutationObserver(function(){
+        if(dialog.hidden||getComputedStyle(dialog).display==='none'){
+          observer.disconnect();
+          requestAnimationFrame(function(){requestAnimationFrame(function(){if(!autoDone){autoDone=true;navigateToToday();}});});
+        }
+      });
+      observer.observe(dialog,{attributes:true,attributeFilter:['hidden','style','class']});
+      return;
+    }
+    navigateToToday();
+  }
+  function scheduleAutoToday(){
+    /* Po layout i przywróceniu dokumentu, bez ciągłego ponawiania przewijania. */
+    requestAnimationFrame(function(){requestAnimationFrame(autoNavigateToToday);});
+  }
+  if(document.readyState==='complete')scheduleAutoToday();
+  else window.addEventListener('load',scheduleAutoToday,{once:true});
 })();
 </script>
 </body>
