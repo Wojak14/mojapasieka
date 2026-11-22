@@ -6415,6 +6415,33 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+<script>
+/* Etap kontrolowanego scalania: tylko brakujące klucze i nagrania, konflikty bez zmian. */
+(function(){
+  const $=id=>document.getElementById(id);
+  let prepared=null;
+  function dbOpen(){return new Promise((ok,no)=>{const r=indexedDB.open('KalendarzPszczelarski2026',1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('voiceNotes'))r.result.createObjectStore('voiceNotes',{keyPath:'key'});};r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);r.onblocked=()=>no(Error('Zamknij pozostałe karty aplikacji.'));});}
+  function voiceAll(db){return new Promise((ok,no)=>{const tx=db.transaction('voiceNotes','readonly'),r=tx.objectStore('voiceNotes').getAll();r.onsuccess=()=>ok(r.result||[]);r.onerror=()=>no(r.error);});}
+  function b64(bytes){let out='';for(let i=0;i<bytes.length;i+=16384)out+=String.fromCharCode(...bytes.subarray(i,i+16384));return btoa(out);}
+  async function snapshot(db){const storage={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);storage[k]=localStorage.getItem(k);}const voice=[];for(const r of await voiceAll(db)){if(!(r.blob instanceof Blob))throw Error('Nie można wykonać kopii nagrania '+r.key);voice.push({key:r.key,dateKey:r.dateKey||'',mimeType:r.mimeType||r.blob.type||'audio/webm',updatedAt:r.updatedAt||'',base64:b64(new Uint8Array(await r.blob.arrayBuffer()))});}return {format:'bee-assistant-pro-backup',version:1,createdAt:new Date().toISOString(),storage,voice};}
+  function download(data,name){const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),120000);}
+  function validate(data){if(!data||data.format!=='bee-assistant-pro-backup'||data.version!==1||!data.storage||Array.isArray(data.storage)||typeof data.storage!=='object'||!Array.isArray(data.voice))throw Error('Niepoprawny format pliku.');if(Object.keys(data.storage).length>100000||data.voice.length>10000)throw Error('Za dużo danych.');for(const [k,v] of Object.entries(data.storage))if(typeof v!=='string'||['__proto__','constructor','prototype'].includes(k))throw Error('Nieprawidłowy klucz danych.');const seen=new Set();for(const v of data.voice){if(!v||typeof v.key!=='string'||!v.key||typeof v.base64!=='string'||seen.has(v.key)||!/^[A-Za-z0-9+/]*={0,2}$/.test(v.base64))throw Error('Niepoprawne nagranie.');seen.add(v.key);}}
+  function init(){const file=$('bee-backup-file'),preview=$('bee-controlled-preview'),apply=$('bee-controlled-apply'),status=$('bee-controlled-status');if(!file||!preview||!apply||!status)return;
+    const say=s=>status.textContent=s;
+    file.addEventListener('change',()=>{prepared=null;apply.disabled=true;say('');});
+    preview.addEventListener('click',async()=>{prepared=null;apply.disabled=true;const f=file.files?.[0];if(!f){say('Najpierw wybierz scalony plik JSON.');return;}preview.disabled=true;let db;try{const data=JSON.parse(await f.text());validate(data);db=await dbOpen();const current=await voiceAll(db),voiceKeys=new Set(current.map(v=>v.key));const missing=[],same=[],conflicts=[];for(const [k,v] of Object.entries(data.storage)){const existing=localStorage.getItem(k);if(existing===null)missing.push(k);else if(existing===v)same.push(k);else conflicts.push(k);}const newVoices=data.voice.filter(v=>!voiceKeys.has(v.key));const voiceConflicts=data.voice.filter(v=>voiceKeys.has(v.key));prepared={file:f,data,missing,same,conflicts,newVoices,voiceConflicts};apply.disabled=false;say('PODGLĄD — NIC NIE ZMIENIONO\nBrakujące klucze: '+missing.length+'\nIdentyczne: '+same.length+'\nRóżne (pozostaną nietknięte): '+conflicts.length+'\nNowe nagrania: '+newVoices.length+'\nNagrania o istniejącym kluczu (pozostaną nietknięte): '+voiceConflicts.length+'\n\nKliknij „Importuj tylko brakujące”, aby wykonać kopię bezpieczeństwa i dodać wyłącznie brakujące dane. Konflikty zostaną zapisane w osobnym raporcie.');}catch(e){say('Błąd podglądu: '+e.message);}finally{db?.close();preview.disabled=false;}});
+    apply.addEventListener('click',async()=>{if(!prepared||file.files?.[0]!==prepared.file)return;apply.disabled=true;let db;try{db=await dbOpen();const p=prepared;const local=await snapshot(db);download(local,'BEE_KOPIA_PRZED_IMPORTEM_'+new Date().toISOString().slice(0,10)+'.json');const report={format:'bee-assistant-pro-conflicts',createdAt:new Date().toISOString(),note:'Konflikty NIE zostały nadpisane. Porównaj oba warianty przed dalszym scalaniem.',conflicts:p.conflicts.map(k=>({key:k,local:local.storage[k],incoming:p.data.storage[k]})),voiceExisting:p.voiceConflicts.map(v=>({key:v.key,dateKey:v.dateKey}))};download(report,'BEE_KONFLIKTY_DO_WERYFIKACJI.json');
+      if(!confirm('Pobrano kopię bezpieczeństwa i raport konfliktów. Sprawdź, czy oba pliki są zapisane na urządzeniu. Import doda TYLKO brakujące klucze i nagrania. Istniejące wpisy pozostaną bez zmian. Kontynuować?')){say('Import anulowany. Kopia i raport zostały przygotowane.');return;}
+      // Ponowna kontrola bieżącego stanu przed zapisem.
+      const voicesNow=new Set((await voiceAll(db)).map(v=>v.key));const keys=Object.entries(p.data.storage).filter(([k])=>localStorage.getItem(k)===null);const voices=p.data.voice.filter(v=>!voicesNow.has(v.key));
+      const added=[];let voiceAdded=0;try{for(const [k,v] of keys){localStorage.setItem(k,v);added.push(k);}for(const v of voices){const raw=atob(v.base64),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0));await new Promise((ok,no)=>{const tx=db.transaction('voiceNotes','readwrite');tx.objectStore('voiceNotes').add({key:v.key,dateKey:v.dateKey||'',mimeType:v.mimeType||'audio/webm',updatedAt:v.updatedAt||'',blob:new Blob([bytes],{type:v.mimeType||'audio/webm'})});tx.oncomplete=ok;tx.onerror=()=>no(tx.error);tx.onabort=()=>no(tx.error);});voiceAdded++;}}catch(err){for(const k of added)if(localStorage.getItem(k)===p.data.storage[k])localStorage.removeItem(k);throw Error('Niepełny import: '+err.message+'. Zachowaj kopię sprzed importu.');}
+      prepared=null;say('✅ Dodano '+added.length+' brakujących kluczy i '+voiceAdded+' nagrań. Nie zmieniono istniejących wpisów. Konflikty pozostają nierozstrzygnięte. Sprawdź aplikację i zachowaj oba pobrane pliki. Firestore NIE synchronizowano.');
+    }catch(e){say('⛔ '+e.message);}finally{db?.close();}});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
 <!-- Ostatnia sekcja strony: pełna kopia obu pasiek -->
 <section id="bee-backup-panel" style="margin:18px 5px;padding:15px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px;">
   <h2 style="margin-top:0;color:#654b13">💾 Kopia bezpieczeństwa obu pasiek</h2>
@@ -6432,6 +6459,13 @@ if ("serviceWorker" in navigator) {
     <button type="button" id="bee-merge-preview" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">🔍 Sprawdź scaloną kopię</button>
     <button type="button" id="bee-merge-test-import" disabled style="padding:10px;background:#ddd;border:0;border-radius:8px;font-weight:bold;margin:6px">🧪 Import do pustego profilu</button>
     <div id="bee-merge-report" role="status" aria-live="polite" style="font-size:13px;white-space:pre-wrap;margin-top:8px"></div>
+  </div>
+  <div style="margin-top:14px;padding:12px;border:1px solid #d9bd63;border-radius:9px">
+    <strong>🔐 Etap 2 — kontrolowany import tylko brakujących danych</strong>
+    <p style="font-size:13px">Wybierz plik JSON w polu powyżej. Ten etap nie nadpisuje istniejących kart uli, notatek, magazynu ani finansów. Przed zapisem pobiera pełną kopię lokalną i raport konfliktów. To jeszcze nie jest pełne scalanie konfliktujących kart uli.</p>
+    <button type="button" id="bee-controlled-preview" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">🔍 Podgląd bezpiecznego importu</button>
+    <button type="button" id="bee-controlled-apply" disabled style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold;margin:6px">⬇ Importuj tylko brakujące</button>
+    <div id="bee-controlled-status" role="status" aria-live="polite" style="font-size:13px;white-space:pre-wrap;margin-top:8px"></div>
   </div>
 
 </section>
