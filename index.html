@@ -2499,7 +2499,7 @@ font-weight:bold;
 
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
   <button type="button" id="bee-bar-toggle" aria-expanded="false" aria-controls="bee-mobile-bar">☰ Menu</button><button type="button" id="bee-bar-backup">💾 Kopia</button>
-  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-down">⬇ Dół</button><button type="button" id="s6-quick-top">⬆ Góra</button>
+  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-stop-scan">⏹ Zatrzymaj skaner</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-down">⬇ Dół</button><button type="button" id="s6-quick-top">⬆ Góra</button>
 </div>
 <script>
 /* Zwinięte menu na Androidzie + szybki dostęp do kopii. Nie zmienia danych. */
@@ -2568,6 +2568,10 @@ font-weight:bold;
         else {var dialog=document.getElementById('bee-apiary-start');if(dialog){dialog.hidden=false;dialog.style.display='flex';}}
         break;
       }
+      case 's6-quick-stop-scan':
+        if(typeof s6StopScan==='function'){Promise.resolve(s6StopScan()).catch(function(err){console.error('Zatrzymanie skanera:',err);});}
+        else {var stop=document.getElementById('s6-stop-scan');if(stop)stop.click();}
+        break;
       case 's6-quick-scan':
         goTo('bee-stage6-panel');
         var scan=document.getElementById('s6-scan');
@@ -5723,9 +5727,9 @@ function s6Render(){
  const ml=document.getElementById("s6-movement-list");ml.innerHTML=moves.length?moves.slice().reverse().slice(0,50).map(m=>`<div class="s6-row"><div><strong>${m.kind==="in"?"Dostawa":"Zużycie"}: ${s6Esc(m.name)}</strong><small>${s6Esc(m.date)} · ${m.kind==="in"?"+":"−"}${Number(m.qty)} ${s6Esc(m.unit)}${m.hive?" · Ul "+s6Esc(m.hive):""}${m.note?" · "+s6Esc(m.note):""}</small></div><button type="button" class="danger" data-s6-move-delete="${s6Esc(m.id)}">Usuń</button></div>`).join(""):"Brak operacji magazynowych.";
 }
 function s6Download(name,content,type){const blob=new Blob(["\ufeff"+content],{type}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-let s6WakeLock=null,s6Stream=null,s6ScanTimer=null;
-async function s6StopScan(){if(s6ScanTimer)clearTimeout(s6ScanTimer);s6ScanTimer=null;if(s6Stream){s6Stream.getTracks().forEach(t=>t.stop());s6Stream=null;}const v=document.getElementById("s6-camera");if(v)v.srcObject=null;document.getElementById("s6-scan-area").hidden=true;}
-async function s6StartScan(){const area=document.getElementById("s6-scan-area"),result=document.getElementById("s6-scan-result");area.hidden=false;if(!("BarcodeDetector" in window)){result.textContent="Ta przeglądarka nie obsługuje wbudowanego skanowania QR. Użyj aparatu telefonu lub wyszukaj ul ręcznie.";return;}try{const detector=new BarcodeDetector({formats:["qr_code"]});s6Stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});const video=document.getElementById("s6-camera");video.srcObject=s6Stream;await video.play();result.textContent="Skieruj aparat na kod QR ula…";const scan=async()=>{if(!s6Stream)return;try{const codes=await detector.detect(video);if(codes.length){const raw=codes[0].rawValue||"";result.textContent="Odczytano kod: "+raw; if(raw.startsWith("BEE-HIVE:")){const n=raw.slice(9);result.textContent="Kod ula nr "+n+" odczytany. Otwórz odpowiadającą mu kartę w sekcji rodzin.";}if(navigator.vibrate)navigator.vibrate(100);await s6StopScan();return;}}catch(e){}s6ScanTimer=setTimeout(scan,450);};scan();}catch(e){result.textContent="Nie udało się uruchomić aparatu: "+(e.message||e)+". Sprawdź zgodę na aparat i połączenie HTTPS.";}}
+let s6WakeLock=null,s6Stream=null,s6ScanTimer=null,s6ScanGeneration=0;
+async function s6StopScan(){s6ScanGeneration++;if(s6ScanTimer)clearTimeout(s6ScanTimer);s6ScanTimer=null;if(s6Stream){s6Stream.getTracks().forEach(t=>t.stop());s6Stream=null;}const v=document.getElementById("s6-camera");if(v)v.srcObject=null;document.getElementById("s6-scan-area").hidden=true;}
+async function s6StartScan(){const generation=++s6ScanGeneration;const area=document.getElementById("s6-scan-area"),result=document.getElementById("s6-scan-result");area.hidden=false;if(!("BarcodeDetector" in window)){result.textContent="Ta przeglądarka nie obsługuje wbudowanego skanowania QR. Użyj aparatu telefonu lub wyszukaj ul ręcznie.";return;}try{const detector=new BarcodeDetector({formats:["qr_code"]});const acquiredStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});if(generation!==s6ScanGeneration){acquiredStream.getTracks().forEach(t=>t.stop());return;}s6Stream=acquiredStream;const video=document.getElementById("s6-camera");video.srcObject=s6Stream;await video.play();result.textContent="Skieruj aparat na kod QR ula…";const scan=async()=>{if(!s6Stream||generation!==s6ScanGeneration)return;try{const codes=await detector.detect(video);if(codes.length){const raw=codes[0].rawValue||"";result.textContent="Odczytano kod: "+raw; if(raw.startsWith("BEE-HIVE:")){const n=raw.slice(9);result.textContent="Kod ula nr "+n+" odczytany. Otwórz odpowiadającą mu kartę w sekcji rodzin.";}if(navigator.vibrate)navigator.vibrate(100);await s6StopScan();return;}}catch(e){}s6ScanTimer=setTimeout(scan,450);};scan();}catch(e){if(generation!==s6ScanGeneration)return;result.textContent="Nie udało się uruchomić aparatu: "+(e.message||e)+". Sprawdź zgodę na aparat i połączenie HTTPS.";}}
 let s6QrInstance=null;
 function s6RefreshQrHiveOptions(){
  const select=document.getElementById("s6-qr-hive");if(!select)return;
