@@ -7265,8 +7265,65 @@ function showConflicts(){
    const b=document.createElement("button");b.type="button";b.textContent=name;b.style.cssText="padding:7px;margin:5px;background:#fff1bd;border:1px solid #c49a20;border-radius:6px";
    b.onclick=()=>resolve(c,mode);wrap.append(b);
   }
+  if(["bee-hive-profiles:pasieka_1","bee-hive-profiles:pasieka_2","bee-hive-deleted:pasieka_2","bee-hive-count:pasieka_2"].includes(c.key)){
+   const b=document.createElement("button");b.type="button";b.textContent="🛡️ Bezpiecznie scal uzgodnione dane";
+   b.style.cssText="padding:9px;margin:5px;background:#dff4df;border:1px solid #468c46;border-radius:6px;font-weight:bold";
+   b.onclick=()=>mergeConflict(c);wrap.append(b);
+  }
   conflictsBox.append(wrap);
  }
+}
+const approved={pasieka_1:[1,2,3,4,5,6,8,9,10,15,19,20,21,22,23,24,25,26,27,29,30,31],pasieka_2:[11,12,13,14,16,17,28]};
+function mergeRecords(key,lv,rv){
+ const id=key.split(":")[1];
+ if(key.startsWith("bee-hive-count:"))return String(Math.max(31,Number(lv)||0,Number(rv)||0));
+ if(key.startsWith("bee-hive-deleted:"))return JSON.stringify([...new Set([...(JSON.parse(lv||"[]")),...(JSON.parse(rv||"[]")),7,9])].sort((a,b)=>a-b));
+ const local=JSON.parse(lv||"{}"),remote=JSON.parse(rv||"{}");
+ const allowed=approved[id];if(!allowed)throw Error("Nieuzgodniona pasieka.");
+ const result={};
+ const nonempty=v=>v!==undefined&&v!==null&&v!=="";
+ const arrayKeys=new Set(["inspections","queenHistory","splits","harvests","frameOperations","varroaMeasurements"]);
+ const uniq=(a,b)=>{const out=[];const seen=new Set();for(const x of [...a,...b]){const k=x&&typeof x==="object"&&x.id?"id:"+x.id:JSON.stringify(x);if(!seen.has(k)){seen.add(k);out.push(x);}}return out;};
+ for(const n of allowed){
+  const a=local[n]||{},b=remote[n]||{};if(!Object.keys(a).length&&!Object.keys(b).length)throw Error("Brakuje uzgodnionej karty ula "+n+" w obu wersjach.");
+  const r={...b,...a,number:n};
+  for(const k of new Set([...Object.keys(a),...Object.keys(b)])){
+   if(arrayKeys.has(k)){r[k]=uniq(Array.isArray(a[k])?a[k]:[],Array.isArray(b[k])?b[k]:[]);continue;}
+   if(k==="apiaryLat"||k==="apiaryLon"||k==="apiaryGpsAccuracy"||k==="apiaryLocationUpdated"){
+    const newer=String(a.apiaryLocationUpdated||"")>String(b.apiaryLocationUpdated||"")?a:b;
+    r[k]=nonempty(newer[k])?newer[k]:(nonempty(a[k])?a[k]:b[k]);continue;
+   }
+   if(k==="notes"&&nonempty(a[k])&&nonempty(b[k])&&a[k].trim()!==b[k].trim()){
+    r[k]=a[k].trim()+"\n\n[Zapis z drugiego urządzenia]\n"+b[k].trim();continue;
+   }
+   if(k==="frameInventory"&&a[k]&&b[k]){r[k]={...b[k],...Object.fromEntries(Object.entries(a[k]).filter(([,v])=>nonempty(v)))};continue;}
+   if(k==="updatedAt") {r[k]=String(a[k]||"")>String(b[k]||"")?a[k]:b[k];continue;}
+   r[k]=nonempty(a[k])?a[k]:b[k];
+  }
+  result[n]=r;
+ }
+ return JSON.stringify(result);
+}
+async function mergeConflict(c){
+ if(busy)return;
+ const explanation="Scalenie zachowa uzgodnione numery kart i historie z obu urządzeń. Przy różnych niepustych polach pierwszeństwo mają dane Windows (tego urządzenia), GPS zostanie pobrany z nowszego pomiaru. Oryginały zostaną zapisane w kopii JSON.\n\nWykonaj również kopie zapasowe całej aplikacji na obu urządzeniach.";
+ if(!confirm("Scalić "+c.key+"?\n\n"+explanation))return;
+ busy=true;
+ try{
+  await setup();const user=auth.currentUser;if(!user)throw Error("Zaloguj się przez Google.");
+  if(localStorage.getItem(c.key)!==c.local)throw Error("Dane lokalne zmieniły się. Uruchom synchronizację ponownie.");
+  const ref=fs.doc(db,"users",user.uid,"hiveSyncKeys","k_"+await digest(c.key));
+  const snap=await fs.getDocFromServer(ref),current=snap.exists()?snap.data().value:null;
+  if(current!==c.remote)throw Error("Dane Firebase zmieniły się. Uruchom synchronizację ponownie.");
+  const merged=mergeRecords(c.key,c.local,c.remote);
+  const archive={key:c.key,local:c.local,remote:c.remote,merged,createdAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(archive,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="BEE_KOPIA_SCALANIA_"+c.key.replace(/[^a-z0-9_-]/gi,"_")+"_"+Date.now()+".json";document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+  await fs.runTransaction(db,async tx=>{const doc=await tx.get(ref);if((doc.exists()?doc.data().value:null)!==c.remote)throw Error("Firebase zmienił dane podczas scalania.");tx.set(ref,{key:c.key,value:merged,updatedAt:fs.serverTimestamp()});});
+  localStorage.setItem(c.key,merged);baseline[c.key]=merged;persist();refresh();
+  status.textContent="Scalono "+c.key+". Kopia wersji została przygotowana do pobrania.";
+ }catch(e){status.textContent="Scalanie wstrzymane: "+(e?.message||e)+". Nie zmieniono lokalnych danych.";busy=false;return;}
+ busy=false;await sync();
 }
 async function resolve(c,mode){
  if(busy)return;
