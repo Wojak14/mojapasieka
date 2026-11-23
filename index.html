@@ -7276,7 +7276,7 @@ function showConflicts(){
 const approved={pasieka_1:[1,2,3,4,5,6,8,9,10,15,19,20,21,22,23,24,25,26,27,29,30,31],pasieka_2:[11,12,13,14,16,17,28]};
 function mergeRecords(key,lv,rv){
  const id=key.split(":")[1];
- if(key.startsWith("bee-hive-count:"))return String(Math.max(31,Number(lv)||0,Number(rv)||0));
+ if(key.startsWith("bee-hive-count:"))return String(Math.max(Number(lv)||0,Number(rv)||0,Math.max(...approved[id])));
  if(key.startsWith("bee-hive-deleted:"))return JSON.stringify([...new Set([...(JSON.parse(lv||"[]")),...(JSON.parse(rv||"[]")),7,9])].sort((a,b)=>a-b));
  const local=JSON.parse(lv||"{}"),remote=JSON.parse(rv||"{}");
  const allowed=approved[id];if(!allowed)throw Error("Nieuzgodniona pasieka.");
@@ -7300,13 +7300,20 @@ function mergeRecords(key,lv,rv){
    if(k==="updatedAt") {r[k]=String(a[k]||"")>String(b[k]||"")?a[k]:b[k];continue;}
    r[k]=nonempty(a[k])?a[k]:b[k];
   }
+  // Potwierdzenie pszczelarza: rodzina nr 5 w pasiece 1 została stracona.
+  // Nie wolno przywrócić jej do stanu "obserwacja" ani usuwać jej historii.
+  if(id==="pasieka_1" && n===5){
+   r.status="stracona";
+   const evidence="Rodzina stracona — brak pszczół (potwierdzone przez pszczelarza 23.11.2026).";
+   if(!String(r.notes||"").includes(evidence))r.notes=(String(r.notes||"").trim()+"\n"+evidence).trim();
+  }
   result[n]=r;
  }
  return JSON.stringify(result);
 }
 async function mergeConflict(c){
  if(busy)return;
- const explanation="Scalenie zachowa uzgodnione numery kart i historie z obu urządzeń. Przy różnych niepustych polach pierwszeństwo mają dane Windows (tego urządzenia), GPS zostanie pobrany z nowszego pomiaru. Oryginały zostaną zapisane w kopii JSON.\n\nWykonaj również kopie zapasowe całej aplikacji na obu urządzeniach.";
+ const explanation="Scalenie zachowa uzgodnione numery kart i historie z obu urządzeń. Przy różnych niepustych polach pierwszeństwo mają dane tego urządzenia, z wyjątkiem potwierdzonego statusu STRACONA dla ula 5 w pasiece 1. GPS zostanie pobrany z nowszego pomiaru. Oryginały zostaną zapisane w kopii JSON.\n\nWykonaj również kopie zapasowe całej aplikacji na obu urządzeniach.";
  if(!confirm("Scalić "+c.key+"?\n\n"+explanation))return;
  busy=true;
  try{
