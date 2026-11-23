@@ -3313,6 +3313,28 @@ function updateMarkers() {
   beeMarkTodayPermanently();
 }
 
+// Firebase: odśwież widoczne notatki i ikony bez przeładowania strony.
+// Zdarzenie wysyła wyłącznie silnik synchronizacji po trwałym zapisie w localStorage.
+document.addEventListener("bee:calendar-notes-updated", event => {
+  const keys = Array.isArray(event.detail?.keys) ? event.detail.keys : [];
+  if (!keys.length) return;
+  const selectedDate = selectedNoteDateKey();
+  if (selectedDate && keys.includes(getApiaryKey(selectedDate))) {
+    const field = getMonthlyTextarea(currentMonth);
+    if (field) {
+      const saved = localStorage.getItem(getApiaryKey(selectedDate));
+      // Nie zastępuj tekstu wpisywanego właśnie przez użytkownika.
+      if (document.activeElement !== field || field.value === saved) {
+        field.value = saved ?? "";
+      }
+    }
+  }
+  updateMarkers();
+  if (typeof autoScaleCalendarText === "function") {
+    setTimeout(autoScaleCalendarText, 50);
+  }
+});
+
 // --- OTWIERANIE NOTATKI PO KLIKU ---
 // Delegacja zdarzeń jest konieczna, bo układ dni jest odświeżany przy zmianie roku.
 document.addEventListener("click", event => {
@@ -7060,7 +7082,7 @@ if ("serviceWorker" in navigator) {
 <button id="bee-live-disable" type="button" style="padding:10px;margin-left:5px">Wyłącz</button>
 <button id="bee-live-check" type="button" style="padding:10px;margin-left:5px">Synchronizuj teraz</button>
 <p id="bee-live-status" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
-<p style="font-size:12px">Nie nadpisujemy konfliktowych notatek. Zachowaj kopie JSON obu urządzeń. Ikony notatek w kalendarzu aktualizują się automatycznie po pobraniu.</p>
+<p style="font-size:12px">Nie nadpisujemy konfliktowych notatek. Zachowaj kopie JSON obu urządzeń. Po pobraniu notatek ikony i widoczna treść są odświeżane automatycznie.</p>
 </section>
 <script type="module" id="bee-live-sync-engine">
 (async()=>{
@@ -7074,23 +7096,6 @@ const capture=()=>{const o={};for(let i=0;i<localStorage.length;i++){const k=loc
 const digest=async s=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,"0")).join("");
 const baseline={};try{const old=JSON.parse(localStorage.getItem(BASE)||"{}");for(const [k,v] of Object.entries(old))if(noteKey(k)&&typeof v==="string")baseline[k]=v;}catch(_){}
 const persist=()=>{let stored={};try{stored=JSON.parse(localStorage.getItem(BASE)||"{}");}catch(_){}Object.assign(stored,baseline);localStorage.setItem(BASE,JSON.stringify(stored));};
-// Odswiez ikony po zapisie z Firebase bez przeladowywania strony.
-// Nie dotykaj aktywnie edytowanej notatki ani nie przewijaj kalendarza.
-function refreshCalendarNotes(){
- try {
-  if(typeof window.updateMarkers === "function") window.updateMarkers();
-  // Odśwież otwartą notatkę tylko gdy użytkownik nie edytuje jej tekstu.
-  if(typeof window.selectedNoteDateKey === "function" && typeof window.getMonthlyTextarea === "function" && typeof window.readNoteForDate === "function"){
-   const dateKey=window.selectedNoteDateKey();
-   if(dateKey){
-    const month=dateKey.split(".")[1];
-    const field=window.getMonthlyTextarea(month);
-    if(field && document.activeElement!==field) field.value=window.readNoteForDate(dateKey);
-   }
-  }
- } catch(e){console.warn("Odświeżanie oznaczeń notatek:",e);}
-}
-
 let db,auth,fs,busy=false,running=false,timer=null,conflicts=[];
 const section=document.createElement("div");section.id="bee-note-conflicts";section.style.cssText="margin-top:12px;max-height:400px;overflow:auto";panel.append(section);
 async function setup(){
@@ -7140,8 +7145,9 @@ async function resolve(c,mode){
    const snap=await fs.getDocFromServer(ref),remote=snap.exists()?snap.data().value:null;
    if(remote!==c.remote||typeof remote!=="string")throw Error("Notatka w chmurze zmieniła się. Synchronizuj ponownie.");
    localStorage.setItem(c.key,remote);baseline[c.key]=remote;
+   document.dispatchEvent(new CustomEvent("bee:calendar-notes-updated",{detail:{keys:[c.key]}}));
   }
-  persist();refreshCalendarNotes();say("Rozwiązano konflikt dla "+c.key+". Synchronizuję pozostałe notatki…");
+  persist();say("Rozwiązano konflikt dla "+c.key+". Synchronizuję pozostałe notatki…");
  }catch(e){say("Nie udało się rozwiązać konfliktu: "+(e?.message||e));busy=false;return;}
  busy=false;await sync();
 }
@@ -7164,14 +7170,14 @@ async function sync(){
    if(snap.size<400)break;cursor=snap.docs[snap.docs.length-1];
    if(page===29)throw Error("Zbyt wiele dokumentów do pełnego odczytu — synchronizacja przerwana bez zmian.");
   }
-  const local=capture();let uploaded=0,downloaded=0,unchanged=0;conflicts=[];
+  const local=capture();let uploaded=0,downloaded=0,unchanged=0;const changedKeys=[];conflicts=[];
   for(const k of new Set([...Object.keys(local),...cloud.keys()])){
    const lv=own(local,k)?local[k]:null,rv=cloud.has(k)?cloud.get(k):null;
    const hasBase=own(baseline,k),bv=hasBase?baseline[k]:null;
    if(lv===rv){if(lv!==null)baseline[k]=lv;unchanged++;continue;}
    if(lv===null&&rv!==null){
     if(hasBase){conflicts.push({key:k,local:lv,remote:rv});continue;}
-    localStorage.setItem(k,rv);baseline[k]=rv;downloaded++;continue;
+    localStorage.setItem(k,rv);baseline[k]=rv;changedKeys.push(k);downloaded++;continue;
    }
    if(lv!==null&&rv===null){
     if(hasBase&&bv!==lv){conflicts.push({key:k,local:lv,remote:rv});continue;}
@@ -7182,18 +7188,19 @@ async function sync(){
    }
    if(lv!==null&&rv!==null){
     if(!hasBase){conflicts.push({key:k,local:lv,remote:rv});continue;}
-    if(lv===bv){localStorage.setItem(k,rv);baseline[k]=rv;downloaded++;continue;}
+    if(lv===bv){localStorage.setItem(k,rv);baseline[k]=rv;changedKeys.push(k);downloaded++;continue;}
     if(rv!==bv){conflicts.push({key:k,local:lv,remote:rv});continue;}
     const ref=fs.doc(col,"k_"+await digest(k));
     try{await fs.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists()||snap.data().value!==bv)throw Error("CONFLICT");tx.set(ref,{key:k,value:lv,updatedAt:fs.serverTimestamp()});});baseline[k]=lv;uploaded++;}
     catch(e){if(e.message==="CONFLICT")conflicts.push({key:k,local:lv,remote:rv});else throw e;}
    }
   }
-  persist();displayConflicts();if(downloaded>0)refreshCalendarNotes();
+  persist();displayConflicts();
+  if(changedKeys.length)document.dispatchEvent(new CustomEvent("bee:calendar-notes-updated",{detail:{keys:changedKeys}}));
   say("Firebase: połączono. Konto: "+(user.email||user.uid)+" | "+new Date().toLocaleTimeString("pl-PL")+
    "\nNotatki — wysłano: "+uploaded+" | pobrano: "+downloaded+" | zgodne: "+unchanged+" | konflikty: "+conflicts.length+
    (conflicts.length?"\n⚠️ Poniżej wybierz właściwą wersję każdej konfliktowej notatki. Powtarzanie synchronizacji nie rozwiązuje konfliktów.":"")+
-   (downloaded?"\nPobrane notatki: ikony w kalendarzu odświeżone automatycznie.":""));
+   (downloaded?"\nOdśwież stronę, aby zobaczyć pobrane notatki w kalendarzu.":""));
  }catch(e){say("Synchronizacja wstrzymana: "+(e?.code||"")+" "+(e?.message||e)+"\nNotatki lokalne nie zostały usunięte.");}
  finally{busy=false;}
 }
