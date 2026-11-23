@@ -7044,116 +7044,96 @@ if ("serviceWorker" in navigator) {
 </script>
 
 <section id="bee-live-sync" style="margin:18px 5px;padding:14px;background:#fffdf5;border:1px solid #d9bd63;border-radius:12px;max-width:1100px">
-<h2>☁️ Synchronizacja Android ↔ Windows — tryb bezpieczny</h2>
-<p>Zaloguj się przez Google w panelu Firebase powyżej. Włącz na obu urządzeniach to samo konto. Synchronizacja nowych zmian działa automatycznie co 8 sekund po włączeniu na każdym urządzeniu. Wcześniejsze różnice są chronione przed nadpisaniem. Nagrania głosowe nie są jeszcze synchronizowane.</p>
-<button id="bee-live-enable" type="button" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">Włącz bezpieczną synchronizację</button>
+<h2>☁️ Synchronizacja notatek kalendarza — Android ↔ Windows</h2>
+<p>Zaloguj się na obu urządzeniach na to samo konto Google. Synchronizacja notatek tekstowych działa co 8 sekund. Wcześniejsze różniące się wpisy pozostają chronione; karty uli i nagrania głosowe nie są tutaj zmieniane.</p>
+<button id="bee-live-enable" type="button" style="padding:10px;background:#fbc02d;border:0;border-radius:8px;font-weight:bold">Włącz synchronizację notatek</button>
 <button id="bee-live-disable" type="button" style="padding:10px;margin-left:5px">Wyłącz</button>
 <button id="bee-live-check" type="button" style="padding:10px;margin-left:5px">Synchronizuj teraz</button>
 <p id="bee-live-status" role="status" style="white-space:pre-wrap;overflow-wrap:anywhere"></p>
-<p style="font-size:12px">Zmiany konfliktowe nie są nadpisywane; pozostają na urządzeniu. Synchronizacja nie scala automatycznie różniących się historii rodzin. Zachowaj obie kopie JSON.</p>
+<p style="font-size:12px">Nie nadpisujemy konfliktowych notatek. Zachowaj kopie JSON obu urządzeń. Po pobraniu notatek odśwież stronę, aby zobaczyć je w kalendarzu.</p>
 </section>
 <script type="module" id="bee-live-sync-engine">
 (async()=>{
 "use strict";
 const $=id=>document.getElementById(id), status=$("bee-live-status");
-const P="bee-live-sync:", FLAG=P+"enabled", BASE=P+"baseline", DEVICE=P+"device";
+const P="bee-live-sync:", FLAG=P+"enabled", BASE=P+"baseline";
+const noteKey=k=>/^(?:(?:pasieka_\d+|default)_)?\d{2}\.\d{2}\.\d{4}$/.test(k);
 const say=x=>{status.textContent=x;};
-const excluded=k=>k.startsWith(P)||k.startsWith("firebase:")||k.startsWith("firebaseLocalStorage")||
-k==="gpsEnabled"||k==="lastLat"||k==="lastLon"||k==="bee-current-apiary-id"||
-k.startsWith("bee-gps-")||k.startsWith("bee-sync-");
-const capture=()=>{const o={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(!excluded(k))o[k]=localStorage.getItem(k);}return o;};
+const capture=()=>{const o={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(noteKey(k))o[k]=localStorage.getItem(k);}return o;};
 const digest=async s=>Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,"0")).join("");
-let baseline={};try{baseline=JSON.parse(localStorage.getItem(BASE)||"{}");}catch(_){}
-let device=localStorage.getItem(DEVICE);if(!device){device=crypto.randomUUID();localStorage.setItem(DEVICE,device);}
-let db,auth,fs,authSdk,busy=false,running=false,timer=null;
+let baseline={};try{const old=JSON.parse(localStorage.getItem(BASE)||"{}");for(const [k,v] of Object.entries(old))if(noteKey(k))baseline[k]=v;}catch(_){}
+let db,auth,fs,busy=false,running=false,timer=null;
 async function setup(){
  if(db)return;
- const instance=await window.beeFirebase.prepare(); // exactly the same Firebase app and Auth as Google login panel
- const base="https://www.gstatic.com/firebasejs/10.14.1/";
- fs=await import(base+"firebase-firestore.js");
- authSdk=await import(base+"firebase-auth.js");
- auth=instance.auth;db=instance.db; // database ID "default" is selected by the existing adapter
+ const instance=await window.beeFirebase.prepare();
+ fs=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js");
+ auth=instance.auth;db=instance.db;
  await auth.authStateReady();
 }
 async function sync(){
- if(busy||!running||!navigator.onLine)return;
+ if(busy||!running)return;
+ if(!navigator.onLine){say("Brak internetu — notatki pozostają lokalnie. Synchronizacja wznowi się po połączeniu.");return;}
  busy=true;
  try{
-  await setup();
-  const user=auth.currentUser;
-  if(!user){say("Zaloguj się przez Google w panelu Firebase. Niczego nie zmieniono.");return;}
-  const uid=user.uid;
-  const col=fs.collection(db,"users",uid,"syncKeys");
-  // Explicitly test permissions before any local data is changed.
-  const probe=fs.doc(db,"users",uid,"syncKeys","_connection_probe");
-  await fs.getDocFromServer(probe);
+  await setup();const user=auth.currentUser;
+  if(!user){say("Zaloguj się przez Google w panelu Firebase na tym urządzeniu.");return;}
+  const col=fs.collection(db,"users",user.uid,"syncKeys");
+  await fs.getDocFromServer(fs.doc(col,"_connection_probe"));
   const snapshot=await fs.getDocsFromServer(fs.query(col,fs.limit(1000)));
-  const cloud=new Map();
-  snapshot.forEach(d=>{const v=d.data();if(typeof v.key==="string"&&typeof v.value==="string"&&!excluded(v.key))cloud.set(v.key,v);});
-  const local=capture();let uploaded=0,downloaded=0,protectedCount=0;
-  // A baseline represents data observed locally when synchronization was enabled.
-  // Existing divergent data is NEVER replaced.
-  for(const [k,v] of Object.entries(local)){
-   if(!(k in baseline)){baseline[k]=v;continue;}
-   if(v===baseline[k])continue;
-   const r=cloud.get(k);
-   if(r && r.value!==baseline[k] && r.value!==v){protectedCount++;continue;}
-   const id="k_"+await digest(k);
-   try{
-    await fs.runTransaction(db,async tx=>{
-      const ref=fs.doc(col,id), snap=await tx.get(ref);
-      if(snap.exists()){
-       const remote=snap.data();
-       if(remote.value!==baseline[k] && remote.value!==v)throw Error("CONFLICT");
-      }
-      tx.set(ref,{key:k,value:v,device,updatedAt:fs.serverTimestamp()});
-    });
-    baseline[k]=v;uploaded++;
-   }catch(e){if(e.message==="CONFLICT")protectedCount++;else throw e;}
+  const cloud=new Map();snapshot.forEach(d=>{const v=d.data();if(noteKey(v.key)&&typeof v.value==="string")cloud.set(v.key,v);});
+  const local=capture();let uploaded=0,downloaded=0,protectedCount=0,unchanged=0;
+  const keys=new Set([...Object.keys(local),...cloud.keys()]);
+  for(const k of keys){
+   const lv=Object.prototype.hasOwnProperty.call(local,k)?local[k]:null;
+   const r=cloud.get(k),rv=r?r.value:null;
+   const hasBase=Object.prototype.hasOwnProperty.call(baseline,k),bv=hasBase?baseline[k]:null;
+   if(lv===rv){if(lv!==null)baseline[k]=lv;unchanged++;continue;}
+   if(lv===null&&rv!==null){
+    // Never reintroduce a deleted local note if this device previously knew it.
+    if(hasBase){protectedCount++;continue;}
+    localStorage.setItem(k,rv);baseline[k]=rv;downloaded++;continue;
+   }
+   if(lv!==null&&rv===null){
+    // Create only when absent in Firestore; never replace a concurrent upload.
+    const ref=fs.doc(col,"k_"+await digest(k));
+    try{await fs.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(snap.exists())throw Error("CONFLICT");tx.set(ref,{key:k,value:lv,updatedAt:fs.serverTimestamp()});});baseline[k]=lv;uploaded++;}
+    catch(e){if(e.message==="CONFLICT")protectedCount++;else throw e;}
+    continue;
+   }
+   if(lv!==null&&rv!==null){
+    if(!hasBase){protectedCount++;continue;} // old divergent data, never choose a winner automatically
+    if(lv===bv){
+     // Remote changed, local note has not: accept the remote edit.
+     // Do not change the textarea while the user is typing; storage refresh is safe.
+     localStorage.setItem(k,rv);baseline[k]=rv;downloaded++;continue;
+    }
+    if(rv!==bv){protectedCount++;continue;} // both devices edited the same note
+    const ref=fs.doc(col,"k_"+await digest(k));
+    try{await fs.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists()||snap.data().value!==bv)throw Error("CONFLICT");tx.set(ref,{key:k,value:lv,updatedAt:fs.serverTimestamp()});});baseline[k]=lv;uploaded++;}
+    catch(e){if(e.message==="CONFLICT")protectedCount++;else throw e;}
+   }
   }
-  // Only absent keys may be imported. Never overwrite a different existing local record.
-  for(const [k,r] of cloud){
-   const v=localStorage.getItem(k);
-   if(v===null && !(k in baseline)){
-     localStorage.setItem(k,r.value);baseline[k]=r.value;downloaded++;
-   }else if(v===r.value){baseline[k]=v;}
-   else if(v!==null && v!==r.value)protectedCount++;
-  }
-  localStorage.setItem(BASE,JSON.stringify(baseline));
+  // Preserve old baseline entries for other app features, which this module does not sync.
+  let stored={};try{stored=JSON.parse(localStorage.getItem(BASE)||"{}");}catch(_){}
+  Object.assign(stored,baseline);localStorage.setItem(BASE,JSON.stringify(stored));
   say("Firebase SDK: połączono z bazą default. "+new Date().toLocaleTimeString("pl-PL")+
-  "\nWysłano: "+uploaded+" | Pobrano brakujących: "+downloaded+" | Chronione różnice: "+protectedCount+
-  "\nIstniejące różniące się rekordy nie są nadpisywane. Nagrania pozostają lokalne."+
-  (downloaded?"\nOdśwież stronę, aby zobaczyć pobrane wpisy.":""));
- }catch(e){
-  const code=e?.code||"";
-  say("Synchronizacja wstrzymana: "+code+" "+(e?.message||e)+
-  "\nUpewnij się, że w panelu Firebase jest zalogowane konto Google i że reguły dotyczą bazy default."+
-  "\nŻadnych danych lokalnych nie usunięto.");
- }finally{busy=false;}
+    "\nNotatki — wysłano: "+uploaded+" | pobrano: "+downloaded+" | chronione konflikty: "+protectedCount+
+    "\nSynchronizacja działa w obie strony; różniące się wcześniejsze wpisy nie są nadpisywane."+
+    (downloaded?"\nPobrano nowe wpisy — odśwież stronę, aby zobaczyć je w kalendarzu.":""));
+ }catch(e){say("Synchronizacja wstrzymana: "+(e?.code||"")+" "+(e?.message||e)+"\nDane lokalne nie zostały usunięte.");}
+ finally{busy=false;}
 }
 async function start(){
- try{
-  await setup();
-  if(!auth.currentUser){say("Najpierw zaloguj się przez Google w panelu Firebase.");return;}
-  if(!localStorage.getItem(FLAG)){
-   if(!confirm("Włączyć synchronizację? Zachowaj kopie JSON obu urządzeń. Istniejące różnice nie zostaną nadpisane."))return;
-   baseline=capture();localStorage.setItem(BASE,JSON.stringify(baseline));
-  }
-  localStorage.setItem(FLAG,"1");running=true;
-  if(timer)clearInterval(timer);timer=setInterval(sync,8000);await sync();
+ try{await setup();if(!auth.currentUser){say("Najpierw zaloguj się przez Google w panelu Firebase.");return;}
+ if(!localStorage.getItem(FLAG)&&!confirm("Włączyć synchronizację notatek? Zachowaj kopie JSON obu urządzeń. Wcześniejsze konflikty nie będą nadpisane."))return;
+ localStorage.setItem(FLAG,"1");running=true;if(timer)clearInterval(timer);timer=setInterval(sync,8000);await sync();
  }catch(e){say("Błąd inicjalizacji Firebase: "+(e?.message||e));}
 }
 $("bee-live-enable").addEventListener("click",start);
-$("bee-live-disable").addEventListener("click",()=>{
- running=false;if(timer)clearInterval(timer);timer=null;localStorage.removeItem(FLAG);
- say("Synchronizacja wyłączona. Dane pozostają na urządzeniu.");
-});
+$("bee-live-disable").addEventListener("click",()=>{running=false;if(timer)clearInterval(timer);timer=null;localStorage.removeItem(FLAG);say("Synchronizacja wyłączona. Notatki pozostają na urządzeniu.");});
 $("bee-live-check").addEventListener("click",()=>running?sync():start());
-say("Synchronizacja bezpieczna: oczekiwanie na zalogowanie Google.");
-if(localStorage.getItem(FLAG)==="1"){
- setup().then(()=>{running=true;timer=setInterval(sync,8000);sync();})
- .catch(e=>say("Nie można uruchomić: "+(e?.message||e)));
-}
+say("Synchronizacja notatek: oczekiwanie na zalogowanie Google.");
+if(localStorage.getItem(FLAG)==="1")setup().then(()=>{running=true;timer=setInterval(sync,8000);sync();}).catch(e=>say("Nie można uruchomić: "+(e?.message||e)));
 })();
 </script>
 </body>
