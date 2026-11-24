@@ -5066,6 +5066,11 @@ function formatCalendarDate(isoDate) {
 }
 
 // Most dla panelu głosowego: główny moduł działa w zakresie DOMContentLoaded.
+// Most synchronizacji: korzysta z tej samej bazy i funkcji odświeżania.
+window.beeVoiceSyncLocal = Object.freeze({
+  open: openVoiceNotesDb,
+  refresh: function(){ updateMarkers(); updateVoiceControlsForSelectedDate(); }
+});
 window.beeVoiceHiveContext = function(){
   return {hive:Number(selectedHiveNumber), apiary:currentApiary?.id || null,
           apiaryName:currentApiary?.name || 'wybrana'};
@@ -7412,7 +7417,7 @@ if(enabled())autoCheck(true);
 </script>
 <section id="bee-voice-cloud" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5">
 <h3>🎙️ Synchronizacja notatek głosowych</h3>
-<p>Firestore — synchronizacja ręczna. Różne nagrania nie są nadpisywane. Usunięcia pozostają lokalne; brakujące nagrania mogą zostać ponownie pobrane.</p>
+<p>Firestore — synchronizacja ręczna (wersja 2). Różne nagrania nie są nadpisywane. Usunięcia pozostają lokalne; brakujące nagrania mogą zostać ponownie pobrane.</p>
 <button id="bee-voice-sync-run" type="button" style="padding:10px;background:#fff1bd;border:1px solid #c49a20;border-radius:7px">🔄 Synchronizuj notatki głosowe</button>
 <div id="bee-voice-sync-status" style="white-space:pre-wrap;font-size:13px;margin-top:9px">Oczekiwanie na synchronizację.</div></section>
 <script type="module" id="bee-voice-cloud-engine">
@@ -7433,7 +7438,8 @@ button.addEventListener('click',async()=>{
  const {auth,db}=await window.beeFirebase.prepare();await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');
  const fs=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
  const guard=()=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');};
- const localDb=await openVoiceNotesDb();const local=new Map((await read(localDb)).map(r=>[r.key,r]));
+ if(!window.beeVoiceSyncLocal)throw Error('Moduł nagrań nie został zainicjalizowany. Odśwież aplikację.');
+ const localDb=await window.beeVoiceSyncLocal.open();const local=new Map((await read(localDb)).map(r=>[r.key,r]));
  const col=fs.collection(db,'users',uid,'voiceSyncV1');const remote=new Map();
  for(const d of (await fs.getDocsFromServer(col)).docs){const m=d.data();if(valid(m.key)&&d.id===await keyHash(m.key))remote.set(m.key,m);}
  for(const key of new Set([...local.keys(),...remote.keys()])){
@@ -7455,7 +7461,7 @@ button.addEventListener('click',async()=>{
  guard();if(await read(localDb,key)){conflicts++;continue;}await add(localDb,{key,dateKey:r.dateKey||key.slice(-10),mimeType:blob.type,updatedAt:r.updatedAt||'',blob});localStorage.setItem('voice-note:'+key,'1');received++;
  }
  }
- try{updateMarkers();updateVoiceControlsForSelectedDate();}catch(e){console.warn(e);}
+ try{window.beeVoiceSyncLocal.refresh();}catch(e){console.warn(e);details.push("Odśwież aplikację, aby zobaczyć znaczniki nagrań.");}
  status.textContent=report()+'\n'+details.join('\n');
  }catch(e){status.textContent=report()+'\nPrzerwano: '+e.message;}finally{button.disabled=false;}
 });
