@@ -7088,6 +7088,7 @@ if ("serviceWorker" in navigator) {
 <h3>🐝 Synchronizacja kart uli — Android ↔ Windows</h3>
 <p style="font-size:13px">Oddzielna od notatek kalendarza. Przed pierwszym użyciem wykonaj kopie JSON na obu urządzeniach. Różnych wersji kart nie nadpisujemy automatycznie.</p>
 <button type="button" id="bee-hive-cloud-run" style="padding:10px;background:#fff1bd;border:1px solid #c49a20;border-radius:7px">🔄 Synchronizuj karty uli</button>
+<button type="button" id="bee-hive-cloud-auto" style="padding:10px;background:#fff1bd;border:1px solid #c49a20;border-radius:7px;margin:5px">Automatyczna synchronizacja: WYŁ.</button>
 <div id="bee-hive-cloud-status" style="white-space:pre-wrap;font-size:13px;margin-top:9px">Oczekiwanie na synchronizację kart uli.</div>
 <div id="bee-hive-cloud-conflicts"></div>
 </section>
@@ -7265,73 +7266,38 @@ function showConflicts(){
    const b=document.createElement("button");b.type="button";b.textContent=name;b.style.cssText="padding:7px;margin:5px;background:#fff1bd;border:1px solid #c49a20;border-radius:6px";
    b.onclick=()=>resolve(c,mode);wrap.append(b);
   }
-  if(["bee-hive-profiles:pasieka_1","bee-hive-profiles:pasieka_2","bee-hive-deleted:pasieka_2","bee-hive-count:pasieka_2"].includes(c.key)){
-   const b=document.createElement("button");b.type="button";b.textContent="🛡️ Bezpiecznie scal uzgodnione dane";
-   b.style.cssText="padding:9px;margin:5px;background:#dff4df;border:1px solid #468c46;border-radius:6px;font-weight:bold";
-   b.onclick=()=>mergeConflict(c);wrap.append(b);
-  }
   conflictsBox.append(wrap);
  }
 }
-const approved={pasieka_1:[1,2,3,4,5,6,8,9,10,15,19,20,21,22,23,24,25,26,27,29,30,31],pasieka_2:[11,12,13,14,16,17,28]};
-function mergeRecords(key,lv,rv){
- const id=key.split(":")[1];
- if(key.startsWith("bee-hive-count:"))return String(Math.max(Number(lv)||0,Number(rv)||0,Math.max(...approved[id])));
- if(key.startsWith("bee-hive-deleted:"))return JSON.stringify([...new Set([...(JSON.parse(lv||"[]")),...(JSON.parse(rv||"[]")),7,9])].sort((a,b)=>a-b));
- const local=JSON.parse(lv||"{}"),remote=JSON.parse(rv||"{}");
- const allowed=approved[id];if(!allowed)throw Error("Nieuzgodniona pasieka.");
- const result={};
- const nonempty=v=>v!==undefined&&v!==null&&v!=="";
- const arrayKeys=new Set(["inspections","queenHistory","splits","harvests","frameOperations","varroaMeasurements"]);
- const uniq=(a,b)=>{const out=[];const seen=new Set();for(const x of [...a,...b]){const k=x&&typeof x==="object"&&x.id?"id:"+x.id:JSON.stringify(x);if(!seen.has(k)){seen.add(k);out.push(x);}}return out;};
- for(const n of allowed){
-  const a=local[n]||{},b=remote[n]||{};if(!Object.keys(a).length&&!Object.keys(b).length)throw Error("Brakuje uzgodnionej karty ula "+n+" w obu wersjach.");
-  const r={...b,...a,number:n};
-  for(const k of new Set([...Object.keys(a),...Object.keys(b)])){
-   if(arrayKeys.has(k)){r[k]=uniq(Array.isArray(a[k])?a[k]:[],Array.isArray(b[k])?b[k]:[]);continue;}
-   if(k==="apiaryLat"||k==="apiaryLon"||k==="apiaryGpsAccuracy"||k==="apiaryLocationUpdated"){
-    const newer=String(a.apiaryLocationUpdated||"")>String(b.apiaryLocationUpdated||"")?a:b;
-    r[k]=nonempty(newer[k])?newer[k]:(nonempty(a[k])?a[k]:b[k]);continue;
-   }
-   if(k==="notes"&&nonempty(a[k])&&nonempty(b[k])&&a[k].trim()!==b[k].trim()){
-    r[k]=a[k].trim()+"\n\n[Zapis z drugiego urządzenia]\n"+b[k].trim();continue;
-   }
-   if(k==="frameInventory"&&a[k]&&b[k]){r[k]={...b[k],...Object.fromEntries(Object.entries(a[k]).filter(([,v])=>nonempty(v)))};continue;}
-   if(k==="updatedAt") {r[k]=String(a[k]||"")>String(b[k]||"")?a[k]:b[k];continue;}
-   r[k]=nonempty(a[k])?a[k]:b[k];
+const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==="object"?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
+const eq=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
+const obj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
+function mergeProfiles(lv,rv,bv){
+ const l=JSON.parse(lv),r=JSON.parse(rv),base=bv===null?undefined:JSON.parse(bv);
+ if(!obj(l)||!obj(r)||(base!==undefined&&!obj(base)))throw Error("Nieprawidłowe karty");
+ const issues=[];
+ function walk(a,b,c,path){
+  if(eq(a,b))return a;
+  if(path.length===2&&path[1]==="updatedAt"&&typeof a==="string"&&typeof b==="string")return a>b?a:b;
+  if(base!==undefined&&eq(a,c))return b;
+  if(base!==undefined&&eq(b,c))return a;
+  if(obj(a)&&obj(b)&&(obj(c)||c===undefined)){
+   const out=Object.create(null);
+   for(const k of new Set([...Object.keys(a),...Object.keys(b),...Object.keys(c||{})])){
+    const v=walk(a[k],b[k],c?.[k],[...path,k]);if(v!==undefined)out[k]=v;
+   }return out;
   }
-  // Potwierdzenie pszczelarza: rodzina nr 5 w pasiece 1 została stracona.
-  // Nie wolno przywrócić jej do stanu "obserwacja" ani usuwać jej historii.
-  if(id==="pasieka_1" && n===5){
-   r.status="stracona";
-   const evidence="Rodzina stracona — brak pszczół (potwierdzone przez pszczelarza 23.11.2026).";
-   if(!String(r.notes||"").includes(evidence))r.notes=(String(r.notes||"").trim()+"\n"+evidence).trim();
-  }
-  result[n]=r;
+  issues.push(path.join(" / "));return a;
  }
- return JSON.stringify(result);
+ const value=walk(l,r,base,[]);return {value:JSON.stringify(value),issues};
 }
-async function mergeConflict(c){
- if(busy)return;
- const explanation="Scalenie zachowa uzgodnione numery kart i historie z obu urządzeń. Przy różnych niepustych polach pierwszeństwo mają dane tego urządzenia, z wyjątkiem potwierdzonego statusu STRACONA dla ula 5 w pasiece 1. GPS zostanie pobrany z nowszego pomiaru. Oryginały zostaną zapisane w kopii JSON.\n\nWykonaj również kopie zapasowe całej aplikacji na obu urządzeniach.";
- if(!confirm("Scalić "+c.key+"?\n\n"+explanation))return;
- busy=true;
- try{
-  await setup();const user=auth.currentUser;if(!user)throw Error("Zaloguj się przez Google.");
-  if(localStorage.getItem(c.key)!==c.local)throw Error("Dane lokalne zmieniły się. Uruchom synchronizację ponownie.");
-  const ref=fs.doc(db,"users",user.uid,"hiveSyncKeys","k_"+await digest(c.key));
-  const snap=await fs.getDocFromServer(ref),current=snap.exists()?snap.data().value:null;
-  if(current!==c.remote)throw Error("Dane Firebase zmieniły się. Uruchom synchronizację ponownie.");
-  const merged=mergeRecords(c.key,c.local,c.remote);
-  const archive={key:c.key,local:c.local,remote:c.remote,merged,createdAt:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(archive,null,2)],{type:"application/json"});
-  const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="BEE_KOPIA_SCALANIA_"+c.key.replace(/[^a-z0-9_-]/gi,"_")+"_"+Date.now()+".json";document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  await fs.runTransaction(db,async tx=>{const doc=await tx.get(ref);if((doc.exists()?doc.data().value:null)!==c.remote)throw Error("Firebase zmienił dane podczas scalania.");tx.set(ref,{key:c.key,value:merged,updatedAt:fs.serverTimestamp()});});
-  localStorage.setItem(c.key,merged);baseline[c.key]=merged;persist();refresh();
-  status.textContent="Scalono "+c.key+". Kopia wersji została przygotowana do pobrania.";
- }catch(e){status.textContent="Scalanie wstrzymane: "+(e?.message||e)+". Nie zmieniono lokalnych danych.";busy=false;return;}
- busy=false;await sync();
-}
+const AUTO=prefix+"auto-v2";
+let observed="",pending=false,dirty=false;
+const fingerprint=()=>JSON.stringify(canonical(getLocal()));
+const editing=()=>dirty||!!document.activeElement?.closest("#hive-editor");
+document.addEventListener("input",e=>{if(e.target.closest?.("#hive-editor"))dirty=true;});
+// A saved profile change is detected by the polling loop; do not reload an active editor.
+function safeRefresh(){if(!editing())refresh();else pending=true;}
 async function resolve(c,mode){
  if(busy)return;
  if(!confirm("Rozwiązać konflikt "+c.key+" wybierając: "+(mode==="local"?"TO URZĄDZENIE":"FIREBASE")+"?\n\nTa operacja zastąpi jedną wersję danych. Wykonaj wcześniej kopie JSON na OBU urządzeniach."))return;
@@ -7350,7 +7316,8 @@ async function resolve(c,mode){
   }else{
    const snap=await fs.getDocFromServer(ref),v=snap.exists()?snap.data().value:null;
    if(v!==c.remote||typeof v!=="string")throw Error("Dane Firebase zmieniły się lub nie istnieją.");
-   localStorage.setItem(c.key,v);baseline[c.key]=v;refresh();
+   if(localStorage.getItem(c.key)!==c.local)throw Error("Dane lokalne zmieniły się.");
+   localStorage.setItem(c.key,v);baseline[c.key]=v;safeRefresh();
   }
   persist();status.textContent="Rozwiązano konflikt "+c.key+".";
  }catch(e){status.textContent="Nie rozwiązano konfliktu: "+(e?.message||e);busy=false;return;}
@@ -7358,6 +7325,7 @@ async function resolve(c,mode){
 }
 async function sync(){
  if(busy)return;
+ if(editing()){status.textContent="Zakończ edycję karty przed synchronizacją.";return;}
  if(!navigator.onLine){status.textContent="Offline — karty pozostają zapisane lokalnie.";return;}
  busy=true;status.textContent="Sprawdzanie kart uli w Firebase…";
  try{
@@ -7375,6 +7343,7 @@ async function sync(){
   const local=getLocal();let sent=0,received=0,same=0;conflicts=[];
   for(const k of new Set([...Object.keys(local),...cloud.keys()])){
    const lv=own(local,k)?local[k]:null,rv=cloud.has(k)?cloud.get(k):null,bv=own(baseline,k)?baseline[k]:null;
+   if(localStorage.getItem(k)!==lv||editing())throw Error("Dane lokalne zmieniły się podczas synchronizacji.");
    if(lv===rv){if(lv!==null)baseline[k]=lv;same++;continue;}
    if(lv===null&&rv!==null){
     // Brak lokalnych danych nie jest zgodą na przywrócenie wcześniej usuniętej karty.
@@ -7391,6 +7360,18 @@ async function sync(){
     }catch(e){if(e.message==="CONFLICT")conflicts.push({key:k,local:lv,remote:rv});else throw e;}
     continue;
    }
+   if(k.startsWith("bee-hive-profiles:")&&lv!==null&&rv!==null){
+    const m=mergeProfiles(lv,rv,bv);
+    if(!m.issues.length){
+     const ref=fs.doc(col,"k_"+await digest(k));
+     if(m.value!==rv)await fs.runTransaction(db,async tx=>{const snap=await tx.get(ref);if(!snap.exists()||snap.data().value!==rv)throw Error("Firebase zmienił dane — ponów synchronizację.");tx.set(ref,{key:k,value:m.value,updatedAt:fs.serverTimestamp()});});
+     if(localStorage.getItem(k)!==lv||editing())throw Error("Lokalne dane zmieniły się — ponów synchronizację.");
+     if(m.value!==lv){localStorage.setItem(k,m.value);received++;}else if(m.value===rv)same++;
+     if(m.value!==rv)sent++;
+     baseline[k]=m.value;persist();continue;
+    }
+    conflicts.push({key:k,local:lv,remote:rv});continue;
+   }
    if(bv!==null&&lv===bv){
     localStorage.setItem(k,rv);baseline[k]=rv;received++;continue;
    }
@@ -7404,14 +7385,29 @@ async function sync(){
    }
    conflicts.push({key:k,local:lv,remote:rv});
   }
-  persist();refresh();showConflicts();
+  persist();if(received)safeRefresh();showConflicts();
   status.textContent="Karty uli — wysłano: "+sent+" | pobrano: "+received+" | zgodne: "+same+" | konflikty: "+conflicts.length+
    "\nKonto: "+(user.email||user.uid)+" | "+new Date().toLocaleTimeString("pl-PL")+
    (conflicts.length?"\n⚠️ Różne wersje wymagają ręcznego wyboru. Nie usuwaj danych z żadnego urządzenia.":"");
  }catch(e){status.textContent="Synchronizacja kart wstrzymana: "+(e?.message||e)+". Dane lokalne zachowane.";}
  finally{busy=false;}
 }
-$("bee-hive-cloud-run").addEventListener("click",sync);
+const toggle=$("bee-hive-cloud-auto");
+function enabled(){return localStorage.getItem(AUTO)==="1";}
+function updateToggle(){toggle.textContent=enabled()?"Automatyczna synchronizacja: WŁ.":"Automatyczna synchronizacja: WYŁ.";}
+let lastAttempt=0;
+async function autoCheck(force=false){
+ const now=fingerprint();if(now!==observed){observed=now;dirty=false;pending=true;}
+ if(!enabled()||busy||editing()||!navigator.onLine)return;
+ if(!force&&!pending&&Date.now()-lastAttempt<30000)return;
+ if(Date.now()-lastAttempt<3000)return;
+ lastAttempt=Date.now();pending=false;await sync();observed=fingerprint();
+}
+$("bee-hive-cloud-run").addEventListener("click",()=>{dirty=false;sync();});
+toggle.addEventListener("click",()=>{if(enabled())localStorage.removeItem(AUTO);else if(confirm("Włączyć automatyczną synchronizację? Wykonaj kopie JSON obu urządzeń.")){localStorage.setItem(AUTO,"1");pending=true;autoCheck(true);}updateToggle();});
+observed=fingerprint();updateToggle();setInterval(()=>autoCheck(),3000);
+window.addEventListener("online",()=>{pending=true;autoCheck(true);});
+if(enabled())autoCheck(true);
 })();
 </script>
 </body>
