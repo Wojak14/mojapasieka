@@ -7535,5 +7535,32 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule()
 window.addEventListener('load',()=>{window.beeVoiceSyncLocal?.refresh().catch(console.warn);schedule();});
 setInterval(()=>{if(!document.hidden&&navigator.onLine)schedule();},120000);
 </script>
+<section style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>Synchronizacja finansów V6</h3><button type="button" id="fin-sync-run">🔄 Synchronizuj finanse</button> <button type="button" id="fin-sync-auto"></button><div id="fin-sync-status" style="white-space:pre-wrap">Oczekiwanie na synchronizację.</div></section>
+<script type="module">
+(()=>{
+const status=document.getElementById('fin-sync-status'),button=document.getElementById('fin-sync-run'),toggle=document.getElementById('fin-sync-auto');
+const valid=k=>/^bee-finance-records:pasieka_\d+$/.test(k);let busy=false,fs,auth,db;
+const read=k=>{const a=JSON.parse(localStorage.getItem(k)||'[]');if(!Array.isArray(a)||a.some(x=>!x||typeof x.id!=='string'||!x.id)||new Set(a.map(x=>x.id)).size!==a.length)throw Error('Nieprawidłowe lub starsze wpisy: '+k);return a;};
+const canon=x=>JSON.stringify(x,Object.keys(x||{}).sort());
+const eq=(a,b)=>canon(a)===canon(b);
+const hash=async s=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,'0')).join('');
+async function sync(){if(busy||!navigator.onLine)return;busy=true;button.disabled=true;try{
+if(!db){({auth,db}=await window.beeFirebase.prepare());fs=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');}await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');
+const guard=()=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');};
+const baseKey='bee-fin-sync-v6:'+uid,base=JSON.parse(localStorage.getItem(baseKey)||'{}');
+const col=fs.collection(db,'users',uid,'financeSyncV6');const snap=await fs.getDocsFromServer(col);guard();const remote=new Map();for(const d of snap.docs){const r=d.data();if(!valid(r.key)||typeof r.id!=='string'||(!r.deleted&&(!r.value||r.value.id!==r.id)))throw Error('Nieprawidłowy wpis w chmurze.');remote.set(JSON.stringify([r.key,r.id]),r);}
+const keys=new Set([...Object.keys(localStorage).filter(valid),...Object.keys(base).filter(valid),...Array.from(remote.values(),r=>r.key)]);let sent=0,received=0,same=0,conflicts=[];
+for(const k of keys){const initial=localStorage.getItem(k),a=read(k),local=new Map(a.map(x=>[x.id,x])),b=new Map((base[k]||[]).map(x=>[x.id,x.value]));const ids=new Set([...local.keys(),...b.keys(),...Array.from(remote.values()).filter(r=>r.key===k).map(r=>r.id)]);const next=new Map(local),nb=new Map(b);
+for(const id of ids){guard();const l=local.get(id)||null, r=remote.get(JSON.stringify([k,id])),v=r&&!r.deleted?r.value:null,old=b.get(id)||null;const known=b.has(id);if(eq(l,v)){if(l||r||known)nb.set(id,l);same++;continue;}
+const upload=(!r&&!known&&l)||(known&&eq(v,old)&&!eq(l,old));const download=(!known&&!l&&r)||(known&&eq(l,old)&&!eq(v,old));
+if(upload){const ref=fs.doc(col,await hash(JSON.stringify([k,id])));await fs.runTransaction(db,async tx=>{const s=await tx.get(ref);guard();if(localStorage.getItem(k)!==initial)throw Error('Dane lokalne zmieniły się — ponów.');if(s.exists()!==!!r||(r&&JSON.stringify(s.data())!==JSON.stringify(r)))throw Error('Dane w chmurze zmieniły się — ponów.');tx.set(ref,{key:k,id,deleted:!l,value:l});});nb.set(id,l);sent++;}
+else if(download){if(v)next.set(id,v);else next.delete(id);nb.set(id,v);received++;}else conflicts.push(k+' / '+id);
+}
+guard();if(localStorage.getItem(k)!==initial)throw Error('Dane lokalne zmieniły się — ponów.');const out=JSON.stringify([...next.values()]);if(out!==JSON.stringify(a)){localStorage.setItem(k,out);}base[k]=[...nb].map(([id,value])=>({id,value}));localStorage.setItem(baseKey,JSON.stringify(base));}
+if(received&&typeof stage5Render==='function')stage5Render();status.textContent=`Finanse — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts.length}`+(conflicts.length?'\nZachowano obie wersje: '+conflicts.join('\n'):'');
+}catch(e){status.textContent='Synchronizacja finansów wstrzymana: '+e.message;}finally{busy=false;button.disabled=false;}}
+const enabled=()=>localStorage.getItem('bee-fin-auto-v6')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja finansów: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=sync;toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-fin-auto-v6');else if(confirm('Włączyć synchronizację finansów? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-fin-auto-v6','1');sync();}label();};label();setInterval(()=>{if(enabled())sync();},120000);window.addEventListener('online',()=>{if(enabled())sync();});if(enabled())sync();
+})();
+</script>
 </body>
 </html>
