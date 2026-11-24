@@ -3045,11 +3045,15 @@ function initVoiceNoteControls() {
         status.textContent = "Brak nagrania do usunięcia dla wybranego dnia.";
         return;
       }
-      if (!confirm("Usunąć nagranie głosowe z dnia " + dateKey + "?\n\nTekst notatki, pozostałe nagrania i historia uli pozostaną bez zmian.")) return;
+      if (!confirm("Usunąć nagranie głosowe z dnia " + dateKey + "?\n\nNa Androidzie usunięcie identycznego zsynchronizowanego nagrania zostanie przekazane do Windows. Tekst notatki, pozostałe nagrania i historia uli pozostaną bez zmian.")) return;
       try {
         if (audio) { audio.pause(); audio.removeAttribute("src"); audio.load(); }
         if (activeVoiceObjectUrl) { URL.revokeObjectURL(activeVoiceObjectUrl); activeVoiceObjectUrl = null; }
+        if (/Android/i.test(navigator.userAgent) && existingBlob && window.beeVoiceRememberDeletion) {
+          await window.beeVoiceRememberDeletion(getApiaryKey(dateKey), existingBlob);
+        }
         await deleteVoiceBlob(dateKey);
+        window.dispatchEvent(new Event("bee-voice-changed"));
         updateMarkers();
         updateVoiceControlsForSelectedDate();
         status.textContent = "Usunięto nagranie dla " + dateKey + ". Tekst notatki pozostał bez zmian.";
@@ -3116,6 +3120,7 @@ function initVoiceNoteControls() {
           }
           try {
             await saveVoiceBlob(dateKey, blob);
+            window.dispatchEvent(new Event("bee-voice-changed"));
             setVoiceNoteMarker(dateKey);
             updateMarkers();
             updateVoiceControlsForSelectedDate();
@@ -7417,7 +7422,7 @@ if(enabled())autoCheck(true);
 </script>
 <section id="bee-voice-cloud" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5">
 <h3>🎙️ Synchronizacja notatek głosowych</h3>
-<p>Firestore — synchronizacja ręczna (wersja 2). Różne nagrania nie są nadpisywane. Usunięcia pozostają lokalne; brakujące nagrania mogą zostać ponownie pobrane.</p>
+<p>Firestore — wersja 3: Android → Windows. Automatyczna synchronizacja podczas pracy aplikacji. Różne nagrania nie są nadpisywane.</p>
 <button id="bee-voice-sync-run" type="button" style="padding:10px;background:#fff1bd;border:1px solid #c49a20;border-radius:7px">🔄 Synchronizuj notatki głosowe</button>
 <div id="bee-voice-sync-status" style="white-space:pre-wrap;font-size:13px;margin-top:9px">Oczekiwanie na synchronizację.</div></section>
 <script type="module" id="bee-voice-cloud-engine">
@@ -7428,8 +7433,24 @@ const valid=k=>typeof k==='string'&&/^(?:(?:pasieka_\d+|default)_)?\d{2}\.\d{2}\
 const CHUNK=600000,MAX=12000000;
 function read(db,key){return new Promise((ok,no)=>{const t=db.transaction('voiceNotes','readonly'),r=key===undefined?t.objectStore('voiceNotes').getAll():t.objectStore('voiceNotes').get(key);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);});}
 function add(db,record){return new Promise((ok,no)=>{const t=db.transaction('voiceNotes','readwrite');t.objectStore('voiceNotes').add(record);t.oncomplete=ok;t.onabort=()=>no(t.error);t.onerror=()=>no(t.error);});}
-button.addEventListener('click',async()=>{
- if(button.disabled)return;
+const sender=/Android/i.test(navigator.userAgent);
+button.textContent=sender?"🔄 Wyślij nagrania do Windows (V3)":"🔄 Pobierz nagrania z Androida (V3)";
+const journal='bee-voice-v3-delete:';
+let timer, pending=false;
+window.beeVoiceRememberDeletion=async(key,blob)=>{
+ const uid=localStorage.getItem('bee-voice-v3-uid');
+ if(!uid) return;
+ const digest=await hash(await blob.arrayBuffer());
+ localStorage.setItem(journal+uid+':'+key, digest);
+};
+function schedule(){clearTimeout(timer);timer=setTimeout(()=>run(),1500);}
+function removeMatching(db,key,record){return new Promise((ok,no)=>{
+ const t=db.transaction('voiceNotes','readwrite'),st=t.objectStore('voiceNotes'),q=st.get(key);let removed=false;
+ q.onsuccess=()=>{const v=q.result;if(v&&v.updatedAt===record.updatedAt&&v.blob.size===record.blob.size){st.delete(key);removed=true;}};
+ t.oncomplete=()=>ok(removed);t.onabort=()=>no(t.error);t.onerror=()=>no(t.error);
+});}
+async function run(){
+ if(button.disabled){pending=true;return;}
  if(!navigator.onLine){status.textContent='Brak internetu. Nagrania pozostają na urządzeniu.';return;}
  button.disabled=true;let sent=0,received=0,same=0,conflicts=0,skipped=0;const details=[];
  const report=()=>`Nagrania — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts} | pominięto: ${skipped}`;
@@ -7441,20 +7462,37 @@ button.addEventListener('click',async()=>{
  if(!window.beeVoiceSyncLocal)throw Error('Moduł nagrań nie został zainicjalizowany. Odśwież aplikację.');
  const localDb=await window.beeVoiceSyncLocal.open();const local=new Map((await read(localDb)).map(r=>[r.key,r]));
  const col=fs.collection(db,'users',uid,'voiceSyncV1');const remote=new Map();
+ if(sender)localStorage.setItem('bee-voice-v3-uid',uid);
  for(const d of (await fs.getDocsFromServer(col)).docs){const m=d.data();if(valid(m.key)&&d.id===await keyHash(m.key))remote.set(m.key,m);}
- for(const key of new Set([...local.keys(),...remote.keys()])){
+ const deleted=new Map();
+ if(sender)for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),prefix=journal+uid+':';if(k.startsWith(prefix))deleted.set(k.slice(prefix.length),localStorage.getItem(k));}
+ for(const key of new Set([...local.keys(),...remote.keys(),...deleted.keys()])){
  guard();status.textContent=report()+'\nSprawdzanie: '+key;
  if(!valid(key)){skipped++;continue;}
  const l=local.get(key),r=remote.get(key),id=await keyHash(key),ref=fs.doc(col,id);
  if(l&&(!(l.blob instanceof Blob)||!l.blob.size||l.blob.size>MAX)){skipped++;details.push(key+': nieobsługiwany rozmiar nagrania');continue;}
  const digest=l?await hash(await l.blob.arrayBuffer()):null;
+ if(sender&&deleted.has(key)){
+ const old=deleted.get(key);
+ if(l){if(digest!==old)localStorage.removeItem(journal+uid+':'+key);}
+ else if(r&&r.hash===old&&!r.deleted){
+ guard();await fs.runTransaction(db,async tx=>{const d=await tx.get(ref);if(d.exists()&&d.data().hash===old&&!d.data().deleted){guard();tx.update(ref,{deleted:true});}});
+ localStorage.removeItem(journal+uid+':'+key);details.push(key+': przekazano usunięcie');continue;
+ }else if(!r||r.deleted){localStorage.removeItem(journal+uid+':'+key);continue;}
+ else{conflicts++;details.push(key+': usunięcie wstrzymane — inna wersja w chmurze');continue;}
+ }
+ if(r?.deleted){
+ if(!sender&&l&&digest===r.hash){guard();if(await removeMatching(localDb,key,l)){localStorage.removeItem('voice-note:'+key);details.push(key+': usunięto zgodne nagranie');}else conflicts++;}
+ else if(l){conflicts++;details.push(key+': lokalne nagranie zachowane — usunięcie w chmurze');}
+ continue;
+ }
  if(l&&r){if(digest===r.hash)same++;else{conflicts++;details.push(key+': różne nagrania — zachowano obie wersje');}continue;}
- if(l){
+ if(l&&sender){
  const count=Math.ceil(l.blob.size/CHUNK);
  const current=await read(localDb,key);if(!current||await hash(await current.blob.arrayBuffer())!==digest){skipped++;continue;}
  guard();
  await fs.runTransaction(db,async tx=>{const existing=await tx.get(ref);if(existing.exists())throw Error('Nagranie pojawiło się równocześnie w chmurze: '+key);guard();for(let i=0;i<count;i++){const bytes=new Uint8Array(await l.blob.slice(i*CHUNK,(i+1)*CHUNK).arrayBuffer());tx.set(fs.doc(ref,'parts',digest+'-'+i),{data:fs.Bytes.fromUint8Array(bytes)});}tx.set(ref,{key,dateKey:l.dateKey||key.slice(-10),mimeType:l.mimeType||l.blob.type||'audio/webm',updatedAt:l.updatedAt||'',hash:digest,size:l.blob.size,count});});sent++;
- }else if(r){
+ }else if(r&&!sender&&!l){
  if(!Number.isInteger(r.size)||r.size<1||r.size>MAX||r.count!==Math.ceil(r.size/CHUNK)||!/^[a-f0-9]{64}$/.test(r.hash)){skipped++;continue;}
  const parts=[];for(let i=0;i<r.count;i++){guard();const d=await fs.getDocFromServer(fs.doc(ref,'parts',r.hash+'-'+i));if(!d.exists())throw Error('Brak fragmentu: '+key);parts.push(d.data().data.toUint8Array());}
  const blob=new Blob(parts,{type:r.mimeType||'audio/webm'});if(blob.size!==r.size||await hash(await blob.arrayBuffer())!==r.hash)throw Error('Nieprawidłowa suma kontrolna: '+key);
@@ -7463,8 +7501,14 @@ button.addEventListener('click',async()=>{
  }
  try{window.beeVoiceSyncLocal.refresh();}catch(e){console.warn(e);details.push("Odśwież aplikację, aby zobaczyć znaczniki nagrań.");}
  status.textContent=report()+'\n'+details.join('\n');
- }catch(e){status.textContent=report()+'\nPrzerwano: '+e.message;}finally{button.disabled=false;}
-});
+ }catch(e){status.textContent=report()+'\nPrzerwano: '+e.message;}finally{button.disabled=false;if(pending){pending=false;schedule();}}
+}
+button.addEventListener('click',run);
+window.addEventListener('bee-voice-changed',()=>{if(sender)schedule();});
+window.addEventListener('online',schedule);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule();});
+window.addEventListener('load',schedule);
+setInterval(()=>{if(!document.hidden&&navigator.onLine)schedule();},120000);
 </script>
 </body>
 </html>
