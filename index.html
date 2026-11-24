@@ -7422,8 +7422,9 @@ if(enabled())autoCheck(true);
 </script>
 <section id="bee-voice-cloud" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5">
 <h3>🎙️ Synchronizacja notatek głosowych</h3>
-<p>Firestore — wersja 3: Android → Windows. Automatyczna synchronizacja podczas pracy aplikacji. Różne nagrania nie są nadpisywane.</p>
+<p>Firestore — wersja 4: Android → Windows. Automatyczna synchronizacja podczas pracy aplikacji. Różne nagrania nie są nadpisywane.</p>
 <button id="bee-voice-sync-run" type="button" style="padding:10px;background:#fff1bd;border:1px solid #c49a20;border-radius:7px">🔄 Synchronizuj notatki głosowe</button>
+<button id="bee-voice-resolve" type="button" hidden style="padding:10px;background:#fff1bd;border:1px solid #c49a20;border-radius:7px">Rozwiąż konflikt nagrania</button>
 <div id="bee-voice-sync-status" style="white-space:pre-wrap;font-size:13px;margin-top:9px">Oczekiwanie na synchronizację.</div></section>
 <script type="module" id="bee-voice-cloud-engine">
 const button=document.getElementById('bee-voice-sync-run'),status=document.getElementById('bee-voice-sync-status');
@@ -7434,7 +7435,9 @@ const CHUNK=600000,MAX=12000000;
 function read(db,key){return new Promise((ok,no)=>{const t=db.transaction('voiceNotes','readonly'),r=key===undefined?t.objectStore('voiceNotes').getAll():t.objectStore('voiceNotes').get(key);r.onsuccess=()=>ok(r.result);r.onerror=()=>no(r.error);});}
 function add(db,record){return new Promise((ok,no)=>{const t=db.transaction('voiceNotes','readwrite');t.objectStore('voiceNotes').add(record);t.oncomplete=ok;t.onabort=()=>no(t.error);t.onerror=()=>no(t.error);});}
 const sender=/Android/i.test(navigator.userAgent);
-button.textContent=sender?"🔄 Wyślij nagrania do Windows (V3)":"🔄 Pobierz nagrania z Androida (V3)";
+button.textContent=sender?"🔄 Wyślij nagrania do Windows (V4)":"🔄 Pobierz nagrania z Androida (V4)";
+const resolveButton=document.getElementById('bee-voice-resolve');
+resolveButton.hidden=!sender;
 const journal='bee-voice-v3-delete:';
 let timer, pending=false;
 window.beeVoiceRememberDeletion=async(key,blob)=>{
@@ -7449,10 +7452,11 @@ function removeMatching(db,key,record){return new Promise((ok,no)=>{
  q.onsuccess=()=>{const v=q.result;if(v&&v.updatedAt===record.updatedAt&&v.blob.size===record.blob.size){st.delete(key);removed=true;}};
  t.oncomplete=()=>ok(removed);t.onabort=()=>no(t.error);t.onerror=()=>no(t.error);
 });}
-async function run(){
+async function run(resolve=false){
+ resolve=resolve===true;
  if(button.disabled){pending=true;return;}
  if(!navigator.onLine){status.textContent='Brak internetu. Nagrania pozostają na urządzeniu.';return;}
- button.disabled=true;let sent=0,received=0,same=0,conflicts=0,skipped=0;const details=[];
+ button.disabled=true;resolveButton.disabled=true;let sent=0,received=0,same=0,conflicts=0,skipped=0;const details=[];
  const report=()=>`Nagrania — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts} | pominięto: ${skipped}`;
  try{
  status.textContent='Łączenie z Firebase…';
@@ -7476,22 +7480,30 @@ async function run(){
  const old=deleted.get(key);
  if(l){if(digest!==old)localStorage.removeItem(journal+uid+':'+key);}
  else if(r&&r.hash===old&&!r.deleted){
- guard();await fs.runTransaction(db,async tx=>{const d=await tx.get(ref);if(d.exists()&&d.data().hash===old&&!d.data().deleted){guard();tx.update(ref,{deleted:true});}});
+ guard();await fs.runTransaction(db,async tx=>{const d=await tx.get(ref);if(!d.exists()||d.data().hash!==old||d.data().deleted)throw Error('Nagranie w chmurze zmieniło się. Ponów synchronizację.');guard();tx.update(ref,{deleted:true});});
  localStorage.removeItem(journal+uid+':'+key);details.push(key+': przekazano usunięcie');continue;
  }else if(!r||r.deleted){localStorage.removeItem(journal+uid+':'+key);continue;}
- else{conflicts++;details.push(key+': usunięcie wstrzymane — inna wersja w chmurze');continue;}
+ else{
+ if(resolve && confirm('Usunąć konfliktowe nagranie z chmury?\n'+key+'\nTelefon nie ma już tego nagrania. Zgodna kopia na komputerze zostanie usunięta.')){
+ if(await read(localDb,key))throw Error('Nagranie pojawiło się ponownie na telefonie.');
+ guard();await fs.runTransaction(db,async tx=>{const d=await tx.get(ref);guard();if(!d.exists()||d.data().deleted||d.data().hash!==r.hash)throw Error('Wersja w chmurze zmieniła się. Ponów synchronizację.');tx.update(ref,{deleted:true});});
+ if(localStorage.getItem(journal+uid+':'+key)===old)localStorage.removeItem(journal+uid+':'+key);
+ details.push(key+': zatwierdzono usunięcie konfliktu');continue;
  }
- if(r?.deleted){
+ conflicts++;details.push(key+': usunięcie wstrzymane — inna wersja w chmurze');continue;
+ }
+ }
+ if(r?.deleted && !(sender&&l)){
  if(!sender&&l&&digest===r.hash){guard();if(await removeMatching(localDb,key,l)){localStorage.removeItem('voice-note:'+key);details.push(key+': usunięto zgodne nagranie');}else conflicts++;}
  else if(l){conflicts++;details.push(key+': lokalne nagranie zachowane — usunięcie w chmurze');}
  continue;
  }
- if(l&&r){if(digest===r.hash)same++;else{conflicts++;details.push(key+': różne nagrania — zachowano obie wersje');}continue;}
+ if(l&&r&&!r.deleted){if(digest===r.hash)same++;else{conflicts++;details.push(key+': różne nagrania — zachowano obie wersje');}continue;}
  if(l&&sender){
  const count=Math.ceil(l.blob.size/CHUNK);
  const current=await read(localDb,key);if(!current||await hash(await current.blob.arrayBuffer())!==digest){skipped++;continue;}
  guard();
- await fs.runTransaction(db,async tx=>{const existing=await tx.get(ref);if(existing.exists())throw Error('Nagranie pojawiło się równocześnie w chmurze: '+key);guard();for(let i=0;i<count;i++){const bytes=new Uint8Array(await l.blob.slice(i*CHUNK,(i+1)*CHUNK).arrayBuffer());tx.set(fs.doc(ref,'parts',digest+'-'+i),{data:fs.Bytes.fromUint8Array(bytes)});}tx.set(ref,{key,dateKey:l.dateKey||key.slice(-10),mimeType:l.mimeType||l.blob.type||'audio/webm',updatedAt:l.updatedAt||'',hash:digest,size:l.blob.size,count});});sent++;
+ await fs.runTransaction(db,async tx=>{const existing=await tx.get(ref);if(existing.exists()&&!(r?.deleted&&existing.data().deleted&&existing.data().hash===r.hash))throw Error('Nagranie pojawiło się równocześnie w chmurze: '+key);guard();for(let i=0;i<count;i++){const bytes=new Uint8Array(await l.blob.slice(i*CHUNK,(i+1)*CHUNK).arrayBuffer());tx.set(fs.doc(ref,'parts',digest+'-'+i),{data:fs.Bytes.fromUint8Array(bytes)});}tx.set(ref,{key,dateKey:l.dateKey||key.slice(-10),mimeType:l.mimeType||l.blob.type||'audio/webm',updatedAt:l.updatedAt||'',hash:digest,size:l.blob.size,count});});sent++;
  }else if(r&&!sender&&!l){
  if(!Number.isInteger(r.size)||r.size<1||r.size>MAX||r.count!==Math.ceil(r.size/CHUNK)||!/^[a-f0-9]{64}$/.test(r.hash)){skipped++;continue;}
  const parts=[];for(let i=0;i<r.count;i++){guard();const d=await fs.getDocFromServer(fs.doc(ref,'parts',r.hash+'-'+i));if(!d.exists())throw Error('Brak fragmentu: '+key);parts.push(d.data().data.toUint8Array());}
@@ -7501,9 +7513,10 @@ async function run(){
  }
  try{window.beeVoiceSyncLocal.refresh();}catch(e){console.warn(e);details.push("Odśwież aplikację, aby zobaczyć znaczniki nagrań.");}
  status.textContent=report()+'\n'+details.join('\n');
- }catch(e){status.textContent=report()+'\nPrzerwano: '+e.message;}finally{button.disabled=false;if(pending){pending=false;schedule();}}
+ }catch(e){status.textContent=report()+'\nPrzerwano: '+e.message;}finally{button.disabled=false;resolveButton.disabled=false;if(pending){pending=false;schedule();}}
 }
-button.addEventListener('click',run);
+button.addEventListener('click',()=>run());
+resolveButton.addEventListener('click',()=>{if(sender)run(true);});
 window.addEventListener('bee-voice-changed',()=>{if(sender)schedule();});
 window.addEventListener('online',schedule);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule();});
