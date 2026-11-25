@@ -550,6 +550,20 @@ body.bee-has-fixed-bar{padding-bottom:155px!important} #bee-mobile-bar button{po
 }
 .calendar-scroll td:has(.day-number) { cursor:pointer; touch-action:pan-x pan-y; }
 .calendar-scroll td.bee-selected-note-day { box-shadow:inset 0 0 0 3px #d59d00; }
+
+/* V9.3: zwijane menu Android i Windows; przycisk zwijania zawsze dostępny. */
+@media(max-width:600px){
+ #bee-mobile-bar #bee-bar-toggle{position:sticky;bottom:0;z-index:3;flex-shrink:0}
+ #bee-mobile-bar:not(.bee-bar-expanded){width:auto!important}
+}
+body.bee-android-menu #bee-mobile-bar{position:fixed!important;left:auto!important;right:10px!important;bottom:max(10px,env(safe-area-inset-bottom))!important;width:min(260px,calc(100vw - 20px))!important;max-height:min(75vh,620px)!important;overflow-y:auto!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:4px!important;padding:6px!important;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none!important}
+body.bee-android-menu #bee-mobile-bar > button{width:100%!important;min-width:0!important;flex:none!important;margin:0!important;pointer-events:auto!important}
+body.bee-android-menu #bee-mobile-bar:not(.bee-bar-expanded){width:auto!important}
+body.bee-android-menu #bee-mobile-bar:not(.bee-bar-expanded) > button:not(#bee-bar-toggle){display:none!important}
+body.bee-android-menu #bee-mobile-bar.bee-bar-expanded{background:rgba(255,255,255,.98)!important;border:1px solid #ddd!important;box-shadow:0 2px 12px #0003!important;pointer-events:auto!important}
+body.bee-android-menu #bee-mobile-bar.bee-bar-expanded > button{display:block!important}
+body.bee-android-menu #bee-mobile-bar #bee-bar-toggle{display:block!important;background:#fbc02d!important;order:99;align-self:flex-end;width:auto!important;min-width:104px!important;position:sticky;bottom:0;z-index:3}
+body.bee-android-menu.bee-has-fixed-bar{padding-bottom:70px!important}
 </style>
 
 </head>
@@ -2395,7 +2409,7 @@ font-weight:bold;
     </div>
     <div id="stage5-rec-card" class="stage5-rec-card" aria-live="polite">Brak zapisanych kart rodzin.</div>
   </div>
-  <h3>💰 Dodaj przychód lub wydatek</h3>
+  <h3 id="stage5-income-heading">💰 Dodaj przychód lub wydatek</h3>
   <div class="stage5-fields">
     <label>Rodzaj wpisu<select id="stage5-kind"><option value="expense">Wydatek</option><option value="income">Przychód</option></select></label>
     <label>Kategoria<select id="stage5-category"><option>Sprzedaż miodu</option><option>Sprzedaż odkładów</option><option>Sprzedaż matek</option><option>Inne przychody</option><option>Karmienie</option><option>Leczenie i preparaty</option><option>Matki i odkłady</option><option>Sprzęt i wyposażenie</option><option>Opakowania</option><option>Transport i paliwo</option><option>Inne wydatki</option></select></label>
@@ -2436,7 +2450,7 @@ font-weight:bold;
   <h3>📋 Stan magazynu</h3><div id="s6-inventory-list">Brak pozycji w magazynie.</div>
   <h3>🔄 Rejestr zużycia i dostaw</h3>
   <div class="s6-fields">
-    <label>Pozycja<select id="s6-move-item"></select></label>
+    <label id="s6-moves-heading">Pozycja<select id="s6-move-item"></select></label>
     <label>Rodzaj operacji<select id="s6-move-kind"><option value="in">Dostawa / zwiększenie</option><option value="out">Zużycie / wydanie</option></select></label>
     <label>Ilość<input id="s6-move-qty" type="number" min="0.01" step="0.01" placeholder="np. 5"></label>
     <label>Data<input id="s6-move-date" type="date"></label>
@@ -2497,13 +2511,28 @@ font-weight:bold;
  <div id="bee-task-status" role="status" aria-live="polite" style="font-size:13px;margin:8px 0"></div>
  <div id="bee-task-summary" style="font-weight:bold;margin:8px 0"></div>
  <div id="bee-task-list"></div>
-<style>#task-sync-run,#task-sync-auto,#task-sync-resolve,#task-conflicts button{padding:10px;border:1px solid #c49a20;border-radius:8px;background:#fff1bd;color:#302600;font:inherit;margin:4px;cursor:pointer}#task-conflicts pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><section style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>📋 Synchronizacja listy prac V8</h3><button type="button" id="task-sync-run">🔄 Synchronizuj listę prac</button> <button type="button" id="task-sync-auto"></button> <button type="button" id="task-sync-resolve">Rozwiąż konflikt zadania</button><div id="task-conflicts"></div><div id="task-sync-status" style="white-space:pre-wrap">Oczekiwanie na synchronizację.</div></section>
+<style>#task-sync-run,#task-sync-auto,#task-sync-resolve,#task-conflicts button{padding:10px;border:1px solid #c49a20;border-radius:8px;background:#fff1bd;color:#302600;font:inherit;margin:4px;cursor:pointer}#task-conflicts pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><section style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>📋 Synchronizacja listy prac</h3><button type="button" id="task-sync-run">🔄 Synchronizuj listę prac</button> <button type="button" id="task-sync-auto"></button> <button type="button" id="task-sync-resolve">Rozwiąż konflikt zadania</button><div id="task-conflicts"></div><div id="task-sync-status" style="white-space:pre-wrap">Oczekiwanie na synchronizację.</div></section>
 
 </section>
 
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
-  <button type="button" id="bee-bar-toggle" aria-expanded="false" aria-controls="bee-mobile-bar">☰ Menu</button><button type="button" id="bee-bar-backup">💾 Kopia</button>
-  <button type="button" id="s6-quick-stock">📦 Magazyn</button><button type="button" id="s6-quick-scan">📷 QR ula</button><button type="button" id="s6-quick-stop-scan">⏹ Zatrzymaj skaner</button><button type="button" id="s6-quick-today">📅 Dzisiaj</button><button type="button" id="s6-quick-hives">🐝 Karty ula</button><button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button><button type="button" id="s6-quick-analytics">📊 Analityka</button><button type="button" id="s6-quick-down">⬇ Dół</button><button type="button" id="s6-quick-top">⬆ Góra</button>
+<button type="button" id="bee-bar-toggle" aria-expanded="false" aria-controls="bee-mobile-bar">☰ Menu</button>
+<button type="button" id="s6-quick-top">⬆ Góra</button>
+<button type="button" id="s6-quick-apiary">🐝 Zmień pasiekę</button>
+<button type="button" id="s6-quick-today">📅 Dziś</button>
+<button type="button" id="s6-quick-hives">🐝 Karty ula</button>
+<button type="button" id="s6-quick-analytics">📊 Analityka</button>
+<button type="button" id="s6-quick-stock">📦 Magazyn</button>
+<button type="button" id="bee-bar-backup">💾 Kopia</button>
+<button type="button" id="s6-quick-income">💰 Dodaj przychód</button>
+<button type="button" id="s6-quick-moves">📦 Rejestr zużycia i dostaw</button>
+<button type="button" id="s6-quick-tasks">📋 Lista prac do wykonania</button>
+<button type="button" id="s6-quick-voice">🎙️ Synchronizacja notatek głosowych</button>
+<button type="button" id="s6-quick-scan">📷 QR ula</button>
+<button type="button" id="s6-quick-stop-scan">⏹ Zatrzymaj skaner</button>
+<button type="button" id="s6-quick-queen">👑 Wychów matek pszczelich</button>
+<button type="button" id="s6-quick-login">🔐 Zaloguj się do Google</button>
+<button type="button" id="s6-quick-down">⬇ Dół</button>
 </div>
 <script>
 /* Zwinięte menu na Androidzie + szybki dostęp do kopii. Nie zmienia danych. */
@@ -2537,6 +2566,12 @@ font-weight:bold;
   }
   function action(id){
     switch(id){
+      case 's6-quick-login':{goTo('bee-firebase-panel');var login=document.getElementById('bee-fb-login');if(login&&!login.disabled)login.click();break;}
+      case 's6-quick-income':{var kind=document.getElementById('stage5-kind');if(kind){kind.value='income';kind.dispatchEvent(new Event('change',{bubbles:true}));}goTo('stage5-income-heading');break;}
+      case 's6-quick-moves':goTo('s6-moves-heading');break;
+      case 's6-quick-tasks':goTo('bee-tasks-panel');break;
+      case 's6-quick-voice':goTo('bee-voice-cloud');break;
+      case 's6-quick-queen':goTo('bee-queen-guide');break;
       case 's6-quick-stock':goTo('bee-stage6-panel');break;
       case 's6-quick-analytics':goTo('bee-stage5-panel');break;
       case 's6-quick-hives':goTo('hive-management');break;
@@ -2589,6 +2624,7 @@ font-weight:bold;
     if(!bar||bar.dataset.beeWired==='yes')return;
     bar.dataset.beeWired='yes';
     document.body.classList.add('bee-has-fixed-bar');
+    document.body.classList.add('bee-android-menu');
     /* Umieszczenie bezpośrednio w body usuwa problemy z nakładkami i przewijanymi rodzicami. */
     if(bar.parentElement!==document.body)document.body.appendChild(bar);
     bar.querySelectorAll('button').forEach(function(btn){
@@ -2642,11 +2678,12 @@ font-weight:bold;
 <div class="bee-guide-item"><strong>Jesień / okres bezczerwiowy</strong><p>Zweryfikuj skuteczność i warunki ewentualnego zabiegu końcowego. Zapisz datę, preparat i wynik kontroli.</p></div>
 <p class="bee-guide-note">Nie stosuj leków według stałych dat z kalendarza — decyzja wymaga pomiaru, oceny rodziny i przestrzegania aktualnej etykiety produktu.</p>
 </article>
-<article class="bee-guide"><h3>👑 Wychów matek pszczelich</h3>
+<article class="bee-guide" id="bee-queen-guide"><h3>👑 Wychów matek pszczelich</h3>
 <p>Wybierz datę przekładania młodych larw. Kalkulator pokaże orientacyjny harmonogram dla metody przekładania larw.</p>
 <label for="bee-queen-start">Data przekładania larw</label>
 <input type="date" id="bee-queen-start">
 <div id="bee-queen-schedule" aria-live="polite"></div>
+<div class="bee-guide-note"><strong>Kolory opalitków matek pszczelich</strong><p id="bee-queen-current-color"></p><div id="bee-queen-color-legend"></div></div>
 <p class="bee-guide-note">Daty są przybliżone. Wiek larw, temperatura i metoda wychowu mogą zmienić przebieg; kontroluj mateczniki ostrożnie.</p>
 </article>
 </section>
@@ -4319,7 +4356,7 @@ function generateBeeForecast(days){
     }
 
     summary.push(buildHiveSeasonRecommendations());
-    summary.push("<small style=\"display:block;color:#666;margin-top:6px\">Prognoza pogody obejmuje tylko najbliższy dostępny horyzont (około 16 dni), a nie cały sezon 2027. Rekomendacje są orientacyjne i wymagają potwierdzenia podczas przeglądu.</small>");
+    summary.push("<small style=\"display:block;color:#666;margin-top:6px\">Prognoza pogody obejmuje tylko najbliższy dostępny horyzont (około 16 dni), a nie cały bieżący sezon. Rekomendacje są orientacyjne i wymagają potwierdzenia podczas przeglądu.</small>");
     box.innerHTML = summary.join("<br>");
     box.querySelectorAll('div[data-key]').forEach(div => {
       div.addEventListener('click', () => {
@@ -7553,7 +7590,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)schedule()
 window.addEventListener('load',()=>{window.beeVoiceSyncLocal?.refresh().catch(console.warn);schedule();});
 setInterval(()=>{if(!document.hidden&&navigator.onLine)schedule();},120000);
 </script>
-<style>#fin-sync-run,#fin-sync-auto,#fin-sync-resolve,#fin-conflicts button{padding:10px;border:1px solid #c49a20;border-radius:8px;background:#fff1bd;color:#302600;font:inherit;margin:4px;cursor:pointer}#fin-conflicts pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><section style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>Synchronizacja finansów V6.2</h3><button type="button" id="fin-sync-run">🔄 Synchronizuj finanse</button> <button type="button" id="fin-sync-auto"></button> <button type="button" id="fin-sync-resolve">Rozwiąż konflikt finansowy</button><div id="fin-conflicts"></div><div id="fin-sync-status" style="white-space:pre-wrap">Oczekiwanie na synchronizację.</div></section>
+<style>#fin-sync-run,#fin-sync-auto,#fin-sync-resolve,#fin-conflicts button{padding:10px;border:1px solid #c49a20;border-radius:8px;background:#fff1bd;color:#302600;font:inherit;margin:4px;cursor:pointer}#fin-conflicts pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><section style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>Synchronizacja finansów</h3><button type="button" id="fin-sync-run">🔄 Synchronizuj finanse</button> <button type="button" id="fin-sync-auto"></button> <button type="button" id="fin-sync-resolve">Rozwiąż konflikt finansowy</button><div id="fin-conflicts"></div><div id="fin-sync-status" style="white-space:pre-wrap">Oczekiwanie na synchronizację.</div></section>
 <script type="module">
 (()=>{
 const status=document.getElementById('fin-sync-status'),button=document.getElementById('fin-sync-run'),toggle=document.getElementById('fin-sync-auto');
@@ -7580,7 +7617,7 @@ if(received&&typeof stage5Render==='function')stage5Render();status.textContent=
 const enabled=()=>localStorage.getItem('bee-fin-auto-v6')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja finansów: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=()=>sync();document.getElementById("fin-sync-resolve").onclick=()=>sync(true);toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-fin-auto-v6');else if(confirm('Włączyć synchronizację finansów? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-fin-auto-v6','1');sync();}label();};label();setInterval(()=>{if(enabled())window.beeV9.auto("finance",sync);},120000);window.addEventListener('online',()=>{if(enabled())window.beeV9.auto("finance",sync);});if(enabled())window.beeV9.auto("finance",sync);
 })();
 </script>
-<style>#wh-panel button{padding:10px;border:1px solid #c49a20;border-radius:8px;background:#fff1bd;color:#302600;font:inherit;margin:4px;cursor:pointer}#wh-panel pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><section id="wh-panel" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>📦 Synchronizacja magazynu V7</h3><p>Android ↔ Windows. Stan i operacje magazynowe synchronizowane razem dla każdej pasieki.</p><button id="wh-run" type="button">🔄 Synchronizuj magazyn</button><button id="wh-auto" type="button"></button><button id="wh-resolve" type="button">Rozwiąż konflikt magazynu</button><div id="wh-status" role="status">Oczekiwanie na synchronizację.</div><div id="wh-conflicts"></div></section>
+<style>#wh-panel button{padding:10px;border:1px solid #c49a20;border-radius:8px;background:#fff1bd;color:#302600;font:inherit;margin:4px;cursor:pointer}#wh-panel pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><section id="wh-panel" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>📦 Synchronizacja magazynu</h3><p>Android ↔ Windows. Stan i operacje magazynowe synchronizowane razem dla każdej pasieki.</p><button id="wh-run" type="button">🔄 Synchronizuj magazyn</button><button id="wh-auto" type="button"></button><button id="wh-resolve" type="button">Rozwiąż konflikt magazynu</button><div id="wh-status" role="status">Oczekiwanie na synchronizację.</div><div id="wh-conflicts"></div></section>
 <script type="module">
 (()=>{
 const $=id=>document.getElementById(id),status=$('wh-status'),panel=$('wh-conflicts'),buttons=['wh-run','wh-resolve','wh-auto'].map($);let busy=false,auth,db,fs;
@@ -7634,5 +7671,18 @@ const enabled=()=>localStorage.getItem('bee-task-auto-v8')==='1';const label=()=
 })();
 </script>
 
-<details style="margin:12px;padding:10px;border:1px solid #d9bd63;border-radius:8px"><summary>V9 OPTIMAL — diagnostyka synchronizacji</summary><p id="bee-v9-stats"></p><p id="bee-v9-storage"></p><p>Automatyczne sprawdzanie co 120 sekund w aktywnej aplikacji. Limity lokalne nie obejmują innych urządzeń ani wszystkich operacji Firebase.</p></details></body>
+<details style="margin:12px;padding:10px;border:1px solid #d9bd63;border-radius:8px"><summary>V9 OPTIMAL — diagnostyka synchronizacji</summary><p id="bee-v9-stats"></p><p id="bee-v9-storage"></p><p>Automatyczne sprawdzanie co 120 sekund w aktywnej aplikacji. Limity lokalne nie obejmują innych urządzeń ani wszystkich operacji Firebase.</p></details><style>@media(max-width:520px){#bee-mobile-bar.bee-bar-expanded{max-height:65vh!important;overflow-y:auto!important}} @media(min-width:521px){#bee-mobile-bar.bee-bar-expanded{max-height:80vh!important;overflow-y:auto!important}}</style>
+<script>
+(function(){
+ const colors=[['Niebieski','#2474c6'],['Biały','#ffffff'],['Żółty','#f4cf24'],['Czerwony','#d73535'],['Zielony','#36934b']];
+ function color(y){return colors[y%5];}
+ function init(){const y=new Date().getFullYear(), c=color(y), current=document.getElementById('bee-queen-current-color'), legend=document.getElementById('bee-queen-color-legend');
+ function line(parent,label,hex){const row=document.createElement('div'),dot=document.createElement('span');dot.style.cssText='display:inline-block;width:15px;height:15px;border:1px solid #777;border-radius:50%;margin-right:8px;vertical-align:middle;background:'+hex;row.append(dot,document.createTextNode(label));parent.append(row);}
+ current.textContent='';line(current,'Bieżący rok '+y+': '+c[0],c[1]);legend.textContent='';[1,2,3,4,0].forEach(n=>line(legend,colors[n][0]+' — lata kończące się na '+(n===0?'5 i 0':n+' i '+(n+5)),colors[n][1]));
+ const year=document.getElementById('queen-event-year'),mark=document.getElementById('queen-event-mark');year.addEventListener('input',()=>{const v=Number(year.value);if(Number.isInteger(v)&&v>=2000&&v<=9999)mark.value=color(v)[0];});year.placeholder=String(y);mark.placeholder=c[0];
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+</body>
 </html>
