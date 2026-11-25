@@ -5811,7 +5811,7 @@ function initStage6(){
  document.getElementById("s6-qr-print").addEventListener("click",s6PrintQr);
  const localDate=new Date();const today=[localDate.getFullYear(),String(localDate.getMonth()+1).padStart(2,"0"),String(localDate.getDate()).padStart(2,"0")].join("-");document.getElementById("s6-move-date").value=today;
  document.getElementById("s6-add").addEventListener("click",()=>{const name=document.getElementById("s6-name").value.trim(),qty=Number(document.getElementById("s6-qty").value),min=Number(document.getElementById("s6-min").value);if(!name){alert("Podaj nazwę pozycji.");return;}if(!Number.isFinite(qty)||qty<0||!Number.isFinite(min)||min<0){alert("Sprawdź ilość i próg minimalny.");return;}const a=s6Read("inventory");a.push({id:"stk-"+Date.now()+"-"+Math.random().toString(36).slice(2,7),name,category:document.getElementById("s6-category").value,qty,unit:document.getElementById("s6-unit").value,min,place:document.getElementById("s6-place").value.trim(),expiry:document.getElementById("s6-expiry").value,notes:document.getElementById("s6-notes").value.trim()});if(s6Write("inventory",a)){["s6-name","s6-place","s6-expiry","s6-notes"].forEach(id=>document.getElementById(id).value="");document.getElementById("s6-qty").value="0";s6Render();}});
- document.getElementById("s6-inventory-list").addEventListener("click",e=>{const b=e.target.closest("[data-s6-delete]");if(!b)return;const id=b.dataset.s6Delete,item=s6Read("inventory").find(x=>x.id===id);if(!item||!confirm("Usunąć z magazynu pozycję: "+item.name+"? Historia operacji pozostanie zachowana."))return;s6Write("inventory",s6Read("inventory").filter(x=>x.id!==id));s6Render();});
+ document.getElementById("s6-inventory-list").addEventListener("click",e=>{const b=e.target.closest("[data-s6-delete]");if(!b)return;const id=b.dataset.s6Delete,item=s6Read("inventory").find(x=>x.id===id);if(!item||!confirm("Usunąć z magazynu pozycję: "+item.name+"? Historia operacji pozostanie zachowana."))return;const purge=confirm("Czy dodatkowo usunąć historię operacji WYŁĄCZNIE produktu "+item.name+"? Anuluj = zachowaj historię.");if(purge){const before=s6Read("movements");if(!s6Write("movements",before.filter(x=>x.itemId!==id)))return;if(!s6Write("inventory",s6Read("inventory").filter(x=>x.id!==id))){s6Write("movements",before);return;}}else if(!s6Write("inventory",s6Read("inventory").filter(x=>x.id!==id)))return;s6Render();});
  document.getElementById("s6-movement-list").addEventListener("click", e => {
    const btn=e.target.closest("[data-s6-move-delete]"); if(!btn)return;
    const id=btn.dataset.s6MoveDelete,moves=s6Read("movements"),move=moves.find(m=>m.id===id);
@@ -7111,7 +7111,22 @@ if ("serviceWorker" in navigator) {
 <div id="bee-hive-cloud-status" style="white-space:pre-wrap;font-size:13px;margin-top:9px">Oczekiwanie na synchronizację kart uli.</div>
 <div id="bee-hive-cloud-conflicts"></div>
 </section>
-<script type="module" id="bee-live-sync-engine">
+<script>
+window.beeV9=(()=>{
+ const key='bee-v9-usage', owner='bee-v9-owner'; let last={};
+ const day=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ function stats(){try{const v=JSON.parse(localStorage.getItem(key)||'{}');if(v.day===day())return v;}catch(e){}return {day:day(),reads:0,writes:0,deletes:0,checks:0};}
+ function add(k,n){const v=stats();v[k]+=n;localStorage.setItem(key,JSON.stringify(v));render();}
+ function budget(){const v=stats();if(v.reads>=20000||v.writes>=8000||v.deletes>=8000)throw Error('V9: osiągnięto lokalny próg operacji Firebase. Dane pozostają lokalnie.');}
+ function account(uid){if(!uid)throw Error('Zaloguj się do Firebase.');const old=localStorage.getItem(owner);if(old&&old!==uid)throw Error('V9: inne konto Google — synchronizacja zablokowana. Wróć do poprzedniego konta.');if(!old)localStorage.setItem(owner,uid);}
+ function sdk(fs,auth){return new Proxy({...fs},{get(t,k){const f=t[k];if(k==='getDocsFromServer'||k==='getDocFromServer')return async(...a)=>{account(auth.currentUser?.uid);budget();const r=await f(...a);add('reads',k==='getDocsFromServer'?Math.max(1,r.size):1);return r;};if(k==='runTransaction')return (db,fn,...args)=>{account(auth.currentUser?.uid);budget();const uid=auth.currentUser.uid;return f(db,tx=>fn(new Proxy(tx,{get(o,m){const v=o[m];if(['get','set','update','delete'].includes(m))return (...a)=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');budget();add(m==='get'?'reads':m==='delete'?'deletes':'writes',1);return v.apply(o,a);};return typeof v==='function'?v.bind(o):v;}})),...args);};return f;}});}
+ function auto(name,fn){if(document.hidden||!navigator.onLine||Date.now()-(last[name]||0)<120000)return;last[name]=Date.now();fn();}
+ function check(){budget();add('checks',1);}
+ function render(){const e=document.getElementById('bee-v9-stats');if(e){const v=stats();e.textContent=`Dzisiaj na tym urządzeniu: odczyty ${v.reads}/20000 | próby zapisów ${v.writes}/8000 | próby usunięć ${v.deletes}/8000 | cykle ${v.checks}. Szacunek, nie licznik rozliczeniowy Firebase.`;}}
+ async function storage(){const e=document.getElementById('bee-v9-storage');if(!e)return;let n=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);n+=2*(k.length+(localStorage.getItem(k)||'').length);}let msg='localStorage: około '+Math.round(n/1024)+' KiB.'+(n>3500000?' UWAGA: wykonaj kopię danych.':'');try{const x=await navigator.storage.estimate();if(x.quota){msg+=' Pamięć witryny: '+Math.round(x.usage/x.quota*100)+'%.';if(x.usage/x.quota>.8)msg+=' UWAGA: mało miejsca.';}}catch(e){}e.textContent=msg;}
+ window.addEventListener('load',()=>{render();storage();setInterval(storage,120000);});return {account,sdk,auto,check,storage};
+})();
+</script><script type="module" id="bee-live-sync-engine">
 (async()=>{
 "use strict";
 const $=id=>document.getElementById(id), status=$("bee-live-status"), panel=$("bee-live-sync");
@@ -7129,7 +7144,7 @@ async function setup(){
  if(db)return;
  if(!window.beeFirebase?.prepare)throw Error("Nie znaleziono modułu logowania Firebase.");
  const instance=await window.beeFirebase.prepare();
- fs=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js");
+ fs=window.beeV9.sdk(await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"),instance.auth);
  auth=instance.auth;db=instance.db;await auth.authStateReady();
 }
 function displayConflicts(){
@@ -7185,7 +7200,7 @@ async function sync(){
  try{
   await setup();const user=auth.currentUser;
   if(!user){say("Zaloguj się na to samo konto Google na obu urządzeniach.");return;}
-  const col=fs.collection(db,"users",user.uid,"syncKeys");
+  window.beeV9.account(user.uid);window.beeV9.check();const col=fs.collection(db,"users",user.uid,"syncKeys");
   await fs.getDocFromServer(fs.doc(col,"_connection_probe"));
   // Stronicowanie: nie pomijaj notatek, gdy w kolekcji jest ponad 1000 rekordów.
   const cloud=new Map();let cursor=null;
@@ -7234,14 +7249,14 @@ async function sync(){
 async function start(){
  try{await setup();if(!auth.currentUser){say("Najpierw zaloguj się przez Google w panelu Firebase.");return;}
  if(!localStorage.getItem(FLAG)&&!confirm("Włączyć synchronizację notatek? Zachowaj kopie JSON obu urządzeń."))return;
- localStorage.setItem(FLAG,"1");running=true;if(timer)clearInterval(timer);timer=setInterval(sync,8000);await sync();
+ localStorage.setItem(FLAG,"1");running=true;if(timer)clearInterval(timer);timer=setInterval(()=>window.beeV9.auto("notes",sync),120000);await sync();
  }catch(e){say("Błąd inicjalizacji Firebase: "+(e?.message||e));}
 }
 $("bee-live-enable").addEventListener("click",start);
 $("bee-live-disable").addEventListener("click",()=>{running=false;if(timer)clearInterval(timer);timer=null;localStorage.removeItem(FLAG);say("Synchronizacja wyłączona. Notatki pozostają na urządzeniu.");});
 $("bee-live-check").addEventListener("click",()=>running?sync():start());
 say("Synchronizacja notatek: oczekiwanie na zalogowanie Google.");
-if(localStorage.getItem(FLAG)==="1")setup().then(()=>{running=true;timer=setInterval(sync,8000);sync();}).catch(e=>say("Nie można uruchomić: "+(e?.message||e)));
+if(localStorage.getItem(FLAG)==="1")setup().then(()=>{running=true;timer=setInterval(()=>window.beeV9.auto("notes",sync),120000);sync();}).catch(e=>say("Nie można uruchomić: "+(e?.message||e)));
 })();
 </script>
 <script type="module" id="bee-hive-cloud-engine">
@@ -7260,7 +7275,7 @@ async function setup(){
  if(db)return;
  if(!window.beeFirebase?.prepare)throw Error("Nie znaleziono połączenia Firebase.");
  const instance=await window.beeFirebase.prepare();
- fs=await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js");
+ fs=window.beeV9.sdk(await import("https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"),instance.auth);
  db=instance.db;auth=instance.auth;await auth.authStateReady();
 }
 function refresh(){
@@ -7349,7 +7364,7 @@ async function sync(){
  busy=true;status.textContent="Sprawdzanie kart uli w Firebase…";
  try{
   await setup();const user=auth.currentUser;if(!user)throw Error("Zaloguj się przez Google w panelu Firebase.");
-  const col=fs.collection(db,"users",user.uid,"hiveSyncKeys");
+  window.beeV9.account(user.uid);window.beeV9.check();const col=fs.collection(db,"users",user.uid,"hiveSyncKeys");
   const cloud=new Map();let cursor=null;
   for(let page=0;page<20;page++){
    let q=fs.query(col,fs.orderBy(fs.documentId()),fs.limit(300));
@@ -7417,9 +7432,9 @@ function updateToggle(){toggle.textContent=enabled()?"Automatyczna synchronizacj
 let lastAttempt=0;
 async function autoCheck(force=false){
  const now=fingerprint();if(now!==observed){observed=now;dirty=false;pending=true;}
- if(!enabled()||busy||editing()||!navigator.onLine)return;
- if(!force&&!pending&&Date.now()-lastAttempt<30000)return;
- if(Date.now()-lastAttempt<3000)return;
+ if(!enabled()||busy||editing()||!navigator.onLine||document.hidden)return;
+ if(!force&&!pending&&Date.now()-lastAttempt<120000)return;
+ if(Date.now()-lastAttempt<120000)return;
  lastAttempt=Date.now();pending=false;await sync();observed=fingerprint();
 }
 $("bee-hive-cloud-run").addEventListener("click",()=>{dirty=false;sync();});
@@ -7459,7 +7474,7 @@ window.beeVoiceRememberDeletion=async(key,blob)=>{
  if(!uid) return;
  localStorage.setItem(journal+uid+':'+key, digest);
 };
-function schedule(){clearTimeout(timer);timer=setTimeout(()=>run(),1500);}
+function schedule(){if(document.hidden||!navigator.onLine)return;clearTimeout(timer);timer=setTimeout(()=>window.beeV9.auto("voice",run),1500);}
 function removeMatching(db,key,record){return new Promise((ok,no)=>{
  const t=db.transaction('voiceNotes','readwrite'),st=t.objectStore('voiceNotes'),q=st.get(key);let removed=false;
  q.onsuccess=()=>{const v=q.result;if(v&&v.updatedAt===record.updatedAt&&v.blob.size===record.blob.size){st.delete(key);removed=true;}};
@@ -7474,11 +7489,11 @@ async function run(resolve=false){
  try{
  status.textContent='Łączenie z Firebase…';
  const {auth,db}=await window.beeFirebase.prepare();await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');
- const fs=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+ const fs=window.beeV9.sdk(await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'),auth);
  const guard=()=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');};
  if(!window.beeVoiceSyncLocal)throw Error('Moduł nagrań nie został zainicjalizowany. Odśwież aplikację.');
  const localDb=await window.beeVoiceSyncLocal.open();const local=new Map((await read(localDb)).map(r=>[r.key,r]));
- const col=fs.collection(db,'users',uid,'voiceSyncV1');const remote=new Map();
+ window.beeV9.account(uid);window.beeV9.check();const col=fs.collection(db,'users',uid,'voiceSyncV1');const remote=new Map();
  if(sender)localStorage.setItem('bee-voice-v3-uid',uid);
  for(const d of (await fs.getDocsFromServer(col)).docs){const m=d.data();if(valid(m.key)&&d.id===await keyHash(m.key))remote.set(m.key,m);}
  const deleted=new Map();
@@ -7513,6 +7528,7 @@ async function run(resolve=false){
  }
  if(l&&r&&!r.deleted){if(digest===r.hash)same++;else{conflicts++;details.push(key+': różne nagrania — zachowano obie wersje');}continue;}
  if(l&&sender){
+ if(l.blob.size>8000000){skipped++;details.push(key+': nagranie ponad 8 MB — zachowano lokalnie.');continue;}
  const count=Math.ceil(l.blob.size/CHUNK);
  const current=await read(localDb,key);if(!current||await hash(await current.blob.arrayBuffer())!==digest){skipped++;continue;}
  guard();
@@ -7547,10 +7563,10 @@ const canon=x=>JSON.stringify(x,(_k,v)=>v && typeof v==='object' && !Array.isArr
 const eq=(a,b)=>canon(a)===canon(b);
 const hash=async s=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,'0')).join('');
 async function sync(resolve=false){if(busy||!navigator.onLine)return;busy=true;button.disabled=true;document.getElementById("fin-sync-resolve").disabled=true;try{
-if(!db){({auth,db}=await window.beeFirebase.prepare());fs=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');}await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');
+if(!db){({auth,db}=await window.beeFirebase.prepare());fs=window.beeV9.sdk(await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'),auth);}await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');
 const guard=()=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');};
 const baseKey='bee-fin-sync-v6:'+uid,base=JSON.parse(localStorage.getItem(baseKey)||'{}');
-const col=fs.collection(db,'users',uid,'financeSyncV6');const snap=await fs.getDocsFromServer(col);guard();const remote=new Map();for(const d of snap.docs){const r=d.data();if(!valid(r.key)||typeof r.id!=='string'||(!r.deleted&&(!r.value||r.value.id!==r.id)))throw Error('Nieprawidłowy wpis w chmurze.');remote.set(JSON.stringify([r.key,r.id]),r);}
+window.beeV9.account(uid);window.beeV9.check();const col=fs.collection(db,'users',uid,'financeSyncV6');const snap=await fs.getDocsFromServer(col);guard();const remote=new Map();for(const d of snap.docs){const r=d.data();if(!valid(r.key)||typeof r.id!=='string'||(!r.deleted&&(!r.value||r.value.id!==r.id)))throw Error('Nieprawidłowy wpis w chmurze.');remote.set(JSON.stringify([r.key,r.id]),r);}
 const keys=new Set([...Object.keys(localStorage).filter(valid),...Object.keys(base).filter(valid),...Array.from(remote.values(),r=>r.key)]);let sent=0,received=0,same=0,conflicts=[];const panel=document.getElementById("fin-conflicts");panel.replaceChildren();
 for(const k of keys){const initial=localStorage.getItem(k),a=read(k),local=new Map(a.map(x=>[x.id,x])),b=new Map((base[k]||[]).map(x=>[x.id,x.value]));const ids=new Set([...local.keys(),...b.keys(),...Array.from(remote.values()).filter(r=>r.key===k).map(r=>r.id)]);const next=new Map(local),nb=new Map(b);
 for(const id of ids){guard();const l=local.get(id)||null, r=remote.get(JSON.stringify([k,id])),v=r&&!r.deleted?r.value:null,old=b.get(id)||null;const known=b.has(id);if(eq(l,v)){if(l||r||known)nb.set(id,l);same++;continue;}
@@ -7561,7 +7577,7 @@ else if(download){if(v)next.set(id,v);else next.delete(id);nb.set(id,v);received
 guard();if(localStorage.getItem(k)!==initial)throw Error('Dane lokalne zmieniły się — ponów.');const out=JSON.stringify([...next.values()]);if(out!==JSON.stringify(a)){localStorage.setItem(k,out);}base[k]=[...nb].map(([id,value])=>({id,value}));localStorage.setItem(baseKey,JSON.stringify(base));}
 if(received&&typeof stage5Render==='function')stage5Render();status.textContent=`Finanse — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts.length}`+(conflicts.length?'\nZachowano obie wersje: '+conflicts.join('\n'):'');
 }catch(e){status.textContent='Synchronizacja finansów wstrzymana: '+e.message;}finally{busy=false;button.disabled=false;document.getElementById("fin-sync-resolve").disabled=false;}}
-const enabled=()=>localStorage.getItem('bee-fin-auto-v6')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja finansów: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=()=>sync();document.getElementById("fin-sync-resolve").onclick=()=>sync(true);toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-fin-auto-v6');else if(confirm('Włączyć synchronizację finansów? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-fin-auto-v6','1');sync();}label();};label();setInterval(()=>{if(enabled())sync();},120000);window.addEventListener('online',()=>{if(enabled())sync();});if(enabled())sync();
+const enabled=()=>localStorage.getItem('bee-fin-auto-v6')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja finansów: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=()=>sync();document.getElementById("fin-sync-resolve").onclick=()=>sync(true);toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-fin-auto-v6');else if(confirm('Włączyć synchronizację finansów? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-fin-auto-v6','1');sync();}label();};label();setInterval(()=>{if(enabled())window.beeV9.auto("finance",sync);},120000);window.addEventListener('online',()=>{if(enabled())window.beeV9.auto("finance",sync);});if(enabled())window.beeV9.auto("finance",sync);
 })();
 </script>
 <style>#wh-panel button{padding:10px;border:1px solid #c49a20;border-radius:8px;background:#fff1bd;color:#302600;font:inherit;margin:4px;cursor:pointer}#wh-panel pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><section id="wh-panel" style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>📦 Synchronizacja magazynu V7</h3><p>Android ↔ Windows. Stan i operacje magazynowe synchronizowane razem dla każdej pasieki.</p><button id="wh-run" type="button">🔄 Synchronizuj magazyn</button><button id="wh-auto" type="button"></button><button id="wh-resolve" type="button">Rozwiąż konflikt magazynu</button><div id="wh-status" role="status">Oczekiwanie na synchronizację.</div><div id="wh-conflicts"></div></section>
@@ -7576,11 +7592,11 @@ function save(id,x){validate(x);const old=types.map(t=>localStorage.getItem(key(
 const enabled=()=>localStorage.getItem('bee-wh-auto-v7')==='1',label=()=>buttons[2].textContent='Automatyczna synchronizacja magazynu: '+(enabled()?'WŁ.':'WYŁ.');
 function lock(v){busy=v;buttons.forEach(b=>b.disabled=v);}
 async function sync(resolve=false){if(busy)return;if(!navigator.onLine){status.textContent='Offline — dane pozostają lokalnie.';return;}lock(true);panel.replaceChildren();try{
-if(!db){({auth,db}=await window.beeFirebase.prepare());fs=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');}await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');const guard=()=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');};
-const col=fs.collection(db,'users',uid,'warehouseSyncV7'),snap=await fs.getDocsFromServer(col);guard();const remote=new Map(snap.docs.map(d=>[d.id,validate(d.data().value)]));const baseKey='bee-wh-base-v7:'+uid,base=JSON.parse(localStorage.getItem(baseKey)||'{}');const ids=new Set([...Object.keys(localStorage).filter(k=>/^bee-stage6-(inventory|movements):/.test(k)).map(k=>k.split(':')[1]),...remote.keys(),...Object.keys(base)]);let sent=0,received=0,same=0,conflicts=0;
+if(!db){({auth,db}=await window.beeFirebase.prepare());fs=window.beeV9.sdk(await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'),auth);}await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');const guard=()=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');};
+window.beeV9.account(uid);window.beeV9.check();const col=fs.collection(db,'users',uid,'warehouseSyncV7'),snap=await fs.getDocsFromServer(col);guard();const remote=new Map(snap.docs.map(d=>[d.id,validate(d.data().value)]));const baseKey='bee-wh-base-v7:'+uid,base=JSON.parse(localStorage.getItem(baseKey)||'{}');const ids=new Set([...Object.keys(localStorage).filter(k=>/^bee-stage6-(inventory|movements):/.test(k)).map(k=>k.split(':')[1]),...remote.keys(),...Object.keys(base)]);let sent=0,received=0,same=0,conflicts=0;
 const remember=(id,x)=>{const b=JSON.parse(localStorage.getItem(baseKey)||'{}');b[id]=x;localStorage.setItem(baseKey,JSON.stringify(b));};
 for(const id of ids){if(!valid(id))throw Error('Nieobsługiwany identyfikator pasieki: '+id);guard();const l=read(id),r=remote.get(id),old=base[id],ref=fs.doc(col,id);const check=()=>{guard();if(!eq(read(id),l))throw Error('Magazyn lokalny zmienił się — ponów.');};
-async function apply(choice,backup=false){check();const chosen=choice==='local'?l:r;if(!chosen)throw Error('Brak wersji w chmurze.');if(backup)localStorage.setItem('bee-wh-conflict-backup:'+uid+':'+id+':'+Date.now(),JSON.stringify({local:l,cloud:r||null}));await fs.runTransaction(db,async tx=>{const d=await tx.get(ref);check();if(d.exists()!==!!r||(r&&!eq(d.data().value,r)))throw Error('Magazyn w chmurze zmienił się — ponów.');if(choice==='local')tx.set(ref,{value:l});});check();if(choice==='cloud')save(id,chosen);remember(id,chosen);}
+async function apply(choice,backup=false){check();const chosen=choice==='local'?l:r;if(!chosen)throw Error('Brak wersji w chmurze.');if(backup)localStorage.setItem('bee-wh-conflict-backup:'+uid+':'+id+':'+Date.now(),JSON.stringify({local:l,cloud:r||null}));await fs.runTransaction(db,async tx=>{const d=await tx.get(ref);check();if(d.exists()!==!!r||(r&&!eq(d.data().value,r)))throw Error('Magazyn w chmurze zmienił się — ponów.');if(choice==='local'){if(new TextEncoder().encode(JSON.stringify(l)).length>750000)throw Error('Magazyn przekracza bezpieczny próg 750 kB. Dane lokalne zachowane.');tx.set(ref,{value:l});}});check();if(choice==='cloud')save(id,chosen);remember(id,chosen);}
 if(r&&eq(l,r)){remember(id,l);same++;continue;}
 if((!r&&!old&&!empty(l))||(r&&old&&eq(r,old))){await apply('local');sent++;continue;}
 if(r&&((!old&&empty(l))||(old&&eq(l,old)))){await apply('cloud');received++;continue;}
@@ -7588,7 +7604,7 @@ if(!r&&!old&&empty(l))continue;
 conflicts++;const box=document.createElement('div'),pre=document.createElement('pre');pre.textContent=id+' — różne wersje magazynu.'+(resolve?'\nLokalnie: '+JSON.stringify(l,null,2)+'\nChmura: '+JSON.stringify(r||null,null,2):'');box.append(pre);if(resolve)for(const choice of ['local','cloud']){if(choice==='cloud'&&!r)continue;const b=document.createElement('button');b.textContent=choice==='local'?'Zachowaj magazyn lokalny':'Zachowaj magazyn z chmury';b.onclick=async()=>{if(busy||!confirm('Zastąpić cały magazyn tej pasieki wybraną wersją? Obie wersje zostaną zapisane w lokalnej kopii konfliktu.'))return;lock(true);try{await apply(choice,true);panel.replaceChildren();status.textContent='Konflikt rozwiązany. Ponów synchronizację na obu urządzeniach.';}catch(e){status.textContent=e.message;}finally{lock(false);}};box.append(b);}panel.append(box);
 }status.textContent=`Magazyn — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts} (pasieki)`;
 }catch(e){status.textContent='Synchronizacja magazynu wstrzymana: '+e.message;}finally{lock(false);}}
-buttons[0].onclick=()=>sync();buttons[1].onclick=()=>sync(true);buttons[2].onclick=()=>{if(enabled())localStorage.removeItem('bee-wh-auto-v7');else if(confirm('Włączyć automatyczną synchronizację magazynu? Najpierw wykonaj kopie danych.')){localStorage.setItem('bee-wh-auto-v7','1');sync();}label();};label();setInterval(()=>{if(enabled()&&!document.hidden)sync();},120000);window.addEventListener('online',()=>{if(enabled())sync();});document.addEventListener('visibilitychange',()=>{if(enabled()&&!document.hidden)sync();});if(enabled())sync();
+buttons[0].onclick=()=>sync();buttons[1].onclick=()=>sync(true);buttons[2].onclick=()=>{if(enabled())localStorage.removeItem('bee-wh-auto-v7');else if(confirm('Włączyć automatyczną synchronizację magazynu? Najpierw wykonaj kopie danych.')){localStorage.setItem('bee-wh-auto-v7','1');sync();}label();};label();setInterval(()=>{if(enabled())window.beeV9.auto("warehouse",sync);},120000);window.addEventListener('online',()=>{if(enabled())window.beeV9.auto("warehouse",sync);});document.addEventListener('visibilitychange',()=>{if(enabled())window.beeV9.auto("warehouse",sync);});if(enabled())window.beeV9.auto("warehouse",sync);
 })();
 </script>
 <script type="module">
@@ -7600,10 +7616,10 @@ const canon=x=>JSON.stringify(x,(_k,v)=>v && typeof v==='object' && !Array.isArr
 const eq=(a,b)=>canon(a)===canon(b);
 const hash=async s=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,'0')).join('');
 async function sync(resolve=false){if(busy)return;if(!navigator.onLine){status.textContent="Offline — zadania pozostają lokalnie.";return;}busy=true;button.disabled=true;document.getElementById("task-sync-resolve").disabled=true;try{
-if(!db){({auth,db}=await window.beeFirebase.prepare());fs=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');}await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');
+if(!db){({auth,db}=await window.beeFirebase.prepare());fs=window.beeV9.sdk(await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js'),auth);}await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');
 const guard=()=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');};
 const baseKey='bee-task-sync-v8:'+uid,base=JSON.parse(localStorage.getItem(baseKey)||'{}');
-const col=fs.collection(db,'users',uid,'tasksSyncV8');const snap=await fs.getDocsFromServer(col);guard();const remote=new Map();for(const d of snap.docs){const r=d.data();if(!valid(r.key)||typeof r.id!=='string'||(!r.deleted&&(!r.value||r.value.id!==r.id)))throw Error('Nieprawidłowy wpis w chmurze.');remote.set(JSON.stringify([r.key,r.id]),r);}
+window.beeV9.account(uid);window.beeV9.check();const col=fs.collection(db,'users',uid,'tasksSyncV8');const snap=await fs.getDocsFromServer(col);guard();const remote=new Map();for(const d of snap.docs){const r=d.data();if(!valid(r.key)||typeof r.id!=='string'||(!r.deleted&&(!r.value||r.value.id!==r.id)))throw Error('Nieprawidłowy wpis w chmurze.');remote.set(JSON.stringify([r.key,r.id]),r);}
 const keys=new Set([...Object.keys(localStorage).filter(valid),...Object.keys(base).filter(valid),...Array.from(remote.values(),r=>r.key)]);let sent=0,received=0,same=0,conflicts=[];const panel=document.getElementById("task-conflicts");panel.replaceChildren();
 for(const k of keys){const initial=localStorage.getItem(k),a=read(k),local=new Map(a.map(x=>[x.id,x])),b=new Map((base[k]||[]).map(x=>[x.id,x.value]));const ids=new Set([...local.keys(),...b.keys(),...Array.from(remote.values()).filter(r=>r.key===k).map(r=>r.id)]);const next=new Map(local),nb=new Map(b);
 for(const id of ids){guard();const l=local.get(id)||null, r=remote.get(JSON.stringify([k,id])),v=r&&!r.deleted?r.value:null,old=b.get(id)||null;const known=b.has(id);if(eq(l,v)){if(l||r||known)nb.set(id,l);same++;continue;}
@@ -7614,9 +7630,9 @@ else if(download){if(v)next.set(id,v);else next.delete(id);nb.set(id,v);received
 guard();if(localStorage.getItem(k)!==initial)throw Error('Dane lokalne zmieniły się — ponów.');const out=JSON.stringify([...next.values()]);if(out!==JSON.stringify(a)){localStorage.setItem(k,out);}base[k]=[...nb].map(([id,value])=>({id,value}));localStorage.setItem(baseKey,JSON.stringify(base));}
 if(received&&typeof window.beeRenderTasks==='function')window.beeRenderTasks();status.textContent=`Lista prac — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts.length}`+(conflicts.length?'\nZachowano obie wersje: '+conflicts.join('\n'):'');
 }catch(e){status.textContent='Synchronizacja listy prac wstrzymana: '+e.message;}finally{busy=false;button.disabled=false;document.getElementById("task-sync-resolve").disabled=false;}}
-const enabled=()=>localStorage.getItem('bee-task-auto-v8')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja listy prac: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=()=>sync();document.getElementById("task-sync-resolve").onclick=()=>sync(true);toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-task-auto-v8');else if(confirm('Włączyć synchronizację listy prac? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-task-auto-v8','1');sync();}label();};label();setInterval(()=>{if(enabled()&&!document.hidden)sync();},120000);window.addEventListener('online',()=>{if(enabled())sync();});document.addEventListener('visibilitychange',()=>{if(enabled()&&!document.hidden)sync();});if(enabled())sync();
+const enabled=()=>localStorage.getItem('bee-task-auto-v8')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja listy prac: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=()=>sync();document.getElementById("task-sync-resolve").onclick=()=>sync(true);toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-task-auto-v8');else if(confirm('Włączyć synchronizację listy prac? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-task-auto-v8','1');sync();}label();};label();setInterval(()=>{if(enabled())window.beeV9.auto("tasks",sync);},120000);window.addEventListener('online',()=>{if(enabled())window.beeV9.auto("tasks",sync);});document.addEventListener('visibilitychange',()=>{if(enabled())window.beeV9.auto("tasks",sync);});if(enabled())window.beeV9.auto("tasks",sync);
 })();
 </script>
 
-</body>
+<details style="margin:12px;padding:10px;border:1px solid #d9bd63;border-radius:8px"><summary>V9 OPTIMAL — diagnostyka synchronizacji</summary><p id="bee-v9-stats"></p><p id="bee-v9-storage"></p><p>Automatyczne sprawdzanie co 120 sekund w aktywnej aplikacji. Limity lokalne nie obejmują innych urządzeń ani wszystkich operacji Firebase.</p></details></body>
 </html>
