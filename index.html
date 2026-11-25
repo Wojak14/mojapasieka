@@ -2497,6 +2497,8 @@ font-weight:bold;
  <div id="bee-task-status" role="status" aria-live="polite" style="font-size:13px;margin:8px 0"></div>
  <div id="bee-task-summary" style="font-weight:bold;margin:8px 0"></div>
  <div id="bee-task-list"></div>
+<style>#task-sync-run,#task-sync-auto,#task-sync-resolve,#task-conflicts button{padding:10px;border:1px solid #c49a20;border-radius:8px;background:#fff1bd;color:#302600;font:inherit;margin:4px;cursor:pointer}#task-conflicts pre{white-space:pre-wrap;overflow-wrap:anywhere}</style><section style="margin:14px 0;padding:12px;border:1px solid #d9bd63;border-radius:10px;background:#fffdf5"><h3>📋 Synchronizacja listy prac V8</h3><button type="button" id="task-sync-run">🔄 Synchronizuj listę prac</button> <button type="button" id="task-sync-auto"></button> <button type="button" id="task-sync-resolve">Rozwiąż konflikt zadania</button><div id="task-conflicts"></div><div id="task-sync-status" style="white-space:pre-wrap">Oczekiwanie na synchronizację.</div></section>
+
 </section>
 
 <div id="bee-mobile-bar" aria-label="Szybkie akcje mobilne">
@@ -6161,14 +6163,14 @@ if ("serviceWorker" in navigator) {
 /* Lista prac: osobny klucz dla każdej pasieki; kopia bezpieczeństwa obejmuje localStorage. */
 (function(){
  const $=id=>document.getElementById('bee-task-'+id);
- let editing=null, editingApiary=null;
+ let editing=null, editingApiary=null, editingSnapshot=null;
  const apiary=()=>String((typeof currentApiary!=='undefined'&&currentApiary?.id)||'default');
  const key=()=> 'bee-tasks:'+apiary();
  const msg=t=>{if($('status'))$('status').textContent=t;};
  function read(){try{const v=JSON.parse(localStorage.getItem(key())||'[]');return Array.isArray(v)?v:[];}catch(e){msg('Nie można odczytać zadań: '+e.message);return [];}}
  function write(rows){localStorage.setItem(key(),JSON.stringify(rows));}
  const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
- function reset(){editing=null;editingApiary=null;$('title').value='';$('date').value=today();$('hive').value='';$('priority').value='normalny';$('notes').value='';$('save').textContent='➕ Dodaj zadanie';$('cancel').hidden=true;}
+ function reset(){editing=null;editingApiary=null;editingSnapshot=null;$('title').value='';$('date').value=today();$('hive').value='';$('priority').value='normalny';$('notes').value='';$('save').textContent='➕ Dodaj zadanie';$('cancel').hidden=true;}
  function refreshHives(){
   const old=$('hive').value;const select=$('hive');select.replaceChildren(new Option('Cała pasieka',''));
   try{
@@ -6184,7 +6186,7 @@ if ("serviceWorker" in navigator) {
   if(!title||!date){msg('Wpisz nazwę pracy i termin.');return;}
   if(editing&&editingApiary!==apiary()){reset();msg('Zmieniono pasiekę. Wybierz zadanie ponownie.');return;}
   const rows=read();
-  if(editing){const task=rows.find(x=>x.id===editing);if(!task){reset();msg('Nie znaleziono zadania.');return;}Object.assign(task,{title,date,hive,priority,notes,updatedAt:new Date().toISOString()});}
+  if(editing){const task=rows.find(x=>x.id===editing);if(!task){reset();msg('Nie znaleziono zadania.');return;}if(JSON.stringify(task)!==editingSnapshot){msg('Zadanie zmieniło się podczas edycji. Anuluj i otwórz aktualną wersję.');return;}Object.assign(task,{title,date,hive,priority,notes,updatedAt:new Date().toISOString()});}
   else rows.push({id:'task-'+Date.now()+'-'+Math.random().toString(36).slice(2),title,date,hive,priority,notes,status:'open',createdAt:new Date().toISOString()});
   try{write(rows);reset();render();msg('Zadanie zapisane.');}catch(e){msg('Nie udało się zapisać: '+e.message);}
  }
@@ -6261,7 +6263,7 @@ if ("serviceWorker" in navigator) {
    item.append(button(task.status==='done'?'↩ Przywróć':'✅ Wykonane',()=>update(task.id,'done')));
    if(task.status!=='done')item.append(button('📅 Przełóż +7 dni',()=>update(task.id,'postpone')));
    if(task.status!=='done')item.append(button('🔔 Kalendarz Google',()=>openGoogleCalendar(task)));
-   item.append(button('✏️ Edytuj',()=>{editing=task.id;editingApiary=apiary();$('title').value=task.title||'';$('date').value=task.date||today();$('hive').value=task.hive||'';$('priority').value=task.priority||'normalny';$('notes').value=task.notes||'';$('save').textContent='💾 Zapisz zmiany';$('cancel').hidden=false;$('title').scrollIntoView({behavior:'smooth',block:'center'});msg('Edytujesz wybrane zadanie.');}));
+   item.append(button('✏️ Edytuj',()=>{editing=task.id;editingApiary=apiary();editingSnapshot=JSON.stringify(task);$('title').value=task.title||'';$('date').value=task.date||today();$('hive').value=task.hive||'';$('priority').value=task.priority||'normalny';$('notes').value=task.notes||'';$('save').textContent='💾 Zapisz zmiany';$('cancel').hidden=false;$('title').scrollIntoView({behavior:'smooth',block:'center'});msg('Edytujesz wybrane zadanie.');}));
    item.append(button('🗑️ Usuń',()=>update(task.id,'delete')));list.append(item);
   });
  }
@@ -7589,5 +7591,32 @@ conflicts++;const box=document.createElement('div'),pre=document.createElement('
 buttons[0].onclick=()=>sync();buttons[1].onclick=()=>sync(true);buttons[2].onclick=()=>{if(enabled())localStorage.removeItem('bee-wh-auto-v7');else if(confirm('Włączyć automatyczną synchronizację magazynu? Najpierw wykonaj kopie danych.')){localStorage.setItem('bee-wh-auto-v7','1');sync();}label();};label();setInterval(()=>{if(enabled()&&!document.hidden)sync();},120000);window.addEventListener('online',()=>{if(enabled())sync();});document.addEventListener('visibilitychange',()=>{if(enabled()&&!document.hidden)sync();});if(enabled())sync();
 })();
 </script>
+<script type="module">
+(()=>{
+const status=document.getElementById('task-sync-status'),button=document.getElementById('task-sync-run'),toggle=document.getElementById('task-sync-auto');
+const valid=k=>/^bee-tasks:(?:pasieka_\d+|default)$/.test(k);let busy=false,fs,auth,db;
+const read=k=>{const a=JSON.parse(localStorage.getItem(k)||'[]');if(!Array.isArray(a)||a.some(x=>!x||typeof x.id!=='string'||!x.id)||new Set(a.map(x=>x.id)).size!==a.length)throw Error('Nieprawidłowe lub starsze wpisy: '+k);return a;};
+const canon=x=>JSON.stringify(x,(_k,v)=>v && typeof v==='object' && !Array.isArray(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
+const eq=(a,b)=>canon(a)===canon(b);
+const hash=async s=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s))),x=>x.toString(16).padStart(2,'0')).join('');
+async function sync(resolve=false){if(busy)return;if(!navigator.onLine){status.textContent="Offline — zadania pozostają lokalnie.";return;}busy=true;button.disabled=true;document.getElementById("task-sync-resolve").disabled=true;try{
+if(!db){({auth,db}=await window.beeFirebase.prepare());fs=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');}await auth.authStateReady();const uid=auth.currentUser?.uid;if(!uid)throw Error('Zaloguj się do Firebase.');
+const guard=()=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');};
+const baseKey='bee-task-sync-v8:'+uid,base=JSON.parse(localStorage.getItem(baseKey)||'{}');
+const col=fs.collection(db,'users',uid,'tasksSyncV8');const snap=await fs.getDocsFromServer(col);guard();const remote=new Map();for(const d of snap.docs){const r=d.data();if(!valid(r.key)||typeof r.id!=='string'||(!r.deleted&&(!r.value||r.value.id!==r.id)))throw Error('Nieprawidłowy wpis w chmurze.');remote.set(JSON.stringify([r.key,r.id]),r);}
+const keys=new Set([...Object.keys(localStorage).filter(valid),...Object.keys(base).filter(valid),...Array.from(remote.values(),r=>r.key)]);let sent=0,received=0,same=0,conflicts=[];const panel=document.getElementById("task-conflicts");panel.replaceChildren();
+for(const k of keys){const initial=localStorage.getItem(k),a=read(k),local=new Map(a.map(x=>[x.id,x])),b=new Map((base[k]||[]).map(x=>[x.id,x.value]));const ids=new Set([...local.keys(),...b.keys(),...Array.from(remote.values()).filter(r=>r.key===k).map(r=>r.id)]);const next=new Map(local),nb=new Map(b);
+for(const id of ids){guard();const l=local.get(id)||null, r=remote.get(JSON.stringify([k,id])),v=r&&!r.deleted?r.value:null,old=b.get(id)||null;const known=b.has(id);if(eq(l,v)){if(l||r||known)nb.set(id,l);same++;continue;}
+const upload=(!r&&!known&&l)||(known&&eq(v,old)&&!eq(l,old));const download=(!known&&!l&&r)||(known&&eq(l,old)&&!eq(v,old));
+if(upload){const ref=fs.doc(col,await hash(JSON.stringify([k,id])));await fs.runTransaction(db,async tx=>{const s=await tx.get(ref);guard();if(localStorage.getItem(k)!==initial)throw Error('Dane lokalne zmieniły się — ponów.');if(s.exists()!==!!r||(r&&!eq(s.data(),r)))throw Error('Dane w chmurze zmieniły się — ponów.');tx.set(ref,{key:k,id,deleted:!l,value:l});});nb.set(id,l);sent++;}
+else if(download){if(v)next.set(id,v);else next.delete(id);nb.set(id,v);received++;}else {conflicts.push(k+' / '+id);if(resolve){const box=document.createElement('div');const pre=document.createElement('pre');pre.textContent=k+' / '+id+'\nLokalnie: '+JSON.stringify(l,null,2)+'\nChmura: '+JSON.stringify(v,null,2);box.append(pre);for(const choice of ['local','cloud']){const btn=document.createElement('button');btn.textContent=choice==='local'?'Zachowaj lokalny wpis':'Zachowaj wpis z chmury';btn.onclick=async()=>{if(busy)return;if(!confirm('Zatwierdzić wybraną wersję? Druga wersja zostanie zapisana w lokalnej kopii konfliktu.'))return;busy=true;button.disabled=true;try{guard();const current=read(k);if(!eq(current.find(x=>x.id===id)||null,l))throw Error('Wpis lokalny zmienił się. Ponów porównanie.');const raw=localStorage.getItem(k);const ref=fs.doc(col,await hash(JSON.stringify([k,id])));localStorage.setItem('bee-task-conflict-backup:'+uid+':'+Date.now()+':'+id,JSON.stringify({key:k,id,local:l,cloud:v}));await fs.runTransaction(db,async tx=>{const d=await tx.get(ref);guard();if(localStorage.getItem(k)!==raw||d.exists()!==!!r||(r&&!eq(d.data(),r)))throw Error('Dane zmieniły się. Ponów porównanie.');if(choice==='local')tx.set(ref,{key:k,id,deleted:!l,value:l});});guard();if(localStorage.getItem(k)!==raw)throw Error('Dane lokalne zmieniły się. Ponów synchronizację.');const chosen=choice==='local'?l:v;const updated=current.filter(x=>x.id!==id);if(chosen)updated.push(chosen);localStorage.setItem(k,JSON.stringify(updated));const latest=JSON.parse(localStorage.getItem(baseKey)||'{}');latest[k]=(latest[k]||[]).filter(x=>x.id!==id);latest[k].push({id,value:chosen});localStorage.setItem(baseKey,JSON.stringify(latest));if(typeof window.beeRenderTasks==='function')window.beeRenderTasks();panel.replaceChildren();status.textContent='Konflikt rozwiązany. Ponów synchronizację na obu urządzeniach.';}catch(e){status.textContent=e.message;}finally{busy=false;button.disabled=false;}};box.append(btn);}panel.append(box);}}
+}
+guard();if(localStorage.getItem(k)!==initial)throw Error('Dane lokalne zmieniły się — ponów.');const out=JSON.stringify([...next.values()]);if(out!==JSON.stringify(a)){localStorage.setItem(k,out);}base[k]=[...nb].map(([id,value])=>({id,value}));localStorage.setItem(baseKey,JSON.stringify(base));}
+if(received&&typeof window.beeRenderTasks==='function')window.beeRenderTasks();status.textContent=`Lista prac — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts.length}`+(conflicts.length?'\nZachowano obie wersje: '+conflicts.join('\n'):'');
+}catch(e){status.textContent='Synchronizacja listy prac wstrzymana: '+e.message;}finally{busy=false;button.disabled=false;document.getElementById("task-sync-resolve").disabled=false;}}
+const enabled=()=>localStorage.getItem('bee-task-auto-v8')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja listy prac: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=()=>sync();document.getElementById("task-sync-resolve").onclick=()=>sync(true);toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-task-auto-v8');else if(confirm('Włączyć synchronizację listy prac? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-task-auto-v8','1');sync();}label();};label();setInterval(()=>{if(enabled()&&!document.hidden)sync();},120000);window.addEventListener('online',()=>{if(enabled())sync();});document.addEventListener('visibilitychange',()=>{if(enabled()&&!document.hidden)sync();});if(enabled())sync();
+})();
+</script>
+
 </body>
 </html>
