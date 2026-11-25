@@ -2533,6 +2533,7 @@ font-weight:bold;
 <button type="button" id="s6-quick-queen">👑 Wychów matek pszczelich</button>
 <button type="button" id="s6-quick-login">🔐 Zaloguj się do Google</button>
 <button type="button" id="s6-quick-down">⬇ Dół</button>
+<button type="button" id="bee-exit-app">🚪 Wyjdź z aplikacji</button>
 </div>
 <script>
 /* Zwinięte menu na Androidzie + szybki dostęp do kopii. Nie zmienia danych. */
@@ -2896,6 +2897,7 @@ function setVoiceNoteMarker(dateKey) {
 
 let voiceDbPromise = null;
 let activeVoiceRecorder = null;
+window.beeExitVoiceSaving=false;
 let activeVoiceRecognition = null;
 let activeVoiceObjectUrl = null;
 
@@ -3147,6 +3149,7 @@ function initVoiceNoteControls() {
           status.textContent = "Wystąpił błąd podczas nagrywania.";
         };
         recorder.onstop = async () => {
+          window.beeExitVoiceSaving=true;
           stream.getTracks().forEach(track => track.stop());
           activeVoiceRecorder = null;
           recordButton.disabled = false;
@@ -3154,6 +3157,7 @@ function initVoiceNoteControls() {
 
           const blob = new Blob(chunks, { type: recorder.mimeType || (chunks[0] && chunks[0].type) || "audio/webm" });
           if (!blob.size) {
+            window.beeExitVoiceSaving=false;
             status.textContent = "Nagranie jest puste. Spróbuj ponownie.";
             return;
           }
@@ -3166,7 +3170,7 @@ function initVoiceNoteControls() {
             status.textContent = `Nagranie zapisane dla ${dateKey}.`;
           } catch (error) {
             status.textContent = "Nie udało się zapisać nagrania: " + (error.message || error);
-          }
+          } finally { window.beeExitVoiceSaving=false; }
         };
 
         recorder.start();
@@ -7149,6 +7153,7 @@ if ("serviceWorker" in navigator) {
 <div id="bee-hive-cloud-conflicts"></div>
 </section>
 <script>
+window.beeExitModules={};
 window.beeV9=(()=>{
  const key='bee-v9-usage', owner='bee-v9-owner'; let last={};
  const day=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -7157,7 +7162,7 @@ window.beeV9=(()=>{
  function budget(){const v=stats();if(v.reads>=20000||v.writes>=8000||v.deletes>=8000)throw Error('V9: osiągnięto lokalny próg operacji Firebase. Dane pozostają lokalnie.');}
  function account(uid){if(!uid)throw Error('Zaloguj się do Firebase.');const old=localStorage.getItem(owner);if(old&&old!==uid)throw Error('V9: inne konto Google — synchronizacja zablokowana. Wróć do poprzedniego konta.');if(!old)localStorage.setItem(owner,uid);}
  function sdk(fs,auth){return new Proxy({...fs},{get(t,k){const f=t[k];if(k==='getDocsFromServer'||k==='getDocFromServer')return async(...a)=>{account(auth.currentUser?.uid);budget();const r=await f(...a);add('reads',k==='getDocsFromServer'?Math.max(1,r.size):1);return r;};if(k==='runTransaction')return (db,fn,...args)=>{account(auth.currentUser?.uid);budget();const uid=auth.currentUser.uid;return f(db,tx=>fn(new Proxy(tx,{get(o,m){const v=o[m];if(['get','set','update','delete'].includes(m))return (...a)=>{if(auth.currentUser?.uid!==uid)throw Error('Zmieniono konto.');budget();add(m==='get'?'reads':m==='delete'?'deletes':'writes',1);return v.apply(o,a);};return typeof v==='function'?v.bind(o):v;}})),...args);};return f;}});}
- function auto(name,fn){if(document.hidden||!navigator.onLine||Date.now()-(last[name]||0)<120000)return;last[name]=Date.now();fn();}
+ function auto(name,fn){if(window.beeExitPaused||document.hidden||!navigator.onLine||Date.now()-(last[name]||0)<120000)return;last[name]=Date.now();fn();}
  function check(){budget();add('checks',1);}
  function render(){const e=document.getElementById('bee-v9-stats');if(e){const v=stats();e.textContent=`Dzisiaj na tym urządzeniu: odczyty ${v.reads}/20000 | próby zapisów ${v.writes}/8000 | próby usunięć ${v.deletes}/8000 | cykle ${v.checks}. Szacunek, nie licznik rozliczeniowy Firebase.`;}}
  async function storage(){const e=document.getElementById('bee-v9-storage');if(!e)return;let n=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);n+=2*(k.length+(localStorage.getItem(k)||'').length);}let msg='localStorage: około '+Math.round(n/1024)+' KiB.'+(n>3500000?' UWAGA: wykonaj kopię danych.':'');try{const x=await navigator.storage.estimate();if(x.quota){msg+=' Pamięć witryny: '+Math.round(x.usage/x.quota*100)+'%.';if(x.usage/x.quota>.8)msg+=' UWAGA: mało miejsca.';}}catch(e){}e.textContent=msg;}
@@ -7289,6 +7294,7 @@ async function start(){
  localStorage.setItem(FLAG,"1");running=true;if(timer)clearInterval(timer);timer=setInterval(()=>window.beeV9.auto("notes",sync),120000);await sync();
  }catch(e){say("Błąd inicjalizacji Firebase: "+(e?.message||e));}
 }
+window.beeExitModules.notes={busy:()=>busy,run:()=>running?sync():Promise.resolve()};
 $("bee-live-enable").addEventListener("click",start);
 $("bee-live-disable").addEventListener("click",()=>{running=false;if(timer)clearInterval(timer);timer=null;localStorage.removeItem(FLAG);say("Synchronizacja wyłączona. Notatki pozostają na urządzeniu.");});
 $("bee-live-check").addEventListener("click",()=>running?sync():start());
@@ -7469,11 +7475,12 @@ function updateToggle(){toggle.textContent=enabled()?"Automatyczna synchronizacj
 let lastAttempt=0;
 async function autoCheck(force=false){
  const now=fingerprint();if(now!==observed){observed=now;dirty=false;pending=true;}
- if(!enabled()||busy||editing()||!navigator.onLine||document.hidden)return;
+ if(window.beeExitPaused||!enabled()||busy||editing()||!navigator.onLine||document.hidden)return;
  if(!force&&!pending&&Date.now()-lastAttempt<120000)return;
  if(Date.now()-lastAttempt<120000)return;
  lastAttempt=Date.now();pending=false;await sync();observed=fingerprint();
 }
+window.beeExitModules.hives={busy:()=>busy,run:()=>enabled()?sync():Promise.resolve()};
 $("bee-hive-cloud-run").addEventListener("click",()=>{dirty=false;sync();});
 toggle.addEventListener("click",()=>{if(enabled())localStorage.removeItem(AUTO);else if(confirm("Włączyć automatyczną synchronizację? Wykonaj kopie JSON obu urządzeń.")){localStorage.setItem(AUTO,"1");pending=true;autoCheck(true);}updateToggle();});
 observed=fingerprint();updateToggle();setInterval(()=>autoCheck(),3000);
@@ -7582,6 +7589,7 @@ async function run(resolve=false){
  status.textContent=report()+'\n'+details.join('\n');
  }catch(e){status.textContent=report()+'\nPrzerwano: '+e.message;}finally{button.disabled=false;resolveButton.disabled=false;if(pending){pending=false;schedule();}}
 }
+window.beeExitModules.voice={busy:()=>button.disabled,run:()=>run()};
 button.addEventListener('click',()=>run());
 resolveButton.addEventListener('click',()=>{if(sender)run(true);});
 window.addEventListener('bee-voice-changed',()=>{if(sender)schedule();});
@@ -7614,6 +7622,7 @@ else if(download){if(v)next.set(id,v);else next.delete(id);nb.set(id,v);received
 guard();if(localStorage.getItem(k)!==initial)throw Error('Dane lokalne zmieniły się — ponów.');const out=JSON.stringify([...next.values()]);if(out!==JSON.stringify(a)){localStorage.setItem(k,out);}base[k]=[...nb].map(([id,value])=>({id,value}));localStorage.setItem(baseKey,JSON.stringify(base));}
 if(received&&typeof stage5Render==='function')stage5Render();status.textContent=`Finanse — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts.length}`+(conflicts.length?'\nZachowano obie wersje: '+conflicts.join('\n'):'');
 }catch(e){status.textContent='Synchronizacja finansów wstrzymana: '+e.message;}finally{busy=false;button.disabled=false;document.getElementById("fin-sync-resolve").disabled=false;}}
+window.beeExitModules.finance={busy:()=>busy,run:()=>enabled()?sync():Promise.resolve()};
 const enabled=()=>localStorage.getItem('bee-fin-auto-v6')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja finansów: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=()=>sync();document.getElementById("fin-sync-resolve").onclick=()=>sync(true);toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-fin-auto-v6');else if(confirm('Włączyć synchronizację finansów? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-fin-auto-v6','1');sync();}label();};label();setInterval(()=>{if(enabled())window.beeV9.auto("finance",sync);},120000);window.addEventListener('online',()=>{if(enabled())window.beeV9.auto("finance",sync);});if(enabled())window.beeV9.auto("finance",sync);
 })();
 </script>
@@ -7641,6 +7650,7 @@ if(!r&&!old&&empty(l))continue;
 conflicts++;const box=document.createElement('div'),pre=document.createElement('pre');pre.textContent=id+' — różne wersje magazynu.'+(resolve?'\nLokalnie: '+JSON.stringify(l,null,2)+'\nChmura: '+JSON.stringify(r||null,null,2):'');box.append(pre);if(resolve)for(const choice of ['local','cloud']){if(choice==='cloud'&&!r)continue;const b=document.createElement('button');b.textContent=choice==='local'?'Zachowaj magazyn lokalny':'Zachowaj magazyn z chmury';b.onclick=async()=>{if(busy||!confirm('Zastąpić cały magazyn tej pasieki wybraną wersją? Obie wersje zostaną zapisane w lokalnej kopii konfliktu.'))return;lock(true);try{await apply(choice,true);panel.replaceChildren();status.textContent='Konflikt rozwiązany. Ponów synchronizację na obu urządzeniach.';}catch(e){status.textContent=e.message;}finally{lock(false);}};box.append(b);}panel.append(box);
 }status.textContent=`Magazyn — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts} (pasieki)`;
 }catch(e){status.textContent='Synchronizacja magazynu wstrzymana: '+e.message;}finally{lock(false);}}
+window.beeExitModules.warehouse={busy:()=>busy,run:()=>enabled()?sync():Promise.resolve()};
 buttons[0].onclick=()=>sync();buttons[1].onclick=()=>sync(true);buttons[2].onclick=()=>{if(enabled())localStorage.removeItem('bee-wh-auto-v7');else if(confirm('Włączyć automatyczną synchronizację magazynu? Najpierw wykonaj kopie danych.')){localStorage.setItem('bee-wh-auto-v7','1');sync();}label();};label();setInterval(()=>{if(enabled())window.beeV9.auto("warehouse",sync);},120000);window.addEventListener('online',()=>{if(enabled())window.beeV9.auto("warehouse",sync);});document.addEventListener('visibilitychange',()=>{if(enabled())window.beeV9.auto("warehouse",sync);});if(enabled())window.beeV9.auto("warehouse",sync);
 })();
 </script>
@@ -7667,6 +7677,7 @@ else if(download){if(v)next.set(id,v);else next.delete(id);nb.set(id,v);received
 guard();if(localStorage.getItem(k)!==initial)throw Error('Dane lokalne zmieniły się — ponów.');const out=JSON.stringify([...next.values()]);if(out!==JSON.stringify(a)){localStorage.setItem(k,out);}base[k]=[...nb].map(([id,value])=>({id,value}));localStorage.setItem(baseKey,JSON.stringify(base));}
 if(received&&typeof window.beeRenderTasks==='function')window.beeRenderTasks();status.textContent=`Lista prac — wysłano: ${sent} | pobrano: ${received} | zgodne: ${same} | konflikty: ${conflicts.length}`+(conflicts.length?'\nZachowano obie wersje: '+conflicts.join('\n'):'');
 }catch(e){status.textContent='Synchronizacja listy prac wstrzymana: '+e.message;}finally{busy=false;button.disabled=false;document.getElementById("task-sync-resolve").disabled=false;}}
+window.beeExitModules.tasks={busy:()=>busy,run:()=>enabled()?sync():Promise.resolve()};
 const enabled=()=>localStorage.getItem('bee-task-auto-v8')==='1';const label=()=>toggle.textContent='Automatyczna synchronizacja listy prac: '+(enabled()?'WŁ.':'WYŁ.');button.onclick=()=>sync();document.getElementById("task-sync-resolve").onclick=()=>sync(true);toggle.onclick=()=>{if(enabled())localStorage.removeItem('bee-task-auto-v8');else if(confirm('Włączyć synchronizację listy prac? Wykonaj kopie danych obu urządzeń.')){localStorage.setItem('bee-task-auto-v8','1');sync();}label();};label();setInterval(()=>{if(enabled())window.beeV9.auto("tasks",sync);},120000);window.addEventListener('online',()=>{if(enabled())window.beeV9.auto("tasks",sync);});document.addEventListener('visibilitychange',()=>{if(enabled())window.beeV9.auto("tasks",sync);});if(enabled())window.beeV9.auto("tasks",sync);
 })();
 </script>
@@ -7714,5 +7725,15 @@ body #bee-mobile-bar #bee-bar-toggle {
   z-index: 3 !important;
 }
 </style>
+<style>body #bee-mobile-bar #bee-exit-app{background:#c62828!important;color:white!important}#bee-exit-screen{position:fixed;inset:0;z-index:2147483647;background:#fffdf5;color:#302600;display:flex;align-items:center;justify-content:center;padding:20px;text-align:center}#bee-exit-screen[hidden]{display:none!important}#bee-exit-screen button{padding:12px;margin:8px;border:0;border-radius:8px;background:#fbc02d;color:#302600;font-weight:bold}</style>
+<div id="bee-exit-screen" hidden role="dialog" aria-modal="true" aria-labelledby="bee-exit-title"><div><h2 id="bee-exit-title">🐝 BEE ASSISTANT PRO</h2><p id="bee-exit-status" role="status"></p><button type="button" id="bee-exit-resume">Wróć do aplikacji</button><button type="button" id="bee-exit-close" hidden>Zamknij okno</button></div></div>
+<script>
+(()=>{const $=id=>document.getElementById(id), screen=$('bee-exit-screen'), status=$('bee-exit-status'), close=$('bee-exit-close'), resume=$('bee-exit-resume');let exiting=false;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+$('bee-exit-app').addEventListener('click',async()=>{if(exiting)return;if((typeof activeVoiceRecorder!=='undefined'&&activeVoiceRecorder&&activeVoiceRecorder.state!=='inactive')||window.beeExitVoiceSaving){alert('Najpierw zakończ nagrywanie i poczekaj na zapis.');return;}if(!confirm('Czy na pewno chcesz wyjść? Zapisz wcześniej wszystkie edytowane formularze.'))return;
+exiting=true;window.beeExitPaused=true;screen.hidden=false;resume.disabled=true;close.hidden=true;status.textContent='Zatrzymywanie skanera i oczekiwanie na synchronizację…';
+try{if(typeof s6StopScan==='function')await s6StopScan();const modules=Object.values(window.beeExitModules||{});const wait=async()=>{const end=Date.now()+30000;while(modules.some(m=>m.busy())){if(Date.now()>end)throw Error('Synchronizacja nadal trwa. Wróć do aplikacji i spróbuj później.');await sleep(200);}};await wait();if(navigator.onLine){status.textContent='Próba końcowej synchronizacji…';await Promise.race([(async()=>{for(const m of modules){if(!window.beeExitPaused)return;await m.run();}await wait();})(),sleep(45000).then(()=>{throw Error('Nie potwierdzono zakończenia synchronizacji. Wróć i sprawdź jej status.');})]);}status.textContent=navigator.onLine?'Synchronizacja zakończyła próbę. Możesz zamknąć aplikację; niepotwierdzone zmiany pozostają lokalnie.':'Tryb offline. Zapisane dane pozostają lokalnie. Możesz zamknąć aplikację.';close.hidden=false;close.focus();}catch(e){status.textContent=e.message; }finally{resume.disabled=false;}});
+resume.onclick=()=>{window.beeExitPaused=false;exiting=false;screen.hidden=true; $('bee-bar-toggle').focus();};close.onclick=()=>{window.close();status.textContent='Jeżeli okno nie zamknęło się automatycznie, zamknij je przyciskiem systemowym lub zamknij kartę przeglądarki.';};})();
+</script>
 </body>
 </html>
