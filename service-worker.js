@@ -1,5 +1,5 @@
 /* Pasieka PWA: bezpieczny cache plików lokalnych, bez usuwania danych użytkownika. */
-const CACHE_NAME = 'bee-pasieka-offline-20261120-v1';
+const CACHE_NAME = 'bee-pasieka-offline-v9';
 const APP_SHELL = ['./', './index.html', './manifest.json', './bee_icon_192x192.png', './bee_icon_512x512.png'];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
@@ -8,6 +8,7 @@ self.addEventListener('install', event => {
       try { const response = await fetch(url, {cache:'reload'}); if(response.ok) await cache.put(url,response); }
       catch(e) { console.warn('Brak zasobu podczas instalacji:',url); }
     }));
+    if(!(await cache.match('./index.html')))throw Error('Brak nowego HTML — zachowano poprzedni cache');
     await self.skipWaiting();
   })());
 });
