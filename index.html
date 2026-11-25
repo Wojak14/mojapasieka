@@ -7684,5 +7684,35 @@ const enabled=()=>localStorage.getItem('bee-task-auto-v8')==='1';const label=()=
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
+
+<style id="bee-v94-vertical-menu">
+/* V9.4: one vertical column, no horizontal scrolling. */
+body #bee-mobile-bar {
+  flex-wrap: nowrap !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  box-sizing: border-box !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+body #bee-mobile-bar > button {
+  box-sizing: border-box !important;
+  flex: 0 0 auto !important;
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  touch-action: pan-y;
+}
+body #bee-mobile-bar.bee-bar-expanded {
+  max-height: min(75vh, 620px) !important;
+  max-height: min(75dvh, 620px) !important;
+}
+body #bee-mobile-bar #bee-bar-toggle {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 3 !important;
+}
+</style>
 </body>
 </html>
