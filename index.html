@@ -1944,15 +1944,13 @@ font-weight:bold;
   <b>Legenda ikon:</b>
   <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:5px; margin-top:5px;">
     <div>🫙 miód / miodobranie</div>
-    <div>🍯 karmienie / syrop / ciasto</div>
+    <div>🥣 karmienie / syrop / ciasto</div>
     <div>💊 leczenie / warroza / apiwarol</div>
     <div>🏷️ paski</div>
     <div>🌬️ kwas</div>
     <div>🛡️ zakończenie leczenia</div>
     <div>🧴 dezynfekcja</div>
-    <div>🔍 przegląd</div>
-    <div>📋 sprawdzenie</div>
-    <div>🕵️‍♂️ inspekcja</div>
+    <div>🔍 przegląd / sprawdzenie / inspekcja</div>
     <div>🐝 rój / rójka</div>
     <div>🏃‍♂️🐝 ucieczka pszczół</div>
     <div>🌸 pożytek</div>
@@ -1966,16 +1964,17 @@ font-weight:bold;
     <div>❄️ śnieg / zima</div>
     <div>🥶 mróz / zimno</div>
     <div>🥵 gorąco / upał</div>
-    <div>🌫️ pochmurno</div>
-    <div>🌡 niska temperatura</div>
+    <div>☁️ pochmurno / zachmurzenie</div>
+    <div>🌡 pomiar temperatury / niska temperatura</div>
     <div>☀️ słonecznie</div>
     <div>🌁 mgła</div>
     <div>🧊 grad</div>
     <div>🧹 odsklepianie</div>
     <div>🏠 ule / pasieka</div>
-    <div>👨‍🌾 trutnie</div>
+    <div>🐝♂️ trutnie</div>
     <div>🐝🌿 dzikie pszczoły</div>
-    <div>🏠 ule / pasieka</div>
+    <div>📒 notatka tekstowa</div>
+    <div>🎙️ nagranie głosowe</div>
     <div>🧇 węza</div>
   </div>
 
@@ -2045,7 +2044,7 @@ font-weight:bold;
     <div id="quick-buttons" style="margin-top:8px;">
       <button onclick="addQuick('przegląd')">🔍 Przegląd</button>
       <button onclick="addQuick('miodobranie')">🫙 Miodobranie</button>
-      <button onclick="addQuick('karmienie')">🍯 Karmienie</button>
+      <button onclick="addQuick('karmienie')">🥣 Karmienie</button>
       <button onclick="addQuick('leczenie')">💊 Leczenie</button>
       <button onclick="addQuick('rój')">🐝 Rój</button>
     </div>
@@ -2555,7 +2554,7 @@ font-weight:bold;
       if(panel){panel.scrollIntoView({behavior:'auto',block:'center'});}
     });
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+  init();
 })();
 /* BEE MOBILE BAR: autonomiczna obsługa, bez zależności od innych modułów. */
 (function(){
@@ -2636,8 +2635,7 @@ font-weight:bold;
       });
     });
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup,{once:true});
-  else setup();
+  setup();
 })();
 </script>
 
@@ -2830,10 +2828,10 @@ function applySmartColorsAndAlerts(td, text){
   if(t.includes("wiatr")) td.classList.add("icon-wind");
   if(t.includes("inspekcja") || t.includes("kontrola")) td.classList.add("icon-search");
   if(t.includes("pszczo") || t.includes("ula")) td.classList.add("icon-bee");
-  if(t.includes("roj") || t.includes("rójka")) td.classList.add("icon-fire");
+  if(beeNoteIcons(t).includes("🐝")) td.classList.add("icon-fire");
   if(t.includes("pogoda") || t.includes("deszcz")) td.classList.add("icon-weather");
 
-  if(t.includes("roj") || t.includes("ryzyko")){
+  if(beeNoteIcons(t).includes("🐝") || t.includes("ryzyko")){
     td.classList.add("alert-high");
   }
   else if(t.includes("inspekcja")){
@@ -3287,6 +3285,36 @@ function initVoiceNoteControls() {
 // =========================
 // 📅 MARKERY I IKONY
 // =========================
+function beeNoteIcons(note) {
+  const t = String(note || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ł/g,'l');
+  const words = t.match(/[a-z0-9]+/g) || [];
+  const has = re => words.some(w => re.test(w));
+  const icons = [];
+  const add = (condition, icon) => { if(condition) icons.push(icon); };
+  const ended = /\b(?:zakoncz\w*|koniec|ukoncz\w*)\s+(?:\w+\s+){0,2}lecze\w*\b|\blecze\w*\s+(?:zakoncz\w*|ukoncz\w*|koniec)\b/.test(t);
+  add(has(/^(?:miod|miodu|miodem|miodzie|miody|miodobran\w*|wirowan\w*)$/),'🫙');
+  add(has(/^(?:(?:pod|do|za|na)?karm\w*|syrop\w*|ciast\w*)$/),'🥣');
+  add(!ended && has(/^(?:lecz\w*|warroz\w*|varro\w*|apiwarol\w*)$/),'💊');
+  add(has(/^pask\w*$/),'🏷️'); add(has(/^kwas\w*$/),'🌬️'); add(ended,'🛡️');
+  add(has(/^(?:przeglad\w*|sprawdz\w*|inspekcj\w*|kontrol\w*)$/),'🔍');
+  add(has(/^(?:roj|roju|rojem|roje|rojow\w*|rojk\w*|rojliw\w*|wyroj\w*)$/),'🐝');
+  add(has(/^(?:pozyt\w*|nektar\w*|pylek|pylk\w*)$/),'🌸');
+  add(has(/^(?:matk\w*|matek|matce)$/),'👑');
+  add(has(/^(?:ramk\w*|ramek|ramce)$/),'🧱'); add(has(/^(?:nadstaw\w*|korpus\w*)$/),'📦');
+  add(has(/^deszcz\w*$/),'🌧'); add(has(/^(?:wiatr\w*|wietrz\w*)$/),'💨'); add(has(/^burz\w*$/),'🌩️');
+  add(has(/^(?:snieg\w*|sniez\w*|zim[ayoe]|zimow\w*)$/),'❄️');
+  add(has(/^(?:mroz\w*|mrozny|zimn\w*|przymroz\w*)$/),'🥶');
+  add(has(/^(?:gorac\w*|upal\w*)$/),'🥵'); add(has(/^(?:pochmurn\w*|zachmurz\w*)$/),'☁️');
+  add(has(/^temperatur\w*$/),'🌡'); add(has(/^(?:trut\w*)$/),'🐝♂️');
+  add(has(/^(?:slonc\w*|slonecz\w*)$/),'☀️'); add(has(/^(?:mgla|mgl\w*|mgiel\w*)$/),'🌁');
+  add(has(/^(?:grad|gradu|gradem|gradobic\w*)$/),'🧊'); add(has(/^(?:czerw|czerwi\w*|czerwien\w*)$/),'🐣');
+  add(/\bdzik\w*\s+pszcz\w*/.test(t),'🐝🌿'); add(has(/^(?:miotl\w*|odsklep\w*)$/),'🧹');
+  add(has(/^(?:ul|ula|ulu|ule|uli|ulom|ulami|ulach|ulow|pasiek\w*|pasiece)$/),'🏠');
+  add(has(/^dezynfek\w*$/),'🧴'); add(/\b(?:uciecz\w*|uciekl\w*)\s+pszcz\w*/.test(t),'🏃‍♂️🐝');
+  add(has(/^(?:wez[ayoe]|wezie|wez[ao]m)$/),'🧇');
+  return icons;
+}
+
 function updateMarkers() {
   document.querySelectorAll("td .day-number").forEach(span => {
     const td = span.closest("td");
@@ -3315,43 +3343,7 @@ function updateMarkers() {
 
       const marker = document.createElement("span");
       marker.className = "note-marker";
-      const text = (noteData || "").toLowerCase();
-      const icons = [];
-
-      if(text.includes("miód") || text.includes("miodobranie")) icons.push("🫙");
-      if(text.includes("karmienie") || text.includes("syrop") || text.includes("ciasto")) icons.push("🍯");
-      if(text.includes("leczenie") || text.includes("apiwarol")) icons.push("💊");
-      if(text.includes("paski")) icons.push("🏷️");
-      if(text.includes("kwas")) icons.push("🌬️");
-      if(text.includes("zakończenie leczenia")) icons.push("🛡️");
-      if(text.includes("przegląd")) icons.push("🔍");
-      if(text.includes("sprawdzenie")) icons.push("📋");
-      if(text.includes("rój") || text.includes("rójka")) icons.push("🐝");
-      if(text.includes("pożytek") || text.includes("nektar") || text.includes("pyłek")) icons.push("🌸");
-      if(text.includes("matka") || text.includes("wymiana matki")) icons.push("👑");
-      if(text.includes("ramka")) icons.push("🧱");
-      if(text.includes("nadstawka")) icons.push("📦");
-      if(text.includes("deszcz")) icons.push("🌧");
-      if(text.includes("wiatr")) icons.push("💨");
-      if(text.includes("burza")) icons.push("🌩️");
-      if(text.includes("śnieg")) icons.push("❄️");
-      if(text.includes("mróz") || text.includes("zimno")) icons.push("🥶");
-      if(text.includes("gorąco") || text.includes("upał")) icons.push("🥵");
-      if(text.includes("pochmurno")) icons.push("🌫️");
-      if(text.includes("niska temperatura")) icons.push("🌡");
-      if(text.includes("trutnie")) icons.push("👨‍🌾");
-      if(text.includes("inspekcja")) icons.push("🕵️‍♂️");
-      if(text.includes("słonecznie")) icons.push("☀️");
-      if(text.includes("mgła")) icons.push("🌁");
-      if(text.includes("grad")) icons.push("🧊");
-      if(text.includes("czerw")) icons.push("🐣");
-      if(text.includes("dzikie pszczoły")) icons.push("🐝🌿");
-      if(text.includes("miotła") || text.includes("odsklepianie")) icons.push("🧹");
-      if(text.includes("ule") || text.includes("pasieka")) icons.push("🏠");
-      if(text.includes("dezynfekcja")) icons.push("🧴");
-      if(text.includes("ucieczka pszczół")) icons.push("🏃‍♂️🐝");
-      if(text.includes("węza")) icons.push("🧇");
-
+      const icons = beeNoteIcons(noteData);
       if (hasTextNote && icons.length === 0) icons.push("📒");
       if (hasVoice) icons.push("🎙️");
       marker.textContent = icons.join(" ");
@@ -5515,23 +5507,25 @@ function loadApiaryMapLibrary(callback) {
 function getApiaryHivesWithGPS() {
   const profiles = getHiveProfiles();
   const deleted = getDeletedHiveNumbers();
-  return Object.keys(profiles).map(Number).filter(n => Number.isInteger(n) && n >= 1 && !deleted.has(n))
+  return Object.keys(profiles).map(Number).filter(n => Number.isInteger(n) && n >= 1 && beeHiveBelongsHere(n) && !deleted.has(n))
     .map(n => ({ number:n, profile:profiles[String(n)] }))
     .filter(x => Number.isFinite(Number(x.profile.apiaryLat)) && Number.isFinite(Number(x.profile.apiaryLon)));
 }
 
 function openHiveFromMap(number) {
-  selectedHiveNumber = Number(number);
+  const n = Number(number);
+  if (!Number.isInteger(n) || n < 1 || n > 100 || !beeHiveBelongsHere(n) || getDeletedHiveNumbers().has(n)) {
+    alert("Karta nie należy do wybranej pasieki lub została usunięta."); return;
+  }
+  selectedHiveNumber = n;
   const countInput = document.getElementById("hive-card-count");
-  const mainCount = document.getElementById("hivesCount");
-  const count = Math.max(Number(countInput && countInput.value || 1), selectedHiveNumber);
-  if (countInput) countInput.value = count;
-  if (mainCount) mainCount.value = count;
-  localStorage.setItem("bee-hive-count:" + (currentApiary?.id || "default"), String(count));
+  if (countInput) countInput.value = Math.max(Number(countInput.value)||1,n);
   renderHiveCards();
   loadHiveEditor();
-  document.getElementById("hive-editor")?.scrollIntoView({behavior:"smooth",block:"start"});
+  if (apiaryHiveMap) apiaryHiveMap.closePopup();
+  document.getElementById("hive-editor")?.scrollIntoView({behavior:"auto",block:"start"});
 }
+window.openHiveFromMap = openHiveFromMap;
 
 function renderApiaryHiveMap() {
   const list = document.getElementById("apiary-hive-map-list");
@@ -7735,5 +7729,11 @@ exiting=true;window.beeExitPaused=true;screen.hidden=false;resume.disabled=true;
 try{if(typeof s6StopScan==='function')await s6StopScan();const modules=Object.values(window.beeExitModules||{});const wait=async()=>{const end=Date.now()+30000;while(modules.some(m=>m.busy())){if(Date.now()>end)throw Error('Synchronizacja nadal trwa. Wróć do aplikacji i spróbuj później.');await sleep(200);}};await wait();if(navigator.onLine){status.textContent='Próba końcowej synchronizacji…';await Promise.race([(async()=>{for(const m of modules){if(!window.beeExitPaused)return;await m.run();}await wait();})(),sleep(45000).then(()=>{throw Error('Nie potwierdzono zakończenia synchronizacji. Wróć i sprawdź jej status.');})]);}status.textContent=navigator.onLine?'Synchronizacja zakończyła próbę. Możesz zamknąć aplikację; niepotwierdzone zmiany pozostają lokalnie.':'Tryb offline. Zapisane dane pozostają lokalnie. Możesz zamknąć aplikację.';close.hidden=false;close.focus();}catch(e){status.textContent=e.message; }finally{resume.disabled=false;}});
 resume.onclick=()=>{window.beeExitPaused=false;exiting=false;screen.hidden=true; $('bee-bar-toggle').focus();};close.onclick=()=>{window.close();status.textContent='Jeżeli okno nie zamknęło się automatycznie, zamknij je przyciskiem systemowym lub zamknij kartę przeglądarki.';};})();
 </script>
+<style id="bee-v96-offline-menu">
+body #bee-mobile-bar.bee-bar-expanded {display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important;overflow-y:auto!important;overflow-x:hidden!important;pointer-events:auto!important;max-height:75vh!important;max-height:75dvh!important;}
+body #bee-mobile-bar.bee-bar-expanded > button {display:block!important;flex:0 0 auto!important;visibility:visible!important;min-height:40px;}
+body #bee-mobile-bar:not(.bee-bar-expanded) > button:not(#bee-bar-toggle){display:none!important;}
+body #bee-mobile-bar #bee-bar-toggle{display:block!important;}
+</style>
 </body>
 </html>
