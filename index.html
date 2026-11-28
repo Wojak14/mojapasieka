@@ -1976,6 +1976,22 @@ font-weight:bold;
     <div>📒 notatka tekstowa</div>
     <div>🎙️ nagranie głosowe</div>
     <div>🧇 węza</div>
+    <div>👶 mateczniki</div>
+    <div>🔗 łączenie rodzin</div>
+    <div>⚰️ strata rodziny</div>
+    <div>💪 silna rodzina</div>
+    <div>📉 słaba rodzina</div>
+    <div>🔨 naprawa ula</div>
+    <div>🕯️ wytapianie wosku</div>
+    <div>💧 poidło / woda</div>
+    <div>🦠 podejrzenie choroby</div>
+    <div>🔬 monitoring warrozy</div>
+    <div>⚔️ rabunek</div>
+    <div>🐝❌ brak matki</div>
+    <div>⚠️ nastrój rojowy</div>
+    <div>🍽️ brak pokarmu</div>
+    <div>🐭 gryzonie</div>
+    <div>🐝💀 osyp pszczół</div>
   </div>
 
 </div>
@@ -3291,15 +3307,18 @@ function beeNoteIcons(note) {
   const has = re => words.some(w => re.test(w));
   const icons = [];
   const add = (condition, icon) => { if(condition) icons.push(icon); };
+  const monitoring = /\b(?:monitor\w*|pomiar\w*|kontrol\w*|badani\w*|test\w*)\s+(?:\w+\s+){0,2}(?:warroz\w*|varro\w*)\b/.test(t);
+  const queenMissing = /\b(?:brak\s+matk\w*|bez\s+matk\w*|bezmatecz\w*|nie\s+ma\s+matk\w*)\b/.test(t);
+  const swarmMood = /\b(?:nastroj\w*|ryzyk\w*|objaw\w*)\s+roj\w*\b/.test(t);
   const ended = /\b(?:zakoncz\w*|koniec|ukoncz\w*)\s+(?:\w+\s+){0,2}lecze\w*\b|\blecze\w*\s+(?:zakoncz\w*|ukoncz\w*|koniec)\b/.test(t);
   add(has(/^(?:miod|miodu|miodem|miodzie|miody|miodobran\w*|wirowan\w*)$/),'🫙');
   add(has(/^(?:(?:pod|do|za|na)?karm\w*|syrop\w*|ciast\w*)$/),'🥣');
-  add(!ended && has(/^(?:lecz\w*|warroz\w*|varro\w*|apiwarol\w*)$/),'💊');
+  add(!ended && (!monitoring || has(/^(?:lecz\w*|apiwarol\w*)$/)) && has(/^(?:lecz\w*|warroz\w*|varro\w*|apiwarol\w*)$/),'💊');
   add(has(/^pask\w*$/),'🏷️'); add(has(/^kwas\w*$/),'🌬️'); add(ended,'🛡️');
   add(has(/^(?:przeglad\w*|sprawdz\w*|inspekcj\w*|kontrol\w*)$/),'🔍');
   add(has(/^(?:roj|roju|rojem|roje|rojow\w*|rojk\w*|rojliw\w*|wyroj\w*)$/),'🐝');
   add(has(/^(?:pozyt\w*|nektar\w*|pylek|pylk\w*)$/),'🌸');
-  add(has(/^(?:matk\w*|matek|matce)$/),'👑');
+  add(!queenMissing && has(/^(?:matk\w*|matek|matce)$/),'👑');
   add(has(/^(?:ramk\w*|ramek|ramce)$/),'🧱'); add(has(/^(?:nadstaw\w*|korpus\w*)$/),'📦');
   add(has(/^deszcz\w*$/),'🌧'); add(has(/^(?:wiatr\w*|wietrz\w*)$/),'💨'); add(has(/^burz\w*$/),'🌩️');
   add(has(/^(?:snieg\w*|sniez\w*|zim[ayoe]|zimow\w*)$/),'❄️');
@@ -3312,7 +3331,23 @@ function beeNoteIcons(note) {
   add(has(/^(?:ul|ula|ulu|ule|uli|ulom|ulami|ulach|ulow|pasiek\w*|pasiece)$/),'🏠');
   add(has(/^dezynfek\w*$/),'🧴'); add(/\b(?:uciecz\w*|uciekl\w*)\s+pszcz\w*/.test(t),'🏃‍♂️🐝');
   add(has(/^(?:wez[ayoe]|wezie|wez[ao]m)$/),'🧇');
-  return icons;
+  add(/\bmatecznik\w*\b/.test(t),"👶");
+  add(/\b(?:polacz\w*|lacz\w*|zlacz\w*)\s+(?:\w+\s+){0,3}rodzin\w*\b/.test(t),"🔗");
+  add(/\b(?:strat\w*|strac\w*|utrac\w*|utrat\w*|padl\w*)\s+(?:\w+\s+){0,2}rodzin\w*\b|\brodzin\w*\s+(?:padl\w*|zgin\w*)\b/.test(t),"⚰️");
+  add(/\b(?:siln\w*\s+rodzin\w*|rodzin\w*\s+(?:jest\s+)?siln\w*)\b/.test(t),"💪");
+  add(/\b(?:slab\w*\s+rodzin\w*|rodzin\w*\s+(?:jest\s+)?slab\w*)\b/.test(t),"📉");
+  add(/\b(?:napraw\w*|remont\w*)\s+(?:\w+\s+){0,2}(?:ul|ula|ulu|ule|uli|ulow|ulach)\b/.test(t),"🔨");
+  add(/\b(?:wytap\w*|wytop\w*|topien\w*|stopil\w*)\s+wosk\w*\b/.test(t),"🕯️");
+  add(/\b(?:poidl\w*|wod[ayoe]|wodzie)\b/.test(t),"💧");
+  add(/\b(?:podejrz\w*\s+(?:\w+\s+){0,2}chorob\w*|objaw\w*\s+chorob\w*)\b/.test(t),"🦠");
+  add(/\b(?:monitor\w*|pomiar\w*|kontrol\w*|badani\w*|test\w*)\s+(?:\w+\s+){0,2}(?:warroz\w*|varro\w*)\b/.test(t),"🔬");
+  add(/\b(?:rabun\w*|rabow\w*|rabuj\w*)\b/.test(t),"⚔️");
+  add(/\b(?:brak\s+matk\w*|bez\s+matk\w*|bezmatecz\w*|nie\s+ma\s+matk\w*)\b/.test(t),"🐝❌");
+  add(/\b(?:nastroj\w*|ryzyk\w*|objaw\w*)\s+roj\w*\b/.test(t),"⚠️");
+  add(/\b(?:brak\s+(?:pokarm\w*|zapas\w*)|bez\s+pokarm\w*|glod\w*|niedobor\w*\s+pokarm\w*)\b/.test(t),"🍽️");
+  add(/\b(?:gryzon\w*|mysz\w*|myszy|szczur\w*)\b/.test(t),"🐭");
+  add(/\b(?:osyp\w*|martw\w*\s+pszcz\w*)\b/.test(t),"🐝💀");
+  return [...new Set(icons)];
 }
 
 function updateMarkers() {
